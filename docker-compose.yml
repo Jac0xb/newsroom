@@ -1,0 +1,5 @@
+version: '3'
+services:
+  document-api:
+    build: document-api
+    image: documocracy/newsroom/document-api

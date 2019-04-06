@@ -1,0 +1,22 @@
+variables:
+  DOCKER_HOST: tcp://localhost:2375
+  DOCKER_DRIVER: overlay2
+
+services:
+  - docker:dind
+
+# Build all docker images via docker-compose
+build:
+  stage: build
+  image:
+    name: docker/compose:1.24.0
+    entrypoint: ["/bin/sh", "-c"]
+  script:
+    - docker-compose build
+
+deploy:
+  stage: deploy
+  image: bitnami/kubectl
+  script:
+    - kubectl apply -f document-api/kubernetes.yml
+    - kubectl rollout -f document-api/kubernetes.yml
