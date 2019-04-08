@@ -1,0 +1,10 @@
+{
+    "type": "mysql",
+    "host": "newsroom-mysql.cqkyyaxacnoo.us-west-2.rds.amazonaws.com",
+    "port": 3306,
+    "username": "admin",
+    "password": "uqpnegTyfb5K37C",
+    "database": "",
+    "entities": ["src/entity/*.js"],
+    "logging": true
+}
