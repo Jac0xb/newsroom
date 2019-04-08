@@ -2,18 +2,18 @@ import * as React from 'react';
 import * as style from './style.css';
 import { RouteComponentProps } from 'react-router';
 
-export namespace App {
+export namespace Dashboard {
 	export interface Props extends RouteComponentProps<void> {
 		tasks: Array<String>
   }
 }
 
-export class App extends React.Component<App.Props> {
-	static defaultProps: Partial<App.Props> = {
+export class Dashboard extends React.Component<Dashboard.Props> {
+	static defaultProps: Partial<Dashboard.Props> = {
 		tasks: []
   	};
 
-  	constructor(props: App.Props, context?: any) {
+  	constructor(props: Dashboard.Props, context?: any) {
 		super(props, context);
   	}
 

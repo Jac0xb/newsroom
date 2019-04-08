@@ -79,6 +79,10 @@ module.exports = {
 					'ts-loader'
 				].filter(Boolean)
 			},
+			{
+				test: /\.less$/,
+				use: ['css-loader', 'less-loader']
+			},
 			// css
 			{
 				test: /\.css$/,
