@@ -14,6 +14,14 @@ import AccountCircle from '@material-ui/icons/AccountCircle';
 import MailIcon from '@material-ui/icons/Mail';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import MoreIcon from '@material-ui/icons/MoreVert';
+import Drawer from '@material-ui/core/Drawer';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
+import Divider from '@material-ui/core/Divider';
+import InboxIcon from '@material-ui/icons/MoveToInbox';
+// import { Link  } from 'react-router';
 import {styles} from "./styles";
 
 export namespace PrimarySearchAppBar {
@@ -26,6 +34,7 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, any
   state = {
     anchorEl: null,
     mobileMoreAnchorEl: null,
+    sideMenuOpen: false,
   };
 
   handleProfileMenuOpen = (event: React.MouseEvent) => {
@@ -45,12 +54,18 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, any
     this.setState({ mobileMoreAnchorEl: null });
   };
 
+  toggleDrawer = (open: boolean) => () =>{
+    this.setState({
+      sideMenuOpen: open,
+    });
+  };
+
   constructor(props: PrimarySearchAppBar.Props) {
       super(props)
   }
 
   render() {
-    const { anchorEl, mobileMoreAnchorEl } = this.state;
+    const { anchorEl, mobileMoreAnchorEl, sideMenuOpen } = this.state;
     const { classes } = this.props;
     const isMenuOpen = Boolean(anchorEl);
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -101,13 +116,37 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, any
       </Menu>
     );
 
+    const sideMenuList = (
+      <div className={classes.list}>
+        <List>
+          {['Dashboard', 'Workflow'].map((text, index) => (
+            <ListItem button component="a" href={"/" + text.toLowerCase()}>
+              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
+              <ListItemText primary={text} />
+            </ListItem>
+          ))}
+        </List>
+        <Divider />
+      </div>
+    );
+
     return (
       <div className={classes.root}>
         <AppBar position="static">
           <Toolbar>
-            <IconButton className={classes.menuButton} color="inherit" aria-label="Open drawer">
-              <MenuIcon />
+            <IconButton className={classes.menuButton} color="inherit" aria-label="Open drawer" >
+              <MenuIcon onClick={this.toggleDrawer(true)} />
             </IconButton>
+            <Drawer open={sideMenuOpen} onClose={this.toggleDrawer(false)}>
+              <div
+                tabIndex={0}
+                role="button"
+                onClick={this.toggleDrawer(false)}
+                onKeyDown={this.toggleDrawer(false)}
+              >
+                {sideMenuList}
+              </div>
+          </Drawer>
             <Typography className={classes.title} variant="h6" color="inherit" noWrap>
               Material-UI
             </Typography>

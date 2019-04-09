@@ -19,7 +19,6 @@ export class Dashboard extends React.Component<Dashboard.Props> {
   	}
 
   	render() {
-		
 		return (
 			<React.Fragment>
 				<PrimarySearchAppBar/>
