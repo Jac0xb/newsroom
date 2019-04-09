@@ -16,7 +16,6 @@ export const App = hot(module)(() => (
   <React.Fragment>
     <CssBaseline />
     <Switch>
-
       <Route path="/" component={Dashboard} />
     </Switch>
   </React.Fragment>
