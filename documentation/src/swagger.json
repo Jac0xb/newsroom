@@ -1,0 +1,20 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Newsroom API",
+        "version": "0.0.1"
+    },
+    "apis": [
+        {
+            "url": "../document-api/dist/swagger.json",
+            "paths": {
+                "base": "/documents"
+            },
+            "tags": {
+                "add": [
+                    "Document API"
+                ]
+            }
+        }
+    ]
+}
