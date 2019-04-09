@@ -4,12 +4,9 @@
   "description": "Newsroom Documentation",
   "main": "dist/index.js",
   "scripts": {
-    "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
-    "build": "tsc",
-    "collect-swagger": "",
-    "prestart": "yarn run build",
-    "start": "node .",
-    "test": "ts-mocha -p tsconfig.json src/**/*.spec.ts"
+    "prestart": "tslint -c tslint.json -p tsconfig.json --fix",
+    "start": "ts-node src/index.ts",
+    "test": "true"
   },
   "repository": {
     "type": "git",
@@ -30,6 +27,7 @@
     "@types/express": "^4.16.1",
     "@types/node": "^11.13.0",
     "@types/swagger-ui-express": "^3.0.0",
+    "ts-node": "^8.0.3",
     "tslint": "^5.15.0",
     "typescript": "^3.4.1"
   }
