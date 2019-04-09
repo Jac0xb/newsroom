@@ -23,7 +23,6 @@
   "license": "UNLICENSED",
   "dependencies": {
     "express": "^4.16.4",
-    "fast-glob": "^2.2.6",
     "swagger-combine": "^0.21.0",
     "swagger-ui-express": "^4.0.2"
   },

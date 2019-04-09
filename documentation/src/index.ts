@@ -1,8 +1,7 @@
 import dotenv from "dotenv";
 import "dotenv/config";
 import express from "express";
-import * as fg from "fast-glob";
-import swaggerCombine from "swagger-combine";
+import swaggerCombine from "./swagger-combine";
 import swaggerUi from "swagger-ui-express";
 
 dotenv.config();
