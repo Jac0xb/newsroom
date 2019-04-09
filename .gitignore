@@ -3,5 +3,5 @@ node_modules
 *.log
 dist
 .vscode
-
+*.sqlite
 .DS_STORE

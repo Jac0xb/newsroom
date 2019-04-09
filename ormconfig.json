@@ -1,18 +1,14 @@
 {
   "name": "default",
-  "type": "mysql",
-  "host": "localhost",
-  "port": 3306,
-  "username": "root",
-  "password": "password",
-  "database": "test",
+  "type": "sqlite",
+  "database": "newsroom.sqlite",
   "synchronize": true,
   "logging": false,
   "entities": [
-    "dist/entity/*.js"
+    "../orm/dist/entity/*.js"
   ],
   "migrations": [
-    "dist/migration/*.js"
+    "../orm/dist/migration/*.js"
   ],
   "cli": {
     "entitiesDir": "src/entity",

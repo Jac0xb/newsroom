@@ -4,7 +4,6 @@ import { Stage } from "./Stage";
 
 @Entity()
 export class Workflow {
-
     // Primary key.
     @PrimaryGeneratedColumn()
     public id: number;
@@ -44,7 +43,7 @@ export class Workflow {
         {
             default: () => "CURRENT_TIMESTAMP",
             onUpdate: "CURRENT_TIMESTAMP",
-            type: "datetime"
+            type: "datetime",
         },
     )
     public lastUpdated: string;

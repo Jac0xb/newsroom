@@ -23,6 +23,7 @@
   "dependencies": {
     "dotenv": "^7.0.0",
     "express": "^4.16.4",
+    "orm": "0.0.1",
     "typescript-rest": "^2.0.0"
   },
   "devDependencies": {
@@ -32,6 +33,7 @@
     "@types/mocha": "^5.2.6",
     "@types/node": "^11.13.0",
     "mocha": "^6.1.1",
+    "sqlite3": "^4.0.6",
     "ts-mocha": "^6.0.0",
     "ts-node": "^8.0.3",
     "tslint": "^5.15.0",

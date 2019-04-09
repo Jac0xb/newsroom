@@ -3,7 +3,6 @@ import { Workflow } from "./Workflow";
 
 @Entity()
 export class Document {
-
     // Primary Key column with auto generated sequence number.
     @PrimaryGeneratedColumn()
     public id: number;
