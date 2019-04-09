@@ -4,6 +4,7 @@
   "description": "Newsroom Documentation",
   "main": "dist/index.js",
   "scripts": {
+    "build": "true",
     "prestart": "tslint -c tslint.json -p tsconfig.json --fix",
     "start": "ts-node src/index.ts",
     "test": "true"
