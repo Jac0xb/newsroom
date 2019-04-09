@@ -86,12 +86,13 @@ const styles = (theme: Theme) => ({
   },
 } as StyleRules);
 
+
 export namespace PrimarySearchAppBar {
-    export interface Props extends React.Component<void, any> {
+    export interface Props {
         classes?: any
     }
 }
-class PrimarySearchAppBar extends React.Component<any , any> {
+class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, any> {
 
   state = {
     anchorEl: null,
