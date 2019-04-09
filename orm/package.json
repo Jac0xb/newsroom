@@ -1,27 +1,30 @@
 {
   "name": "orm",
   "version": "0.0.1",
-  "description": "Newsroom ORM",
+  "description": "Newsroom ORM/migrations using TypeORM.",
+  "license": "UNLICENSED",
+  "author": "Newsroom",
   "main": "dist/index.js",
   "scripts": {
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc",
     "prestart": "npm run build",
     "start": "node .",
-    "test": "true"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
     "url": "https://capstone-cs.eng.utah.edu/Newsroom/newsroom"
   },
   "keywords": [
-    "newsroom",
-    "orm"
+    "orm",
+    "migrations",
+    "newsroom"
   ],
-  "author": "Newsroom",
-  "license": "UNLICENSED",
   "dependencies": {
-    "typeorm": "^0.2.16"
+    "mysql": "^2.15.0",
+    "reflect-metadata": "^0.1.12",
+    "typeorm": "^0.2.15"
   },
   "devDependencies": {
     "@types/node": "^11.13.0",
