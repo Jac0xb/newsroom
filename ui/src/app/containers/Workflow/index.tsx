@@ -2,27 +2,27 @@ import * as React from 'react';
 import * as style from './style.css';
 import { RouteComponentProps } from 'react-router';
 
-export namespace Dashboard {
+export namespace Workflow {
 	export interface Props extends RouteComponentProps<void> {
 		tasks: Array<String>
   }
 }
 
-export class Dashboard extends React.Component<Dashboard.Props> {
-	static defaultProps: Partial<Dashboard.Props> = {
+export class Workflow extends React.Component<Workflow.Props> {
+	static defaultProps: Partial<Workflow.Props> = {
 		tasks: []
   	};
 
-  	constructor(props: Dashboard.Props, context?: any) {
+  	constructor(props: Workflow.Props, context?: any) {
 		super(props, context);
   	}
 
   	render() {
 
-	return (
-	  	<div className={style.normal}>
-			Hello World!
-	  	</div>
-	);
+			return (
+					<div className={style.normal}>
+					Hello World!
+					</div>
+			);
   }
 }
