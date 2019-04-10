@@ -65,7 +65,7 @@ export class DocumentService {
             return this.documentRepository.findOneOrFail(id);
         } catch (EntityNotFoundError) {
             // TODO: Change to arrow function and update tslint.json config.
-            return new Promise<Document>(function (resolve, reject) {
+            return new Promise<Document>(function(resolve, reject) {
                 reject(new EntityNotFoundError("Unable to find document with ${id}"));
             });
         }
@@ -97,7 +97,7 @@ export class DocumentService {
             currDocument = await this.documentRepository.findOneOrFail(document.id);
         } catch (EntityNotFoundError) {
             // TODO: Change to arrow function and update tslint.json config.
-            return new Promise<Document>(function (resolve, reject) {
+            return new Promise<Document>(function(resolve, reject) {
                 reject(new EntityNotFoundError("Unable to find document with ${id}"));
             });
         }
