@@ -2,7 +2,7 @@ FROM node:8-alpine
 WORKDIR /usr/src/app
 COPY package.json yarn.lock ./
 COPY documentation/package.json ./documentation/
-COPY document-api/package.json ./document-api/
+COPY newsroom-api/package.json ./newsroom-api/
 COPY orm/package.json ./orm/
 RUN yarn install
 COPY . .
