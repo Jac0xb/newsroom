@@ -5,6 +5,7 @@ import { Route, Switch } from 'react-router';
 
 // Newsroom the application.
 import { Dashboard } from './containers/Dashboard';
+import { DocumentContainer } from './containers/Document';
 import { Workflow } from './containers/Workflow';
 
 // Style-Normalization (https://material-ui.com/style/css-baseline/)
@@ -17,8 +18,9 @@ export const App = hot(module)(() => (
   <React.Fragment>
     <CssBaseline />
     <Switch>
-      <Route path="/" component={Dashboard} />
+    <Route path="/document" component={DocumentContainer} />
       <Route path="/workflow" component={Workflow} />
+      <Route exact path="/" component={Dashboard} />
     </Switch>
   </React.Fragment>
 ));
