@@ -6,15 +6,7 @@
     },
     "apis": [
         {
-            "url": "../document-api/dist/swagger.json",
-            "paths": {
-                "base": "/documents"
-            },
-            "tags": {
-                "add": [
-                    "Document API"
-                ]
-            }
+            "url": "../newsroom-api/dist/swagger.json"
         }
     ]
 }

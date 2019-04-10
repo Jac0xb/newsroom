@@ -1,7 +1,0 @@
-{
-    "swagger": {
-        "outputDirectory": "./dist",
-        "entryFile": "./src/index.ts",
-        "basePath": "/workflows"
-    }
-}

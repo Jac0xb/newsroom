@@ -3,7 +3,7 @@ import "dotenv/config";
 import express from "express";
 import { createConnection } from "typeorm";
 import { Server } from "typescript-rest";
-import { DocumentService } from "./service";
+import { DocumentService } from "./services/DocumentService";
 
 dotenv.config();
 
