@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: document-ingress
+  name: workflow-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
@@ -9,7 +9,7 @@ spec:
   - host: ab642bc8e59a311e99f0f06c6421f175-1910322875.us-west-2.elb.amazonaws.com
     http:
       paths:
-      - path: /documents
+      - path: /workflows
         backend:
-          serviceName: document-api
+          serviceName: workflow-api
           servicePort: 80
