@@ -6,6 +6,7 @@
   "workspaces": [
     "documentation",
     "document-api",
+    "workflow-api",
     "orm"
   ]
 }

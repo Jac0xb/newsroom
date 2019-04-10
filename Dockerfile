@@ -3,6 +3,7 @@ WORKDIR /usr/src/app
 COPY package.json yarn.lock ./
 COPY documentation/package.json ./documentation/
 COPY document-api/package.json ./document-api/
+COPY workflow-api/package.json ./workflow-api/
 COPY orm/package.json ./orm/
 RUN yarn install
 COPY . .

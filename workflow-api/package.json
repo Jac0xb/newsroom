@@ -1,0 +1,43 @@
+{
+  "name": "workflow-api",
+  "version": "0.0.1",
+  "description": "Newsroom Workflow API",
+  "main": "dist/index.js",
+  "scripts": {
+    "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
+    "build": "tsc",
+    "prestart": "yarn run build",
+    "start": "node .",
+    "test": "ts-mocha -p tsconfig.json src/**/*.spec.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://capstone-cs.eng.utah.edu/Newsroom/newsroom"
+  },
+  "keywords": [
+    "newsroom",
+    "workflow"
+  ],
+  "author": "Newsroom",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "dotenv": "^7.0.0",
+    "express": "^4.16.4",
+    "orm": "0.0.1",
+    "typescript-rest": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^6.1.1",
+    "@types/expect": "^1.20.4",
+    "@types/express": "^4.16.1",
+    "@types/mocha": "^5.2.6",
+    "@types/node": "^11.13.0",
+    "mocha": "^6.1.1",
+    "sqlite3": "^4.0.6",
+    "ts-mocha": "^6.0.0",
+    "ts-node": "^8.0.3",
+    "tslint": "^5.15.0",
+    "typescript": "^3.4.1",
+    "typescript-rest-swagger": "^0.0.24"
+  }
+}

@@ -1,0 +1,27 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: workflow-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workflow-api
+  template:
+    metadata:
+      labels:
+        app: workflow-api
+    spec:
+      containers:
+        - name: workflow-api
+          image: documocracy/newsroom
+          ports:
+            - containerPort: 8000
+          env:
+            - name: SERVICE
+              value: workflow-api
+            - name: SERVICE_PORT
+              value: "8000"
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: documocracy-docker-hub
