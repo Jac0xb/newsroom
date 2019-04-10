@@ -4,7 +4,7 @@
   "description": "Newsroom Document API",
   "main": "dist/index.js",
   "scripts": {
-    "prebuild": "tslint -c tslint.json -p tsconfig.json --fix && swaggerGen -c swagger.config.json",
+    "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc",
     "prestart": "yarn run build",
     "start": "node .",

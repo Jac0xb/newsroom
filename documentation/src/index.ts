@@ -6,7 +6,7 @@ import swaggerUi from "swagger-ui-express";
 
 dotenv.config();
 
-const port = process.env.SWAGGER_PORT;
+const port = 4050;
 
 const app = express();
 

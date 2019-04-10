@@ -4,6 +4,7 @@
         "tslint:recommended"
     ],
     "rules": {
-        "no-console": false
+        "no-console": false,
+        "only-arrow-functions": false
     }
 }
