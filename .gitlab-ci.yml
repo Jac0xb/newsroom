@@ -39,5 +39,5 @@ deploy:
   environment:
     name: prototype
   script:
-    - kubectl apply --namespace $KUBE_NAMESPACE -f */kube/
-    - kubectl rollout --namespace $KUBE_NAMESPACE status -f */kube/deployment.yml
+    - find ./ -name kube | xargs -I{} kubectl apply --namespace $KUBE_NAMESPACE -f {}
+    - find ./ -name deployment.yml | xargs -I{} kubectl rollout status --namespace $KUBE_NAMESPACE -f {}
