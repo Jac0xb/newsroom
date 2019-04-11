@@ -98,7 +98,7 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, any
     const sideMenuList = (
       <div className={classes.list}>
         <List>
-          {['Dashboard', 'Workflow'].map((text, index) => (
+          {['Document', 'Workflow'].map((text, index) => (
             <ListItem button component="a" key={text}  href={"/" + text.toLowerCase()}>
               <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
               <ListItemText primary={text} />
