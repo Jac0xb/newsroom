@@ -7,4 +7,4 @@ COPY orm/package.json ./orm/
 RUN yarn install
 COPY . .
 RUN yarn workspaces run build
-CMD node $SERVICE
+CMD cd $SERVICE && node .
