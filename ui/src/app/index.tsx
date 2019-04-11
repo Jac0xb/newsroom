@@ -15,12 +15,12 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import { hot } from 'react-hot-loader';
 
 export const App = hot(module)(() => (
-  <React.Fragment>
-    <CssBaseline />
-    <Switch>
-    <Route path="/document" component={DocumentContainer} />
-      <Route path="/workflow" component={Workflow} />
-      <Route exact path="/" component={Dashboard} />
-    </Switch>
-  </React.Fragment>
+  	<React.Fragment>
+    	<CssBaseline />
+    	<Switch>
+    		<Route path="/document/:id" component={DocumentContainer} />
+      		<Route path="/workflow" component={Workflow} />
+      		<Route exact path="/" component={Dashboard} />
+		</Switch>
+  	</React.Fragment>
 ));

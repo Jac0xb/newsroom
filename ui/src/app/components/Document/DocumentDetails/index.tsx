@@ -9,34 +9,34 @@ import Button from '@material-ui/core/Button';
 
 export namespace DocumentDetails {
     export interface Props {
-        classes?: any
+		classes?: any
+		match?: { params: any }
     }
 }
 class DocumentDetails extends React.Component<DocumentDetails.Props, any> {
 
-  constructor(props: DocumentDetails.Props) {
-      super(props)
-  }
+	constructor(props: DocumentDetails.Props) {
+		super(props)
+	}
 
-  render() {
-
+  	render() {
+		console.log(this.props)
     const { classes } = this.props;
-
+//Document Details for {match!.params ? match!.params.id : "" }
     return (
-      <main className={classes.layout}>
-        <Paper className={classes.paper}>
-          <Typography className={classes.heading} variant="h4">
-            Document Details
-          </Typography>
-          <Divider/>
-          <SectionItem heading={"Name"} description={"Description"} />
-          <SectionItem heading={"Created Date"} description={"4/11/2019 2:09 PM"} />
-          <SectionItem heading={"Content Preview"} description={"Happy ".repeat(255)} />
-          <div className={classes.buttonGroup}>
-            <Button variant="contained" className={classes.button}>Edit</Button>
-            <Button variant="contained" className={classes.button}>Edit</Button>
-          </div>
-        </Paper>
+      	<main className={classes.layout}>
+			<Paper className={classes.paper}>
+				<Typography className={classes.heading} variant="h4">
+				</Typography>
+				<Divider/>
+				<SectionItem heading={"Name"} description={"Description"} />
+				<SectionItem heading={"Created Date"} description={"4/11/2019 2:09 PM"} />
+				<SectionItem heading={"Content Preview"} description={"Happy ".repeat(255)} />
+				<div className={classes.buttonGroup}>
+					<Button variant="contained" className={classes.button}>View Content</Button>
+					<Button variant="contained" className={classes.button}>Edit</Button>
+				</div>
+			</Paper>
       </main>
     );
   }

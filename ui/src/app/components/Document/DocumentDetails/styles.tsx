@@ -31,10 +31,13 @@ export function styles(theme: Theme)  {
           },
           buttonGroup: {
             display: "flex",
-            justifyContent: "flex-end"
+            justifyContent: "flex-end",
           },
           button: {
-            marginTop: theme.spacing.unit * 2
+            marginTop: theme.spacing.unit * 2,
+            '&:not(:last-child)': {
+              marginRight: 20
+            }
           },
 
 

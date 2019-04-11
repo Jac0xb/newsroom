@@ -54,6 +54,7 @@ module.exports = {
 	output: {
 		path: outPath,
 		filename: isProduction ? '[contenthash].js' : '[hash].js',
+		publicPath:"/",
 		chunkFilename: isProduction ? '[name].[contenthash].js' : '[name].[hash].js'
 	},
 	target: 'web',
