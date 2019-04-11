@@ -1,8 +1,8 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Document } from "./Document";
 import { Stage } from "./Stage";
 
-@Entity()
+@Entity("workflow")
 export class Workflow {
     // Primary key.
     @PrimaryGeneratedColumn()
@@ -29,24 +29,13 @@ export class Workflow {
     )
     public creator: string; // TODO: Should relate to an Account ID later.
 
-    // The timestamp of when this Workflow was created.
-    @Column(
-        {
-            default: () => "CURRENT_TIMESTAMP",
-            type: "datetime",
-        },
-    )
-    public created: string;
+    // The Date of when this workflow was created.
+    @CreateDateColumn()
+    public created: Date;
 
-    // The timestamp of when this Workflow was last edited.
-    @Column(
-        {
-            default: () => "CURRENT_TIMESTAMP",
-            onUpdate: "CURRENT_TIMESTAMP",
-            type: "datetime",
-        },
-    )
-    public lastUpdated: string;
+    // The Date of when this workflow was last edited.
+    @UpdateDateColumn()
+    public lastUpdated: Date;
 
     // Each workflow can have many associated documents.
     @OneToMany(

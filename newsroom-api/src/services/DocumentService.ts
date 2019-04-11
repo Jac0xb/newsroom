@@ -21,12 +21,28 @@ export class DocumentService {
             throw new Errors.BadRequestError("Document name was not a string.");
         }
 
+        if (!req.body.creator) {
+            throw new Errors.BadRequestError("Document creator not present.");
+        }
+
+        if (!(typeof req.body.creator === "string")) {
+            throw new Errors.BadRequestError("Document creator was not a string.");
+        }
+
         if (!req.body.workflow) {
             throw new Errors.BadRequestError("Document workflow not present.");
         }
 
         if (!(typeof req.body.workflow === "number")) {
             throw new Errors.BadRequestError("Document workflow was not a number.");
+        }
+
+        if (!req.body.stage) {
+            throw new Errors.BadRequestError("Document stage not present.");
+        }
+
+        if (!(typeof req.body.stage === "number")) {
+            throw new Errors.BadRequestError("Document stage was not a number.");
         }
     }
 
@@ -42,7 +58,34 @@ export class DocumentService {
         if (!(typeof req.body.id === "number")) {
             throw new Errors.BadRequestError("Document ID was not a number.");
         }
+
+        if (req.body.name) {
+            if (!(typeof req.body.name === "string")) {
+                throw new Errors.BadRequestError("Document name was not a string.");
+            }
+        }
+
+        if (req.body.creator) {
+            if (!(typeof req.body.creator === "string")) {
+                throw new Errors.BadRequestError("Document creator was not a string.");
+            }
+        }
+
+        if (req.body.workflow) {
+            if (!(typeof req.body.workflow === "number")) {
+                throw new Errors.BadRequestError("Document workflow was not a number.");
+            }
+        }
+
+        if (req.body.stage) {
+            if (!(typeof req.body.stage === "number")) {
+                throw new Errors.BadRequestError("Document stage was not a number.");
+            }
+        }
     }
+
+    /* Used to interact with any given document in the database.
+     */
     public documentRepository = getManager().getRepository(Document);
 
     /* Get all documents that exist in the 'document' table under the
@@ -56,7 +99,7 @@ export class DocumentService {
     /* Get a specific document from 'document' table based on passed
      * document id.
      *
-     * Fails if a document with the specified id is not found.
+     * Returns a 404 if the document is not found.
      */
     @Path("/:id")
     @GET
@@ -66,16 +109,21 @@ export class DocumentService {
         } catch (EntityNotFoundError) {
             // TODO: Change to arrow function and update tslint.json config.
             return new Promise<Document>(function(resolve, reject) {
-                reject(new EntityNotFoundError("Unable to find document with ${id}"));
+                reject({ status: 404 });
+                // reject(new EntityNotFoundError("Unable to find document with ${id}"));
             });
         }
-
     }
 
     /* Create a new entry in the 'document' table with the specified
      * information.
+     *
+     * Returns a 404 if the parameters to create the document were not
+     * sufficient.
+     *      - Wrong types.
      */
     @POST
+    // TODO: Make PreProcessor return a 404?
     @PreProcessor(DocumentService.createDocumentValidator)
     // TODO: Figure out how to allow Swagger to recognize these arguments.
     public async createDocument(document: Document): Promise<any> {
@@ -85,20 +133,25 @@ export class DocumentService {
 
     /* Update an entry in the 'document' table with the specified
      * information.
+     *
+     * Returns a 404 if the parameters to update the document were
+     * not sufficient.
+     *      - Missing ID.
      */
     @PUT
     @PreProcessor(DocumentService.updateDocumentValidator)
     // TODO: Figure out how to allow Swagger to recognize these arguments.
     public async updateDocument(document: Document): Promise<any> {
         // TODO: Is there a better way to do this?
-        let currDocument = null;
+        let currDocument: Document = null;
 
         try {
             currDocument = await this.documentRepository.findOneOrFail(document.id);
         } catch (EntityNotFoundError) {
             // TODO: Change to arrow function and update tslint.json config.
             return new Promise<Document>(function(resolve, reject) {
-                reject(new EntityNotFoundError("Unable to find document with ${id}"));
+                reject({ status: 404 });
+                // reject(new EntityNotFoundError("Unable to find document with ${id}"));
             });
         }
 
@@ -107,12 +160,23 @@ export class DocumentService {
             currDocument.name = document.name;
         }
 
+        // Update the creator of the document.
+        if (document.creator) {
+            currDocument.creator = document.creator;
+        }
+
         // Update current stored workflow if given one.
+        // TODO: Does this update the workflows list of documents too?
         if (document.workflow) {
             currDocument.workflow = document.workflow;
         }
 
+        // Update the current stage that the document is in.
+        if (document.stage) {
+            currDocument.stage = document.stage;
+        }
+
         // TODO: Catch more exceptions here.
-        await this.documentRepository.save(document);
+        await this.documentRepository.save(currDocument);
     }
 }
