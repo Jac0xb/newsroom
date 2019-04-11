@@ -8,10 +8,9 @@
   "scripts": {
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc",
-    "prestart": "yarn run build",
-    "start": "node .",
+    "build:watch": "nodemon -e ts --watch src --exec 'yarn build'",
     "test": "true",
-    "typeorm": "typeorm --config ../ormconfig.json"
+    "typeorm": "yarn build && typeorm --config ../ormconfig.json"
   },
   "repository": {
     "type": "git",
@@ -29,6 +28,7 @@
   },
   "devDependencies": {
     "@types/node": "^11.13.0",
+    "nodemon": "^1.18.11",
     "sqlite3": "^4.0.6",
     "ts-node": "^8.0.3",
     "tslint": "^5.15.0",

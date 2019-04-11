@@ -2,216 +2,197 @@ import * as express from "express";
 import { NRStage, NRWorkflow } from "orm";
 import { getManager } from "typeorm";
 import { Errors, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
+import { Tags } from "typescript-rest-swagger";
+import { InternalServerError, NotFoundError } from "typescript-rest/dist/server/model/errors";
 
-/* Served in /workflows.
+/**
+ * Provides API services for Workflows, and the stages associated with a workflow.
  */
 @Path("/workflows")
+@Tags("Workflows")
 export class WorkflowService {
 
-    /* When creating a new workflow, we need to validate that it has all the
-    * required information to define a workflow. The workflow id should always
-    * be blank because it is an auto-generated column.
-    */
+    /**
+     * When creating a new workflow, we need to validate that it has all the
+     * required information to define a workflow. The workflow id should always
+     * be blank because it is an auto-generated column.
+     */
     private static createWorkflowValidator(req: express.Request): void {
-        if (!req.body.name) {
+        const workflow = req.body as NRWorkflow;
+
+        if (!workflow.name) {
             throw new Errors.BadRequestError("Workflow name not present.");
         }
 
-        if (!(typeof req.body.name === "string")) {
+        if (!(typeof workflow.name === "string")) {
             throw new Errors.BadRequestError("Workflow name was not a string.");
         }
 
-        if (!req.body.creator) {
+        if (!workflow.creator) {
             throw new Errors.BadRequestError("Workflow creator not present.");
         }
 
-        if (!(typeof req.body.creator === "string")) {
+        if (!(typeof workflow.creator === "string")) {
             throw new Errors.BadRequestError("Workflow creator was not a string.");
         }
     }
 
-    /* When updating a workflow, we need to validate that we at least have an id
-     * to identify it. Other fields may be empty because only some need to be
+    /**
+     * When updating a workflow, fields may be empty because only some need to be
      * updated.
      */
     private static updateWorkflowValidator(req: express.Request): void {
-        if (!req.body.id) {
-            throw new Errors.BadRequestError("Workflow ID not present.");
-        }
+        const workflow = req.body as NRWorkflow;
 
-        if (!(typeof req.body.id === "number")) {
-            throw new Errors.BadRequestError("Workflow ID was not a number.");
-        }
-
-        if (req.body.name) {
-            if (!(typeof req.body.name === "string")) {
+        if (workflow.name) {
+            if (!(typeof workflow.name === "string")) {
                 throw new Errors.BadRequestError("Workflow name was not a string.");
             }
         }
 
-        if (req.body.creator) {
-            if (!(typeof req.body.creator === "string")) {
+        if (workflow.creator) {
+            if (!(typeof workflow.creator === "string")) {
                 throw new Errors.BadRequestError("Workflow creator was not a string.");
             }
         }
     }
 
-    /* When adding a stage to a workflow, we need to validate that we have
+    /**
+     * When adding a stage to a workflow, we need to validate that we have
      * the necessary information within the database to create it.
      */
     private static addStageValidator(req: express.Request): void {
-        if (!req.body.name) {
+        const stage = req.body as NRStage;
+
+        if (!stage.name) {
             throw new Errors.BadRequestError("Stage name not present.");
         }
 
-        if (!(typeof req.body.name === "string")) {
+        if (!(typeof stage.name === "string")) {
             throw new Errors.BadRequestError("Stage name was not a string.");
         }
 
-        if (!req.body.creator) {
+        if (!stage.creator) {
             throw new Errors.BadRequestError("Stage creator not present.");
         }
 
-        if (!(typeof req.body.creator === "string")) {
+        if (!(typeof stage.creator === "string")) {
             throw new Errors.BadRequestError("Stage creator was not a string.");
         }
     }
 
-    /* When updating a stage, we need to validate that we at least have an id
+    /**
+     * When updating a stage, we need to validate that we at least have an id
      * to identify it. Other fields may be empty because only some need to be
      * updated.
      */
     private static updateStageValidator(req: express.Request): void {
-        if (!req.body.id) {
-            throw new Errors.BadRequestError("Stage ID not present.");
-        }
+        const stage = req.body as NRStage;
 
-        if (!(typeof req.body.id === "number")) {
-            throw new Errors.BadRequestError("Stage ID was not a number.");
-        }
-
-        if (req.body.name) {
-            if (!(typeof req.body.name === "string")) {
+        if (stage.name) {
+            if (!(typeof stage.name === "string")) {
                 throw new Errors.BadRequestError("Stage name was not a string.");
             }
         }
 
-        if (req.body.creator) {
-            if (!(typeof req.body.creator === "string")) {
+        if (stage.creator) {
+            if (!(typeof stage.creator === "string")) {
                 throw new Errors.BadRequestError("Stage creator was not a string.");
             }
         }
     }
 
-    /* Used to interact with any given workflow in the database.
+    /**
+     * Used to interact with any given workflow in the database.
      */
     public workflowRepository = getManager().getRepository(NRWorkflow);
 
-    /* Get all workflows that exist in the 'workflow' table under the
+    public stageRepository = getManager().getRepository(NRStage);
+
+    /**
+     * Get all workflows that exist in the 'workflow' table under the
      * configured connection.
      */
     @GET
-    public getWorkflows(): Promise<any> {
+    public getWorkflows(): Promise<NRWorkflow[]> {
         return this.workflowRepository.find();
-    }
-
-    /* Get a specific workflow from 'workflow' table based on passed
-     * workflow id.
-     *
-     * Returns a 404 if the workflow is not found.
-     */
-    @Path("/:id")
-    @GET
-    public getWorkflow(@PathParam("id") id: number): Promise<any> {
-        try {
-            return this.workflowRepository.findOneOrFail(id);
-        } catch (EntityNotFoundError) {
-            // TODO: Change to arrow function and update tslint.json config.
-            return new Promise<NRWorkflow>(function(resolve, reject) {
-                reject({ status: 404 });
-                // reject(new EntityNotFoundError("Unable to find workflow with ${id}"));
-            });
-        }
     }
 
     /* Create a new entry in the 'workflow' table with the specified
      * information.
      *
-     * Returns a 404 if the parameters to create the document were not
+     * Returns a 400 if the parameters to create the workflow were not
      * sufficient.
      *      - Wrong types.
      */
     @POST
     @PreProcessor(WorkflowService.createWorkflowValidator)
-    // TODO: Figure out how to allow Swagger to recognize these arguments.
-    public async createWorkflow(workflow: NRWorkflow): Promise<any> {
+    public async createWorkflow(workflow: NRWorkflow): Promise<NRWorkflow> {
         // TODO: Catch more exceptions here.
-        await this.workflowRepository.save(workflow);
+        return await this.workflowRepository.save(workflow);
+
+    }
+
+    /**
+     * Get a specific workflow from 'workflow' table based on passed
+     * workflow id.
+     *
+     * Returns a 404 if the workflow is not found.
+     */
+    @GET
+    @Path("/:id")
+    public async getWorkflow(@PathParam("id") id: number): Promise<NRWorkflow> {
+        try {
+            return await this.workflowRepository.findOneOrFail(id);
+        } catch (err) {
+            console.error("Error getting workflow:", err);
+            throw new NotFoundError("A workflow with the given id was not found.");
+        }
     }
 
     /* Add a stage to the end of this workflow.
      */
-    @Path("/:id")
+    @Path("/:id/stages")
     @POST
     @PreProcessor(WorkflowService.addStageValidator)
     public async addStage(@PathParam("id") workflowId: number, stage: NRStage): Promise<any> {
-        let currWorkflow: NRWorkflow = null;
+        let currWorkflow: NRWorkflow;
 
         try {
             currWorkflow = await this.workflowRepository.findOneOrFail(workflowId);
-        } catch (EntityNotFoundError) {
-            // TODO: Change to arrow function and update tslint.json config.
-            return new Promise<NRWorkflow>(function(resolve, reject) {
-                reject({ status: 404 });
-                // reject(new EntityNotFoundError("Unable to find workflow with ${id}"));
-            });
+        } catch (err) {
+            console.error("Error getting workflow:", err);
+            throw new NotFoundError("A workflow with the given id was not found.");
+        }
+        if (currWorkflow.stages == null) {
+            stage.sequenceId = 1;
+            currWorkflow.stages = [stage];
+        } else {
+            stage.sequenceId = currWorkflow.stages.push(stage);
         }
 
-        console.log(currWorkflow.stages);
-
-        // // Empty linked list.
-        // if (currWorkflow.stages == null) {
-        //     stage.next = null;
-        //     stage.previous = null;
-        //     stage.workflow = currWorkflow;
-
-        //     await this.workflowRepository.save(stage);
-        // } else {
-        //     // Index into the stages array for this workflow.
-        //     let currIdx: number = 0;
-
-        //     // Walk to the end.
-        //     while (currWorkflow.stages[currIdx] != null) {
-        //         currIdx++;
-        //     }
-
-        //     let prevStage: Stage = currWorkflow.stages[currIdx];
-
-        //     // Append to the end of the linked list.
+        // TODO catch errors
+        return await this.workflowRepository.save(currWorkflow);
     }
 
     /* Update an entry in the 'workflow' table with the specified
      * information.
      *
-     * Returns a 404 if the parameters to update the document were
+     * Returns a 400 if the parameters to update the document were
      * not sufficient.
      *      - Missing ID.
      */
     @PUT
+    @Path("/:id")
     @PreProcessor(WorkflowService.updateWorkflowValidator)
-    // TODO: Figure out how to allow Swagger to recognize these arguments.
-    public async updateWorkflow(workflow: NRWorkflow): Promise<any> {
-        // TODO: Is there a better way to do this?
-        let currWorkflow: NRWorkflow = null;
+    public async updateWorkflow(workflow: NRWorkflow): Promise<NRWorkflow> {
+        let currWorkflow: NRWorkflow;
 
         try {
             currWorkflow = await this.workflowRepository.findOneOrFail(workflow.id);
-        } catch (EntityNotFoundError) {
-            // TODO: Change to arrow function and update tslint.json config.
-            return new Promise<NRWorkflow>(function(resolve, reject) {
-                reject({ status: 404 });
-                // reject(new EntityNotFoundError("Unable to find workflow with ${id}"));
-            });
+        } catch (err) {
+            console.error("Error getting workflow:", err);
+            throw new NotFoundError("A workflow with the given id was not found");
         }
 
         // Update current stored name if given one.
@@ -220,6 +201,6 @@ export class WorkflowService {
         }
 
         // TODO: Catch more exceptions here.
-        await this.workflowRepository.save(currWorkflow);
+        return await this.workflowRepository.save(currWorkflow);
     }
 }

@@ -2,6 +2,8 @@
     "swagger": {
         "outputDirectory": "./dist",
         "entryFile": "./src/index.ts",
-        "basePath": "/documents"
+        "host": "localhost:8000",
+        "consumes": "application/json",
+        "produces": "application/json"
     }
 }

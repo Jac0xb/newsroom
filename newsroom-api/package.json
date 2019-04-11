@@ -4,10 +4,11 @@
   "description": "Newsroom Document API",
   "main": "dist/index.js",
   "scripts": {
-    "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
+    "prebuild": "tslint -c tslint.json -p tsconfig.json --fix && swaggerGen -c swagger.config.json",
     "build": "tsc",
-    "prestart": "yarn run build",
+    "prestart": "yarn build",
     "start": "node .",
+    "start:watch": "nodemon -e ts --watch src --exec 'yarn start'",
     "test": "ts-mocha -p tsconfig.json src/**/*.spec.ts"
   },
   "repository": {
@@ -34,6 +35,7 @@
     "@types/mocha": "^5.2.6",
     "@types/node": "^11.13.0",
     "mocha": "^6.1.1",
+    "nodemon": "^1.18.11",
     "sqlite3": "^4.0.6",
     "ts-mocha": "^6.0.0",
     "ts-node": "^8.0.3",
