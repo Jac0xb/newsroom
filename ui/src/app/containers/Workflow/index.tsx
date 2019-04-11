@@ -1,10 +1,9 @@
 import * as React from 'react';
-import * as style from './style.css';
 import { RouteComponentProps } from 'react-router';
 import PrimarySearchAppBar from 'app/components/Common/appbar';
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
 import Grid from '@material-ui/core/Grid';
+import WorkflowContents from 'app/components/Workflow/WorkflowContents';
+import CreateWorkflow from 'app/components/Workflow/CreateWorkflow';
 
 export namespace Workflow {
 	export interface Props extends RouteComponentProps<void> {
@@ -16,39 +15,29 @@ export class Workflow extends React.Component<Workflow.Props> {
 	static defaultProps: Partial<Workflow.Props> = {
 		flows: []
 	};
-	state = {
-		dialogCreateNewOpen: false,
-	  };
+
 	constructor(props: Workflow.Props, context?: any) {
 		super(props, context);
 	}
 
-	handleCreateNewOpen = (open: boolean) => () => {
-		this.setState({ dialogCreateNewOpen: open });
-	};
-
   	render() {
-		console.log("workflow");
-		const { dialogCreateNewOpen } = this.state;
 		return (
 			<React.Fragment>
 				<PrimarySearchAppBar/>
-				<Grid container spacing={24}>
-        			<Grid item sm={12}>
-						<Button variant="contained" onClick={this.handleCreateNewOpen(true)}>Create New</Button>
-						<Dialog
-							disableBackdropClick
-							disableEscapeKeyDown
-							open={dialogCreateNewOpen}
-							onClose={this.handleCreateNewOpen(false)}
-							></Dialog>
-					</Grid>
-					<Grid item sm={12}>
-					<div className={style.normal}>
-						Hello World!
-					</div>
+				<Grid item xs={3}>
+					<CreateWorkflow />
+				</Grid>
+
+				<Grid item xs={12}>
+					<Grid container justify="center" spacing={16}>
+						{[0, 1, 2].map(value => (
+						<Grid key={value} item>
+							<WorkflowContents />
+						</Grid>
+						))}
 					</Grid>
 				</Grid>
+				
 			</React.Fragment>
 		);
 	}
