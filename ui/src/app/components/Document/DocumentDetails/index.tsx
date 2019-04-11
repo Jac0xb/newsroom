@@ -30,11 +30,11 @@ class DocumentDetails extends React.Component<DocumentDetails.Props, any> {
           </Typography>
           <Divider/>
           <SectionItem heading={"Name"} description={"Description"} />
-          <SectionItem heading={"Name"} description={"Description"} />
+          <SectionItem heading={"Created Date"} description={"4/11/2019 2:09 PM"} />
+          <SectionItem heading={"Content Preview"} description={"Happy ".repeat(255)} />
           <div className={classes.buttonGroup}>
-            <Button variant="contained" className={classes.button}>
-              Edit
-            </Button>
+            <Button variant="contained" className={classes.button}>Edit</Button>
+            <Button variant="contained" className={classes.button}>Edit</Button>
           </div>
         </Paper>
       </main>
