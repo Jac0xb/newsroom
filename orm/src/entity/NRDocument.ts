@@ -1,9 +1,9 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { Stage } from "./Stage";
-import { Workflow } from "./Workflow";
+import { NRStage } from "./NRStage";
+import { NRWorkflow } from "./NRWorkflow";
 
 @Entity("document")
-export class Document {
+export class NRDocument {
     // Primary key.
     @PrimaryGeneratedColumn()
     public id: number;
@@ -34,15 +34,15 @@ export class Document {
 
     // Each document belongs to only one workflow.
     @ManyToOne(
-        (type) => Workflow,
+        (type) => NRWorkflow,
         (workflow) => workflow.documents,
     )
-    public workflow: Workflow;
+    public workflow: NRWorkflow;
 
     // Each document belongs to only one stage.
     @ManyToOne(
-        (type) => Stage,
+        (type) => NRStage,
         (stage) => stage.documents,
     )
-    public stage: Stage;
+    public stage: NRStage;
 }

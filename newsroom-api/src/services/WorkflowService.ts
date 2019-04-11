@@ -1,5 +1,5 @@
 import * as express from "express";
-import { Stage, Workflow } from "orm";
+import { NRStage, NRWorkflow } from "orm";
 import { getManager } from "typeorm";
 import { Errors, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
 
@@ -105,7 +105,7 @@ export class WorkflowService {
 
     /* Used to interact with any given workflow in the database.
      */
-    public workflowRepository = getManager().getRepository(Workflow);
+    public workflowRepository = getManager().getRepository(NRWorkflow);
 
     /* Get all workflows that exist in the 'workflow' table under the
      * configured connection.
@@ -127,7 +127,7 @@ export class WorkflowService {
             return this.workflowRepository.findOneOrFail(id);
         } catch (EntityNotFoundError) {
             // TODO: Change to arrow function and update tslint.json config.
-            return new Promise<Workflow>(function(resolve, reject) {
+            return new Promise<NRWorkflow>(function(resolve, reject) {
                 reject({ status: 404 });
                 // reject(new EntityNotFoundError("Unable to find workflow with ${id}"));
             });
@@ -144,7 +144,7 @@ export class WorkflowService {
     @POST
     @PreProcessor(WorkflowService.createWorkflowValidator)
     // TODO: Figure out how to allow Swagger to recognize these arguments.
-    public async createWorkflow(workflow: Workflow): Promise<any> {
+    public async createWorkflow(workflow: NRWorkflow): Promise<any> {
         // TODO: Catch more exceptions here.
         await this.workflowRepository.save(workflow);
     }
@@ -154,14 +154,14 @@ export class WorkflowService {
     @Path("/:id")
     @POST
     @PreProcessor(WorkflowService.addStageValidator)
-    public async addStage(@PathParam("id") workflowId: number, stage: Stage): Promise<any> {
-        let currWorkflow: Workflow = null;
+    public async addStage(@PathParam("id") workflowId: number, stage: NRStage): Promise<any> {
+        let currWorkflow: NRWorkflow = null;
 
         try {
             currWorkflow = await this.workflowRepository.findOneOrFail(workflowId);
         } catch (EntityNotFoundError) {
             // TODO: Change to arrow function and update tslint.json config.
-            return new Promise<Workflow>(function(resolve, reject) {
+            return new Promise<NRWorkflow>(function(resolve, reject) {
                 reject({ status: 404 });
                 // reject(new EntityNotFoundError("Unable to find workflow with ${id}"));
             });
@@ -200,15 +200,15 @@ export class WorkflowService {
     @PUT
     @PreProcessor(WorkflowService.updateWorkflowValidator)
     // TODO: Figure out how to allow Swagger to recognize these arguments.
-    public async updateWorkflow(workflow: Workflow): Promise<any> {
+    public async updateWorkflow(workflow: NRWorkflow): Promise<any> {
         // TODO: Is there a better way to do this?
-        let currWorkflow: Workflow = null;
+        let currWorkflow: NRWorkflow = null;
 
         try {
             currWorkflow = await this.workflowRepository.findOneOrFail(workflow.id);
         } catch (EntityNotFoundError) {
             // TODO: Change to arrow function and update tslint.json config.
-            return new Promise<Workflow>(function(resolve, reject) {
+            return new Promise<NRWorkflow>(function(resolve, reject) {
                 reject({ status: 404 });
                 // reject(new EntityNotFoundError("Unable to find workflow with ${id}"));
             });

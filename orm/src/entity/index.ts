@@ -1,5 +1,5 @@
 import "reflect-metadata";
 
-export { Document } from "./Document";
-export { Workflow } from "./Workflow";
-export { Stage } from "./Stage";
+export { NRDocument } from "./NRDocument";
+export { NRWorkflow } from "./NRWorkflow";
+export { NRStage } from "./NRStage";

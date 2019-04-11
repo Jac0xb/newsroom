@@ -1,5 +1,5 @@
 import * as express from "express";
-import { Document } from "orm";
+import { NRDocument } from "orm";
 import { getManager } from "typeorm";
 import { Errors, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
 
@@ -86,7 +86,7 @@ export class DocumentService {
 
     /* Used to interact with any given document in the database.
      */
-    public documentRepository = getManager().getRepository(Document);
+    public documentRepository = getManager().getRepository(NRDocument);
 
     /* Get all documents that exist in the 'document' table under the
      * configured connection.
@@ -108,7 +108,7 @@ export class DocumentService {
             return this.documentRepository.findOneOrFail(id);
         } catch (EntityNotFoundError) {
             // TODO: Change to arrow function and update tslint.json config.
-            return new Promise<Document>(function(resolve, reject) {
+            return new Promise<NRDocument>(function(resolve, reject) {
                 reject({ status: 404 });
                 // reject(new EntityNotFoundError("Unable to find document with ${id}"));
             });
@@ -126,7 +126,7 @@ export class DocumentService {
     // TODO: Make PreProcessor return a 404?
     @PreProcessor(DocumentService.createDocumentValidator)
     // TODO: Figure out how to allow Swagger to recognize these arguments.
-    public async createDocument(document: Document): Promise<any> {
+    public async createDocument(document: NRDocument): Promise<any> {
         // TODO: Catch more exceptions here.
         await this.documentRepository.save(document);
     }
@@ -141,15 +141,15 @@ export class DocumentService {
     @PUT
     @PreProcessor(DocumentService.updateDocumentValidator)
     // TODO: Figure out how to allow Swagger to recognize these arguments.
-    public async updateDocument(document: Document): Promise<any> {
+    public async updateDocument(document: NRDocument): Promise<any> {
         // TODO: Is there a better way to do this?
-        let currDocument: Document = null;
+        let currDocument: NRDocument = null;
 
         try {
             currDocument = await this.documentRepository.findOneOrFail(document.id);
         } catch (EntityNotFoundError) {
             // TODO: Change to arrow function and update tslint.json config.
-            return new Promise<Document>(function(resolve, reject) {
+            return new Promise<NRDocument>(function(resolve, reject) {
                 reject({ status: 404 });
                 // reject(new EntityNotFoundError("Unable to find document with ${id}"));
             });
