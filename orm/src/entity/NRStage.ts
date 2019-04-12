@@ -11,6 +11,7 @@ export class NRStage {
     @PrimaryGeneratedColumn()
     public id: number;
 
+    // Stages position in workflow.
     @Column()
     public sequenceId: number;
 
@@ -37,22 +38,6 @@ export class NRStage {
     // The Date of when this stage was last edited.
     @UpdateDateColumn()
     public lastUpdated: Date;
-
-    // // The ID of the stage that comes before this one.
-    // // NULL if this stage is the starting one.
-    // @Column({
-    //     nullable: true,
-    //     type: "int",
-    // })
-    // public previous: number;
-
-    // // The ID of the stage that comes after this one.
-    // // NULL if this stage is the ending one.
-    // @Column({
-    //     nullable: true,
-    //     type: "int",
-    // })
-    // public next: number;
 
     // Each stage belongs to only one workflow.
     @ManyToOne(

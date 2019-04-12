@@ -1,10 +1,9 @@
 import * as express from "express";
-import { NRDocument } from "orm";
+import { NRDocument, NRWorkflow } from "orm";
 import { getManager } from "typeorm";
 import { Errors, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-import { BadRequestError, InternalServerError, NotFoundError } from "typescript-rest/dist/server/model/errors";
-import { WorkflowService } from "./WorkflowService";
+import { NotFoundError } from "typescript-rest/dist/server/model/errors";
 
 /**
  * Provides API services for documents.
@@ -85,13 +84,14 @@ export class DocumentService {
         }
     }
 
-    /* Used to interact with any given document in the database.
+    /**
+     * Used to interact with any given document/workflow in the database.
      */
     private documentRepository = getManager().getRepository(NRDocument);
+    private workflowRepository = getManager().getRepository(NRWorkflow);
 
-    private workflowService = new WorkflowService();
-
-    /* Get all documents that exist in the 'document' table under the
+    /**
+     * Get all documents that exist in the 'document' table under the
      * configured connection.
      */
     @GET
@@ -99,26 +99,39 @@ export class DocumentService {
         return this.documentRepository.find();
     }
 
-    /* Create a new entry in the 'document' table with the specified
+    /**
+     * Create a new entry in the 'document' table with the specified
      * information.
      *
-     * Returns a 400 if the parameters to create the document were not
-     * sufficient.
-     *      - Wrong types.
+     * Returns a 400 if:
+     *      - Document properties are the wrong types.
+     *      - Document is missing properties.
+     *      - Document workflow doesn't exist.
      */
     @POST
     @PreProcessor(DocumentService.createDocumentValidator)
     public async createDocument(document: NRDocument): Promise<NRDocument> {
+        let assocWorkflow: NRWorkflow = null;
+
+        // Ensure that the workflow exists.
+        try {
+            assocWorkflow = await this.workflowRepository.findOneOrFail(document.workflow);
+        } catch (err) {
+            console.error("Error getting document associated workflow for document:", err);
+            throw new NotFoundError("A workflow with the given ID was not found.");
+        }
+
         // TODO: Catch more exceptions here.
-        // TODO: Verify workflow exists
         return await this.documentRepository.save(document);
     }
 
-    /* Get a specific document from 'document' table based on passed
-    * document id.
-    *
-    * Returns a 404 if the document is not found.
-    */
+    /**
+     * Get a specific document from 'document' table based on passed
+     * document id.
+     *
+     * Returns a 404 if:
+     *      - Document not found.
+     */
     @Path("/:id")
     @GET
     public async getDocument(@PathParam("id") id: number): Promise<NRDocument> {

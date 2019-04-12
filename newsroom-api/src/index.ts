@@ -13,14 +13,14 @@ const port = process.env.SERVICE_PORT;
 
 const app = express();
 
-// Build typescript-rest services
+// Build typescript-rest services.
 Server.buildServices(app, DocumentService, WorkflowService);
 
-// Add error handler to return JSON error
+// Add error handler to return JSON error.
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (err instanceof HttpError) {
         if (res.headersSent) {
-            // allows default error handler to close connection if headers already sent
+            // Allows default error handler to close connection if headers already sent.
             return next(err);
         }
 
@@ -34,8 +34,8 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 createConnection().then(async (connection) => {
     app.listen(port, () => {
-        console.info(`server started at http://localhost:${port}`);
+        console.info(`Server started at http://localhost:${port}.`);
     });
 }).catch((error) => {
-    console.error("Error creating DB connection", error);
+    console.error("Error creating DB connection.", error);
 });
