@@ -172,7 +172,7 @@ export class WorkflowService {
     @Path("/:id")
     @PreProcessor(WorkflowService.updateWorkflowValidator)
     public async updateWorkflow(@PathParam("id") wid: number,
-        workflow: NRWorkflow): Promise<NRWorkflow> {
+                                workflow: NRWorkflow): Promise<NRWorkflow> {
 
         let currWorkflow: NRWorkflow;
 
@@ -205,7 +205,7 @@ export class WorkflowService {
      */
     @DELETE
     @Path("/:id")
-    public async deleteWorkflow(@PathParam("id") wid: number): Promise<any> {
+    public async deleteWorkflow(@PathParam("id") wid: number) {
         let currWorkflow: NRWorkflow;
 
         try {
@@ -243,8 +243,7 @@ export class WorkflowService {
     @POST
     @Path("/:id/stages")
     @PreProcessor(WorkflowService.addStageValidator)
-    public async appendStage(stage: NRStage,
-        @PathParam("id") workflowId: number): Promise<any> {
+    public async appendStage(stage: NRStage, @PathParam("id") workflowId: number): Promise<NRStage> {
 
         let currWorkflow: NRWorkflow;
 
@@ -283,7 +282,7 @@ export class WorkflowService {
      */
     @GET
     @Path("/:id/stages")
-    public async getStages(@PathParam("id") workflowId: number): Promise<any> {
+    public async getStages(@PathParam("id") workflowId: number): Promise<NRStage[]> {
         let currWorkflow: NRWorkflow;
 
         try {
@@ -310,8 +309,7 @@ export class WorkflowService {
      */
     @GET
     @Path("/:id/stages/:sid")
-    public async getStage(@PathParam("id") wid: number,
-        @PathParam("sid") sid: number): Promise<any> {
+    public async getStage(@PathParam("id") wid: number, @PathParam("sid") sid: number): Promise<NRStage> {
 
         let currWorkflow: NRWorkflow;
 
@@ -349,8 +347,8 @@ export class WorkflowService {
     @Path("/:id/stages/:pos")
     @PreProcessor(WorkflowService.addStageValidator)
     public async addStageAt(stage: NRStage,
-        @PathParam("id") workflowId: number,
-        @PathParam("pos") position: number): Promise<any> {
+                            @PathParam("id") workflowId: number,
+                            @PathParam("pos") position: number): Promise<NRStage> {
 
         // Invalid position.
         if (position <= 0) {
@@ -421,8 +419,8 @@ export class WorkflowService {
     @DELETE
     @Path("/:id/stages/:pos")
     public async deleteStageAt(stage: NRStage,
-        @PathParam("id") workflowId: number,
-        @PathParam("pos") position: number): Promise<any> {
+                               @PathParam("id") workflowId: number,
+                               @PathParam("pos") position: number): Promise<NRStage> {
 
         // Invalid position.
         if (position <= 0) {
@@ -484,7 +482,7 @@ export class WorkflowService {
     @Path("/:id/stages/:sid")
     @PreProcessor(WorkflowService.updateStageValidator)
     public async updateStage(@PathParam("sid") sid: number,
-        stage: NRStage): Promise<NRStage> {
+                             stage: NRStage): Promise<NRStage> {
 
         let currStage: NRStage;
 
