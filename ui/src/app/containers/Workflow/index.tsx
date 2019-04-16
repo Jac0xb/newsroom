@@ -13,7 +13,7 @@ export namespace Workflow {
 
 export class Workflow extends React.Component<Workflow.Props> {
 	static defaultProps: Partial<Workflow.Props> = {
-		flows: []
+		flows: [],
 	};
 
 	constructor(props: Workflow.Props, context?: any) {
@@ -26,7 +26,7 @@ export class Workflow extends React.Component<Workflow.Props> {
 				<PrimarySearchAppBar/>
 				<Grid item xs={3}>
 					<CreateWorkflow>
-						<WorkflowContents />
+						<WorkflowContents name={"Workflow"}/>
 					</CreateWorkflow>
 
 				</Grid>

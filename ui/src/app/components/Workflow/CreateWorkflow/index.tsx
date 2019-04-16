@@ -25,7 +25,7 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
   }
   state: CreateWorkflow.State = {
     dialogCreateNewOpen: false,
-    workFlowName: '',
+    workFlowName: "test",
     workFlowContents: [],
   };
 
@@ -39,8 +39,7 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
 
   handleCreateNew = () => () => {
 
-    this.state.workFlowContents.push(<WorkflowContents/>)
-    // <WorkflowContents name="">
+    this.state.workFlowContents.push(<WorkflowContents name={this.state.workFlowName}/>)
 
     this.setState({ dialogCreateNewOpen: false} );
   };
@@ -62,8 +61,8 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
             </div>
             <Grid item xs={12}>
                 <Grid container justify="center" spacing={16}>
-                    {workFlowContents.map(value => (
-                    <Grid item>
+                    {workFlowContents.map(index => (
+                    <Grid key={index} item>
                         {children}
                     </Grid>
                     ))}
