@@ -24,6 +24,12 @@ export class NRDocument {
     })
     public creator: string; // TODO: Should relate to an Account ID later.
 
+    // The actual plain text content of the article.
+    @Column({
+        nullable: true,
+    })
+    public content: string;
+
     // The Date of when this document was created.
     @CreateDateColumn()
     public created: Date;
