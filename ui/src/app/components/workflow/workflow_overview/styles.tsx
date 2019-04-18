@@ -24,10 +24,16 @@ export function styles(theme: Theme)  {
                 width: 'auto'
             },
             textField: {
-                margin: 'normal',
+                margin: theme.spacing.unit,
                 marginLeft: theme.spacing.unit,
                 marginRight: theme.spacing.unit,
                 width: 200,
+            },
+            container:
+            {
+                margin: theme.spacing.unit,
+                marginLeft: theme.spacing.unit,
+                marginRight: theme.spacing.unit,
             },
 
 
