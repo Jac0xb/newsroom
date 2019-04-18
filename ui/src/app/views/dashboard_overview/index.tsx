@@ -1,8 +1,8 @@
 import * as React from 'react';
 import PrimarySearchAppBar from 'app/components/common/application_bar';
-import { Button, Divider, Typography, Paper, Grid } from '@material-ui/core';
+import { Grid } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import { Link } from '@material-ui/icons';
+import DocumentTile from 'app/components/dashboard/DocumentTile';
 import { styles } from './styles'
 
 export namespace Dashboard {
@@ -25,35 +25,7 @@ class Dashboard extends React.Component<Dashboard.Props> {
 		const documents = ["Document", "Document", "Document", "Document", "Document", "Document", "Document"]
 		
 		const docList = documents.map((name, i) =>
-			<Grid item md={3}>
-				<Paper className={classes.documentItem} >
-					<Typography variant={"title"}> 
-						{`${name} ${i+1}`}
-					</Typography>
-					<Divider/>
-					<Typography className={classes.detailLine} variant={"subtitle1"}> 
-						<span style={{fontWeight: "bold"}}>Author</span>:
-						<a className={classes.detailLine} href="/users/jacobbrown">
-							&nbsp;Jacob Brown
-							<Link className={classes.linkIcon}/>
-						</a>
-					</Typography>
-					<Typography className={classes.detailLine} variant={"subtitle1"}> 
-					<span style={{fontWeight: "bold"}}>Workflow</span>:
-						<a className={classes.detailLine} href="/workflows/abc123">
-							&nbsp;Opinion Desk Submission 
-							<Link className={classes.linkIcon}/>
-						</a>
-					</Typography>
-					<Typography className={classes.detailLine} variant={"subtitle1"}> 
-					<span style={{fontWeight: "bold"}}>Due Date</span>:
-						4/20/2019
-					</Typography>
-					<div className={classes.buttonGroup}>
-						<Button variant="contained" className={classes.button}>Edit</Button>
-					</div>
-				</Paper>
-			</Grid>
+			<DocumentTile name={name} author="Jacob Brown" workflow="Opinion Desk" duedate="4/20/2019"/>
 		);
 
 		return (
