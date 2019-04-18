@@ -12,11 +12,29 @@ export function styles(theme: Theme)  {
 			},
 			"& hr": {
 				marginBottom: "16px"
-			}
+			},
+			"& a": {
+				color: "#263238",
+				fontStyle: "italic",
+				textDecoration: "none",
+			},
+		},
+		detailLine: {
+			display: "flex",
+			alignItems: "center"
+		},
+		linkIcon: {
+			width: "20px",
+			height: "20px",
+			marginLeft: "5px"
 		},
 		outerGrid: {
 			padding: "24px"
-		}
-
+		},
+		buttonGroup: {
+			marginTop: "8px",
+            display: "flex",
+			justifyContent: "flex-end"
+        }
     } as StyleRules);
 }

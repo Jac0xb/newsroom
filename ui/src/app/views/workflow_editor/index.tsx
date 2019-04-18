@@ -21,7 +21,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, any> {
   render() {
 
     const { classes } = this.props;
-    const { stages } = this.state;
+    //const { stages } = this.state;
 
     return (
       <React.Fragment>
