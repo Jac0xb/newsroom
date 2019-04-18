@@ -6,6 +6,7 @@ import { Route, Switch } from 'react-router';
 // Newsroom the application.
 import Dashboard from './views/dashboard_overview';
 import  DocumentEditor from './views/document_editor';
+import  WorkflowEditor from './views/workflow_editor'
 import { Workflow } from './views/workflow_overview';
 
 // Style-Normalization (https://material-ui.com/style/css-baseline/)
@@ -20,6 +21,7 @@ export const App = hot(module)(() => (
     	<Switch>
 			<Route path="/document/:id/editor" component={DocumentEditor} />
 			<Route exact path="/document" component={Dashboard} />
+			<Route path="/workflow/id:/edit" component={WorkflowEditor} />
       		<Route path="/workflow" component={Workflow} />
       		<Route exact path="/" component={Dashboard} />
 		</Switch>

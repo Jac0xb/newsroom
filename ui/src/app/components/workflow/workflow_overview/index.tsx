@@ -4,7 +4,7 @@ import { styles } from './styles'
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import { DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Grid } from '@material-ui/core';
-import WorkflowContents from 'app/components/workflow_overview/WorkflowContents';
+import WorkflowContents from 'app/components/workflow/workflow_object';
 
 export namespace CreateWorkflow {
     export interface Props {
@@ -14,6 +14,7 @@ export namespace CreateWorkflow {
         dialogCreateNewOpen: boolean
         workFlowName: string
         workFlowContents: Array<any>
+        workFlowContentsCount: number
       }
 }
 
@@ -27,6 +28,7 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
     dialogCreateNewOpen: false,
     workFlowName: "test",
     workFlowContents: [],
+    workFlowContentsCount: 0,
   };
 
   handleCreateNewOpen = (open: boolean) => () => {
@@ -38,32 +40,33 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
   };
 
   handleCreateNew = () => () => {
-
-    this.state.workFlowContents.push(<WorkflowContents name={this.state.workFlowName}/>)
-
+    this.state.workFlowContentsCount++;
+    this.state.workFlowContents.push(<WorkflowContents id={this.state.workFlowContentsCount} name={this.state.workFlowName} onClick={(id: number) => this.handleClick(id)}/>)
+    
     this.setState({ dialogCreateNewOpen: false} );
   };
+
+  handleClick (id : number) {
+    //window.location.href += "/id:" + id + "/edit"
+    window.location.href += "/id:/edit"
+    console.log(id)
+};
 
   render() {
 
     const { dialogCreateNewOpen, workFlowName, workFlowContents } = this.state;
-    const { classes, children } = this.props;
-
-    for(var i = 0; i < workFlowContents.length; i++){
-
-    }
+    const { classes } = this.props;
 
     return (
         <main className={classes.layout}>
             <div className={classes.buttonGroup}>
                 <Button variant="contained" onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create New</Button>
-                <Button variant="contained" className={classes.button}>Test</Button>
             </div>
             <Grid item xs={12}>
                 <Grid container justify="center" spacing={16}>
-                    {workFlowContents.map(index => (
-                    <Grid key={index} item>
-                        {children}
+                    {workFlowContents.map(instance => (
+                    <Grid key={instance.props.id} item>
+                        {instance}
                     </Grid>
                     ))}
                 </Grid>
@@ -74,10 +77,10 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
                 open={dialogCreateNewOpen}
                 onClose={this.handleCreateNewOpen(false)}
                 >
-                <DialogTitle id="form-dialog-title">Title</DialogTitle>
+                <DialogTitle id="form-dialog-title">Create New Workflow</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Content text
+                        Enter the name of the new workflow
                     </DialogContentText>
                     <form className={classes.container} noValidate autoComplete="off">
                         <TextField

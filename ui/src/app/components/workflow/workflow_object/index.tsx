@@ -7,7 +7,9 @@ import { Typography, Divider } from '@material-ui/core';
 export namespace WorkflowContents {
     export interface Props {
         classes?: any 
+        id: number
         name: string
+        onClick: Function
     }
 }
 class WorkflowContents extends React.Component<WorkflowContents.Props, any> {
@@ -15,18 +17,16 @@ class WorkflowContents extends React.Component<WorkflowContents.Props, any> {
   constructor(props: WorkflowContents.Props) {
       super(props)
       this.state = {
-        name: "TEST",
       }
   }
-
+  
   render() {
 
     const { classes } = this.props;
-    //const { name } = this.state;
 
     return (
       <main className={classes.layout}>
-        <Paper className={classes.paper}>
+        <Paper className={classes.paper} key={this.props.id} onClick={() => this.props.onClick(this.props.id)}>
           <Typography className={classes.heading} variant="h6">
           {this.props.name}
           </Typography>
