@@ -2,6 +2,8 @@ import * as React from 'react';
 import PrimarySearchAppBar from 'app/components/common/application_bar';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
+import Typography from  '@material-ui/core/Typography';
+import Divider from '@material-ui/core/Divider';
 import { styles } from './styles'
 import { withStyles } from '@material-ui/core/styles';
 
@@ -25,9 +27,15 @@ class Dashboard extends React.Component<Dashboard.Props> {
 		const documents = ["Document","Document","Document","Document","Document", "Document","Document"]
 		
 		const docList = documents.map((name, i) =>
-			<Grid item xs={4}>
+			<Grid item md={3}>
 				<Paper className={classes.documentItem} >
-					{`${name} ${i+1}`}
+					<Typography variant={"title"}> 
+						{`${name} ${i+1}`}
+					</Typography>
+					<Divider/>
+					<Typography> 
+						Hello
+					</Typography>
 				</Paper>
 			</Grid>
 		);
@@ -35,7 +43,7 @@ class Dashboard extends React.Component<Dashboard.Props> {
 		return (
 			<React.Fragment>
 				<PrimarySearchAppBar/>
-				<Grid container spacing={24}>
+				<Grid className={classes.outerGrid} container spacing={24}>
 					{docList}
 				</Grid>
 			</React.Fragment>

@@ -111,7 +111,7 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, any
 
     return (
       <div className={classes.root}>
-        <AppBar position="static">
+        <AppBar style={{backgroundColor: "#cfd8dc"}} position="static">
           <Toolbar>
             <IconButton className={classes.menuButton} color="inherit" aria-label="Open drawer" onClick={this.toggleDrawer(true)}  >
               <MenuIcon/>
@@ -126,7 +126,7 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, any
                 {sideMenuList}
               </div>
           </Drawer>
-            <Typography className={classes.title} variant="h6" color="inherit" noWrap>
+            <Typography className={classes.title} variant="title" color="inherit" noWrap>
               Newsroom
             </Typography>
             <div className={classes.grow} />
