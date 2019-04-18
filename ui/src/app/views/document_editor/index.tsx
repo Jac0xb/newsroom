@@ -1,5 +1,5 @@
 import * as React from 'react';
-import PrimarySearchAppBar from 'app/components/Common/appbar';
+import PrimarySearchAppBar from 'app/components/common/application_bar';
 import Paper from '@material-ui/core/Paper';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'

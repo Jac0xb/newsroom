@@ -4,7 +4,7 @@ import { styles } from './styles'
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import { DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Grid } from '@material-ui/core';
-import WorkflowContents from 'app/components/Workflow/WorkflowContents';
+import WorkflowContents from 'app/components/workflow_overview/WorkflowContents';
 
 export namespace CreateWorkflow {
     export interface Props {

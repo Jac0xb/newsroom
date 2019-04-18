@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { RouteComponentProps } from 'react-router';
-import PrimarySearchAppBar from 'app/components/Common/appbar';
+import PrimarySearchAppBar from 'app/components/common/application_bar';
 import Grid from '@material-ui/core/Grid';
-import WorkflowContents from 'app/components/Workflow/WorkflowContents';
-import CreateWorkflow from 'app/components/Workflow/CreateWorkflow';
+import WorkflowContents from 'app/components/workflow_overview/WorkflowContents';
+import CreateWorkflow from 'app/components/workflow_overview/CreateWorkflow';
 
 export namespace Workflow {
 	export interface Props extends RouteComponentProps<void> {

@@ -4,10 +4,9 @@ import * as React from 'react';
 import { Route, Switch } from 'react-router';
 
 // Newsroom the application.
-import { Dashboard } from './containers/Dashboard';
-import { DocumentContainer } from './containers/Document';
-import  EditorContainer from './containers/Editor';
-import { Workflow } from './containers/Workflow';
+import Dashboard from './views/dashboard_overview';
+import  DocumentEditor from './views/document_editor';
+import { Workflow } from './views/workflow_overview';
 
 // Style-Normalization (https://material-ui.com/style/css-baseline/)
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -19,8 +18,8 @@ export const App = hot(module)(() => (
   	<React.Fragment>
     	<CssBaseline />
     	<Switch>
-			<Route path="/document/:id/editor" component={EditorContainer} />
-    		<Route path="/document/:id" component={DocumentContainer} />
+			<Route path="/document/:id/editor" component={DocumentEditor} />
+			<Route exact path="/document" component={Dashboard} />
       		<Route path="/workflow" component={Workflow} />
       		<Route exact path="/" component={Dashboard} />
 		</Switch>
