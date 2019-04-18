@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { RouteComponentProps } from 'react-router';
 import PrimarySearchAppBar from 'app/components/Common/appbar';
-import DocumentDetails from 'app/components/Document/DocumentDetails';
+import DocumentDetails from 'app/components/DocumentDetails';
 
 export namespace Document {
 	export interface Props extends RouteComponentProps<void> {
