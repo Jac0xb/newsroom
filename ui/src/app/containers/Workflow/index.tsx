@@ -13,7 +13,7 @@ export namespace Workflow {
 
 export class Workflow extends React.Component<Workflow.Props> {
 	static defaultProps: Partial<Workflow.Props> = {
-		flows: []
+		flows: [],
 	};
 
 	constructor(props: Workflow.Props, context?: any) {
@@ -25,17 +25,10 @@ export class Workflow extends React.Component<Workflow.Props> {
 			<React.Fragment>
 				<PrimarySearchAppBar/>
 				<Grid item xs={3}>
-					<CreateWorkflow />
-				</Grid>
+					<CreateWorkflow>
+						<WorkflowContents name={"Workflow"}/>
+					</CreateWorkflow>
 
-				<Grid item xs={12}>
-					<Grid container justify="center" spacing={16}>
-						{[0, 1, 2].map(value => (
-						<Grid key={value} item>
-							<WorkflowContents />
-						</Grid>
-						))}
-					</Grid>
 				</Grid>
 				
 			</React.Fragment>

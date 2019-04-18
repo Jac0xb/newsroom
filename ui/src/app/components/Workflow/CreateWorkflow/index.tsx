@@ -3,7 +3,8 @@ import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
-import { DialogTitle, DialogContent, DialogContentText, TextField, DialogActions } from '@material-ui/core';
+import { DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Grid } from '@material-ui/core';
+import WorkflowContents from 'app/components/Workflow/WorkflowContents';
 
 export namespace CreateWorkflow {
     export interface Props {
@@ -12,12 +13,9 @@ export namespace CreateWorkflow {
     export interface State {
         dialogCreateNewOpen: boolean
         workFlowName: string
+        workFlowContents: Array<any>
       }
 }
-export interface State {
-    dialogCreateNewOpen: boolean
-    workFlowName: string
-  }
 
 
 class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflow.State> {
@@ -27,23 +25,33 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
   }
   state: CreateWorkflow.State = {
     dialogCreateNewOpen: false,
-    workFlowName: '',
+    workFlowName: "test",
+    workFlowContents: [],
   };
-  
-  
 
   handleCreateNewOpen = (open: boolean) => () => {
-    this.setState({ dialogCreateNewOpen: open });
-};
+      this.setState({ dialogCreateNewOpen: open });
+  };
+  
+  handleCreateName = (name: keyof CreateWorkflow.State) => (event: React.ChangeEvent<HTMLInputElement>) => {
+      this.setState({ workFlowName: event.target.value } );
+  };
 
-handleCreateName = (name: keyof CreateWorkflow.State) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ workFlowName: event.target.value } );
+  handleCreateNew = () => () => {
+
+    this.state.workFlowContents.push(<WorkflowContents name={this.state.workFlowName}/>)
+
+    this.setState({ dialogCreateNewOpen: false} );
   };
 
   render() {
 
-    const { dialogCreateNewOpen, workFlowName } = this.state;
-    const { classes } = this.props;
+    const { dialogCreateNewOpen, workFlowName, workFlowContents } = this.state;
+    const { classes, children } = this.props;
+
+    for(var i = 0; i < workFlowContents.length; i++){
+
+    }
 
     return (
         <main className={classes.layout}>
@@ -51,6 +59,15 @@ handleCreateName = (name: keyof CreateWorkflow.State) => (event: React.ChangeEve
                 <Button variant="contained" onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create New</Button>
                 <Button variant="contained" className={classes.button}>Test</Button>
             </div>
+            <Grid item xs={12}>
+                <Grid container justify="center" spacing={16}>
+                    {workFlowContents.map(index => (
+                    <Grid key={index} item>
+                        {children}
+                    </Grid>
+                    ))}
+                </Grid>
+            </Grid>
             <Dialog className={classes.dialog}
                 disableBackdropClick
                 disableEscapeKeyDown
@@ -73,7 +90,7 @@ handleCreateName = (name: keyof CreateWorkflow.State) => (event: React.ChangeEve
                     </form>
                 </DialogContent>
                 <DialogActions>
-                    <Button variant="contained" onClick={this.handleCreateNewOpen(false)} className={classes.button}>Create</Button>
+                    <Button variant="contained" onClick={this.handleCreateNew()} className={classes.button}>Create</Button>
                 </DialogActions>
             </Dialog>
         </main>
