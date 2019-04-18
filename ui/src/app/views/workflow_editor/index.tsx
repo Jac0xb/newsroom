@@ -14,12 +14,14 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, any> {
   constructor(props: WorkflowEditor.Props) {
       super(props)
       this.state = {
+        stages: [],
       }
   }
   
   render() {
 
     const { classes } = this.props;
+    const { stages } = this.state;
 
     return (
       <React.Fragment>
@@ -27,9 +29,9 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, any> {
         <main className={classes.layout}>
 
           <Grid container justify="center" spacing={16}>
-              {/* {workFlowContents.map(instance => (
-              <Grid key={instance.props.id} item>
-                  {instance}
+              {/* {stages.map(stage => (
+              <Grid key={stage} item>
+                  {stage}
               </Grid>
               ))} */}
           </Grid>
