@@ -3,6 +3,7 @@ import Paper from '@material-ui/core/Paper';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import { Typography, Divider } from '@material-ui/core';
+import SectionItem from 'app/components/common/section_item';
 
 export namespace WorkflowContents {
     export interface Props {
@@ -31,13 +32,7 @@ class WorkflowContents extends React.Component<WorkflowContents.Props, any> {
           {this.props.name}
           </Typography>
           <Divider/>
-          {/* <SectionItem heading={"Name"} description={"Description"} />
-          <SectionItem heading={"Name"} description={"Description"} /> */}
-          {/* <div className={classes.buttonGroup}>
-            <Button variant="contained" className={classes.button}>
-              Edit
-            </Button>
-          </div> */}
+          <SectionItem heading={"Description"} description={"This is a workflow instance"} />
         </Paper>
       </main>
     );

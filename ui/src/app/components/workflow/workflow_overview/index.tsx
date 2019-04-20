@@ -26,7 +26,7 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
   }
   state: CreateWorkflow.State = {
     dialogCreateNewOpen: false,
-    workFlowName: "test",
+    workFlowName: "Workflow Name",
     workFlowContents: [],
     workFlowContentsCount: 0,
   };
