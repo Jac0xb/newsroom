@@ -23,6 +23,8 @@
   "author": "Newsroom",
   "license": "UNLICENSED",
   "dependencies": {
+    "Blob": "^0.10.0",
+    "blob": "0.0.5",
     "dotenv": "^7.0.0",
     "express": "^4.16.4",
     "orm": "0.0.1",
