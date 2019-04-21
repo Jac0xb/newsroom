@@ -8,7 +8,7 @@ import { NotFoundError } from "typescript-rest/dist/server/model/errors";
 /**
  * Provides API services for Workflows, and the stages associated with workflows.
  */
-@Path("/workflows")
+@Path("/api/workflows")
 @Tags("Workflows")
 export class WorkflowService {
 

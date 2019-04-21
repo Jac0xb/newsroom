@@ -8,7 +8,7 @@ import { NotFoundError } from "typescript-rest/dist/server/model/errors";
 /**
  * Provides API services for documents.
  */
-@Path("/documents")
+@Path("/api/documents")
 @Tags("Documents")
 export class DocumentService {
     /**

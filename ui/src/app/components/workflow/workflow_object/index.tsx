@@ -6,32 +6,32 @@ import { Typography, Divider } from '@material-ui/core';
 import SectionItem from 'app/components/common/section_item';
 
 export namespace WorkflowContents {
-    export interface Props {
-        classes?: any 
-        id: number
-        name: string
-        onClick: Function
-    }
+  export interface Props {
+    classes?: any
+    workflow: any
+  }
 }
 class WorkflowContents extends React.Component<WorkflowContents.Props, any> {
 
   constructor(props: WorkflowContents.Props) {
-      super(props)
-      this.state = {
-      }
+    super(props)
+    this.state = {}
   }
-  
-  render() {
 
-    const { classes } = this.props;
+  onClick(id: number) {
+    window.location.href = "/workflow/" + id + "/edit"
+  }
+
+  render() {
+    const { classes, workflow } = this.props;
 
     return (
       <main className={classes.layout}>
-        <Paper className={classes.paper} key={this.props.id} onClick={() => this.props.onClick(this.props.id)}>
+        <Paper className={classes.paper} key={workflow.id} onClick={() => this.onClick(workflow.id)}>
           <Typography className={classes.heading} variant="h6">
-          {this.props.name}
+            {workflow.name}
           </Typography>
-          <Divider/>
+          <Divider />
           <SectionItem heading={"Description"} description={"This is a workflow instance"} />
         </Paper>
       </main>
@@ -39,4 +39,4 @@ class WorkflowContents extends React.Component<WorkflowContents.Props, any> {
   }
 }
 
-export default withStyles(styles, {withTheme: true})(WorkflowContents);
+export default withStyles(styles, { withTheme: true })(WorkflowContents);

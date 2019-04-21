@@ -183,7 +183,13 @@ module.exports = {
 			disableDotRule: true
 		},
 		stats: 'minimal',
-		clientLogLevel: 'warning'
+		clientLogLevel: 'warning',
+		proxy: {
+			'/api': {
+				target: 'http://localhost:8000',
+				secure: false
+			}
+		}
 	},
 	// https://webpack.js.org/configuration/devtool/
 	devtool: isProduction ? 'hidden-source-map' : 'cheap-module-eval-source-map',
