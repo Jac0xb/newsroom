@@ -42,6 +42,7 @@ export class NRDocument {
     @ManyToOne(
         (type) => NRWorkflow,
         (workflow) => workflow.documents,
+        { eager: true },
     )
     public workflow: NRWorkflow;
 
