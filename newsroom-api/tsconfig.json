@@ -6,9 +6,9 @@
         "noImplicitAny": true,
         "moduleResolution": "node",
         "sourceMap": true,
-        "declaration": true,
-        "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "resolveJsonModule": true,
         "outDir": "dist",
         "baseUrl": ".",
         "paths": {

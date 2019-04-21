@@ -1,0 +1,9 @@
+{
+    "swagger": {
+        "outputDirectory": "./dist",
+        "entryFile": "./src/index.ts",
+        "host": "localhost:8000",
+        "consumes": "application/json",
+        "produces": "application/json"
+    }
+}

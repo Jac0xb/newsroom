@@ -1,7 +1,11 @@
 {
   "private": true,
+  "scripts": {
+    "build": "yarn workspaces run build"
+  },
   "workspaces": [
-    "document-api",
-    "orm"
+    "documentation",
+    "orm",
+    "newsroom-api"
   ]
 }

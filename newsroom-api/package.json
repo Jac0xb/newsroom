@@ -1,13 +1,14 @@
 {
-  "name": "document-api",
+  "name": "newsroom-api",
   "version": "0.0.1",
   "description": "Newsroom Document API",
   "main": "dist/index.js",
   "scripts": {
-    "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
+    "prebuild": "tslint -c tslint.json -p tsconfig.json --fix && swaggerGen -c swagger.config.json",
     "build": "tsc",
-    "prestart": "npm run build",
+    "prestart": "yarn build",
     "start": "node .",
+    "start:watch": "nodemon -e ts --watch src --exec 'yarn start'",
     "test": "ts-mocha -p tsconfig.json src/**/*.spec.ts"
   },
   "repository": {
@@ -16,13 +17,18 @@
   },
   "keywords": [
     "newsroom",
-    "document"
+    "documents",
+    "workflows"
   ],
   "author": "Newsroom",
   "license": "UNLICENSED",
   "dependencies": {
+    "Blob": "^0.10.0",
+    "blob": "0.0.5",
     "dotenv": "^7.0.0",
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "orm": "0.0.1",
+    "typescript-rest": "^2.0.0"
   },
   "devDependencies": {
     "@types/dotenv": "^6.1.1",
@@ -31,8 +37,12 @@
     "@types/mocha": "^5.2.6",
     "@types/node": "^11.13.0",
     "mocha": "^6.1.1",
+    "nodemon": "^1.18.11",
+    "sqlite3": "^4.0.6",
     "ts-mocha": "^6.0.0",
+    "ts-node": "^8.0.3",
     "tslint": "^5.15.0",
-    "typescript": "^3.4.1"
+    "typescript": "^3.4.1",
+    "typescript-rest-swagger": "^0.0.24"
   }
 }

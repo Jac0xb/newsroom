@@ -2,14 +2,12 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: newsroom-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
   - host: ab642bc8e59a311e99f0f06c6421f175-1910322875.us-west-2.elb.amazonaws.com
     http:
       paths:
-      - path: /documents
+      - path: /
         backend:
-          serviceName: document-api
+          serviceName: newsroom-api
           servicePort: 80

@@ -6,15 +6,19 @@
         "noImplicitAny": true,
         "moduleResolution": "node",
         "sourceMap": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "resolveJsonModule": true,
         "outDir": "dist",
         "baseUrl": ".",
         "paths": {
             "*": [
-                "node_modules/*"
+                "node_modules/*",
             ]
         }
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "dist/*.json"
     ]
 }

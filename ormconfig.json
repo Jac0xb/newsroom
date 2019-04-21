@@ -1,0 +1,17 @@
+{
+  "name": "default",
+  "type": "sqlite",
+  "database": "newsroom.sqlite",
+  "synchronize": true,
+  "logging": false,
+  "entities": [
+    "../orm/dist/entity/*.js"
+  ],
+  "migrations": [
+    "../orm/dist/migration/*.js"
+  ],
+  "cli": {
+    "entitiesDir": "src/entity",
+    "migrationsDir": "src/migration"
+  }
+}
