@@ -1,69 +1,127 @@
-import * as React from 'react';
+import { Dialog, Fab, Grid, DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Button } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import { styles } from './styles'
-import PrimarySearchAppBar from 'app/components/common/application_bar';
-import { Grid, Fab } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
+import PrimarySearchAppBar from 'app/components/common/application_bar';
 import WorkflowStage from 'app/components/workflow/workflow_stage';
+import axios from 'axios';
+import * as React from 'react';
+import { styles } from './styles';
 
 export namespace WorkflowEditor {
-    export interface Props {
-        classes?: any 
+  export interface Props {
+    classes?: any
+    match: {
+      params: {
+        id: number
+      }
     }
-    export interface State {
-      stages: Array<any>
-      stagesCount: number
-    }
+  }
+  export interface State {
+    stages: Array<any>
+    dialogCreateNewOpen: boolean
+    newStageName: string
+  }
 }
 class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEditor.State, any> {
 
   constructor(props: WorkflowEditor.Props) {
-      super(props)
+    super(props)
   }
 
   state: WorkflowEditor.State = {
-    stages: [<WorkflowStage id={0} name={"Stage"} onClick={(id: number) => this.handleClick(id)}/>],
-    stagesCount: 0,
+    stages: [],
+    dialogCreateNewOpen: false,
+    newStageName: ""
   }
 
-  handleAddNew = (index: number) => {
-    // add stage 
-    this.state.stages.splice(index+1, 0, <WorkflowStage id={index+1} name={"Stage inserted after pos " + index.toString()} onClick={(id: number) => this.handleClick(id)}/>)
+  componentDidMount() {
+    const id = this.props.match.params.id;
 
-    // setState will re-render the view
-    this.setState({ stages: this.state.stages} );
+    axios.get("/api/workflows/" + id + "/stages").then((response) => {
+      console.log(response);
+
+      const stages = response.data;
+
+      this.setState({ stages: stages })
+    })
+  }
+
+  handleOpenNewDialog(open: boolean) {
+    this.setState({ dialogCreateNewOpen: open });
   };
 
-  handleClick = (id : number) => {
+  handleCreateName = (name: keyof WorkflowEditor.State) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ newStageName: event.target.value });
+  };
+
+  handleAddNew = () => {
+    const id = this.props.match.params.id;
+
+    axios.post("/api/workflows/" + id + "/stages", {
+      name: this.state.newStageName,
+      creator: "Jacques"
+    }).then((response) => {
+      console.log(response);
+
+      this.state.stages.push(response.data)
+
+      this.setState({
+        dialogCreateNewOpen: false
+      });
+    });
+  };
+
+  handleClick = (id: number) => {
     console.log(id)
   };
+
   render() {
 
     const { classes } = this.props;
-    const { stages } = this.state;
+    const { stages, dialogCreateNewOpen, newStageName } = this.state;
 
-		return (
+    return (
       <React.Fragment>
-				<PrimarySearchAppBar/>
+        <PrimarySearchAppBar />
         <main className={classes.layout}>
-
           <Grid container spacing={16}>
-              {stages.map((stage, index) => (
+            {stages.map((stage, index) => (
               <div className={classes.stagePlusButton}>
                 <Grid key={index} className={classes.stageGrid} item>
-                  {stage}
+                  <WorkflowStage id={stage.id} name={"Stage"} onClick={(id: number) => this.handleClick(id)} />
                 </Grid>
-                <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleAddNew(index)} className={classes.fab}>
-                  <AddIcon />
-                </Fab>
               </div>
-              ))}
-              
+            ))}
+            <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleOpenNewDialog(true)} className={classes.fab}>
+              <AddIcon />
+            </Fab>
           </Grid>
+          <Dialog className={classes.dialog}
+            disableBackdropClick
+            disableEscapeKeyDown
+            open={dialogCreateNewOpen}
+            onClose={() => this.handleOpenNewDialog(false)}>
+            <DialogTitle id="form-dialog-title">Create New Workflow</DialogTitle>
+            <DialogContent>
+              <DialogContentText>Enter the name of the new stage.</DialogContentText>
+              <form className={classes.container} noValidate autoComplete="off">
+                <TextField
+                  id="workflow-name"
+                  label="Name"
+                  className={classes.textField}
+                  value={newStageName}
+                  onChange={this.handleCreateName('newStageName')}
+                />
+              </form>
+            </DialogContent>
+            <DialogActions>
+              <Button variant="contained" onClick={this.handleAddNew} className={classes.button}>Create</Button>
+            </DialogActions>
+          </Dialog>
         </main>
       </React.Fragment>
     );
   }
 }
 
-export default withStyles(styles, {withTheme: true})(WorkflowEditor);
+export default withStyles(styles, { withTheme: true })(WorkflowEditor);

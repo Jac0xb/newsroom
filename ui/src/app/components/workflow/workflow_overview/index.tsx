@@ -87,8 +87,7 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
                     disableBackdropClick
                     disableEscapeKeyDown
                     open={dialogCreateNewOpen}
-                    onClose={this.handleCreateNewOpen(false)}
-                >
+                    onClose={this.handleCreateNewOpen(false)}>
                     <DialogTitle id="form-dialog-title">Create New Workflow</DialogTitle>
                     <DialogContent>
                         <DialogContentText>
