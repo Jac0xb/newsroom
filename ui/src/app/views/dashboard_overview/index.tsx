@@ -9,34 +9,34 @@ export namespace Dashboard {
 	export interface Props {
 		classes?: any
 		match?: { params: any }
-  	}
+	}
 }
 
 class Dashboard extends React.Component<Dashboard.Props> {
 
-  	constructor(props: Dashboard.Props, context?: any) {
+	constructor(props: Dashboard.Props, context?: any) {
 		super(props, context);
-  	}
+	}
 
-  	render() {
+	render() {
 
 
 		const { classes } = this.props;
 		const documents = ["Document", "Document", "Document", "Document", "Document", "Document", "Document"]
-		
+
 		const docList = documents.map((name, i) =>
-			<DocumentTile name={name} author="Jacob Brown" workflow="Opinion Desk" duedate="4/20/2019"/>
+			<DocumentTile id={i} name={name} author="Jacob Brown" workflow="Opinion Desk" duedate="4/20/2019" />
 		);
 
 		return (
 			<React.Fragment>
-				<PrimarySearchAppBar/>
+				<PrimarySearchAppBar />
 				<Grid className={classes.outerGrid} container spacing={24}>
 					{docList}
 				</Grid>
 			</React.Fragment>
 		);
-  }
+	}
 }
 
-export default withStyles(styles, {withTheme: true})(Dashboard);
+export default withStyles(styles, { withTheme: true })(Dashboard);

@@ -6,33 +6,33 @@ import { styles } from './styles'
 import ContentEditable from 'react-contenteditable';
 import Grid from '@material-ui/core/Grid';
 import Divider from '@material-ui/core/Divider';
-import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
+import WorkflowMiniView from 'app/components/workflow/workflow_miniview';
 
 export namespace EditorContainer {
-    export interface Props {
+	export interface Props {
 		classes?: any
 		match?: { params: any }
 	}
 }
 
 class EditorContainer extends React.Component<EditorContainer.Props, any> {
-	
+
 	static defaultProps: Partial<EditorContainer.Props> = {
 	};
 
 	constructor(props: EditorContainer.Props) {
 		super(props)
-		this.state = {html : "Text"}
+		this.state = { html: "Text" }
 	}
 
-  	render() {
+	render() {
 
 		const { classes } = this.props;
 
 		return (
 			<React.Fragment>
-				<PrimarySearchAppBar/>
+				<PrimarySearchAppBar />
 				<main className={classes.layout}>
 					<Grid container spacing={24}>
 						<Grid item xs={9}>
@@ -45,35 +45,28 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 						</Grid>
 						<Grid item xs={3}>
 							<Paper className={classes.paper}>
-								<Typography>
-									Workflow View
-								</Typography>
-								<Divider/>
+								<WorkflowMiniView id={1} name={"Sports Article"} stages={[{ id: 1, name: "Draft" }, { id: 2, name: "Edit 1" }, { id: 3, name: "Edit 2" }]} currentStage={1} />
+								<Divider />
 								<Typography>
 									Styles
 								</Typography>
-								<Divider/>
+								<Divider />
 								<Typography>
 									Insert media
 								</Typography>
-								<Divider/>
-								<div className={classes.buttonGroup}>
-									<Button variant="contained" className={classes.button}>Back</Button>
-									<Button variant="contained" className={classes.button}>Next</Button>
-								</div>
 							</Paper>
 						</Grid>
 					</Grid>
-					</main>
+				</main>
 			</React.Fragment>
 		);
 	}
 
-	handleChange (event : React.ChangeEvent<HTMLInputElement>) {
-		this.setState({html: event.target.value});
+	handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+		this.setState({ html: event.target.value });
 		console.log(event.target.value)
 	};
 }
 
 
-export default withStyles(styles, {withTheme: true})(EditorContainer);
+export default withStyles(styles, { withTheme: true })(EditorContainer);

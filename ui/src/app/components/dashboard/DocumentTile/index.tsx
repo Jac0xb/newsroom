@@ -8,45 +8,46 @@ export namespace Dashboard {
 	export interface Props {
 		classes?: any,
 		match?: { params: any },
+		id: number,
 		name: string,
 		author: string,
 		duedate: string,
 		workflow: string
-	  }
-	  export interface DetailLineProps {
-		  classes?: any
-	  }
+	}
+	export interface DetailLineProps {
+		classes?: any
+	}
 }
 
 class Dashboard extends React.Component<Dashboard.Props> {
 
-  	constructor(props: Dashboard.Props, context?: any) {
+	constructor(props: Dashboard.Props, context?: any) {
 		super(props, context);
-  	}
+	}
 
-  	render() {
-		
-		const { classes, name, author, workflow, duedate } = this.props;
+	render() {
+
+		const { classes, id, name, author, workflow, duedate } = this.props;
 
 		return (
 			<Grid item md={3}>
 				<Paper className={classes.documentItem} >
-					<Typography variant={"title"}> 
+					<Typography variant={"title"}>
 						{name}
 					</Typography>
-					<Divider/>
-					<table style={{width: "100%"}}>
+					<Divider />
+					<table style={{ width: "100%" }}>
 						<DetailRow title="Author" data={author} link={true} />
 						<DetailRow title="Workflow Type" data={workflow} link={true} />
 						<DetailRow title="Due Date" data={duedate} />
 					</table>
 					<div className={classes.buttonGroup}>
-						<Button variant="contained" className={classes.button}>Edit</Button>
+						<Button variant="contained" className={classes.button} href={"/document/" + id + "/editor"}>Edit</Button>
 					</div>
 				</Paper>
 			</Grid>
 		);
-  	}
+	}
 }
 
-export default withStyles(styles, {withTheme: true})(Dashboard);
+export default withStyles(styles, { withTheme: true })(Dashboard);
