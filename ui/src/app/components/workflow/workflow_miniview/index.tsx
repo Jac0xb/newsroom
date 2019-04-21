@@ -1,16 +1,13 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import { Typography, Radio, Chip, Tooltip, Button } from '@material-ui/core';
-import { ArrowRightAlt } from '@material-ui/icons';
-import { Fragment } from 'react';
+import { Typography, Button, Stepper, Step, StepLabel, Link } from '@material-ui/core';
+import { Workflow } from 'app/models/workflow';
 
 export namespace WorkflowMiniView {
   export interface Props {
     classes?: any
-    id: number
-    name: string
-    stages: { id: number, name: string }[]
+    workflow: Workflow
     currentStage: number
   }
 }
@@ -23,35 +20,28 @@ class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, any> {
 
   render() {
 
-    const { classes, name, stages, currentStage } = this.props;
+    const { classes, workflow, currentStage } = this.props;
 
     return (
       <main className={classes.layout}>
         <Typography className={classes.heading} variant="subtitle1">
-          {name}
+          <Link href={"/workflows/" + workflow.id}>
+            Workflow: <span style={{ fontWeight: "bold" }}>{workflow.name}</span>
+          </Link>
         </Typography>
-        <div className={classes.workflow}>
-          {stages.map((stage, idx, arr) => {
-            const sep = idx !== arr.length - 1 ? <ArrowRightAlt className={classes.arrow} /> : null
-
-            if (stage.id === currentStage) {
-              return (<Fragment>
-                <Chip label={stage.name} avatar={<Radio checked={true} className={classes.chip} />} />
-                {sep}
-              </Fragment>)
-            } else {
-              return (<Fragment>
-                <Tooltip title={stage.name}><Radio key={stage.id} className={classes.radio} /></Tooltip>
-                {sep}
-              </Fragment>)
-            }
+        <Stepper className={classes.stepper} activeStep={currentStage - 1}>
+          {workflow.stages.map((stage) => {
+            return (
+              <Step key={stage.id}>
+                <StepLabel>{stage.name}</StepLabel>
+              </Step>)
           })}
-        </div>
+        </Stepper>
         <div className={classes.buttonGroup}>
           <Button variant="contained" className={classes.button}>Back</Button>
           <Button variant="contained" className={classes.button}>Next</Button>
         </div>
-      </main>
+      </main >
     );
   }
 }
