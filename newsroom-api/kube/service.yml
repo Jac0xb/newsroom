@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: newsroom-api
+spec:
+  ports:
+    - name: "newsroom-api"
+      port: 80
+      targetPort: 8000
+  selector:
+    app: newsroom-api

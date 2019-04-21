@@ -1,0 +1,13 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: newsroom-ingress
+spec:
+  rules:
+  - host: ab642bc8e59a311e99f0f06c6421f175-1910322875.us-west-2.elb.amazonaws.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: newsroom-api
+          servicePort: 80

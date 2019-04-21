@@ -1,3 +1,8 @@
 node_modules
 .editorconfig
+.env
+*.log
+dist
+.vscode
+*.sqlite
 .DS_STORE

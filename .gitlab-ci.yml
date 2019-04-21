@@ -1,22 +1,43 @@
 variables:
   DOCKER_HOST: tcp://localhost:2375
   DOCKER_DRIVER: overlay2
+  CONTAINER_IMAGE: documocracy/newsroom
 
 services:
   - docker:dind
 
-# Build all docker images via docker-compose
+cache:
+  key: $CI_PIPELINE_ID
+  paths:
+    - node_modules
+
+# Build and push single docker image to Docker Hub private repo
 build:
   stage: build
-  image:
-    name: docker/compose:1.24.0
-    entrypoint: ["/bin/sh", "-c"]
+  image: docker
   script:
-    - docker-compose build
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+    - docker pull $CONTAINER_IMAGE:latest || true
+    - docker build --cache-from $CONTAINER_IMAGE:latest --tag $CONTAINER_IMAGE:$CI_COMMIT_SHA --tag $CONTAINER_IMAGE:latest .
+    - docker push $CONTAINER_IMAGE:$CI_COMMIT_SHA
+    - docker push $CONTAINER_IMAGE:latest
 
+# Run test script in all modules using Yarn Workspaces
+test:
+  stage: test
+  image: node:8-alpine
+  script:
+    - yarn install
+    - yarn workspaces run test
+
+# Apply kubernetes deployment and monitor
 deploy:
   stage: deploy
   image: bitnami/kubectl
+  only:
+    - master
+  environment:
+    name: prototype
   script:
-    - kubectl apply -f document-api/kubernetes.yml
-    - kubectl rollout -f document-api/kubernetes.yml
+    - find ./ -name kube | xargs -I{} kubectl apply --namespace $KUBE_NAMESPACE -f {}
+    - find ./ -name deployment.yml | xargs -I{} kubectl rollout status --namespace $KUBE_NAMESPACE -f {}
