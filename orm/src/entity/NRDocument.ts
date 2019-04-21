@@ -50,6 +50,7 @@ export class NRDocument {
     @ManyToOne(
         (type) => NRStage,
         (stage) => stage.documents,
+        { eager: true },
     )
     public stage: NRStage;
 }
