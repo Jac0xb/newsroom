@@ -31,6 +31,14 @@ export class NRStage {
     })
     public creator: string; // TODO: Should relate to an Account ID later.
 
+    // A brief description of the stage.
+    @Column({
+        length: 500,
+        nullable: true,
+        type: "varchar",
+    })
+    public description: string;
+
     // The Date of when this stage was created.
     @CreateDateColumn()
     public created: Date;

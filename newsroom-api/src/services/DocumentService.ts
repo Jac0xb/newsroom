@@ -11,6 +11,7 @@ import { NotFoundError } from "typescript-rest/dist/server/model/errors";
 @Path("/api/documents")
 @Tags("Documents")
 export class DocumentService {
+
     /**
      * When creating a new document, we need to validate that it has all the
      * required information to define a document. The document id should always
@@ -19,12 +20,16 @@ export class DocumentService {
     private static createDocumentValidator(req: express.Request) {
         const document = req.body as NRDocument;
 
-        if (!req.body.name) {
+        if (!document.name) {
             throw new Errors.BadRequestError("Document name not present.");
         }
 
         if (!(typeof document.name === "string")) {
             throw new Errors.BadRequestError("Document name was not a string.");
+        }
+
+        if (document.name.length > 256) {
+            throw new Errors.BadRequestError("Document name length is too long, max 256.");
         }
 
         if (!document.creator) {
@@ -33,6 +38,10 @@ export class DocumentService {
 
         if (!(typeof document.creator === "string")) {
             throw new Errors.BadRequestError("Document creator was not a string.");
+        }
+
+        if (document.creator.length > 256) {
+            throw new Errors.BadRequestError("Document creator length is too long, max 256.");
         }
 
         if (!document.workflow) {
@@ -50,6 +59,16 @@ export class DocumentService {
         if (!(typeof document.stage === "number")) {
             throw new Errors.BadRequestError("Document stage was not a number.");
         }
+
+        if (document.description) {
+            if (!(typeof document.description === "string")) {
+                throw new Errors.BadRequestError("Document description was not a string.");
+            }
+
+            if (document.description.length > 1000) {
+                throw new Errors.BadRequestError("Document description too long, max 1000.");
+            }
+        }
     }
 
     /**
@@ -63,11 +82,19 @@ export class DocumentService {
             if (!(typeof document.name === "string")) {
                 throw new Errors.BadRequestError("Document name was not a string.");
             }
+
+            if (document.name.length > 256) {
+                throw new Errors.BadRequestError("Document name length is too long, max 256.");
+            }
         }
 
         if (document.creator) {
             if (!(typeof document.creator === "string")) {
                 throw new Errors.BadRequestError("Document creator was not a string.");
+            }
+
+            if (document.creator.length > 256) {
+                throw new Errors.BadRequestError("Document creator length is too long, max 256.");
             }
         }
 
@@ -88,9 +115,18 @@ export class DocumentService {
                 throw new Errors.BadRequestError("Document content was not a string.");
             }
         }
+
+        if (document.description) {
+            if (!(typeof document.description === "string")) {
+                throw new Errors.BadRequestError("Document description was not a string.");
+            }
+
+            if (document.description.length > 1000) {
+                throw new Errors.BadRequestError("Document description length is too long, max 1000.");
+            }
+        }
     }
     public stageRepository = getManager().getRepository(NRStage);
-
     /**
      * Used to interact with any given document/workflow in the database.
      */
@@ -156,6 +192,21 @@ export class DocumentService {
     }
 
     /**
+     * Get all documents for a specific author.
+     *
+     * Returns a 400 if:
+     *      - Document id not found.
+     */
+    @Path("/author/:name")
+    @GET
+    public async getDocumentsForAuthor(@PathParam("name") authorName: string): Promise<NRDocument[]> {
+        return await this.documentRepository
+            .createQueryBuilder("document")
+            .where("document.creator = :cn", { cn: authorName })
+            .getMany();
+    }
+
+    /**
      * Get all documents for the stage based on passed stage id.
      *
      * Returns a 400 if:
@@ -174,12 +225,10 @@ export class DocumentService {
             throw new NotFoundError("A Stage for the Document could not be found.");
         }
 
-        const allDocs = await this.documentRepository
+        return await this.documentRepository
             .createQueryBuilder("document")
             .where("stageId = :sId", { sId: assocStage.id })
             .getMany();
-
-        return allDocs;
     }
 
     /**
@@ -224,6 +273,7 @@ export class DocumentService {
     @PreProcessor(DocumentService.updateDocumentValidator)
     public async updateDocument(@IsInt @PathParam("id") id: number, document: NRDocument): Promise<NRDocument> {
         let currDocument: NRDocument;
+
         try {
             currDocument = await this.documentRepository.findOneOrFail(document.id);
         } catch (err) {
@@ -251,6 +301,10 @@ export class DocumentService {
 
         if (document.creator) {
             currDocument.creator = document.creator;
+        }
+
+        if (document.description) {
+            currDocument.description = document.description;
         }
 
         if (document.workflow) {
@@ -341,8 +395,6 @@ export class DocumentService {
 
         // The document can be moved forward.
         if ((currStage.sequenceId + 1) <= maxSeq) {
-            console.log("inside of 'if'");
-
             // Get id of next stage in sequence.
             const nextId = await this.stageRepository
                 .createQueryBuilder("stage")

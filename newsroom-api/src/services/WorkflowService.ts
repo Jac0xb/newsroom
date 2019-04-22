@@ -28,12 +28,30 @@ export class WorkflowService {
             throw new Errors.BadRequestError("Workflow name was not a string.");
         }
 
+        if (workflow.name.length > 256) {
+            throw new Errors.BadRequestError("Workflow name too long, max 256.");
+        }
+
         if (!workflow.creator) {
             throw new Errors.BadRequestError("Workflow creator not present.");
         }
 
         if (!(typeof workflow.creator === "string")) {
             throw new Errors.BadRequestError("Workflow creator was not a string.");
+        }
+
+        if (workflow.creator.length > 256) {
+            throw new Errors.BadRequestError("Workflow creator too long, max 256.");
+        }
+
+        if (workflow.description) {
+            if (!(typeof workflow.description === "string")) {
+                throw new Errors.BadRequestError("Workflow description was not a string.");
+            }
+
+            if (workflow.description.length > 1000) {
+                throw new Errors.BadRequestError("Workflow description too long, max 1000");
+            }
         }
     }
 
@@ -54,6 +72,16 @@ export class WorkflowService {
             if (!(typeof workflow.creator === "string")) {
                 throw new Errors.BadRequestError("Workflow creator was not a string.");
             }
+        }
+
+        if (workflow.description) {
+            if (!(typeof workflow.description === "string")) {
+                throw new Errors.BadRequestError("Workflow description was not a string.");
+            }
+
+            if (workflow.description.length > 1000) {
+                throw new Errors.BadRequestError("Workflow description too long, max 1000.");
+           }
         }
     }
 
@@ -79,6 +107,16 @@ export class WorkflowService {
         if (!(typeof stage.creator === "string")) {
             throw new Errors.BadRequestError("Stage creator was not a string.");
         }
+
+        if (stage.description) {
+            if (!(typeof stage.description === "string")) {
+                throw new Errors.BadRequestError("Stage description was not a string.");
+            }
+
+            if (stage.description.length > 1000) {
+                throw new Errors.BadRequestError("Stage description too long, max 1000.");
+           }
+        }
     }
 
     /**
@@ -100,8 +138,17 @@ export class WorkflowService {
                 throw new Errors.BadRequestError("Stage creator was not a string.");
             }
         }
-    }
 
+        if (stage.description) {
+            if (!(typeof stage.description === "string")) {
+                throw new Errors.BadRequestError("Stage description was not a string.");
+            }
+
+            if (stage.description.length > 1000) {
+                throw new Errors.BadRequestError("Stage description too long, max 1000.");
+           }
+        }
+    }
     /**
      * Used to interact with any given workflow/stage in the database.
      */
@@ -182,6 +229,10 @@ export class WorkflowService {
         // Update creator name if given one.
         if (workflow.creator) {
             currWorkflow.creator = workflow.creator;
+        }
+
+        if (workflow.description) {
+            currWorkflow.description = workflow.description;
         }
 
         return await this.workflowRepository.save(currWorkflow);
@@ -489,6 +540,10 @@ export class WorkflowService {
         // Update creator name if given one.
         if (stage.creator) {
             currStage.creator = stage.creator;
+        }
+
+        if (stage.description) {
+            currStage.description = stage.description;
         }
 
         // TODO: Catch more exceptions here.
