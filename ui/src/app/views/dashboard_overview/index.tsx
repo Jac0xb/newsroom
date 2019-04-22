@@ -1,6 +1,6 @@
 import * as React from 'react';
 import PrimarySearchAppBar from 'app/components/common/application_bar';
-import { Grid, Button, Typography } from '@material-ui/core';
+import { Grid, Button } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import DocumentTile from 'app/components/dashboard/DocumentTile';
 import { styles } from './styles';
@@ -25,18 +25,18 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 
 	constructor(props: Dashboard.Props, context?: any) {
 		super(props, context);
-		this.state = {documents: []}
+		this.state = { documents: [] }
 	}
 
 	componentDidMount() {
 		//const id = this.props.match.params.id;
-	
+
 		axios.get("/api/documents").then((response) => {
-		  console.log(response.data);
-	
-		  const documents = response.data;
-	
-		  this.setState({ documents })
+			console.log(response.data);
+
+			const documents = response.data;
+
+			this.setState({ documents })
 		});
 	}
 
@@ -54,11 +54,11 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 			<React.Fragment>
 				<PrimarySearchAppBar />
 				<div className={classes.buttonGroup}>
-				<Link style={{textDecoration: "none"}} to="/document/create">
-					<Button style={{width: "calc(3*58px)"}} variant={"contained"}>
-						New Document
+					<Link style={{ textDecoration: "none" }} to="/document/create">
+						<Button style={{ width: "calc(3*58px)" }} variant={"contained"}>
+							New Document
 					</Button>
-				</Link>
+					</Link>
 				</div>
 				<Grid className={classes.outerGrid} container spacing={24}>
 					{docList}
