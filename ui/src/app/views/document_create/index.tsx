@@ -1,19 +1,25 @@
 import * as React from 'react';
 import PrimarySearchAppBar from 'app/components/common/application_bar';
-import { Grid, Paper, Button, FormGroup, FormLabel, TextField, MenuItem } from '@material-ui/core';
+import { Grid, Paper, FormGroup, FormLabel, TextField, MenuItem, Button, Typography } from '@material-ui/core';
 import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
+import { Redirect } from 'react-router-dom';
+import { withCookies, Cookies } from 'react-cookie';
+import { compose } from 'recompose';
 
 export namespace DocumentCreate {
 	export interface Props {
-		classes?: any
+		classes: Record<string, string>
 		match?: { params: any }
+		cookies: Cookies
 	}
 	export interface State {
 		nickname?: string
-		workflow?: string
+		workflow?: number
 		availableWorkflows: {name: string, id: number}[]
+		submitted: boolean
+		flash?: string
 	}
 }
 
@@ -22,7 +28,7 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 
 	constructor(props: DocumentCreate.Props, context?: any) {
 		super(props, context);
-		this.state = {nickname: undefined, workflow: "undefined", availableWorkflows : []}
+		this.state = {nickname: "", workflow: -1, availableWorkflows : [], submitted: false, flash: ""}
 	}
 
 	componentDidMount() {
@@ -37,9 +43,27 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 		});
 	}
 
+	onSubmit() {
+
+		this.setState({flash: ""})
+		axios.post("/api/documents", {name: this.state.nickname, creator: "Jacques", workflow: this.state.workflow, stage: 1}).then((response:any) => {
+			
+			if (response) {
+				this.setState({submitted: true})
+			}
+
+		}).catch((error) => {
+			this.setState({flash: error.response.data.message});
+		});
+	}
+
 	render() {
 
-		const { classes } = this.props;
+		if (this.state.submitted) {
+			return <Redirect push to="/" />;
+		}
+
+		const { classes, cookies } = this.props;
 
 		return (
 			<React.Fragment>
@@ -47,6 +71,14 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 				<Grid className={classes.outerGrid} alignContent={"center"} container spacing={24} direction="row" justify="center" alignItems="center">
 					<Grid item xs={8} md={6}>
 						<Paper className={classes.formGroup}>
+							{ (this.state.flash != "") ? 
+								<Paper className={classes.flashMessage}>
+									<Typography variant="caption">
+										{this.state.flash}
+									</Typography>
+								</Paper> :
+								<div></div>
+							}
 							<FormGroup>
 								<FormLabel>Document Creator</FormLabel>
 								<TextField
@@ -62,11 +94,11 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 								/>
 								<TextField
 									select
-									label="Document Nickname"
+									label="Workflow"
 									margin="normal"
 									variant="filled"
 									value={this.state.workflow}
-									onChange={(c) => this.setState({workflow: c.target.value})}
+									onChange={(c) => this.setState({workflow: parseInt(c.target.value)})}
 									InputLabelProps={{
 										shrink: true,
 									}}
@@ -77,7 +109,19 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 									</MenuItem>
 								  ))}
 								</TextField>
+								<TextField
+									disabled={true}
+									label="Author"
+									margin="normal"
+									variant="filled"
+									value={cookies.get("username")}
+									onChange={(c) => this.setState({nickname: c.target.value})}
+									InputLabelProps={{
+										shrink: true,
+									}}
+								/>
 							</FormGroup>
+							<Button variant="contained" onClick={this.onSubmit.bind(this)} className={classes.button}>Create</Button>
 						</Paper>
 					</Grid>
 				</Grid>
@@ -86,4 +130,7 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 	}
 }
 
-export default withStyles(styles, { withTheme: true })(DocumentCreate);
+export default compose<DocumentCreate.Props, {}>(
+	withStyles(styles, { withTheme: true }),
+	withCookies
+)(DocumentCreate);

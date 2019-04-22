@@ -27,10 +27,10 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, any> {
 
     const { classes } = this.props;
 
-    const documents = ["Document", "Document"]
+    const documents: any[] = []
 
-		const docList = documents.map((name, i) =>
-			<DocumentTile id={i} name={name} author="Jacob Brown" workflow="Opinion Desk" duedate="4/20/2019" />
+		const docList = documents.map((document, i) =>
+			<DocumentTile key={i} document={document} />
 		);
 
     return (

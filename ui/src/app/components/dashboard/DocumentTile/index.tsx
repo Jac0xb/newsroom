@@ -27,7 +27,7 @@ class DocumentTile extends React.Component<DocumentTile.Props> {
 			<Grid item>
 				<Paper className={classes.documentItem} >
 					<Typography variant={"title"}>
-						{name}
+						{document.name}
 					</Typography>
 					<Divider />
 					<table style={{ width: "100%" }}>
@@ -38,7 +38,7 @@ class DocumentTile extends React.Component<DocumentTile.Props> {
 						</tbody>
 					</table>
 					<div className={classes.buttonGroup}>
-						<Link to={"/document/" + document.id + "/editor"}>
+						<Link to={"/document/" + document.id + "/edit"}>
 							<Button variant="contained" className={classes.button}>Edit</Button>
 						</Link>
 					</div>

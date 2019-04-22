@@ -1,6 +1,6 @@
 import * as React from 'react';
 import PrimarySearchAppBar from 'app/components/common/application_bar';
-import { Grid, Button } from '@material-ui/core';
+import { Grid, Button, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import DocumentTile from 'app/components/dashboard/DocumentTile';
 import { styles } from './styles';
@@ -54,9 +54,9 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 			<React.Fragment>
 				<PrimarySearchAppBar />
 				<div className={classes.buttonGroup}>
-				<Link to="/document/create">
-					<Button variant={"contained"}>
-						Poop
+				<Link style={{textDecoration: "none"}} to="/document/create">
+					<Button style={{width: "calc(3*58px)"}} variant={"contained"}>
+						New Document
 					</Button>
 				</Link>
 				</div>

@@ -22,7 +22,7 @@ export const App = hot(module)(() => (
 		<Switch>
 			<Route exact path="/document" component={Dashboard} />
 			<Route exact path="/document/create" component={DocumentCreator} />
-			<Route path="/document/:id/editor" component={DocumentEditor} />
+			<Route path="/document/:id/edit" component={DocumentEditor} />
 			<Route path="/workflow/:id/edit" component={WorkflowEditor} />
 			<Route path="/workflow" component={Workflow} />
 			<Route exact path="/" component={Dashboard} />
