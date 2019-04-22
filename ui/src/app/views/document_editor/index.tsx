@@ -62,7 +62,7 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 		const { document, editorState } = this.state;
 
 		if (!document || !document.workflow || !document.stage) {
-			return null;
+			return <div>Document did not exist, had no workflow, or had no stage</div>;
 		}
 
 		return (
