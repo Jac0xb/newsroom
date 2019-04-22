@@ -15,14 +15,24 @@ export function styles(theme: Theme) {
           //marginRight: 'auto'
         },
       },
-      paper: {
-        marginTop: theme.spacing.unit * 3,
-        marginBottom: theme.spacing.unit * 3,
-        padding: theme.spacing.unit * 2,
+      documentTitlePaper: {
+        marginTop: theme.spacing.unit,
+        marginBottom: theme.spacing.unit,
+        padding: theme.spacing.unit,
         [theme.breakpoints.up(800 + theme.spacing.unit * 3 * 2)]: {
-          marginTop: theme.spacing.unit * 6,
-          marginBottom: theme.spacing.unit * 6,
-          padding: theme.spacing.unit * 3,
+          marginTop: theme.spacing.unit * 2,
+          marginBottom: theme.spacing.unit * 2,
+          padding: theme.spacing.unit * 2,
+        },
+      },
+      paper: {
+        marginTop: theme.spacing.unit,
+        marginBottom: theme.spacing.unit,
+        padding: theme.spacing.unit,
+        [theme.breakpoints.up(800 + theme.spacing.unit * 3 * 2)]: {
+          marginTop: theme.spacing.unit * 2,
+          marginBottom: theme.spacing.unit * 2,
+          padding: theme.spacing.unit * 2,
         },
       },
       heading: {
