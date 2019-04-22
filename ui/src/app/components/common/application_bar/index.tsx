@@ -100,7 +100,7 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, any
       	<div className={classes.list}>
 			<List>
 				{[{title:'Document', url:"/"}, {title:'Workflow', url:"/workflow"}].map((text, index) => (
-					<Link to={text.url}>
+					<Link key={index} to={text.url}>
 						<ListItem button>
 								<ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
 								<ListItemText primary={text.title} />

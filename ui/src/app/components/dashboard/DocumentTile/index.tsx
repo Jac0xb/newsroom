@@ -1,33 +1,27 @@
 import * as React from 'react';
 import { Button, Divider, Typography, Paper, Grid } from '@material-ui/core';
 import DetailRow from 'app/components/dashboard/DetailLine';
+import { Link } from 'react-router-dom';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles';
 
-export namespace Dashboard {
+export namespace DocumentTile {
 	export interface Props {
 		classes?: any,
 		match?: { params: any },
-		id: number,
-		name: string,
-		author: string,
-		duedate: string,
-		workflow: string
-	}
-	export interface DetailLineProps {
-		classes?: any
+		document: any
 	}
 }
 
-class Dashboard extends React.Component<Dashboard.Props> {
+class DocumentTile extends React.Component<DocumentTile.Props> {
 
-	constructor(props: Dashboard.Props, context?: any) {
+	constructor(props: DocumentTile.Props, context?: any) {
 		super(props, context);
 	}
 
 	render() {
 
-		const { classes, id, name, author, workflow, duedate } = this.props;
+		const { classes, document } = this.props;
 
 		return (
 			<Grid item>
@@ -38,13 +32,15 @@ class Dashboard extends React.Component<Dashboard.Props> {
 					<Divider />
 					<table style={{ width: "100%" }}>
 						<tbody>
-							<DetailRow title="Author" data={author} link={true} />
-							<DetailRow title="Workflow Type" data={workflow} link={true} />
-							<DetailRow title="Due Date" data={duedate} />
+							<DetailRow title="Author" data={document.creator} link={true} />
+							<DetailRow title="Workflow Type" data={document.workflow.name} link={true} />
+							<DetailRow title="Due Date" data={"duedate"} />
 						</tbody>
 					</table>
 					<div className={classes.buttonGroup}>
-						<Button variant="contained" className={classes.button} href={"/document/" + id + "/editor"}>Edit</Button>
+						<Link to={"/document/" + document.id + "/editor"}>
+							<Button variant="contained" className={classes.button}>Edit</Button>
+						</Link>
 					</div>
 				</Paper>
 			</Grid>
@@ -52,4 +48,4 @@ class Dashboard extends React.Component<Dashboard.Props> {
 	}
 }
 
-export default withStyles(styles, { withTheme: true })(Dashboard);
+export default withStyles(styles, { withTheme: true })(DocumentTile);
