@@ -37,9 +37,11 @@ class Dashboard extends React.Component<Dashboard.Props> {
 					</Typography>
 					<Divider />
 					<table style={{ width: "100%" }}>
-						<DetailRow title="Author" data={author} link={true} />
-						<DetailRow title="Workflow Type" data={workflow} link={true} />
-						<DetailRow title="Due Date" data={duedate} />
+						<tbody>
+							<DetailRow title="Author" data={author} link={true} />
+							<DetailRow title="Workflow Type" data={workflow} link={true} />
+							<DetailRow title="Due Date" data={duedate} />
+						</tbody>
 					</table>
 					<div className={classes.buttonGroup}>
 						<Button variant="contained" className={classes.button} href={"/document/" + id + "/editor"}>Edit</Button>

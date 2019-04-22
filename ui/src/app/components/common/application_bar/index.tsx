@@ -17,6 +17,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import Divider from '@material-ui/core/Divider';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
+import {Link} from 'react-router-dom';
 import {styles} from "./styles";
 
 export namespace PrimarySearchAppBar {
@@ -96,17 +97,20 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, any
     );
 
     const sideMenuList = (
-      <div className={classes.list}>
-        <List>
-          {['Document', 'Workflow'].map((text, index) => (
-            <ListItem button component="a" key={text}  href={"/" + text.toLowerCase()}>
-              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItem>
-          ))}
-        </List>
-        <Divider />
-      </div>
+      	<div className={classes.list}>
+			<List>
+				{[{title:'Document', url:"/"}, {title:'Workflow', url:"/workflow"}].map((text, index) => (
+					<Link to={text.url}>
+						<ListItem button>
+								<ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
+								<ListItemText primary={text.title} />
+							
+						</ListItem>
+					</Link>
+				))}
+			</List>
+			<Divider />
+      	</div>
     );
 
     return (

@@ -6,12 +6,8 @@ export function styles(theme: Theme)  {
 		outerGrid: {
 			padding: "24px"
 		},
-		buttonGroup: {
-			display: "flex",
-			margin: "24px 24px 0px 24px",
-			"& button": {
-				width: "calc(56px * 2)"
-			}
+		formGroup: {
+			padding: "16px"
 		}
     } as StyleRules);
 }

@@ -4,7 +4,7 @@ export function styles(theme: Theme)  {
     return (
     {
 		documentItem: {
-			minWidth: "200px",
+			//minWidth: "200px",
 			padding: "16px",
 			"& h2": {
 				

@@ -22,7 +22,7 @@ class DetailLine extends React.Component<DetailLine.Props> {
 			<tr>
 			<td>
 				<Typography className={classes.detailLine} variant={"subtitle1"}> 
-					<span style={{fontWeight: "bold"}}>{title}</span>:
+					<span style={{fontWeight: "bold"}}>{title}:</span>
 				</Typography>
 			</td>
 			<td>
