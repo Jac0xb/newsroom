@@ -20,6 +20,7 @@ export namespace WorkflowEditor {
     stages: Array<any>
     dialogCreateNewOpen: boolean
     newStageName: string
+    newStageDesc: string
   }
 }
 class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEditor.State, any> {
@@ -31,7 +32,8 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
   state: WorkflowEditor.State = {
     stages: [],
     dialogCreateNewOpen: false,
-    newStageName: ""
+    newStageName: "",
+    newStageDesc: "",
   }
 
   componentDidMount() {
@@ -50,8 +52,14 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     this.setState({ dialogCreateNewOpen: open });
   };
 
-  handleCreateName = (name: keyof WorkflowEditor.State) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ newStageName: event.target.value });
+  handleTextBoxesChange = (name: keyof WorkflowEditor.State) => (event: React.ChangeEvent<HTMLInputElement>) => {
+
+    if(name == "newStageName"){
+        this.setState({ newStageName: event.target.value });
+    }
+    if(name == "newStageDesc"){
+        this.setState({ newStageDesc: event.target.value });
+    }
   };
 
   handleAddNew = () => {
@@ -59,15 +67,20 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
 
     axios.post("/api/workflows/" + id + "/stages", {
       name: this.state.newStageName,
-      creator: "Jacques"
+      creator: "Jacques",
+      description: this.state.newStageDesc,
     }).then((response) => {
+
       console.log(response);
 
-      this.state.stages.push(response.data)
+      // TODO: will need actual index stored in db
+      const index = response.data.id + 1;
+      
+      // add stage to list 
+      this.state.stages.splice(index, 0, response.data)
 
-      this.setState({
-        dialogCreateNewOpen: false
-      });
+      // reset text boxes, close dialog
+      this.setState({ dialogCreateNewOpen: false, newStageName: "", newStageDesc: ""});
     });
   };
 
@@ -78,39 +91,50 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
   render() {
 
     const { classes } = this.props;
-    const { stages, dialogCreateNewOpen, newStageName } = this.state;
+    const { stages, dialogCreateNewOpen, newStageName, newStageDesc } = this.state;
 
     return (
       <React.Fragment>
         <PrimarySearchAppBar />
         <main className={classes.layout}>
           <Grid container spacing={16}>
-            {stages.map((stage, index) => (
-              <div className={classes.stagePlusButton}>
-                <Grid key={index} className={classes.stageGrid} item>
-                  <WorkflowStage id={stage.id} name={"Stage"} onClick={(id: number) => this.handleClick(id)} />
-                </Grid>
-              </div>
-            ))}
             <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleOpenNewDialog(true)} className={classes.fab}>
               <AddIcon />
             </Fab>
+            {stages.map((stage, index) => (
+              <div className={classes.stagePlusButton}>
+                <Grid key={index} className={classes.stageGrid} item>
+                  <WorkflowStage id={stage.id} name={stage.name} desc={stage.description} onClick={(id: number) => this.handleClick(id)} />
+                </Grid>
+                <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleOpenNewDialog(true)} className={classes.fab}>
+                  <AddIcon />
+                </Fab>
+              </div>
+            ))}
           </Grid>
+
           <Dialog className={classes.dialog}
             disableBackdropClick
             disableEscapeKeyDown
             open={dialogCreateNewOpen}
             onClose={() => this.handleOpenNewDialog(false)}>
-            <DialogTitle id="form-dialog-title">Create New Workflow</DialogTitle>
+            <DialogTitle id="form-dialog-title">Create New Stage</DialogTitle>
             <DialogContent>
               <DialogContentText>Enter the name of the new stage.</DialogContentText>
               <form className={classes.container} noValidate autoComplete="off">
                 <TextField
-                  id="workflow-name"
+                  id="stage-name"
                   label="Name"
                   className={classes.textField}
                   value={newStageName}
-                  onChange={this.handleCreateName('newStageName')}
+                  onChange={this.handleTextBoxesChange('newStageName')}
+                />
+                <TextField
+                  id="stage-desc"
+                  label="Description"
+                  className={classes.textField}
+                  value={newStageDesc}
+                  onChange={this.handleTextBoxesChange('newStageDesc')}
                 />
               </form>
             </DialogContent>

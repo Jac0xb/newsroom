@@ -5,15 +5,15 @@ import { styles } from './styles'
 import { Typography, Divider } from '@material-ui/core';
 import SectionItem from 'app/components/common/section_item';
 
-export namespace WorkflowContents {
+export namespace Workflow {
   export interface Props {
     classes?: any
     workflow: any
   }
 }
-class WorkflowContents extends React.Component<WorkflowContents.Props, any> {
+class Workflow extends React.Component<Workflow.Props, any> {
 
-  constructor(props: WorkflowContents.Props) {
+  constructor(props: Workflow.Props) {
     super(props)
     this.state = {}
   }
@@ -32,11 +32,11 @@ class WorkflowContents extends React.Component<WorkflowContents.Props, any> {
             {workflow.name}
           </Typography>
           <Divider />
-          <SectionItem heading={"Description"} description={"This is a workflow instance"} />
+          <SectionItem heading={"Description"} description={workflow.description} />
         </Paper>
       </main>
     );
   }
 }
 
-export default withStyles(styles, { withTheme: true })(WorkflowContents);
+export default withStyles(styles, { withTheme: true })(Workflow);

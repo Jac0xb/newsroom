@@ -4,7 +4,7 @@ import { styles } from './styles'
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import { DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Grid } from '@material-ui/core';
-import WorkflowContents from 'app/components/workflow/workflow_object';
+import Workflow from 'app/components/workflow/workflow_object';
 import axios from 'axios';
 
 export namespace CreateWorkflow {
@@ -14,6 +14,7 @@ export namespace CreateWorkflow {
     export interface State {
         dialogCreateNewOpen: boolean
         workFlowName: string
+        workFlowDesc: string
         workflows: Array<any>
     }
 }
@@ -27,7 +28,8 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
 
     state: CreateWorkflow.State = {
         dialogCreateNewOpen: false,
-        workFlowName: "Workflow Name",
+        workFlowName: "",
+        workFlowDesc: "",
         workflows: [],
     };
 
@@ -43,30 +45,37 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
         this.setState({ dialogCreateNewOpen: open });
     };
 
-    handleCreateName = (name: keyof CreateWorkflow.State) => (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({ workFlowName: event.target.value });
+    handleTextBoxesChange = (name: keyof CreateWorkflow.State) => (event: React.ChangeEvent<HTMLInputElement>) => {
+
+        if(name == "workFlowName"){
+            this.setState({ workFlowName: event.target.value });
+        }
+        if(name == "workFlowDesc"){
+            this.setState({ workFlowDesc: event.target.value });
+        }
     };
 
     handleCreateNew = () => () => {
 
         axios.post("/api/workflows", {
             name: this.state.workFlowName,
-            creator: "Jacques"
+            creator: "Jacques",
+            description: this.state.workFlowDesc,
+
         }).then((response: any) => {
             console.log(response);
 
             const workflow = response.data
             this.state.workflows.push(workflow)
 
-            this.setState({
-                dialogCreateNewOpen: false,
-            });
+            // close dialog, rest text boxes
+            this.setState({dialogCreateNewOpen: false, workFlowName: "", workFlowDesc: ""});
         });
     };
 
     render() {
 
-        const { dialogCreateNewOpen, workFlowName, workflows } = this.state;
+        const { dialogCreateNewOpen, workFlowName, workFlowDesc, workflows } = this.state;
         const { classes } = this.props;
 
         return (
@@ -78,7 +87,7 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
                     <Grid container justify="center" spacing={16}>
                         {workflows.map(workflow => (
                             <Grid key={workflow.id} item>
-                                <WorkflowContents workflow={workflow} />
+                                <Workflow workflow={workflow} />
                             </Grid>
                         ))}
                     </Grid>
@@ -99,7 +108,14 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
                                 label="Name"
                                 className={classes.textField}
                                 value={workFlowName}
-                                onChange={this.handleCreateName('workFlowName')}
+                                onChange={this.handleTextBoxesChange('workFlowName')}
+                            />
+                            <TextField
+                                id="workflow-desc"
+                                label="Description"
+                                className={classes.textField}
+                                value={workFlowDesc}
+                                onChange={this.handleTextBoxesChange('workFlowDesc')}
                             />
                         </form>
                     </DialogContent>

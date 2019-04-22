@@ -30,7 +30,7 @@ class Dashboard extends React.Component<Dashboard.Props> {
 		const { classes, id, name, author, workflow, duedate } = this.props;
 
 		return (
-			<Grid item md={3}>
+			<Grid item>
 				<Paper className={classes.documentItem} >
 					<Typography variant={"title"}>
 						{name}
