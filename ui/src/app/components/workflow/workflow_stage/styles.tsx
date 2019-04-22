@@ -12,6 +12,10 @@ export function styles(theme: Theme)  {
         button: {
 
         },
+        documentGrid: {
+            display: "block",
+            paddingTop: "12px"
+        }
 
     } as StyleRules);
 }
