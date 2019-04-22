@@ -5,6 +5,7 @@ import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import { DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Grid } from '@material-ui/core';
 import Workflow from 'app/components/workflow/workflow_object';
+import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
 
 export namespace CreateWorkflow {
@@ -55,12 +56,12 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
         }
     };
 
-    handleCreateNew = () => () => {
+    handleCreateNew = (textBoxName: string, textBoxDesc: string) => {
 
         axios.post("/api/workflows", {
-            name: this.state.workFlowName,
+            name: textBoxName,
             creator: "Jacques",
-            description: this.state.workFlowDesc,
+            description: textBoxDesc,
 
         }).then((response: any) => {
             console.log(response);
@@ -92,37 +93,8 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
                         ))}
                     </Grid>
                 </Grid>
-                <Dialog className={classes.dialog}
-                    disableBackdropClick
-                    disableEscapeKeyDown
-                    open={dialogCreateNewOpen}
-                    onClose={this.handleCreateNewOpen(false)}>
-                    <DialogTitle id="form-dialog-title">Create New Workflow</DialogTitle>
-                    <DialogContent>
-                        <DialogContentText>
-                            Enter the name of the new workflow
-                    </DialogContentText>
-                        <form className={classes.container} noValidate autoComplete="off">
-                            <TextField
-                                id="workflow-name"
-                                label="Name"
-                                className={classes.textField}
-                                value={workFlowName}
-                                onChange={this.handleTextBoxesChange('workFlowName')}
-                            />
-                            <TextField
-                                id="workflow-desc"
-                                label="Description"
-                                className={classes.textField}
-                                value={workFlowDesc}
-                                onChange={this.handleTextBoxesChange('workFlowDesc')}
-                            />
-                        </form>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button variant="contained" onClick={this.handleCreateNew()} className={classes.button}>Create</Button>
-                    </DialogActions>
-                </Dialog>
+
+                <DialogItem title={"Create New Workflow"} desc={"Enter the name of the new workflow"} show={dialogCreateNewOpen} handleSave={this.handleCreateNew}/>
             </main>
         );
     }

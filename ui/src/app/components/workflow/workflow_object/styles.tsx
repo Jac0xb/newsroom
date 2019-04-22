@@ -13,6 +13,9 @@ export function styles(theme: Theme)  {
               padding: theme.spacing.unit * 3,
             },
           },
+          button: {
+            marginTop: theme.spacing.unit * 2,
+          }
 
 
     } as StyleRules);

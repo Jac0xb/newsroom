@@ -1,8 +1,9 @@
-import { Dialog, Fab, Grid, DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Button } from '@material-ui/core';
+import { Fab, Grid} from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import PrimarySearchAppBar from 'app/components/common/application_bar';
 import WorkflowStage from 'app/components/workflow/workflow_stage';
+import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
 import * as React from 'react';
 import { styles } from './styles';
@@ -18,22 +19,20 @@ export namespace WorkflowEditor {
   }
   export interface State {
     stages: Array<any>
-    dialogCreateNewOpen: boolean
-    newStageName: string
-    newStageDesc: string
+    createDialogOpen: boolean
+    editDialogOpen: boolean
+    stageID?: number
   }
 }
 class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEditor.State, any> {
 
   constructor(props: WorkflowEditor.Props) {
     super(props)
-  }
-
-  state: WorkflowEditor.State = {
-    stages: [],
-    dialogCreateNewOpen: false,
-    newStageName: "",
-    newStageDesc: "",
+    this.state = {
+      stages: [],
+      createDialogOpen: false,
+      editDialogOpen: false,
+    }
   }
 
   componentDidMount() {
@@ -48,27 +47,24 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     })
   }
 
-  handleOpenNewDialog(open: boolean) {
-    this.setState({ dialogCreateNewOpen: open });
+  handleStageAddClick(open: boolean) {
+    this.setState({ createDialogOpen: open });
   };
 
-  handleTextBoxesChange = (name: keyof WorkflowEditor.State) => (event: React.ChangeEvent<HTMLInputElement>) => {
+  handleStageEditClick = (id: number) => {
+    console.log(id)
 
-    if(name == "newStageName"){
-        this.setState({ newStageName: event.target.value });
-    }
-    if(name == "newStageDesc"){
-        this.setState({ newStageDesc: event.target.value });
-    }
+    this.setState({ editDialogOpen: true, stageID: id});
+
   };
 
-  handleAddNew = () => {
+  handleAddStage = (textBoxName: string, textBoxDesc: string) => {
     const id = this.props.match.params.id;
 
     axios.post("/api/workflows/" + id + "/stages", {
-      name: this.state.newStageName,
+      name: textBoxName,
       creator: "Jacques",
-      description: this.state.newStageDesc,
+      description: textBoxDesc,
     }).then((response) => {
 
       console.log(response);
@@ -80,68 +76,61 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       this.state.stages.splice(index, 0, response.data)
 
       // reset text boxes, close dialog
-      this.setState({ dialogCreateNewOpen: false, newStageName: "", newStageDesc: ""});
+      this.setState({ createDialogOpen: false});
     });
   };
 
-  handleClick = (id: number) => {
-    console.log(id)
+  handleStageEdit = (textBoxName: string, textBoxDesc: string) => {
+    
+    const id = this.props.match.params.id;
+    console.log(this.state.stageID)
+
+    axios.post("/api/workflows/" + id + "/stages", {
+      id: this.state.stageID,
+      name: textBoxName,
+      creator: "Jacques",
+      description: textBoxDesc,
+    }).then((response) => {
+
+      console.log(response);
+
+      // TODO
+      this.componentDidMount();
+      // WILL RERENDER LIST
+    
+      // reset text boxes, close dialog
+      this.setState({ editDialogOpen: false });
+    });
+
   };
 
   render() {
 
     const { classes } = this.props;
-    const { stages, dialogCreateNewOpen, newStageName, newStageDesc } = this.state;
+    const { stages, createDialogOpen, editDialogOpen } = this.state;
 
     return (
       <React.Fragment>
         <PrimarySearchAppBar />
         <main className={classes.layout}>
           <Grid container spacing={16}>
-            <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleOpenNewDialog(true)} className={classes.fab}>
+            <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true)} className={classes.fab}>
               <AddIcon />
             </Fab>
             {stages.map((stage, index) => (
               <div className={classes.stagePlusButton}>
                 <Grid key={index} className={classes.stageGrid} item>
-                  <WorkflowStage id={stage.id} name={stage.name} desc={stage.description} onClick={(id: number) => this.handleClick(id)} />
+                  <WorkflowStage id={stage.id} name={stage.name} desc={stage.description} onClick={(id: number) => this.handleStageEditClick(id)} />
                 </Grid>
-                <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleOpenNewDialog(true)} className={classes.fab}>
+                <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true)} className={classes.fab}>
                   <AddIcon />
                 </Fab>
               </div>
             ))}
           </Grid>
-
-          <Dialog className={classes.dialog}
-            disableBackdropClick
-            disableEscapeKeyDown
-            open={dialogCreateNewOpen}
-            onClose={() => this.handleOpenNewDialog(false)}>
-            <DialogTitle id="form-dialog-title">Create New Stage</DialogTitle>
-            <DialogContent>
-              <DialogContentText>Enter the name of the new stage.</DialogContentText>
-              <form className={classes.container} noValidate autoComplete="off">
-                <TextField
-                  id="stage-name"
-                  label="Name"
-                  className={classes.textField}
-                  value={newStageName}
-                  onChange={this.handleTextBoxesChange('newStageName')}
-                />
-                <TextField
-                  id="stage-desc"
-                  label="Description"
-                  className={classes.textField}
-                  value={newStageDesc}
-                  onChange={this.handleTextBoxesChange('newStageDesc')}
-                />
-              </form>
-            </DialogContent>
-            <DialogActions>
-              <Button variant="contained" onClick={this.handleAddNew} className={classes.button}>Create</Button>
-            </DialogActions>
-          </Dialog>
+          
+          <DialogItem title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleSave={this.handleAddStage}/>
+          <DialogItem title={"Edit Stage"} desc={"Enter stage information"} show={editDialogOpen} handleSave={this.handleStageEdit}/>
         </main>
       </React.Fragment>
     );

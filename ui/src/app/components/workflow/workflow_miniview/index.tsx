@@ -25,7 +25,7 @@ class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, any> {
     return (
       <main className={classes.layout}>
         <Typography className={classes.heading} variant="subtitle1">
-          <Link href={"/workflows/" + workflow.id}>
+          <Link href={"/workflow/" + workflow.id + "/edit"}>
             Workflow: <span style={{ fontWeight: "bold" }}>{workflow.name}</span>
           </Link>
         </Typography>
