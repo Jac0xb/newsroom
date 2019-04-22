@@ -52,12 +52,10 @@ export class DocumentService {
             throw new Errors.BadRequestError("Document workflow was not a number.");
         }
 
-        if (!document.stage) {
-            throw new Errors.BadRequestError("Document stage not present.");
-        }
-
-        if (!(typeof document.stage === "number")) {
-            throw new Errors.BadRequestError("Document stage was not a number.");
+        if (document.stage) {
+            if (!(typeof document.stage === "number")) {
+                throw new Errors.BadRequestError("Document stage was not a number.");
+            }
         }
 
         if (document.description) {
@@ -127,6 +125,7 @@ export class DocumentService {
         }
     }
     public stageRepository = getManager().getRepository(NRStage);
+
     /**
      * Used to interact with any given document/workflow in the database.
      */
@@ -147,18 +146,26 @@ export class DocumentService {
     @POST
     @PreProcessor(DocumentService.createDocumentValidator)
     public async createDocument(document: NRDocument): Promise<NRDocument> {
+        let currWorkflow: NRWorkflow;
+
         try {
-            await this.workflowRepository.findOneOrFail(document.workflow);
+            currWorkflow = await this.workflowRepository.findOneOrFail(document.workflow);
         } catch (err) {
             console.error("Error getting Document associated Workflow:", err);
             throw new NotFoundError("A Workflow with the given ID was not found.");
         }
 
-        try {
-            await this.stageRepository.findOneOrFail(document.stage);
-        } catch (err) {
-            console.error("Error getting Stage for Document:", err);
-            throw new NotFoundError("A Stage for the Document could not be found.");
+        if (!(document.stage)) {
+            const minSeq = await this.getMinStageSequenceId(currWorkflow.id);
+            let currStage: NRStage;
+
+            currStage = await this.stageRepository
+                .createQueryBuilder("stage")
+                .where("stage.sequenceId = :sid", { sid: minSeq })
+                .andWhere("stage.workflowId = :wid ", { wid: currWorkflow.id })
+                .getOne();
+
+            document.stage = currStage;
         }
 
         return await this.documentRepository.save(document);
@@ -618,5 +625,28 @@ export class DocumentService {
             .getRawOne();
 
         return maxSeq.max;
+    }
+
+    /**
+     * Get the minimum sequenceId for the given workflows stages.
+     */
+    private async getMinStageSequenceId(workflowId: number): Promise<number> {
+        let currWorkflow: NRWorkflow;
+
+        try {
+            currWorkflow = await this.workflowRepository.findOneOrFail(workflowId);
+        } catch (err) {
+            console.error("Error getting workflow:", err);
+            throw new NotFoundError("A workflow with the given id was not found.");
+        }
+
+        // Grab the next sequenceId for this set of workflow stages.
+        const minSeq = await this.stageRepository
+            .createQueryBuilder("stage")
+            .select("MIN(stage.sequenceId)", "min")
+            .where("stage.workflowId = :id", { id: currWorkflow.id })
+            .getRawOne();
+
+        return minSeq.min;
     }
 }
