@@ -118,7 +118,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       <React.Fragment>
         <PrimarySearchAppBar />
         <main className={classes.layout}>
-          <Grid container spacing={16}>
+          <Grid className={classes.grid} container spacing={16}>
             <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.fab}>
               <AddIcon />
             </Fab>

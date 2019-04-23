@@ -340,7 +340,7 @@ export class WorkflowService {
             .getMany();
 
         stages.sort((a: NRStage, b: NRStage) => a.sequenceId - b.sequenceId);
-        
+
         return stages;
     }
 
