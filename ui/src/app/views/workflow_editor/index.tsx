@@ -22,6 +22,7 @@ export namespace WorkflowEditor {
     createDialogOpen: boolean
     editDialogOpen: boolean
     stageID: number
+    currStageIdx: number
   }
 }
 class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEditor.State, any> {
@@ -32,7 +33,8 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       stages: [],
       createDialogOpen: false,
       editDialogOpen: false,
-      stageID: 0
+      stageID: 0,
+      currStageIdx: 0
     }
   }
 
@@ -49,51 +51,44 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
   }
 
   handleStageAddClick(open: boolean, id: number) {
-
-    console.log(id);
-
+    // Need the ID of the stage so that we know which button
+    //   is being pressed and where to add the stage.
     this.setState({ createDialogOpen: open, stageID: id });
   };
 
   handleStageEditClick = (id: number) => {
-    console.log(id)
+
+    console.log("editing stage with ID:");
+    console.log(id);
 
     this.setState({ editDialogOpen: true, stageID: id});
-
   };
 
   handleAddStage = (textBoxName: string, textBoxDesc: string) => {
+    // The ID of the workflow.
     const id = this.props.match.params.id;
 
-    console.log("POSTING STAGE AT IDX");
-    console.log(this.state.stageID);
-
+    // /api/workflows/:id/stages/:position
     axios.post("/api/workflows/" + id + "/stages/" + this.state.stageID, {
       name: textBoxName,
       creator: "Jacques",
       description: textBoxDesc,
     }).then((response) => {
 
-      console.log(response);
-
-      // TODO: will need actual index stored in db
+      // Stages have their own ID, but their position in the workflow is
+      //   their 'sequenceId'.
       const index = response.data.sequenceId;
-
-      console.log("got back spot");
-      console.log(response.data.sequenceId);
       
-      // add stage to list 
+      // Add the stage at the correct position in the list.
       this.state.stages.splice(index, 0, response.data)
 
-      // reset text boxes, close dialog
+      // Reset text boxes, close dialog box.
       this.setState({ createDialogOpen: false});
     });
   };
 
   handleStageEdit = (textBoxName: string, textBoxDesc: string) => {
-    
     const id = this.props.match.params.id;
-    console.log(this.state.stageID)
 
     axios.post("/api/workflows/" + id + "/stages", {
       id: this.state.stageID,

@@ -339,6 +339,8 @@ export class WorkflowService {
             .where("stage.workflowId = :id", { id: currWorkflow.id })
             .getMany();
 
+        stages.sort((a: NRStage, b: NRStage) => a.sequenceId - b.sequenceId);
+        
         return stages;
     }
 
