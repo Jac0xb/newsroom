@@ -1,9 +1,9 @@
-import { Stage} from "./stage";
+import { Stage } from "./stage";
 
-export class Workflow {
-    id: number | undefined
-    name: string | undefined
-    creator: string | undefined
-    description: string | undefined
-    stages: Stage[] = []
+export interface Workflow {
+    id: number
+    name: string
+    creator: string
+    description: string
+    stages: Stage[]
 }

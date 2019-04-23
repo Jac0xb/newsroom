@@ -1,7 +1,7 @@
-export class Stage {
-    id: number | undefined
-    name: string | undefined
-    creator: string | undefined
-    description: string | undefined
-    sequenceId: number | undefined
+export interface Stage {
+    id: number
+    name: string
+    creator: string
+    description: string
+    sequenceId: number
 }
