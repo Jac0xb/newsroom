@@ -42,7 +42,6 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     const id = this.props.match.params.id;
 
     axios.get("/api/workflows/" + id + "/stages").then((response) => {
-      console.log(response);
 
       const stages = response.data;
 
@@ -68,7 +67,6 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     // The ID of the workflow.
     const id = this.props.match.params.id;
 
-    // /api/workflows/:id/stages/:position
     axios.post("/api/workflows/" + id + "/stages/" + this.state.stageID, {
       name: textBoxName,
       creator: "Jacques",
@@ -125,7 +123,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
             {stages.map((stage, index) => (
               <div className={classes.stagePlusButton}>
                 <Grid key={index} className={classes.stageGrid} item>
-                  <WorkflowStage id={stage.id} name={stage.name} workflowID={this.props.match.params.id} desc={stage.description} onClick={(id: number) => this.handleStageEditClick(id)} />
+                  <WorkflowStage id={stage.id} name={stage.name} desc={stage.description} onClick={(id: number) => this.handleStageEditClick(id)} />
                 </Grid>
                 <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index + 1)} className={classes.fab}>
                   <AddIcon />

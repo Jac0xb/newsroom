@@ -5,6 +5,8 @@ export function styles(theme: Theme)  {
     {
        stage: {
             padding: theme.spacing.unit * 2,
+            minHeight: "400px",
+            minWidth: "350px",
         },
         buttonGroup: {
             paddingTop: theme.spacing.unit * 2,

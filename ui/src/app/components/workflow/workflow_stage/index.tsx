@@ -10,14 +10,13 @@ import axios from 'axios';
 export namespace WorkflowStage {
     export interface Props {
         classes?: any 
-        workflowID: number
         id: number
         name: string
         desc: string
         onClick: Function
     }
     export interface State {
-      documents: any[]
+      stageDocuments: any[]
     }
 }
 class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.State, any> {
@@ -25,27 +24,36 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
   constructor(props: WorkflowStage.Props) {
       super(props)
       this.state = {
-        documents: []
+        stageDocuments: []
       }
   }
 
   componentDidMount() {
-    // axios.get("/api/documents/workflow/" + this.props.workflowID + "/").then((response) => {
+    const stageDocuments: any[] = [] 
+
 		axios.get("/api/documents/").then((response) => {
-			console.log(response.data);
 
-			const documents = response.data;
+      const documents: any[] = response.data
 
-			this.setState({ documents })
+      // Get all documents for this stage
+      documents.forEach(document => {
+        if(document.stage != null){
+          if(document.stage.id == this.props.id){
+            stageDocuments.push(document)
+          }
+        }
+      });
+      
+			this.setState({ stageDocuments })
 		});
 	}
   
   render() {
 
     const { classes } = this.props;
-    const { documents } = this.state;
+    const { stageDocuments } = this.state;
 
-		const docList = documents.map((document, i) =>
+    const docList = stageDocuments.map((document, i) =>
 			<DocumentTile key={i} document={document} />
 		);
 
