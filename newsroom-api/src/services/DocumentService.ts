@@ -427,7 +427,6 @@ export class DocumentService {
     @Path("/:id/next")
     public async moveNext(@IsInt @PathParam("id") docId: number): Promise<NRDocument> {
         let currDocument: NRDocument;
-        let currStage: NRStage;
 
         try {
             currDocument = await this.documentRepository.findOneOrFail(docId);
@@ -436,42 +435,23 @@ export class DocumentService {
             throw new NotFoundError("A Document with the given ID could not be found");
         }
 
-        // TODO: How to do this with TypeORM?
-        const stageID = await this.documentRepository
-            .createQueryBuilder("document")
-            .select("document.stageId", "val")
-            .where("document.id = :did", { did: currDocument.id })
-            .getRawOne();
+        const currStage = currDocument.stage;
 
-        try {
-            currStage = await this.stageRepository.findOneOrFail(stageID.val);
-        } catch (err) {
-            console.error("Error getting Stage for Document:", err);
-            throw new NotFoundError("A Stage for the Document could not be found.");
-        }
-
-        // TODO: Better way to do this with TypeORM?
-        //       currDocument.workflow.id doesn't work -> load relations?
-        const workflowId = await this.documentRepository
-            .createQueryBuilder("document")
-            .select("document.workflowId", "val")
-            .where("document.id = :did", { did: currDocument.id })
-            .getRawOne();
+        const workflowId = currDocument.workflow.id;
 
         // Used to determine if the document is done in its workflow.
-        const maxSeq = await this.getMaxStageSequenceId(workflowId.val);
+        const maxSeq = await this.getMaxStageSequenceId(workflowId);
 
         // The document can be moved forward.
         if ((currStage.sequenceId + 1) <= maxSeq) {
             // Get id of next stage in sequence.
-            const nextId = await this.stageRepository
+            const nextStage = await this.stageRepository
                 .createQueryBuilder("stage")
-                .select("stage.id", "val")
                 .where("stage.sequenceId = :sid", { sid: currStage.sequenceId + 1 })
-                .andWhere("stage.workflowId = :wid", { wid: workflowId.val })
-                .getRawOne();
+                .andWhere("stage.workflowId = :wid", { wid: workflowId })
+                .getOne();
 
-            currDocument.stage = nextId.val;
+            currDocument.stage = nextStage;
         }
 
         // It is possible that no updates were made if document is already at the
@@ -523,7 +503,7 @@ export class DocumentService {
             .getRawOne();
 
         // The first stage in any workflow is always sequence 1.
-        const minSeq = 1;
+        const minSeq = 0;
 
         // The document can be moved forward.
         if ((currStage.sequenceId - 1) >= minSeq) {
@@ -552,7 +532,6 @@ export class DocumentService {
     @Path("/:id/prev")
     public async movePrev(@IsInt @PathParam("id") docId: number): Promise<NRDocument> {
         let currDocument: NRDocument;
-        let currStage: NRStage;
 
         try {
             currDocument = await this.documentRepository.findOneOrFail(docId);
@@ -561,41 +540,23 @@ export class DocumentService {
             throw new NotFoundError("A Document with the given ID could not be found");
         }
 
-        const stageID = await this.documentRepository
-            .createQueryBuilder("document")
-            .select("document.stageId", "val")
-            .where("document.id = :did", { did: currDocument.id })
-            .getRawOne();
+        const currStage = currDocument.stage;
 
-        try {
-            currStage = await this.stageRepository.findOneOrFail(stageID.val);
-        } catch (err) {
-            console.error("Error getting Stage for Document:", err);
-            throw new NotFoundError("A Stage for the Document could not be found.");
-        }
-
-        // TODO: Better way to do this with TypeORM?
-        //       currDocument.workflow.id doesn't work -> load relations?
-        const workflowId = await this.documentRepository
-            .createQueryBuilder("document")
-            .select("document.workflowId", "val")
-            .where("document.id = :did", { did: currDocument.id })
-            .getRawOne();
+        const workflowId = currDocument.workflow.id;
 
         // The first stage in any workflow is always sequence 1.
-        const minSeq = 1;
+        const minSeq = 0;
 
         // The document can be moved forward.
         if ((currStage.sequenceId - 1) >= minSeq) {
             // Get id of next stage in sequence.
-            const prevId = await this.stageRepository
+            const prevStage = await this.stageRepository
                 .createQueryBuilder("stage")
-                .select("stage.id", "val")
                 .where("stage.sequenceId = :sid", { sid: currStage.sequenceId - 1 })
-                .andWhere("stage.workflowId = :wid", { wid: workflowId.val })
-                .getRawOne();
+                .andWhere("stage.workflowId = :wid", { wid: workflowId })
+                .getOne();
 
-            currDocument.stage = prevId.val;
+            currDocument.stage = prevStage;
         }
 
         // It is possible that no updates were made if document is already at the
