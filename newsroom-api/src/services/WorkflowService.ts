@@ -341,7 +341,7 @@ export class WorkflowService {
                             @IsInt @PathParam("pos") position: number): Promise<NRStage> {
 
         // Invalid position.
-        if (position <= 0) {
+        if (position < 0) {
             throw new Errors.BadRequestError("Stage position cannot be negative.");
         }
 
@@ -358,14 +358,14 @@ export class WorkflowService {
         const maxSeqId = await this.getMaxStageSequenceId(currWorkflow.id);
 
         if (maxSeqId == null) { // No stages yet, just add it.
-            stage.sequenceId = 1;
+            stage.sequenceId = 0;
         } else if (position > maxSeqId + 1) {
             throw new Errors.BadRequestError("Stage position past bounds.");
         } else { // Insert normally.
             let currSeq = maxSeqId;
 
             // Update sequences.
-            while (currSeq >= 1) {
+            while (currSeq >= 0) {
                 if (currSeq === (position - 1)) {
                     break;
                 }

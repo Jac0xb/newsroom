@@ -21,7 +21,7 @@ export namespace WorkflowEditor {
     stages: Array<any>
     createDialogOpen: boolean
     editDialogOpen: boolean
-    stageID?: number
+    stageID: number
   }
 }
 class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEditor.State, any> {
@@ -32,6 +32,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       stages: [],
       createDialogOpen: false,
       editDialogOpen: false,
+      stageID: 0
     }
   }
 
@@ -47,8 +48,11 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     })
   }
 
-  handleStageAddClick(open: boolean) {
-    this.setState({ createDialogOpen: open });
+  handleStageAddClick(open: boolean, id: number) {
+
+    console.log(id);
+
+    this.setState({ createDialogOpen: open, stageID: id });
   };
 
   handleStageEditClick = (id: number) => {
@@ -61,7 +65,10 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
   handleAddStage = (textBoxName: string, textBoxDesc: string) => {
     const id = this.props.match.params.id;
 
-    axios.post("/api/workflows/" + id + "/stages", {
+    console.log("POSTING STAGE AT IDX");
+    console.log(this.state.stageID);
+
+    axios.post("/api/workflows/" + id + "/stages/" + this.state.stageID, {
       name: textBoxName,
       creator: "Jacques",
       description: textBoxDesc,
@@ -70,7 +77,10 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       console.log(response);
 
       // TODO: will need actual index stored in db
-      const index = response.data.id + 1;
+      const index = response.data.sequenceId;
+
+      console.log("got back spot");
+      console.log(response.data.sequenceId);
       
       // add stage to list 
       this.state.stages.splice(index, 0, response.data)
@@ -114,7 +124,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
         <PrimarySearchAppBar />
         <main className={classes.layout}>
           <Grid container spacing={16}>
-            <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true)} className={classes.fab}>
+            <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.fab}>
               <AddIcon />
             </Fab>
             {stages.map((stage, index) => (
@@ -122,7 +132,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
                 <Grid key={index} className={classes.stageGrid} item>
                   <WorkflowStage id={stage.id} name={stage.name} desc={stage.description} onClick={(id: number) => this.handleStageEditClick(id)} />
                 </Grid>
-                <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true)} className={classes.fab}>
+                <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index + 1)} className={classes.fab}>
                   <AddIcon />
                 </Fab>
               </div>
