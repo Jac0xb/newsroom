@@ -6,8 +6,11 @@ export function styles(theme: Theme)  {
             layout: {
                 marginTop: theme.spacing.unit * 3,
                 marginBottom: theme.spacing.unit * 3,
-                padding: theme.spacing.unit * 2,
-            },
+				padding: theme.spacing.unit * 2,
+			},
+			grid: {
+				JustifyContent: "center"
+			},
             stagePlusButton: {
                 display: "inline-flex"
             },
