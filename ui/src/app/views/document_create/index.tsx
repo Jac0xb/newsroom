@@ -17,7 +17,7 @@ export namespace DocumentCreate {
 	export interface State {
 		nickname?: string
 		workflow?: number
-		availableWorkflows: {name: string, id: number}[]
+		availableWorkflows: { name: string, id: number }[]
 		submitted: boolean
 		flash?: string
 	}
@@ -28,32 +28,32 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 
 	constructor(props: DocumentCreate.Props, context?: any) {
 		super(props, context);
-		this.state = {nickname: "", workflow: -1, availableWorkflows : [], submitted: false, flash: ""}
+		this.state = { nickname: "", workflow: -1, availableWorkflows: [], submitted: false, flash: "" }
 	}
 
 	componentDidMount() {
 		//const id = this.props.match.params.id;
-	
+
 		axios.get("/api/workflows").then((response) => {
-		  console.log(response.data);
-	
-		  const workflows = response.data;
-	
-		  this.setState({ availableWorkflows: workflows })
+			console.log(response.data);
+
+			const workflows = response.data;
+
+			this.setState({ availableWorkflows: workflows })
 		});
 	}
 
 	onSubmit() {
+		this.setState({ flash: "" })
 
-		this.setState({flash: ""})
-		axios.post("/api/documents", {name: this.state.nickname, creator: "Jacques", workflow: this.state.workflow, stage: 1}).then((response:any) => {
-			
+		axios.post("/api/documents", { name: this.state.nickname, creator: "Jacques", workflow: this.state.workflow }).then((response: any) => {
+
 			if (response) {
-				this.setState({submitted: true})
+				this.setState({ submitted: true })
 			}
 
 		}).catch((error) => {
-			this.setState({flash: error.response.data.message});
+			this.setState({ flash: error.response.data.message });
 		});
 	}
 
@@ -71,7 +71,7 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 				<Grid className={classes.outerGrid} alignContent={"center"} container spacing={24} direction="row" justify="center" alignItems="center">
 					<Grid item xs={8} md={6}>
 						<Paper className={classes.formGroup}>
-							{ (this.state.flash != "") ? 
+							{(this.state.flash != "") ?
 								<Paper className={classes.flashMessage}>
 									<Typography variant="caption">
 										{this.state.flash}
@@ -87,7 +87,7 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 									margin="normal"
 									variant="filled"
 									value={this.state.nickname}
-									onChange={(c) => this.setState({nickname: c.target.value})}
+									onChange={(c) => this.setState({ nickname: c.target.value })}
 									InputLabelProps={{
 										shrink: true,
 									}}
@@ -98,16 +98,16 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 									margin="normal"
 									variant="filled"
 									value={this.state.workflow}
-									onChange={(c) => this.setState({workflow: parseInt(c.target.value)})}
+									onChange={(c) => this.setState({ workflow: parseInt(c.target.value) })}
 									InputLabelProps={{
 										shrink: true,
 									}}
 								>
-								{this.state.availableWorkflows.map(workflow => (
-									<MenuItem key={workflow.id} value={workflow.id}>
-									  {workflow.name}
-									</MenuItem>
-								  ))}
+									{this.state.availableWorkflows.map(workflow => (
+										<MenuItem key={workflow.id} value={workflow.id}>
+											{workflow.name}
+										</MenuItem>
+									))}
 								</TextField>
 								<TextField
 									disabled={true}
@@ -115,7 +115,7 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 									margin="normal"
 									variant="filled"
 									value={cookies.get("username")}
-									onChange={(c) => this.setState({nickname: c.target.value})}
+									onChange={(c) => this.setState({ nickname: c.target.value })}
 									InputLabelProps={{
 										shrink: true,
 									}}
