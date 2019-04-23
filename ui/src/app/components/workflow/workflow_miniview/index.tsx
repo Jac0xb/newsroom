@@ -35,8 +35,12 @@ class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, any> {
               Workflow: <span style={{ fontWeight: "bold" }}>{workflow.name}</span>
             </Link>
           </Typography>
-          <Button variant="contained" size="small" onClick={() => this.props.onMove("prev")}>Back</Button>
-          <Button variant="contained" size="small" onClick={() => this.props.onMove("next")}>Next</Button>
+          <Button variant="contained" size="small"
+            disabled={currentStage == 0}
+            onClick={() => this.props.onMove("prev")}>Back</Button>
+          <Button variant="contained" size="small"
+            disabled={currentStage == workflow.stages.length - 1}
+            onClick={() => this.props.onMove("next")}>Next</Button>
         </div>
         <Stepper orientation="vertical" className={classes.stepper} activeStep={currentStage}>
           {workflow.stages.map((stage) => {
