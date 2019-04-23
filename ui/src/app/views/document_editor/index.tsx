@@ -13,6 +13,7 @@ import 'draft-js/dist/Draft.css';
 import * as React from 'react';
 import { styles } from './styles';
 
+
 export namespace EditorContainer {
 	export interface Props {
 		classes: any
@@ -26,12 +27,15 @@ export namespace EditorContainer {
 }
 
 class EditorContainer extends React.Component<EditorContainer.Props, any> {
-	constructor(props: EditorContainer.Props) {
-		super(props)
-	}
+	documentId: number
 
 	state: EditorContainer.State = {
 		editorState: EditorState.createEmpty()
+	}
+
+	constructor(props: EditorContainer.Props) {
+		super(props)
+		this.documentId = props.match.params.id;
 	}
 
 	componentDidMount() {
@@ -95,7 +99,8 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 								<Divider />
 								<WorkflowMiniView
 									workflow={document.workflow}
-									currentStage={document.stage.sequenceId!} />
+									currentStage={document.stage.sequenceId!}
+									onMove={(direction) => this.handleMove(direction)} />
 							</Paper>
 						</Grid>
 					</Grid>
@@ -137,6 +142,13 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 		}
 
 		return 'not-handled';
+	}
+
+	handleMove(direction: string) {
+		axios.put("/api/documents/" + this.documentId + "/" + direction).then((response) => {
+			console.log(response);
+			this.setState({ document: response.data })
+		});
 	}
 }
 

@@ -1,14 +1,17 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import { Typography, Button, Stepper, Step, StepLabel, Link } from '@material-ui/core';
+import { Typography, Button, Stepper, Step, StepLabel, Grid } from '@material-ui/core';
 import { Workflow } from 'app/models/workflow';
+import { Link as RouterLink } from 'react-router-dom'
+import { Link } from '@material-ui/core';
 
 export namespace WorkflowMiniView {
   export interface Props {
     classes?: any
     workflow: Workflow
     currentStage: number
+    onMove: (direction: string) => void
   }
 }
 class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, any> {
@@ -22,25 +25,30 @@ class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, any> {
 
     const { classes, workflow, currentStage } = this.props;
 
+    const workflowRouterLink = (props: any) => <RouterLink to={"/workflow/" + workflow.id + "/edit"} {...props} />
+
     return (
       <main className={classes.layout}>
-        <Typography className={classes.heading} variant="subtitle1">
-          <Link href={"/workflow/" + workflow.id + "/edit"}>
-            Workflow: <span style={{ fontWeight: "bold" }}>{workflow.name}</span>
-          </Link>
-        </Typography>
-        <Stepper className={classes.stepper} activeStep={currentStage - 1}>
+        <div className={classes.header}>
+          <Typography variant="subtitle1">
+            <Link component={workflowRouterLink}>
+              Workflow: <span style={{ fontWeight: "bold" }}>{workflow.name}</span>
+            </Link>
+          </Typography>
+          <Button variant="contained" size="small" onClick={() => this.props.onMove("prev")}>Back</Button>
+          <Button variant="contained" size="small" onClick={() => this.props.onMove("next")}>Next</Button>
+        </div>
+        <Stepper orientation="vertical" className={classes.stepper} activeStep={currentStage}>
           {workflow.stages.map((stage) => {
             return (
               <Step key={stage.id}>
-                <StepLabel>{stage.name}</StepLabel>
+                <StepLabel>
+                  {stage.name}
+                  <Typography variant="caption">{stage.description}</Typography>
+                </StepLabel>
               </Step>)
           })}
         </Stepper>
-        <div className={classes.buttonGroup}>
-          <Button variant="contained" className={classes.button}>Back</Button>
-          <Button variant="contained" className={classes.button}>Next</Button>
-        </div>
       </main >
     );
   }

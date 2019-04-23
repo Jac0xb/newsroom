@@ -10,10 +10,10 @@ export function styles(theme: Theme) {
       padding: 0,
       marginBottom: theme.spacing.unit
     },
-    buttonGroup: {
+    header: {
       display: "flex",
       justifyContent: "space-around",
       marginBottom: theme.spacing.unit
-    },
+    }
   } as StyleRules);
 }
