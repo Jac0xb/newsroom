@@ -84,15 +84,13 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
                 <div className={classes.buttonGroup}>
                     <Button variant="contained" onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create New</Button>
                 </div>
-                <Grid item xs={12}>
-                    <Grid container justify="center" spacing={16}>
+                    <Grid container spacing={16} className={classes.container}>
                         {workflows.map(workflow => (
-                            <Grid key={workflow.id} item>
+                            <Grid key={workflow.id} item className={classes.outerGrid}>
                                 <Workflow workflow={workflow} />
                             </Grid>
                         ))}
                     </Grid>
-                </Grid>
 
                 <DialogItem title={"Create New Workflow"} desc={"Enter the name of the new workflow"} show={dialogCreateNewOpen} handleSave={this.handleCreateNew}/>
             </main>

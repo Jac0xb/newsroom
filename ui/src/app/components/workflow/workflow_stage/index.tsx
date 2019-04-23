@@ -10,6 +10,7 @@ import axios from 'axios';
 export namespace WorkflowStage {
     export interface Props {
         classes?: any 
+        workflowID: number
         id: number
         name: string
         desc: string
@@ -29,8 +30,8 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
   }
 
   componentDidMount() {
-
-		axios.get("/api/documents").then((response) => {
+    // axios.get("/api/documents/workflow/" + this.props.workflowID + "/").then((response) => {
+		axios.get("/api/documents/").then((response) => {
 			console.log(response.data);
 
 			const documents = response.data;

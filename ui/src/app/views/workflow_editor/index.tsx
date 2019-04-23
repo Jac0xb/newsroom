@@ -125,7 +125,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
             {stages.map((stage, index) => (
               <div className={classes.stagePlusButton}>
                 <Grid key={index} className={classes.stageGrid} item>
-                  <WorkflowStage id={stage.id} name={stage.name} desc={stage.description} onClick={(id: number) => this.handleStageEditClick(id)} />
+                  <WorkflowStage id={stage.id} name={stage.name} workflowID={this.props.match.params.id} desc={stage.description} onClick={(id: number) => this.handleStageEditClick(id)} />
                 </Grid>
                 <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index + 1)} className={classes.fab}>
                   <AddIcon />
