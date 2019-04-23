@@ -25,6 +25,8 @@ class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, any> {
 
     const { classes, workflow, currentStage } = this.props;
 
+    const stages = workflow.stages.sort((a, b) => a.sequenceId - b.sequenceId);
+
     const workflowRouterLink = (props: any) => <RouterLink to={"/workflow/" + workflow.id + "/edit"} {...props} />
 
     return (
@@ -39,11 +41,11 @@ class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, any> {
             disabled={currentStage == 0}
             onClick={() => this.props.onMove("prev")}>Back</Button>
           <Button variant="contained" size="small"
-            disabled={currentStage == workflow.stages.length - 1}
+            disabled={currentStage == stages.length - 1}
             onClick={() => this.props.onMove("next")}>Next</Button>
         </div>
         <Stepper orientation="vertical" className={classes.stepper} activeStep={currentStage}>
-          {workflow.stages.map((stage) => {
+          {stages.map((stage) => {
             return (
               <Step key={stage.id}>
                 <StepLabel>

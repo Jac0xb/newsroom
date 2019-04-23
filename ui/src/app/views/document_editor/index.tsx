@@ -93,10 +93,6 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 									onClick={(format) => this.handleFormatChange(format)}
 									onCreateUpdateFormats={(updateFormats) => this.state.styleBarUpdateFormats = updateFormats} />
 								<Divider />
-								<Typography>
-									Insert media
-								</Typography>
-								<Divider />
 								<WorkflowMiniView
 									workflow={document.workflow}
 									currentStage={document.stage.sequenceId!}
