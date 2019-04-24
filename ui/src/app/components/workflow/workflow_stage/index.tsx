@@ -13,7 +13,8 @@ export namespace WorkflowStage {
         id: number
         name: string
         desc: string
-        onClick: Function
+        onEditClick: Function
+        onDeleteClick: Function
     }
     export interface State {
       stageDocuments: any[]
@@ -59,7 +60,7 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
 
     return (
       <main className={classes.layout}>
-        <Paper className={classes.stage} key={this.props.id} onClick={() => this.props.onClick(this.props.id)}>
+        <Paper className={classes.stage} key={this.props.id}>
 			<Typography className={classes.heading} variant="title">
 				{this.props.name}
 			</Typography>
@@ -71,7 +72,8 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
 				{docList}
 			</Grid>
 			<div className={classes.buttonGroup}>
-				<Button variant="contained" className={classes.button}>Edit</Button>
+				<Button variant="contained" className={classes.button} onClick={() => this.props.onEditClick(this.props.id)}>Edit</Button>
+        <Button variant="contained" className={classes.button} onClick={() => this.props.onDeleteClick(this.props.id)}>Delete</Button>
 			</div>
         </Paper>
       </main>

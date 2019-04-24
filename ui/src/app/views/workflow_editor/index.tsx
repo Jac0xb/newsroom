@@ -106,6 +106,21 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
 
   };
 
+  handleStageDeleteClick = (stageID: number) => {
+    const id = this.props.match.params.id;
+
+    axios.delete("/api/workflows/" + id + "/stages/" + stageID, {
+    }).then((response) => {
+
+      console.log(response);
+
+      // TODO
+      this.componentDidMount();
+      // WILL RERENDER LIST
+    });
+
+  };
+
   render() {
 
     const { classes } = this.props;
@@ -123,7 +138,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
 		  </div>
           {stages.map((stage, index) => (
             <div className={classes.stagePlusButton}>
-              	<WorkflowStage id={stage.id} name={stage.name} desc={stage.description} onClick={(id: number) => this.handleStageEditClick(id)} />
+              	<WorkflowStage id={stage.id} name={stage.name} desc={stage.description} onEditClick={(id: number) => this.handleStageEditClick(id)} onDeleteClick={(id: number) => this.handleStageDeleteClick(id)}/>
 				<Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index + 1)} className={classes.fab}>
 				<AddIcon />
 				</Fab>
