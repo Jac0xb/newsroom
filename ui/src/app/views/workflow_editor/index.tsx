@@ -115,17 +115,17 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       <React.Fragment>
         <PrimarySearchAppBar />
         <main className={classes.layout}>
-          <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.fab}>
-            <AddIcon />
-          </Fab>
+			<div className={classes.stagePlusButton}>
+			<Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.fab}>
+				<AddIcon />
+			</Fab>
+		  </div>
           {stages.map((stage, index) => (
             <div className={classes.stagePlusButton}>
-            <Grid key={index} className={classes.stageGrid} item>
-              <WorkflowStage id={stage.id} name={stage.name} desc={stage.description} onClick={(id: number) => this.handleStageEditClick(id)} />
-            </Grid>
-            <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index + 1)} className={classes.fab}>
-              <AddIcon />
-            </Fab>
+              	<WorkflowStage id={stage.id} name={stage.name} desc={stage.description} onClick={(id: number) => this.handleStageEditClick(id)} />
+				<Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index + 1)} className={classes.fab}>
+				<AddIcon />
+				</Fab>
             </div>
           ))}
           <DialogItem title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleClose={() => this.setState({createDialogOpen: false})}  handleSave={this.handleAddStage}/>
