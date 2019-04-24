@@ -78,26 +78,35 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 		var sortTypes = [
 			{name: "Author", type: SortSetting.Author},
 			{name: "Workflow", type: SortSetting.Workflow},
-			{name: "Priority", type: SortSetting.Priority}
+			{name: "Priority", type: SortSetting.Priority},
+			{name: "None", type: SortSetting.None}
 		]
 
 		const { classes } = this.props;
 		const { filter } = this.state;
-			const jsxDocuments = _.map(this.getSortedAndFilteredDocuments(), ((docGroup: {key: string, documents: Document[]}) => 
-			<React.Fragment key={docGroup.key}>
-				<Typography style={{marginLeft:"24px"}} variant={"title"}>
-					{docGroup.key}
-				</Typography>
-				<Divider style={{margin:"0 24px"}}/>
-				<div className={classes.outerGrid}>
-					{
-						_.map(docGroup.documents, (document) =>
-							<DocumentTile key={document.id} document={document} />
-						)
+		const jsxDocuments = _.map(this.getSortedAndFilteredDocuments(), ((docGroup: {key: string, documents: Document[]}) => {
+			
+			if (docGroup.documents.length == 0) return <div></div>
+			
+			return (
+				<React.Fragment key={docGroup.key}>
+					{ (docGroup.key !== "Unfiltered") ?
+						<Typography style={{marginLeft:"24px"}} variant={"title"}>
+							{docGroup.key}
+						</Typography> :
+						<div></div>
 					}
-				</div>
-			</React.Fragment>
-		));
+					<Divider style={{margin:"0 24px"}}/>
+					<div className={classes.outerGrid}>
+						{
+							_.map(docGroup.documents, (document) =>
+								<DocumentTile key={document.id} document={document} />
+							)
+						}
+					</div>
+				</React.Fragment>
+			)
+		}));
 
 		return (
 			<React.Fragment>
@@ -114,16 +123,17 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 							>
 							<AccountCircleIcon />
 					</Button>
-					<form>
+					<form style={{display: "flex"}}>
 					<TextField
 					className={classes.textField}
 					placeholder="Filter Author"
 					margin={"none"}
-					style={{width: 300}}
+					style={{width: 300, marginRight: "16px"}}
 					value={this.state.filterInput}
 					disabled={(!filter)}
 					onChange={(c) => this.setState({ filterInput: c.target.value })}
 					/>
+					<Typography variant={"subtitle1"} style={{marginRight: "16px"}}>Sorting</Typography>
 					<TextField
 					select
 					className={classes.textField}
