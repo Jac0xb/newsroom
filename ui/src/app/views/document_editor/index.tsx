@@ -1,4 +1,4 @@
-import Divider from '@material-ui/core/Divider';
+import { TextField } from '@material-ui/core';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import { withStyles } from '@material-ui/core/styles';
@@ -8,7 +8,7 @@ import StyleBar from 'app/components/common/style_bar';
 import WorkflowMiniView from 'app/components/workflow/workflow_miniview';
 import { Document } from 'app/models';
 import axios from 'axios';
-import { Editor, EditorState, RichUtils, convertFromRaw, convertToRaw } from 'draft-js';
+import { convertFromRaw, convertToRaw, Editor, EditorState, RichUtils } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import * as React from 'react';
 import { styles } from './styles';
@@ -23,6 +23,7 @@ export namespace EditorContainer {
 		document?: Document
 		editorState: EditorState
 		styleBarUpdateFormats?: (formats: string[]) => void
+		errorText?: string
 	}
 }
 
@@ -76,7 +77,18 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 					<Grid container spacing={24}>
 						<Grid item xs={9}>
 							<Paper className={classes.documentTitlePaper}>
-								<Typography variant="h4">{document.name}</Typography>
+								<Typography variant="h5">
+									<TextField
+										fullWidth
+										id="document-name"
+										label="Document Name"
+										placeholder="Document Name"
+										className={classes.documentTitleTextField}
+										margin="normal"
+										defaultValue={document.name}
+										onChange={(event) => this.handleDocumentNameChange(event)}
+										error={!!this.state.errorText} />
+								</Typography>
 							</Paper>
 							<Paper className={classes.editor}>
 								<Editor editorState={editorState}
@@ -144,6 +156,26 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 			console.log(response);
 			this.setState({ document: response.data })
 		});
+	}
+
+	handleDocumentNameChange(event: React.ChangeEvent<any>) {
+		const name = event.target.value;
+
+		if (name.trim().length === 0) {
+			this.setState({ errorText: "Name must not be empty" })
+		} else {
+			this.setState({ errorText: null });
+
+			if (this.state.document) {
+				this.state.document.name = name
+			}
+
+			axios.put("/api/documents/" + this.documentId, {
+				name: name
+			}).then((response) => {
+				console.log(response);
+			});
+		}
 	}
 }
 

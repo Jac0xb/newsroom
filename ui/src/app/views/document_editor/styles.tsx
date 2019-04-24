@@ -20,7 +20,10 @@ export function styles(theme: Theme) {
           marginTop: theme.spacing.unit * 2,
           marginBottom: theme.spacing.unit * 2,
           padding: theme.spacing.unit * 2,
-        },
+        }
+      },
+      documentTitleTextField: {
+        margin: 0
       },
       paper: {
         marginTop: theme.spacing.unit,
