@@ -1,4 +1,4 @@
-import { Fab, Grid} from '@material-ui/core';
+import { Fab, Grid } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import PrimarySearchAppBar from 'app/components/common/application_bar';
@@ -60,7 +60,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     console.log("editing stage with ID:");
     console.log(id);
 
-    this.setState({ editDialogOpen: true, stageID: id});
+    this.setState({ editDialogOpen: true, stageID: id });
   };
 
   handleAddStage = (textBoxName: string, textBoxDesc: string) => {
@@ -76,20 +76,19 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       // Stages have their own ID, but their position in the workflow is
       //   their 'sequenceId'.
       const index = response.data.sequenceId;
-      
+
       // Add the stage at the correct position in the list.
       this.state.stages.splice(index, 0, response.data)
 
       // Reset text boxes, close dialog box.
-      this.setState({ createDialogOpen: false});
+      this.setState({ createDialogOpen: false });
     });
   };
 
   handleStageEdit = (textBoxName: string, textBoxDesc: string) => {
     const id = this.props.match.params.id;
 
-    axios.post("/api/workflows/" + id + "/stages", {
-      id: this.state.stageID,
+    axios.put("/api/workflows/" + id + "/stages/" + this.state.stageID, {
       name: textBoxName,
       creator: "Jacques",
       description: textBoxDesc,
@@ -100,7 +99,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       // TODO
       this.componentDidMount();
       // WILL RERENDER LIST
-    
+
       // reset text boxes, close dialog
       this.setState({ editDialogOpen: false });
     });
@@ -131,9 +130,9 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
               </div>
             ))}
           </Grid>
-          
-          <DialogItem title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleSave={this.handleAddStage}/>
-          <DialogItem title={"Edit Stage"} desc={"Enter stage information"} show={editDialogOpen} handleSave={this.handleStageEdit}/>
+
+          <DialogItem title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleSave={this.handleAddStage} />
+          <DialogItem title={"Edit Stage"} desc={"Enter stage information"} show={editDialogOpen} handleSave={this.handleStageEdit} />
         </main>
       </React.Fragment>
     );
