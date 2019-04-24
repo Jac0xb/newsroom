@@ -13,7 +13,7 @@ export function styles(theme: Theme)  {
 		},
 		buttonGroup: {
 			display: "flex",
-			margin: "24px 24px 0px 24px",
+			margin: "24px 24px 24px 24px",
 			"& button": {
 				heightMax: "36px",
 				height: "36px",
@@ -24,8 +24,8 @@ export function styles(theme: Theme)  {
 		textField: {
 			marginRight: theme.spacing.unit,
 			marginTop: 0,
-			mrginBottom: 0,
-			width: 300
+			marginBottom: 0
+			
 		}
     } as StyleRules);
 }

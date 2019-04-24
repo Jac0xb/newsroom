@@ -1,21 +1,25 @@
 import * as React from 'react';
 import PrimarySearchAppBar from 'app/components/common/application_bar';
-import { Button, TextField } from '@material-ui/core';
+import { Button, TextField, Typography, Divider, MenuItem } from '@material-ui/core';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle'
-import { ToggleButton, ToggleButtonGroup } from '@material-ui/lab';
 import { withStyles } from '@material-ui/core/styles';
 import DocumentTile from 'app/components/dashboard/DocumentTile';
 import { Document } from 'app/models';
 import { styles } from './styles';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import _ from 'lodash-es';
-import { isNullOrUndefined } from 'util';
+import _, { keys, toInteger } from 'lodash-es';
 
 enum FilterSetting {
 	None,
-	Author,
-	Priority
+	Author
+}
+
+enum SortSetting {
+	None,
+	Workflow,
+	Priority,
+	Author
 }
 
 export namespace Dashboard {
@@ -28,6 +32,7 @@ export namespace Dashboard {
 	export interface State {
 		documents: Document[],
 		filter: FilterSetting,
+		sortBy: SortSetting,
 		filterInput: string
 	}
 }
@@ -36,38 +41,63 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 
 	constructor(props: Dashboard.Props, context?: any) {
 		super(props, context);
-		this.state = { documents: [], filter: FilterSetting.None, filterInput: "" }
+		this.state = { documents: [], filter: FilterSetting.None, filterInput: "", sortBy: SortSetting.Workflow }
 	}
 
 	componentDidMount() {
-		//const id = this.props.match.params.id;
-
 		axios.get("/api/documents").then((response) => {
-
-			const documents = response.data;
-
-			this.setState({ documents })
+			this.setState({ documents: response.data })
 		});
+	}
+
+	getSortedAndFilteredDocuments() {
+		
+		var sortfunc: (d: Document) => any = (d: Document) => "Unfiltered";
+
+		if (this.state.sortBy == SortSetting.Workflow)
+			sortfunc = (d) => d.workflow.name;
+		else if (this.state.sortBy == SortSetting.Author)
+			sortfunc = (d) => d.creator;
+
+		var sortedDocuments = _.groupBy(this.state.documents, sortfunc)
+		
+		var filterfunc = (d: Document) => true;
+
+		if (this.state.filter == FilterSetting.Author) {
+			filterfunc = (d: Document) => d.creator.toLowerCase().includes(this.state.filterInput.toLowerCase());
+		}
+
+		return _.map(sortedDocuments, (documentList, key ) => {
+			return {key, documents: _.filter(documentList, filterfunc.bind(this))}
+		}); 
+
 	}
 
 	render() {
 
+		var sortTypes = [
+			{name: "Author", type: SortSetting.Author},
+			{name: "Workflow", type: SortSetting.Workflow},
+			{name: "Priority", type: SortSetting.Priority}
+		]
 
 		const { classes } = this.props;
-		const { documents, filterInput, filter } = this.state;
-		
-		var filterfunc = (d: Document) => true
-
-		if (this.state.filter == FilterSetting.Author)
-			filterfunc = (d: Document) => {
-				return d.creator.toLowerCase().includes(filterInput.toLowerCase())
-			};
-		
-		var filteredDocument = _.filter(documents, filterfunc);
-
-		const jsxDocuments = filteredDocument.map((document: Document, i: number) =>
-			<DocumentTile key={i} document={document} />
-		);
+		const { filter } = this.state;
+			const jsxDocuments = _.map(this.getSortedAndFilteredDocuments(), ((docGroup: {key: string, documents: Document[]}) => 
+			<React.Fragment key={docGroup.key}>
+				<Typography style={{marginLeft:"24px"}} variant={"title"}>
+					{docGroup.key}
+				</Typography>
+				<Divider style={{margin:"0 24px"}}/>
+				<div className={classes.outerGrid}>
+					{
+						_.map(docGroup.documents, (document) =>
+							<DocumentTile key={document.id} document={document} />
+						)
+					}
+				</div>
+			</React.Fragment>
+		));
 
 		return (
 			<React.Fragment>
@@ -88,16 +118,33 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 					<TextField
 					className={classes.textField}
 					placeholder="Filter Author"
-					margin="normal"
+					margin={"none"}
+					style={{width: 300}}
 					value={this.state.filterInput}
 					disabled={(!filter)}
 					onChange={(c) => this.setState({ filterInput: c.target.value })}
 					/>
+					<TextField
+					select
+					className={classes.textField}
+					value={this.state.sortBy}
+					margin={"none"}
+					onChange={(e) => this.setState({sortBy: parseInt(e.target.value)}) }
+					SelectProps={{
+						MenuProps: {
+						className: classes.menu,
+						},
+					}}
+					>
+					{sortTypes.map((item, i) => (
+						<MenuItem key={i} value={item.type}>
+							{item.name}
+						</MenuItem>
+					))}
+					</TextField>
 					</form>
 				</div>
-				<div className={classes.outerGrid}>
-					{jsxDocuments}
-				</div>
+				{jsxDocuments}
 			</React.Fragment>
 		);
 	}
