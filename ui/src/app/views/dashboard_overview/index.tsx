@@ -78,7 +78,7 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 		var sortTypes = [
 			{name: "Author", type: SortSetting.Author},
 			{name: "Workflow", type: SortSetting.Workflow},
-			{name: "Priority", type: SortSetting.Priority},
+			//{name: "Priority", type: SortSetting.Priority},
 			{name: "None", type: SortSetting.None}
 		]
 

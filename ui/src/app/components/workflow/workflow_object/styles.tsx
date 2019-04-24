@@ -27,6 +27,11 @@ export function styles(theme: Theme)  {
 				overflow: "hidden",
 				textOverflow: "ellipsis",
 				whiteSpace: "nowrap"
-			}
+		},
+        buttonGroup: {
+			paddingTop: theme.spacing.unit * 2,
+			display: "flex",
+			flexDirection: "row-reverse"
+        }
     } as StyleRules);
 }

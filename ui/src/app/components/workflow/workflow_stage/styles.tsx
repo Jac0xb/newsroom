@@ -17,7 +17,10 @@ export function styles(theme: Theme)  {
         },
         documentGrid: {
             display: "block",
-            paddingTop: "12px"
+			paddingTop: "12px",
+			"& > *": {
+				marginBottom: "16px"
+			}
         }
 
     } as StyleRules);

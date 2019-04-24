@@ -4,7 +4,7 @@ import { Grid, Paper, FormGroup, FormLabel, TextField, MenuItem, Button, Typogra
 import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import { Redirect } from 'react-router-dom';
+import { Redirect, Link } from 'react-router-dom';
 import { withCookies, Cookies } from 'react-cookie';
 import { compose } from 'recompose';
 
@@ -68,6 +68,13 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 		return (
 			<React.Fragment>
 				<PrimarySearchAppBar />
+                <div className={classes.buttonGroup}>
+					<Link style={{ textDecoration: "none" }} to="/">
+						<Button style={{ width: "calc(4*52px)" }} variant={"contained"}>
+							Back to Dashboard
+						</Button>
+					</Link>
+				</div>
 				<Grid className={classes.outerGrid} alignContent={"center"} container spacing={24} direction="row" justify="center" alignItems="center">
 					<Grid item xs={8} md={6}>
 						<Paper className={classes.formGroup}>

@@ -142,9 +142,11 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, Pri
                 {sideMenuList}
               </div>
           </Drawer>
-            <Typography className={classes.title} variant="title" color="inherit" noWrap>
-              Newsroom
-            </Typography>
+		  	<Link style={{textDecoration: "none"}} to="/">
+				<Typography style={{textDecoration: "none"}} className={classes.title} variant="title" color="inherit" noWrap>
+				Newsroom
+				</Typography>
+			</Link>
             <div className={classes.grow} />
             <div className={classes.sectionDesktop}>
             </div>

@@ -19,6 +19,16 @@ export function styles(theme: Theme)  {
 				fontSize: "16px",
 				lineHeight: "16px",
 			}
+		},
+		buttonGroup: {
+			display: "flex",
+			margin: "24px 24px 24px 24px",
+			"& button": {
+				heightMax: "36px",
+				height: "36px",
+				marginRight: "16px"
+			},
+			flexWrap: 'wrap'
 		}
     } as StyleRules);
 }
