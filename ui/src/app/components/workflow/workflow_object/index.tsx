@@ -32,9 +32,11 @@ class WorkflowTile extends React.Component<Workflow.Props, any> {
 			<Typography component="p">
 				{(workflow.description === "" ? "(No Description)" : workflow.description)}
 			</Typography>
-			<Link to={"/workflow/" + workflow.id + "/edit"}>
-				<Button variant="contained" className={classes.button}>Edit</Button>
-			</Link>
+			<div className={classes.buttonGroup}>
+				<Link to={"/workflow/" + workflow.id + "/edit"}>
+					<Button variant="contained" className={classes.button}>Edit</Button>
+				</Link>
+			</div>
 		</Paper>
     );
   }
