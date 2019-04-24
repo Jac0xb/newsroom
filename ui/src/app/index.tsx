@@ -29,3 +29,6 @@ export const App = hot(module)(() => (
 		</Switch>
 	</React.Fragment>
 ));
+
+
+// https://stackoverflow.com/questions/37843495/material-ui-adding-link-component-from-react-router/46686467#46686467

@@ -46,7 +46,7 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 	onSubmit() {
 		this.setState({ flash: "" })
 
-		axios.post("/api/documents", { name: this.state.nickname, creator: "Jacques", workflow: this.state.workflow }).then((response: any) => {
+		axios.post("/api/documents", { name: this.state.nickname, creator: this.props.cookies.get("username"), workflow: this.state.workflow }).then((response: any) => {
 
 			if (response) {
 				this.setState({ submitted: true })
@@ -115,7 +115,7 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 									margin="normal"
 									variant="filled"
 									value={cookies.get("username")}
-									onChange={(c) => this.setState({ nickname: c.target.value })}
+									//onChange={(c) => this.setState({ nickname: c.target.value })}
 									InputLabelProps={{
 										shrink: true,
 									}}

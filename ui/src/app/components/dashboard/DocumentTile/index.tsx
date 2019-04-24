@@ -4,12 +4,14 @@ import DetailRow from 'app/components/dashboard/DetailLine';
 import { Link } from 'react-router-dom';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles';
+import { Document } from 'app/models';
+import classNames from 'classnames';
 
 export namespace DocumentTile {
 	export interface Props {
 		classes?: any,
 		match?: { params: any },
-		document: any
+		document: Document
 	}
 }
 
@@ -24,26 +26,20 @@ class DocumentTile extends React.Component<DocumentTile.Props> {
 		const { classes, document } = this.props;
 
 		return (
-			<Grid item>
-				<Paper className={classes.documentItem} >
-					<Typography variant={"title"}>
-						{document.name}
-					</Typography>
-					<Divider />
-					<table style={{ width: "100%" }}>
-						<tbody>
-							<DetailRow title="Author" data={document.creator} link={true} />
-							<DetailRow title="Workflow Type" data={document.workflow.name} link={true} />
-							<DetailRow title="Due Date" data={"duedate"} />
-						</tbody>
-					</table>
-					<div className={classes.buttonGroup}>
-						<Link to={"/document/" + document.id + "/edit"}>
-							<Button variant="contained" className={classes.button}>Edit</Button>
-						</Link>
-					</div>
-				</Paper>
-			</Grid>
+			<Paper className={classNames(classes.documentItem, classes.flexAutosize)} >
+				<Typography variant={"title"} className={classes.noWrap}>
+					{document.name}
+				</Typography>
+				<Divider />
+				<DetailRow title="Author" data={document.creator} link={"/users/" + document.creator} />
+				<DetailRow title="Workflow Type" data={document.workflow.name} link={"/workflow/" + document.workflow.id + "/edit"} />
+				<DetailRow title="Due Date" data={"duedate"} />
+				<div className={classes.buttonGroup}>
+					<Link to={"/document/" + document.id + "/edit"}>
+						<Button variant="contained" className={classes.button}>Edit</Button>
+					</Link>
+				</div>
+			</Paper>
 		);
 	}
 }

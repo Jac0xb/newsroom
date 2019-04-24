@@ -18,9 +18,18 @@ export function styles(theme: Theme)  {
 				textDecoration: "none",
 			},
 		},
+		noWrap: {
+			overflow: "hidden",
+			textOverflow: "ellipsis",
+			whiteSpace: "nowrap"
+		},
 		detailLine: {
 			display: "flex",
-			alignItems: "center"
+			alignItems: "center",
+			width: "100%"
+		},
+		flexGrow: {
+			flexGrow: 1
 		},
 		linkIcon: {
 			width: "20px",
