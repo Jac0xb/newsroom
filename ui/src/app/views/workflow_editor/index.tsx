@@ -116,24 +116,22 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       <React.Fragment>
         <PrimarySearchAppBar />
         <main className={classes.layout}>
-          <Grid className={classes.grid} container spacing={16}>
-            <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.fab}>
-              <AddIcon />
-            </Fab>
-            {stages.map((stage, index) => (
-              <div className={classes.stagePlusButton}>
-                <Grid key={index} className={classes.stageGrid} item>
-                  <WorkflowStage id={stage.id} name={stage.name} desc={stage.description} onClick={(id: number) => this.handleStageEditClick(id)} />
-                </Grid>
-                <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index + 1)} className={classes.fab}>
-                  <AddIcon />
-                </Fab>
-              </div>
-            ))}
-          </Grid>
+		<Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.fab}>
+			<AddIcon />
+		</Fab>
+		{stages.map((stage, index) => (
+			<div className={classes.stagePlusButton}>
+			<Grid key={index} className={classes.stageGrid} item>
+				<WorkflowStage id={stage.id} name={stage.name} desc={stage.description} onClick={(id: number) => this.handleStageEditClick(id)} />
+			</Grid>
+			<Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index + 1)} className={classes.fab}>
+				<AddIcon />
+			</Fab>
+			</div>
+		))}
           
-          <DialogItem title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleSave={this.handleAddStage}/>
-          <DialogItem title={"Edit Stage"} desc={"Enter stage information"} show={editDialogOpen} handleSave={this.handleStageEdit}/>
+          <DialogItem title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleClose={() => this.setState({createDialogOpen: false})}  handleSave={this.handleAddStage}/>
+          <DialogItem title={"Edit Stage"} desc={"Enter stage information"} show={editDialogOpen} handleClose={() => this.setState({editDialogOpen: false})} handleSave={this.handleStageEdit}/>
         </main>
       </React.Fragment>
     );

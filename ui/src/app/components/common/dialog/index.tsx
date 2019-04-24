@@ -9,7 +9,8 @@ export namespace DialogItem {
         desc: string
         title: string
         show: boolean
-        handleSave: Function
+		handleSave: Function
+		handleClose: Function
     }
     export interface State {
         textBoxName: string
@@ -40,19 +41,16 @@ class DialogItem extends React.Component<DialogItem.Props, DialogItem.State, any
   
   handleOpen(open: boolean) {
     this.setState({ open: open });
-    //this.props.show = open;
   };
 
   render() {
 
-        const { classes, title, desc, show, handleSave} = this.props;
+        const {classes, title, desc, show, handleSave, handleClose} = this.props;
         const {textBoxName, textBoxDesc} = this.state;
 
         return (
         <div className={classes.item}>
             <Dialog className={classes.dialog}
-            disableBackdropClick
-            disableEscapeKeyDown
             open={show}
             onClose={() => this.handleOpen(false)}>
             <DialogTitle id="form-dialog-title">{title}</DialogTitle>
@@ -76,7 +74,8 @@ class DialogItem extends React.Component<DialogItem.Props, DialogItem.State, any
               </form>
             </DialogContent>
             <DialogActions>
-              <Button variant="contained" onClick={() => handleSave(textBoxName, textBoxDesc)} className={classes.button}>Save</Button>
+				<Button variant="contained" onClick={() => handleClose(false)} className={classes.button}>Cancel</Button>
+              	<Button variant="contained" onClick={() => handleSave(textBoxName, textBoxDesc)} className={classes.button}>Save</Button>
             </DialogActions>
           </Dialog>
         </div>

@@ -7,6 +7,7 @@ export function styles(theme: Theme)  {
                 marginTop: theme.spacing.unit * 3,
                 marginBottom: theme.spacing.unit * 3,
 				padding: theme.spacing.unit * 2,
+				display: "flex"
 			},
 			grid: {
 				JustifyContent: "center"
