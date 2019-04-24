@@ -5,7 +5,6 @@ import { Theme, StyleRules, withStyles} from '@material-ui/core/styles';
 const styles = (theme: Theme) =>  {
     return ({
         item: {
-            marginTop: 20   // TOOD: Replace with theme.unit.spacing
         }
     } as StyleRules) 
 };
