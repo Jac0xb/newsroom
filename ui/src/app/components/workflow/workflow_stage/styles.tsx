@@ -5,11 +5,12 @@ export function styles(theme: Theme)  {
     {
        stage: {
             padding: theme.spacing.unit * 2,
-            minHeight: "400px",
-            minWidth: "350px",
+            minWidth: "380px",
         },
         buttonGroup: {
-            paddingTop: theme.spacing.unit * 2,
+			paddingTop: theme.spacing.unit * 2,
+			display: "flex",
+			flexDirection: "row-reverse"
         },
         button: {
 

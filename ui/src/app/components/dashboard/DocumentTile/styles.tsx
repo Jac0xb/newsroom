@@ -8,7 +8,7 @@ export function styles(theme: Theme)  {
 		},
 		documentItem: {
 			maxWidth: "calc(600px + 38px)",
-			width: "300px",
+			width: "370px",
 			padding: "16px",
 			"& h2": {
 				

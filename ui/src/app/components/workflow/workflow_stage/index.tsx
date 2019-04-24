@@ -60,17 +60,19 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
     return (
       <main className={classes.layout}>
         <Paper className={classes.stage} key={this.props.id} onClick={() => this.props.onClick(this.props.id)}>
-          <Typography className={classes.heading} variant="title">
-          {this.props.name}
-          </Typography>
-          <Divider/>
-          <SectionItem heading={"Description"} description={this.props.desc} />
-          <Grid className={classes.documentGrid} container spacing={16}>
-            {docList}
-          </Grid>
-					<div className={classes.buttonGroup}>
-						<Button variant="contained" className={classes.button}>Edit</Button>
-					</div>
+			<Typography className={classes.heading} variant="title">
+				{this.props.name}
+			</Typography>
+			<Divider style={{marginBottom: "8px"}}/>
+			<Typography component="p">
+				{(this.props.desc) === "" ? "(No Description)" : this.props.desc}
+			</Typography>
+			<Grid className={classes.documentGrid} container spacing={16}>
+				{docList}
+			</Grid>
+			<div className={classes.buttonGroup}>
+				<Button variant="contained" className={classes.button}>Edit</Button>
+			</div>
         </Paper>
       </main>
     );
