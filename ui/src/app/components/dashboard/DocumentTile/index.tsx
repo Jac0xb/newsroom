@@ -6,6 +6,7 @@ import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles';
 import { Document } from 'app/models';
 import classNames from 'classnames';
+import axios from 'axios';
 
 export namespace DocumentTile {
 	export interface Props {
@@ -21,6 +22,20 @@ class DocumentTile extends React.Component<DocumentTile.Props> {
 		super(props, context);
 	}
 
+	onDeleteClick = (docID: number) => {
+	
+		console.log(docID);
+		axios.delete("/api/documents/" + docID  , {
+		}).then((response) => {
+	
+		  console.log(response);
+
+		  // re-render??
+		  
+		});
+		
+	  };
+	
 	render() {
 
 		const { classes, document } = this.props;
@@ -38,6 +53,7 @@ class DocumentTile extends React.Component<DocumentTile.Props> {
 					<Link to={"/document/" + document.id + "/edit"}>
 						<Button variant="contained" className={classes.button}>Edit</Button>
 					</Link>
+					<Button variant="contained" className={classes.button} onClick={() => this.onDeleteClick(document.id)}>Delete</Button>
 				</div>
 			</Paper>
 		);

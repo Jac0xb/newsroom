@@ -5,7 +5,6 @@ import { styles } from './styles';
 import { Typography, Divider, Button } from '@material-ui/core';
 import { Link } from 'react-router-dom';
 import classNames from 'classnames';
-import axios from 'axios';
 
 export namespace Workflow {
   export interface Props {
