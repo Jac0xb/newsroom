@@ -67,6 +67,23 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
         });
     };
 
+    handleDeleteClick = (workflowID: number) => {
+
+        console.log(workflowID)
+        axios.delete("/api/workflows/" + workflowID ,{
+        }).then((response) => {
+    
+          console.log(response);
+    
+          // TODO
+          this.componentDidMount();
+          // WILL RERENDER LIST
+
+          
+        });
+    
+      };
+
     render() {
 
         const { workflows } = this.state;
@@ -80,7 +97,7 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
 				<Divider style={{margin: "0px 24px"}}/>
 				<div className={classes.outerGrid}>
                     {workflows.map(workflow => (
-                    	<WorkflowTile workflow={workflow} />
+                    	<WorkflowTile workflow={workflow} onClick={(id: number) => this.handleDeleteClick(id)}/>
 					))
 					}
 				</div>

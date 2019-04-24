@@ -3,14 +3,15 @@ import Paper from '@material-ui/core/Paper';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles';
 import { Typography, Divider, Button } from '@material-ui/core';
-import SectionItem from 'app/components/common/section_item';
 import { Link } from 'react-router-dom';
 import classNames from 'classnames';
+import axios from 'axios';
 
 export namespace Workflow {
   export interface Props {
     classes?: any
     workflow: any
+    onClick: Function
   }
 }
 class WorkflowTile extends React.Component<Workflow.Props, any> {
@@ -32,11 +33,12 @@ class WorkflowTile extends React.Component<Workflow.Props, any> {
 			<Typography component="p">
 				{(workflow.description === "" ? "(No Description)" : workflow.description)}
 			</Typography>
-			<div className={classes.buttonGroup}>
-				<Link to={"/workflow/" + workflow.id + "/edit"}>
-					<Button variant="contained" className={classes.button}>Edit</Button>
-				</Link>
-			</div>
+      <div className={classes.buttonGroup}>
+        <Link to={"/workflow/" + workflow.id + "/edit"}>
+          <Button variant="contained" className={classes.button}>Edit</Button>
+        </Link>
+        <Button variant="contained" className={classes.button} onClick={() => this.props.onClick(workflow.id)}>Delete</Button>
+      </div>
 		</Paper>
     );
   }

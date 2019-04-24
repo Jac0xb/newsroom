@@ -13,7 +13,7 @@ export function styles(theme: Theme)  {
 			flexDirection: "row-reverse"
         },
         button: {
-
+            margin: theme.spacing.unit,
         },
         documentGrid: {
             display: "block",
