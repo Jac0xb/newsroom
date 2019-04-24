@@ -8,11 +8,8 @@ export function styles(theme: Theme) {
         marginLeft: theme.spacing.unit * 1,
         marginRight: theme.spacing.unit * 1,
         [theme.breakpoints.up(800 + theme.spacing.unit * 2 * 2)]: {
-          //width: 800,
           marginLeft: '10px',
           marginRight: '10px'
-          //marginLeft: 'auto',
-          //marginRight: 'auto'
         },
       },
       documentTitlePaper: {
@@ -48,8 +45,7 @@ export function styles(theme: Theme) {
         }
       },
       editor: {
-        outline: "0px solid transparent", border: "rgba(0,0,0,0.25) 1px solid",
-        padding: "10px"
+        padding: theme.spacing.unit * 4
       }
 
 

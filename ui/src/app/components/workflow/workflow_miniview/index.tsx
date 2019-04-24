@@ -1,10 +1,10 @@
-import * as React from 'react';
+import { Button, ExpansionPanel, ExpansionPanelActions, ExpansionPanelDetails, ExpansionPanelSummary, Link, Step, StepLabel, Stepper, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import { styles } from './styles'
-import { Typography, Button, Stepper, Step, StepLabel, Grid } from '@material-ui/core';
+import { ExpandMore } from '@material-ui/icons';
 import { Workflow } from 'app/models/workflow';
-import { Link as RouterLink } from 'react-router-dom'
-import { Link } from '@material-ui/core';
+import * as React from 'react';
+import { Link as RouterLink } from 'react-router-dom';
+import { styles } from './styles';
 
 export namespace WorkflowMiniView {
   export interface Props {
@@ -13,8 +13,10 @@ export namespace WorkflowMiniView {
     currentStage: number
     onMove: (direction: string) => void
   }
+  export interface State {
+  }
 }
-class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, any> {
+class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, WorkflowMiniView.State> {
 
   constructor(props: WorkflowMiniView.Props) {
     super(props)
@@ -31,31 +33,37 @@ class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, any> {
 
     return (
       <main className={classes.layout}>
-        <div className={classes.header}>
-          <Typography variant="subtitle1">
-            <Link component={workflowRouterLink}>
-              Workflow: <span style={{ fontWeight: "bold" }}>{workflow.name}</span>
-            </Link>
-          </Typography>
-          <Button variant="contained" size="small"
-            disabled={currentStage == 0}
-            onClick={() => this.props.onMove("prev")}>Back</Button>
-          <Button variant="contained" size="small"
-            disabled={currentStage == stages.length - 1}
-            onClick={() => this.props.onMove("next")}>Next</Button>
-        </div>
-        <Stepper orientation="vertical" className={classes.stepper} activeStep={currentStage}>
-          {stages.map((stage) => {
-            return (
-              <Step key={stage.id}>
-                <StepLabel>
-                  {stage.name}
-                  <Typography variant="caption">{stage.description}</Typography>
-                </StepLabel>
-              </Step>)
-          })}
-        </Stepper>
-      </main >
+        <ExpansionPanel>
+          <ExpansionPanelSummary expandIcon={<ExpandMore />}>
+            <Typography variant="subtitle1">
+              <Link component={workflowRouterLink}>
+                Workflow: <span style={{ fontWeight: "bold" }}>{workflow.name}</span>
+              </Link>
+            </Typography>
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails className={classes.details}>
+            <Stepper orientation="vertical" className={classes.stepper} activeStep={currentStage}>
+              {stages.map((stage) => {
+                return (
+                  <Step key={stage.id}>
+                    <StepLabel>
+                      {stage.name}
+                      <Typography variant="caption">{stage.description}</Typography>
+                    </StepLabel>
+                  </Step>)
+              })}
+            </Stepper>
+          </ExpansionPanelDetails>
+          <ExpansionPanelActions className={classes.actions}>
+            <Button variant="contained" size="small"
+              disabled={currentStage == 0}
+              onClick={() => this.props.onMove("prev")}>Back</Button>
+            <Button variant="contained" size="small"
+              disabled={currentStage == stages.length - 1}
+              onClick={() => this.props.onMove("next")}>Next</Button>
+          </ExpansionPanelActions>
+        </ExpansionPanel>
+      </main>
     );
   }
 }

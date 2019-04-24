@@ -2,18 +2,15 @@ import { StyleRules, Theme } from '@material-ui/core/styles';
 
 export function styles(theme: Theme) {
   return ({
-    layout: {
-      marginTop: theme.spacing.unit,
-      marginBottom: theme.spacing.unit
-    },
     stepper: {
       padding: 0,
-      marginBottom: theme.spacing.unit
     },
-    header: {
+    details: {
+    },
+    actions: {
+      width: "100%",
       display: "flex",
-      justifyContent: "space-around",
-      marginBottom: theme.spacing.unit
+      justifyContent: "space-around"
     }
   } as StyleRules);
 }

@@ -78,7 +78,7 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 							<Paper className={classes.documentTitlePaper}>
 								<Typography variant="h4">{document.name}</Typography>
 							</Paper>
-							<Paper className={classes.paper}>
+							<Paper className={classes.editor}>
 								<Editor editorState={editorState}
 									onChange={(editorState: EditorState) => this.handleChange(editorState)}
 									handleKeyCommand={(command: string, editorState: EditorState) => this.handleKeyCommand(command, editorState)} />
@@ -86,18 +86,17 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 						</Grid>
 						<Grid item xs={3}>
 							<Paper className={classes.paper}>
-								<Typography>
+								<Typography variant="subtitle1">
 									Styles
 								</Typography>
 								<StyleBar
 									onClick={(format) => this.handleFormatChange(format)}
 									onCreateUpdateFormats={(updateFormats) => this.state.styleBarUpdateFormats = updateFormats} />
-								<Divider />
-								<WorkflowMiniView
-									workflow={document.workflow}
-									currentStage={document.stage.sequenceId!}
-									onMove={(direction) => this.handleMove(direction)} />
 							</Paper>
+							<WorkflowMiniView
+								workflow={document.workflow}
+								currentStage={document.stage.sequenceId!}
+								onMove={(direction) => this.handleMove(direction)} />
 						</Grid>
 					</Grid>
 				</main>
