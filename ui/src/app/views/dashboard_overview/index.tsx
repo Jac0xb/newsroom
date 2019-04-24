@@ -90,6 +90,7 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 					placeholder="Filter Author"
 					margin="normal"
 					value={this.state.filterInput}
+					disabled={(!filter)}
 					onChange={(c) => this.setState({ filterInput: c.target.value })}
 					/>
 					</form>
