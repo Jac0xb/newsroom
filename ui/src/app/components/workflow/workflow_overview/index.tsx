@@ -2,9 +2,8 @@ import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import { DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Grid } from '@material-ui/core';
-import Workflow from 'app/components/workflow/workflow_object';
+import { Divider } from '@material-ui/core';
+import WorkflowTile from 'app/components/workflow/workflow_object';
 import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
 
@@ -82,15 +81,15 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
         return (
             <main className={classes.layout}>
                 <div className={classes.buttonGroup}>
-                    <Button variant="contained" onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create New</Button>
+                    <Button variant="contained" onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create Workflow</Button>
                 </div>
-                    <Grid container spacing={16} className={classes.container}>
-                        {workflows.map(workflow => (
-                            <Grid key={workflow.id} item className={classes.outerGrid}>
-                                <Workflow workflow={workflow} />
-                            </Grid>
-                        ))}
-                    </Grid>
+				<Divider style={{margin: "0px 24px"}}/>
+				<div className={classes.outerGrid}>
+                    {workflows.map(workflow => (
+                    	<WorkflowTile workflow={workflow} />
+					))
+					}
+				</div>
 
                 <DialogItem title={"Create New Workflow"} desc={"Enter the name of the new workflow"} show={dialogCreateNewOpen} handleSave={this.handleCreateNew}/>
             </main>

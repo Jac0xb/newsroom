@@ -13,9 +13,6 @@ export function styles(theme: Theme)  {
             //       marginRight: 'auto',
             //     },
             // },
-            outerGrid: {
-                padding: "24px"
-            },
             button: {
                 margin: theme.spacing.unit,
                 color: "primary" ,
@@ -37,9 +34,15 @@ export function styles(theme: Theme)  {
                 margin: theme.spacing.unit,
                 marginLeft: theme.spacing.unit,
                 marginRight: theme.spacing.unit,
-            },
-
-
+			},		
+			outerGrid: {
+				padding: "16px",
+				display: "flex",
+				flexWrap: "wrap",
+				"& > *" : {
+					margin: "8px"
+				}
+			}
 
     } as StyleRules);
 }
