@@ -1,53 +1,63 @@
 import * as React from 'react';
 import { Button, Divider, Typography, Paper, Grid } from '@material-ui/core';
 import DetailRow from 'app/components/dashboard/DetailLine';
+import { Link } from 'react-router-dom';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles';
+import { Document } from 'app/models';
+import classNames from 'classnames';
+import axios from 'axios';
 
-export namespace Dashboard {
+export namespace DocumentTile {
 	export interface Props {
 		classes?: any,
 		match?: { params: any },
-		id: number,
-		name: string,
-		author: string,
-		duedate: string,
-		workflow: string
-	}
-	export interface DetailLineProps {
-		classes?: any
+		document: Document
 	}
 }
 
-class Dashboard extends React.Component<Dashboard.Props> {
+class DocumentTile extends React.Component<DocumentTile.Props> {
 
-	constructor(props: Dashboard.Props, context?: any) {
+	constructor(props: DocumentTile.Props, context?: any) {
 		super(props, context);
 	}
 
+	onDeleteClick = (docID: number) => {
+	
+		console.log(docID);
+		axios.delete("/api/documents/" + docID  , {
+		}).then((response) => {
+	
+		  console.log(response);
+
+		  // re-render??
+		  
+		});
+		
+	  };
+	
 	render() {
 
-		const { classes, id, name, author, workflow, duedate } = this.props;
+		const { classes, document } = this.props;
 
 		return (
-			<Grid item md={3}>
-				<Paper className={classes.documentItem} >
-					<Typography variant={"title"}>
-						{name}
-					</Typography>
-					<Divider />
-					<table style={{ width: "100%" }}>
-						<DetailRow title="Author" data={author} link={true} />
-						<DetailRow title="Workflow Type" data={workflow} link={true} />
-						<DetailRow title="Due Date" data={duedate} />
-					</table>
-					<div className={classes.buttonGroup}>
-						<Button variant="contained" className={classes.button} href={"/document/" + id + "/editor"}>Edit</Button>
-					</div>
-				</Paper>
-			</Grid>
+			<Paper className={classNames(classes.documentItem, classes.flexAutosize)} >
+				<Typography variant={"title"} className={classes.noWrap}>
+					{document.name}
+				</Typography>
+				<Divider />
+				<DetailRow title="Author" data={document.creator} link={"/users/" + document.creator} />
+				<DetailRow title="Workflow Type" data={document.workflow.name} link={"/workflow/" + document.workflow.id + "/edit"} />
+				<DetailRow title="Due Date" data={"duedate"} />
+				<div className={classes.buttonGroup}>
+					<Link to={"/document/" + document.id + "/edit"}>
+						<Button variant="contained" className={classes.button}>Edit</Button>
+					</Link>
+					<Button variant="contained" className={classes.button} onClick={() => this.onDeleteClick(document.id)}>Delete</Button>
+				</div>
+			</Paper>
 		);
 	}
 }
 
-export default withStyles(styles, { withTheme: true })(Dashboard);
+export default withStyles(styles, { withTheme: true })(DocumentTile);

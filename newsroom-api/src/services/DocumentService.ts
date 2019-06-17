@@ -8,9 +8,10 @@ import { NotFoundError } from "typescript-rest/dist/server/model/errors";
 /**
  * Provides API services for documents.
  */
-@Path("/documents")
+@Path("/api/documents")
 @Tags("Documents")
 export class DocumentService {
+
     /**
      * When creating a new document, we need to validate that it has all the
      * required information to define a document. The document id should always
@@ -19,12 +20,16 @@ export class DocumentService {
     private static createDocumentValidator(req: express.Request) {
         const document = req.body as NRDocument;
 
-        if (!req.body.name) {
+        if (!document.name) {
             throw new Errors.BadRequestError("Document name not present.");
         }
 
         if (!(typeof document.name === "string")) {
             throw new Errors.BadRequestError("Document name was not a string.");
+        }
+
+        if (document.name.length > 256) {
+            throw new Errors.BadRequestError("Document name length is too long, max 256.");
         }
 
         if (!document.creator) {
@@ -35,6 +40,10 @@ export class DocumentService {
             throw new Errors.BadRequestError("Document creator was not a string.");
         }
 
+        if (document.creator.length > 256) {
+            throw new Errors.BadRequestError("Document creator length is too long, max 256.");
+        }
+
         if (!document.workflow) {
             throw new Errors.BadRequestError("Document workflow not present.");
         }
@@ -43,12 +52,20 @@ export class DocumentService {
             throw new Errors.BadRequestError("Document workflow was not a number.");
         }
 
-        if (!document.stage) {
-            throw new Errors.BadRequestError("Document stage not present.");
+        if (document.stage) {
+            if (!(typeof document.stage === "number")) {
+                throw new Errors.BadRequestError("Document stage was not a number.");
+            }
         }
 
-        if (!(typeof document.stage === "number")) {
-            throw new Errors.BadRequestError("Document stage was not a number.");
+        if (document.description) {
+            if (!(typeof document.description === "string")) {
+                throw new Errors.BadRequestError("Document description was not a string.");
+            }
+
+            if (document.description.length > 1000) {
+                throw new Errors.BadRequestError("Document description too long, max 1000.");
+            }
         }
     }
 
@@ -63,11 +80,19 @@ export class DocumentService {
             if (!(typeof document.name === "string")) {
                 throw new Errors.BadRequestError("Document name was not a string.");
             }
+
+            if (document.name.length > 256) {
+                throw new Errors.BadRequestError("Document name length is too long, max 256.");
+            }
         }
 
         if (document.creator) {
             if (!(typeof document.creator === "string")) {
                 throw new Errors.BadRequestError("Document creator was not a string.");
+            }
+
+            if (document.creator.length > 256) {
+                throw new Errors.BadRequestError("Document creator length is too long, max 256.");
             }
         }
 
@@ -86,6 +111,16 @@ export class DocumentService {
         if (document.content) {
             if (!(typeof document.content === "string")) {
                 throw new Errors.BadRequestError("Document content was not a string.");
+            }
+        }
+
+        if (document.description) {
+            if (!(typeof document.description === "string")) {
+                throw new Errors.BadRequestError("Document description was not a string.");
+            }
+
+            if (document.description.length > 1000) {
+                throw new Errors.BadRequestError("Document description length is too long, max 1000.");
             }
         }
     }
@@ -111,18 +146,26 @@ export class DocumentService {
     @POST
     @PreProcessor(DocumentService.createDocumentValidator)
     public async createDocument(document: NRDocument): Promise<NRDocument> {
+        let currWorkflow: NRWorkflow;
+
         try {
-            await this.workflowRepository.findOneOrFail(document.workflow);
+            currWorkflow = await this.workflowRepository.findOneOrFail(document.workflow);
         } catch (err) {
             console.error("Error getting Document associated Workflow:", err);
             throw new NotFoundError("A Workflow with the given ID was not found.");
         }
 
-        try {
-            await this.stageRepository.findOneOrFail(document.stage);
-        } catch (err) {
-            console.error("Error getting Stage for Document:", err);
-            throw new NotFoundError("A Stage for the Document could not be found.");
+        if (!(document.stage)) {
+            const minSeq = await this.getMinStageSequenceId(currWorkflow.id);
+            let currStage: NRStage;
+
+            currStage = await this.stageRepository
+                .createQueryBuilder("stage")
+                .where("stage.sequenceId = :sid", { sid: minSeq })
+                .andWhere("stage.workflowId = :wid ", { wid: currWorkflow.id })
+                .getOne();
+
+            document.stage = currStage;
         }
 
         return await this.documentRepository.save(document);
@@ -156,6 +199,21 @@ export class DocumentService {
     }
 
     /**
+     * Get all documents for a specific author.
+     *
+     * Returns a 400 if:
+     *      - Document id not found.
+     */
+    @Path("/author/:name")
+    @GET
+    public async getDocumentsForAuthor(@PathParam("name") authorName: string): Promise<NRDocument[]> {
+        return await this.documentRepository
+            .createQueryBuilder("document")
+            .where("document.creator = :cn", { cn: authorName })
+            .getMany();
+    }
+
+    /**
      * Get all documents for the stage based on passed stage id.
      *
      * Returns a 400 if:
@@ -174,12 +232,10 @@ export class DocumentService {
             throw new NotFoundError("A Stage for the Document could not be found.");
         }
 
-        const allDocs = await this.documentRepository
+        return await this.documentRepository
             .createQueryBuilder("document")
             .where("stageId = :sId", { sId: assocStage.id })
             .getMany();
-
-        return allDocs;
     }
 
     /**
@@ -224,6 +280,7 @@ export class DocumentService {
     @PreProcessor(DocumentService.updateDocumentValidator)
     public async updateDocument(@IsInt @PathParam("id") id: number, document: NRDocument): Promise<NRDocument> {
         let currDocument: NRDocument;
+
         try {
             currDocument = await this.documentRepository.findOneOrFail(document.id);
         } catch (err) {
@@ -251,6 +308,10 @@ export class DocumentService {
 
         if (document.creator) {
             currDocument.creator = document.creator;
+        }
+
+        if (document.description) {
+            currDocument.description = document.description;
         }
 
         if (document.workflow) {
@@ -341,8 +402,6 @@ export class DocumentService {
 
         // The document can be moved forward.
         if ((currStage.sequenceId + 1) <= maxSeq) {
-            console.log("inside of 'if'");
-
             // Get id of next stage in sequence.
             const nextId = await this.stageRepository
                 .createQueryBuilder("stage")
@@ -368,7 +427,6 @@ export class DocumentService {
     @Path("/:id/next")
     public async moveNext(@IsInt @PathParam("id") docId: number): Promise<NRDocument> {
         let currDocument: NRDocument;
-        let currStage: NRStage;
 
         try {
             currDocument = await this.documentRepository.findOneOrFail(docId);
@@ -377,42 +435,23 @@ export class DocumentService {
             throw new NotFoundError("A Document with the given ID could not be found");
         }
 
-        // TODO: How to do this with TypeORM?
-        const stageID = await this.documentRepository
-            .createQueryBuilder("document")
-            .select("document.stageId", "val")
-            .where("document.id = :did", { did: currDocument.id })
-            .getRawOne();
+        const currStage = currDocument.stage;
 
-        try {
-            currStage = await this.stageRepository.findOneOrFail(stageID.val);
-        } catch (err) {
-            console.error("Error getting Stage for Document:", err);
-            throw new NotFoundError("A Stage for the Document could not be found.");
-        }
-
-        // TODO: Better way to do this with TypeORM?
-        //       currDocument.workflow.id doesn't work -> load relations?
-        const workflowId = await this.documentRepository
-            .createQueryBuilder("document")
-            .select("document.workflowId", "val")
-            .where("document.id = :did", { did: currDocument.id })
-            .getRawOne();
+        const workflowId = currDocument.workflow.id;
 
         // Used to determine if the document is done in its workflow.
-        const maxSeq = await this.getMaxStageSequenceId(workflowId.val);
+        const maxSeq = await this.getMaxStageSequenceId(workflowId);
 
         // The document can be moved forward.
         if ((currStage.sequenceId + 1) <= maxSeq) {
             // Get id of next stage in sequence.
-            const nextId = await this.stageRepository
+            const nextStage = await this.stageRepository
                 .createQueryBuilder("stage")
-                .select("stage.id", "val")
                 .where("stage.sequenceId = :sid", { sid: currStage.sequenceId + 1 })
-                .andWhere("stage.workflowId = :wid", { wid: workflowId.val })
-                .getRawOne();
+                .andWhere("stage.workflowId = :wid", { wid: workflowId })
+                .getOne();
 
-            currDocument.stage = nextId.val;
+            currDocument.stage = nextStage;
         }
 
         // It is possible that no updates were made if document is already at the
@@ -464,7 +503,7 @@ export class DocumentService {
             .getRawOne();
 
         // The first stage in any workflow is always sequence 1.
-        const minSeq = 1;
+        const minSeq = 0;
 
         // The document can be moved forward.
         if ((currStage.sequenceId - 1) >= minSeq) {
@@ -493,7 +532,6 @@ export class DocumentService {
     @Path("/:id/prev")
     public async movePrev(@IsInt @PathParam("id") docId: number): Promise<NRDocument> {
         let currDocument: NRDocument;
-        let currStage: NRStage;
 
         try {
             currDocument = await this.documentRepository.findOneOrFail(docId);
@@ -502,41 +540,23 @@ export class DocumentService {
             throw new NotFoundError("A Document with the given ID could not be found");
         }
 
-        const stageID = await this.documentRepository
-            .createQueryBuilder("document")
-            .select("document.stageId", "val")
-            .where("document.id = :did", { did: currDocument.id })
-            .getRawOne();
+        const currStage = currDocument.stage;
 
-        try {
-            currStage = await this.stageRepository.findOneOrFail(stageID.val);
-        } catch (err) {
-            console.error("Error getting Stage for Document:", err);
-            throw new NotFoundError("A Stage for the Document could not be found.");
-        }
-
-        // TODO: Better way to do this with TypeORM?
-        //       currDocument.workflow.id doesn't work -> load relations?
-        const workflowId = await this.documentRepository
-            .createQueryBuilder("document")
-            .select("document.workflowId", "val")
-            .where("document.id = :did", { did: currDocument.id })
-            .getRawOne();
+        const workflowId = currDocument.workflow.id;
 
         // The first stage in any workflow is always sequence 1.
-        const minSeq = 1;
+        const minSeq = 0;
 
         // The document can be moved forward.
         if ((currStage.sequenceId - 1) >= minSeq) {
             // Get id of next stage in sequence.
-            const prevId = await this.stageRepository
+            const prevStage = await this.stageRepository
                 .createQueryBuilder("stage")
-                .select("stage.id", "val")
                 .where("stage.sequenceId = :sid", { sid: currStage.sequenceId - 1 })
-                .andWhere("stage.workflowId = :wid", { wid: workflowId.val })
-                .getRawOne();
+                .andWhere("stage.workflowId = :wid", { wid: workflowId })
+                .getOne();
 
-            currDocument.stage = prevId.val;
+            currDocument.stage = prevStage;
         }
 
         // It is possible that no updates were made if document is already at the
@@ -566,5 +586,28 @@ export class DocumentService {
             .getRawOne();
 
         return maxSeq.max;
+    }
+
+    /**
+     * Get the minimum sequenceId for the given workflows stages.
+     */
+    private async getMinStageSequenceId(workflowId: number): Promise<number> {
+        let currWorkflow: NRWorkflow;
+
+        try {
+            currWorkflow = await this.workflowRepository.findOneOrFail(workflowId);
+        } catch (err) {
+            console.error("Error getting workflow:", err);
+            throw new NotFoundError("A workflow with the given id was not found.");
+        }
+
+        // Grab the next sequenceId for this set of workflow stages.
+        const minSeq = await this.stageRepository
+            .createQueryBuilder("stage")
+            .select("MIN(stage.sequenceId)", "min")
+            .where("stage.workflowId = :id", { id: currWorkflow.id })
+            .getRawOne();
+
+        return minSeq.min;
     }
 }

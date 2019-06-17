@@ -9,7 +9,7 @@ import { WorkflowService } from "./services/WorkflowService";
 
 dotenv.config();
 
-const port = process.env.SERVICE_PORT;
+const port = process.env.SERVICE_PORT || 8000;
 
 const app = express();
 

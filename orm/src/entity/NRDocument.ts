@@ -27,8 +27,17 @@ export class NRDocument {
     // The actual plain text content of the article.
     @Column({
         nullable: true,
+        type: "clob",
     })
     public content: string;
+
+    // A brief description of the document.
+    @Column({
+        length: 1000,
+        nullable: true,
+        type: "varchar",
+    })
+    public description: string;
 
     // The Date of when this document was created.
     @CreateDateColumn()
@@ -42,6 +51,7 @@ export class NRDocument {
     @ManyToOne(
         (type) => NRWorkflow,
         (workflow) => workflow.documents,
+        { eager: true },
     )
     public workflow: NRWorkflow;
 
@@ -49,6 +59,7 @@ export class NRDocument {
     @ManyToOne(
         (type) => NRStage,
         (stage) => stage.documents,
+        { eager: true },
     )
     public stage: NRStage;
 }

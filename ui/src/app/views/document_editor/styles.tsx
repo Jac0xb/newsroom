@@ -8,21 +8,31 @@ export function styles(theme: Theme) {
         marginLeft: theme.spacing.unit * 1,
         marginRight: theme.spacing.unit * 1,
         [theme.breakpoints.up(800 + theme.spacing.unit * 2 * 2)]: {
-          //width: 800,
           marginLeft: '10px',
           marginRight: '10px'
-          //marginLeft: 'auto',
-          //marginRight: 'auto'
         },
       },
-      paper: {
-        marginTop: theme.spacing.unit * 3,
-        marginBottom: theme.spacing.unit * 3,
-        padding: theme.spacing.unit * 2,
+      documentTitlePaper: {
+        marginTop: theme.spacing.unit,
+        marginBottom: theme.spacing.unit,
+        padding: theme.spacing.unit,
         [theme.breakpoints.up(800 + theme.spacing.unit * 3 * 2)]: {
-          marginTop: theme.spacing.unit * 6,
-          marginBottom: theme.spacing.unit * 6,
-          padding: theme.spacing.unit * 3,
+          marginTop: theme.spacing.unit * 2,
+          marginBottom: theme.spacing.unit * 2,
+          padding: theme.spacing.unit * 2,
+        }
+      },
+      documentTitleTextField: {
+        margin: 0
+      },
+      paper: {
+        marginTop: theme.spacing.unit,
+        marginBottom: theme.spacing.unit,
+        padding: theme.spacing.unit,
+        [theme.breakpoints.up(800 + theme.spacing.unit * 3 * 2)]: {
+          marginTop: theme.spacing.unit * 2,
+          marginBottom: theme.spacing.unit * 2,
+          padding: theme.spacing.unit * 2,
         },
       },
       heading: {
@@ -38,8 +48,7 @@ export function styles(theme: Theme) {
         }
       },
       editor: {
-        outline: "0px solid transparent", border: "rgba(0,0,0,0.25) 1px solid",
-        padding: "10px"
+        padding: theme.spacing.unit * 4
       }
 
 

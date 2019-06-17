@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { RouteComponentProps } from 'react-router';
 import PrimarySearchAppBar from 'app/components/common/application_bar';
-import CreateWorkflow from 'app/components/workflow/workflow_overview';
+import WorkflowOverview from 'app/components/workflow/workflow_overview';
 
 export namespace Workflow {
 	export interface Props extends RouteComponentProps<void> {
@@ -21,7 +21,7 @@ export class Workflow extends React.Component<Workflow.Props> {
 		return (
 			<React.Fragment>
 				<PrimarySearchAppBar/>
-				<CreateWorkflow/>
+				<WorkflowOverview/>
 			</React.Fragment>
 		);
 	}

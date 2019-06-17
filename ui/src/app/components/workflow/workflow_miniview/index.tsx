@@ -1,20 +1,22 @@
-import * as React from 'react';
+import { Button, ExpansionPanel, ExpansionPanelActions, ExpansionPanelDetails, ExpansionPanelSummary, Link, Step, StepLabel, Stepper, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import { styles } from './styles'
-import { Typography, Radio, Chip, Tooltip, Button } from '@material-ui/core';
-import { ArrowRightAlt } from '@material-ui/icons';
-import { Fragment } from 'react';
+import { ExpandMore } from '@material-ui/icons';
+import { Workflow } from 'app/models/workflow';
+import * as React from 'react';
+import { Link as RouterLink } from 'react-router-dom';
+import { styles } from './styles';
 
 export namespace WorkflowMiniView {
   export interface Props {
     classes?: any
-    id: number
-    name: string
-    stages: { id: number, name: string }[]
+    workflow: Workflow
     currentStage: number
+    onMove: (direction: string) => void
+  }
+  export interface State {
   }
 }
-class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, any> {
+class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, WorkflowMiniView.State> {
 
   constructor(props: WorkflowMiniView.Props) {
     super(props)
@@ -23,34 +25,44 @@ class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, any> {
 
   render() {
 
-    const { classes, name, stages, currentStage } = this.props;
+    const { classes, workflow, currentStage } = this.props;
+
+    const stages = workflow.stages.sort((a, b) => a.sequenceId - b.sequenceId);
+
+    const workflowRouterLink = (props: any) => <RouterLink to={"/workflow/" + workflow.id + "/edit"} {...props} />
 
     return (
       <main className={classes.layout}>
-        <Typography className={classes.heading} variant="subtitle1">
-          {name}
-        </Typography>
-        <div className={classes.workflow}>
-          {stages.map((stage, idx, arr) => {
-            const sep = idx !== arr.length - 1 ? <ArrowRightAlt className={classes.arrow} /> : null
-
-            if (stage.id === currentStage) {
-              return (<Fragment>
-                <Chip label={stage.name} avatar={<Radio checked={true} className={classes.chip} />} />
-                {sep}
-              </Fragment>)
-            } else {
-              return (<Fragment>
-                <Tooltip title={stage.name}><Radio key={stage.id} className={classes.radio} /></Tooltip>
-                {sep}
-              </Fragment>)
-            }
-          })}
-        </div>
-        <div className={classes.buttonGroup}>
-          <Button variant="contained" className={classes.button}>Back</Button>
-          <Button variant="contained" className={classes.button}>Next</Button>
-        </div>
+        <ExpansionPanel>
+          <ExpansionPanelSummary expandIcon={<ExpandMore />}>
+            <Typography variant="subtitle1">
+              <Link component={workflowRouterLink}>
+                Workflow: <span style={{ fontWeight: "bold" }}>{workflow.name}</span>
+              </Link>
+            </Typography>
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails className={classes.details}>
+            <Stepper orientation="vertical" className={classes.stepper} activeStep={currentStage}>
+              {stages.map((stage) => {
+                return (
+                  <Step key={stage.id}>
+                    <StepLabel>
+                      {stage.name}
+                      <Typography variant="caption">{stage.description}</Typography>
+                    </StepLabel>
+                  </Step>)
+              })}
+            </Stepper>
+          </ExpansionPanelDetails>
+          <ExpansionPanelActions className={classes.actions}>
+            <Button variant="contained" size="small"
+              disabled={currentStage == 0}
+              onClick={() => this.props.onMove("prev")}>Back</Button>
+            <Button variant="contained" size="small"
+              disabled={currentStage == stages.length - 1}
+              onClick={() => this.props.onMove("next")}>Next</Button>
+          </ExpansionPanelActions>
+        </ExpansionPanel>
       </main>
     );
   }

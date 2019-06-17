@@ -3,12 +3,13 @@ import { Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { Link } from '@material-ui/icons';
 import { styles } from './styles';
+import classNames from 'classnames';
 
 export namespace DetailLine {
 	export interface Props {
 		classes?: any,
 		title: string,
-		link?: boolean
+		link?: string,
 		data: string,
 	}
 }
@@ -19,17 +20,15 @@ class DetailLine extends React.Component<DetailLine.Props> {
 		const {classes, title, data, link} = this.props
 
 		return (
-			<tr>
-			<td>
-				<Typography className={classes.detailLine} variant={"subtitle1"}> 
-					<span style={{fontWeight: "bold"}}>{title}</span>:
+			<React.Fragment>
+				<Typography className={classNames(classes.detailLine, classes.noWrap)} variant={"subtitle1"}> 
+					<span className={classes.noWrap} style={{fontWeight: "bold"}}>{title}:</span>
 				</Typography>
-			</td>
-			<td>
+
 				<Typography className={classes.detailLine} variant={"subtitle1"}> 
 					{(link) &&
-					<a className={classes.detailLine} href="/users/jacobbrown">
-						&nbsp;{data}
+					<a className={classes.detailLine} href={link}>
+						<div className={classNames(classes.noWrap, classes.flexGrow)}>&nbsp;{data}</div>
 						<Link className={classes.linkIcon}/>
 					</a>
 					}
@@ -37,8 +36,7 @@ class DetailLine extends React.Component<DetailLine.Props> {
 						<span>&nbsp;{data}</span>
 					}
 				</Typography>
-			</td>
-			</tr>
+			</React.Fragment>
 		);
 	}
 }

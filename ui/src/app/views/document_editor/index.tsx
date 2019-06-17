@@ -1,34 +1,74 @@
-import * as React from 'react';
-import PrimarySearchAppBar from 'app/components/common/application_bar';
+import { TextField } from '@material-ui/core';
+import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import { withStyles } from '@material-ui/core/styles';
-import { styles } from './styles'
-import ContentEditable from 'react-contenteditable';
-import Grid from '@material-ui/core/Grid';
-import Divider from '@material-ui/core/Divider';
 import Typography from '@material-ui/core/Typography';
+import PrimarySearchAppBar from 'app/components/common/application_bar';
+import StyleBar from 'app/components/common/style_bar';
 import WorkflowMiniView from 'app/components/workflow/workflow_miniview';
+import { Document } from 'app/models';
+import axios from 'axios';
+import { convertFromRaw, convertToRaw, Editor, EditorState, RichUtils } from 'draft-js';
+import 'draft-js/dist/Draft.css';
+import * as React from 'react';
+import { styles } from './styles';
+
 
 export namespace EditorContainer {
 	export interface Props {
-		classes?: any
-		match?: { params: any }
+		classes: any
+		match: { params: { id: number } }
+	}
+	export interface State {
+		document?: Document
+		editorState: EditorState
+		styleBarUpdateFormats?: (formats: string[]) => void
+		errorText?: string
 	}
 }
 
 class EditorContainer extends React.Component<EditorContainer.Props, any> {
+	documentId: number
 
-	static defaultProps: Partial<EditorContainer.Props> = {
-	};
+	state: EditorContainer.State = {
+		editorState: EditorState.createEmpty()
+	}
 
 	constructor(props: EditorContainer.Props) {
 		super(props)
-		this.state = { html: "Text" }
+		this.documentId = props.match.params.id;
+	}
+
+	componentDidMount() {
+		const documentId = this.props.match.params.id;
+
+		axios.get("/api/documents/" + documentId).then((response) => {
+			console.log(response);
+
+			const document = response.data;
+
+			let editorState: EditorState
+			try {
+				editorState = EditorState.createWithContent(convertFromRaw(JSON.parse(document.content)));
+			} catch (e) {
+				editorState = EditorState.createEmpty();
+			}
+
+			this.setState({
+				document: document,
+				editorState: editorState
+			});
+		});
 	}
 
 	render() {
-
 		const { classes } = this.props;
+
+		const { document, editorState } = this.state;
+
+		if (!document || !document.workflow || !document.stage) {
+			return <div>Document did not exist, had no workflow, or had no stage</div>;
+		}
 
 		return (
 			<React.Fragment>
@@ -36,25 +76,39 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 				<main className={classes.layout}>
 					<Grid container spacing={24}>
 						<Grid item xs={9}>
-							<Paper className={classes.paper}>
-								<ContentEditable className={classes.editor} html={this.state.html} onChange={(e: any) => this.handleChange(e)}>
-
-								</ContentEditable>
+							<Paper className={classes.documentTitlePaper}>
+								<Typography variant="h5">
+									<TextField
+										fullWidth
+										id="document-name"
+										label="Document Name"
+										placeholder="Document Name"
+										className={classes.documentTitleTextField}
+										margin="normal"
+										defaultValue={document.name}
+										onChange={(event) => this.handleDocumentNameChange(event)}
+										error={!!this.state.errorText} />
+								</Typography>
 							</Paper>
-
+							<Paper className={classes.editor}>
+								<Editor editorState={editorState}
+									onChange={(editorState: EditorState) => this.handleChange(editorState)}
+									handleKeyCommand={(command: string, editorState: EditorState) => this.handleKeyCommand(command, editorState)} />
+							</Paper>
 						</Grid>
 						<Grid item xs={3}>
 							<Paper className={classes.paper}>
-								<WorkflowMiniView id={1} name={"Sports Article"} stages={[{ id: 1, name: "Draft" }, { id: 2, name: "Edit 1" }, { id: 3, name: "Edit 2" }]} currentStage={1} />
-								<Divider />
-								<Typography>
+								<Typography variant="subtitle1">
 									Styles
 								</Typography>
-								<Divider />
-								<Typography>
-									Insert media
-								</Typography>
+								<StyleBar
+									onClick={(format) => this.handleFormatChange(format)}
+									onCreateUpdateFormats={(updateFormats) => this.state.styleBarUpdateFormats = updateFormats} />
 							</Paper>
+							<WorkflowMiniView
+								workflow={document.workflow}
+								currentStage={document.stage.sequenceId!}
+								onMove={(direction) => this.handleMove(direction)} />
 						</Grid>
 					</Grid>
 				</main>
@@ -62,11 +116,67 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 		);
 	}
 
-	handleChange(event: React.ChangeEvent<HTMLInputElement>) {
-		this.setState({ html: event.target.value });
-		console.log(event.target.value)
-	};
-}
+	saveContent(editorState: EditorState) {
+		const rawJson = JSON.stringify(convertToRaw(editorState.getCurrentContent()));
 
+		axios.put("/api/documents/" + this.props.match.params.id, {
+			content: rawJson
+		}).then((response) => {
+			console.log(response);
+		});
+	}
+
+	handleChange(editorState: EditorState) {
+		const updateFormats = this.state.styleBarUpdateFormats;
+		if (updateFormats) {
+			updateFormats(editorState.getCurrentInlineStyle().toArray());
+		}
+
+		this.setState({ editorState: editorState });
+
+		this.saveContent(editorState);
+	}
+
+	handleFormatChange(format: string) {
+		this.handleChange(RichUtils.toggleInlineStyle(this.state.editorState, format));
+	}
+
+	handleKeyCommand(command: string, editorState: EditorState) {
+		const newState = RichUtils.handleKeyCommand(editorState, command);
+		if (newState) {
+			this.handleChange(newState);
+			return 'handled';
+		}
+
+		return 'not-handled';
+	}
+
+	handleMove(direction: string) {
+		axios.put("/api/documents/" + this.documentId + "/" + direction).then((response) => {
+			console.log(response);
+			this.setState({ document: response.data })
+		});
+	}
+
+	handleDocumentNameChange(event: React.ChangeEvent<any>) {
+		const name = event.target.value;
+
+		if (name.trim().length === 0) {
+			this.setState({ errorText: "Name must not be empty" })
+		} else {
+			this.setState({ errorText: null });
+
+			if (this.state.document) {
+				this.state.document.name = name
+			}
+
+			axios.put("/api/documents/" + this.documentId, {
+				name: name
+			}).then((response) => {
+				console.log(response);
+			});
+		}
+	}
+}
 
 export default withStyles(styles, { withTheme: true })(EditorContainer);

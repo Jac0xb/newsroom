@@ -10,6 +10,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import MailIcon from '@material-ui/icons/Mail';
 import MoreIcon from '@material-ui/icons/MoreVert';
+import UserIcon from '@material-ui/icons/VerifiedUser';
 import Drawer from '@material-ui/core/Drawer';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -17,14 +18,23 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import Divider from '@material-ui/core/Divider';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
+import {Link} from 'react-router-dom';
 import {styles} from "./styles";
+import { Cookies, withCookies } from 'react-cookie';
+import { compose } from 'recompose';
 
 export namespace PrimarySearchAppBar {
     export interface Props {
-        classes?: any
-    }
+		classes: Record<string, string>
+		cookies: Cookies
+	}
+	export interface State {
+		anchorEl?: any
+		mobileMoreAnchorEl?: any
+		sideMenuOpen: boolean
+	}
 }
-class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, any> {
+class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, PrimarySearchAppBar.State> {
 
   state = {
     anchorEl: null,
@@ -61,7 +71,7 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, any
 
   render() {
     const { anchorEl, mobileMoreAnchorEl, sideMenuOpen } = this.state;
-    const { classes } = this.props;
+    const { classes, cookies } = this.props;
     const isMenuOpen = Boolean(anchorEl);
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
@@ -96,17 +106,23 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, any
     );
 
     const sideMenuList = (
-      <div className={classes.list}>
-        <List>
-          {['Document', 'Workflow'].map((text, index) => (
-            <ListItem button component="a" key={text}  href={"/" + text.toLowerCase()}>
-              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItem>
-          ))}
-        </List>
-        <Divider />
-      </div>
+      	<div className={classes.list}>
+			<List>
+				{[{title:'Document', url:"/"}, {title:'Workflow', url:"/workflow"}].map((text, index) => (
+					<Link key={index} to={text.url}>
+						<ListItem button>
+								<ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
+								<ListItemText primary={text.title} />
+						</ListItem>
+					</Link>
+				))}
+				<ListItem onClick={() => {cookies.set('username', prompt("What is your new user's name?"))}} button>
+					<ListItemIcon><UserIcon/></ListItemIcon>
+					<ListItemText primary="Change User" />
+				</ListItem>
+			</List>
+			<Divider />
+      	</div>
     );
 
     return (
@@ -126,9 +142,11 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, any
                 {sideMenuList}
               </div>
           </Drawer>
-            <Typography className={classes.title} variant="title" color="inherit" noWrap>
-              Newsroom
-            </Typography>
+		  	<Link style={{textDecoration: "none"}} to="/">
+				<Typography style={{textDecoration: "none"}} className={classes.title} variant="title" color="inherit" noWrap>
+				Newsroom
+				</Typography>
+			</Link>
             <div className={classes.grow} />
             <div className={classes.sectionDesktop}>
             </div>
@@ -146,4 +164,8 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, any
   }
 }
 
-export default withStyles(styles)(PrimarySearchAppBar);
+// https://stackoverflow.com/questions/51605112/react-recompose-causing-typescript-error-on-props
+export default compose<PrimarySearchAppBar.Props, {}>(
+	withStyles(styles),
+	withCookies
+)(PrimarySearchAppBar);

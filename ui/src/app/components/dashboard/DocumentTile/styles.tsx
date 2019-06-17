@@ -2,9 +2,13 @@ import { StyleRules, Theme } from '@material-ui/core/styles';
 
 export function styles(theme: Theme)  {
     return (
-    {
+    {	
+		flexAutosize: {
+			flex: "1 1 auto"
+		},
 		documentItem: {
-			minWidth: "200px",
+			maxWidth: "calc(600px + 38px)",
+			width: "370px",
 			padding: "16px",
 			"& h2": {
 				
@@ -17,6 +21,11 @@ export function styles(theme: Theme)  {
 				fontStyle: "italic",
 				textDecoration: "none",
 			},
+		},
+		noWrap: {
+			overflow: "hidden",
+			textOverflow: "ellipsis",
+			whiteSpace: "nowrap"
 		},
 		detailLine: {
 			display: "flex",

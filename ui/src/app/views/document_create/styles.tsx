@@ -4,11 +4,20 @@ export function styles(theme: Theme)  {
     return (
     {
 		outerGrid: {
-			padding: "16px",
-			display: "flex",
-			flexWrap: "wrap",
-			"& > *" : {
-				margin: "8px"
+			padding: "24px"
+		},
+		formGroup: {
+			padding: "16px"
+		},
+		flashMessage: {
+			margin: "8px 0 16px 0",
+			textAlign: "center",
+			padding: "8px",
+			backgroundColor: "#dcd3cf",
+			color: 'white',
+			"& span": {
+				fontSize: "16px",
+				lineHeight: "16px",
 			}
 		},
 		buttonGroup: {
@@ -20,12 +29,8 @@ export function styles(theme: Theme)  {
 				marginRight: "16px"
 			},
 			flexWrap: 'wrap'
-		},
-		textField: {
-			marginRight: theme.spacing.unit,
-			marginTop: 0,
-			marginBottom: 0
-			
 		}
     } as StyleRules);
 }
+
+// https://www.colorhexa.com/cfd8dc Color pallete

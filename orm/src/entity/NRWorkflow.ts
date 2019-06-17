@@ -29,6 +29,14 @@ export class NRWorkflow {
     )
     public creator: string; // TODO: Should relate to an Account ID later.
 
+    // A brief description of the workflow.
+    @Column({
+        length: 1000,
+        nullable: true,
+        type: "varchar",
+    })
+    public description: string;
+
     // The Date of when this workflow was created.
     @CreateDateColumn()
     public created: Date;
@@ -48,6 +56,7 @@ export class NRWorkflow {
     @OneToMany(
         (type) => NRStage,
         (stage) => stage.workflow,
+        { eager: true },
     )
     public stages: NRStage[];
 }

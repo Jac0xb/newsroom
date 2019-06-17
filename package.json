@@ -6,6 +6,7 @@
   "workspaces": [
     "documentation",
     "orm",
-    "newsroom-api"
+    "newsroom-api",
+    "ui"
   ]
 }

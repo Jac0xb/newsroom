@@ -13,9 +13,7 @@
   ],
   "main": "index.js",
   "scripts": {
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "true",
     "start": "webpack-dev-server --mode development --hot --progress --color --port 3000 --open",
     "build": "webpack -p --progress --colors",
     "prettier": "prettier --write \"src/**/*.{ts,tsx,css}\""
@@ -24,6 +22,7 @@
   "devDependencies": {
     "@babel/core": "^7.2.2",
     "@types/classnames": "^2.2.7",
+    "@types/draft-js": "^0.10.30",
     "@types/history": "^4.7.2",
     "@types/node": "^10.12.18",
     "@types/react": "^16.8.2",
@@ -54,7 +53,7 @@
     "ts-loader": "^5.3.3",
     "typescript": "^3.2.4",
     "url-loader": "^1.1.2",
-    "webpack": "^4.28.4",
+    "webpack": "^4.30.0",
     "webpack-cleanup-plugin": "^0.5.1",
     "webpack-cli": "^3.2.1",
     "webpack-dev-server": "^3.1.14"
@@ -62,15 +61,26 @@
   "dependencies": {
     "@material-ui/core": "^3.9.3",
     "@material-ui/icons": "^3.0.2",
+    "@material-ui/lab": "^3.0.0-alpha.30",
     "@material-ui/styles": "^3.0.0-alpha.10",
+    "@types/lodash-es": "^4.17.3",
+    "@types/react-router-dom": "^4.3.2",
+    "@types/recompose": "^0.30.6",
+    "axios": "^0.18.0",
     "classnames": "^2.2.6",
+    "draft-js": "^0.10.5",
+    "immutable": "^4.0.0-rc.12",
+    "lodash-es": "^4.17.11",
     "nvm": "0.0.4",
     "proptypes": "^1.1.0",
     "react": "^16.8.1",
     "react-contenteditable": "^3.2.6",
+    "react-cookie": "^3.1.2",
     "react-dom": "^16.8.1",
     "react-redux": "^6.0.0",
     "react-router": "^4.3.1",
+    "react-router-dom": "^5.0.0",
+    "recompose": "^0.30.0",
     "redux": "^4.0.1",
     "redux-actions": "^2.6.4"
   }
