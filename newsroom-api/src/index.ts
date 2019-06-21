@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import "dotenv/config";
 import express from "express";
+import "reflect-metadata";
 import { createConnection } from "typeorm";
 import { Server } from "typescript-rest";
 import { HttpError } from "typescript-rest/dist/server/model/errors";

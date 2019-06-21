@@ -1,9 +1,9 @@
 import * as express from "express";
-import { NRDocument, NRStage, NRWorkflow } from "orm";
 import { getManager } from "typeorm";
 import { DELETE, Errors, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 import { NotFoundError } from "typescript-rest/dist/server/model/errors";
+import { NRDocument, NRStage, NRWorkflow } from "../entity";
 
 /**
  * Provides API services for documents.
