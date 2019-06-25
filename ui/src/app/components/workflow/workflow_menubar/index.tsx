@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import { } from '@material-ui/core';
+import { Drawer, List, ListItem, Divider, ListItemText, ListItemIcon } from '@material-ui/core';
+import InboxIcon from '@material-ui/icons/MoveToInbox';
+import MailIcon from '@material-ui/icons/Mail';
 
 
 export namespace WorkflowMenuBar {
@@ -27,7 +29,31 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
 
         return (
         <main className={classes.layout}>
-        
+             <Drawer
+                className={classes.drawer}
+                variant="permanent"
+                classes={{
+                paper: classes.drawerPaper,
+                }}
+            >
+                <List>
+                {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
+                    <ListItem button key={text}>
+                    <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
+                    <ListItemText primary={text} />
+                    </ListItem>
+                ))}
+                </List>
+                <Divider />
+                <List>
+                {['All mail', 'Trash', 'Spam'].map((text, index) => (
+                    <ListItem button key={text}>
+                    <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
+                    <ListItemText primary={text} />
+                    </ListItem>
+                ))}
+                </List>
+            </Drawer>
         </main>
         );
     }

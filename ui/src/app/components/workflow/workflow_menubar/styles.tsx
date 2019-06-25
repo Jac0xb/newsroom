@@ -6,5 +6,15 @@ export function styles(theme: Theme)  {
         layout: {
             //display: "flex",
         },
+        drawer: {
+            width: 240,
+            flexShrink: 0,
+        },
+        drawerPaper: {
+            width: 240,
+            top: 'auto',
+        },
+        toolbar: theme.mixins.toolbar,
+
     } as StyleRules);
 }
