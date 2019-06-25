@@ -1,9 +1,8 @@
 import * as React from 'react';
-import Paper from '@material-ui/core/Paper';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import { Typography, Divider, Button, Grid } from '@material-ui/core';
-import SectionItem from 'app/components/common/section_item';
+import { Paper, Typography, Divider, Grid, Menu, MenuItem, IconButton } from '@material-ui/core';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
 import DocumentTile from 'app/components/dashboard/DocumentTile';
 import axios from 'axios';
 
@@ -17,7 +16,9 @@ export namespace WorkflowStage {
         onDeleteClick: Function
     }
     export interface State {
+      openMenu: boolean
       stageDocuments: any[]
+      anchorEl?: any
     }
 }
 class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.State, any> {
@@ -25,7 +26,9 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
   constructor(props: WorkflowStage.Props) {
       super(props)
       this.state = {
-        stageDocuments: []
+        openMenu: false,
+        stageDocuments: [],
+        anchorEl: null,
       }
   }
 
@@ -47,12 +50,19 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
       
 			this.setState({ stageDocuments })
 		});
-	}
+  }
   
+  handleMenuClick = (event: any) => {
+    this.setState({openMenu: !this.state.openMenu, anchorEl: event.currentTarget})
+  }
+  
+  handleMenuClose = () => {
+    this.setState({ openMenu: false, anchorEl: null });
+  }
   render() {
 
     const { classes } = this.props;
-    const { stageDocuments } = this.state;
+    const { openMenu, stageDocuments } = this.state;
 
     const docList = stageDocuments.map((document, i) =>
 			<DocumentTile key={i} document={document} />
@@ -61,20 +71,47 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
     return (
       <main className={classes.layout}>
         <Paper className={classes.stage} key={this.props.id}>
-			<Typography className={classes.heading} variant="title">
-				{this.props.name}
-			</Typography>
-			<Divider style={{marginBottom: "8px"}}/>
-			<Typography component="p">
-				{(this.props.desc) === "" ? "(No Description)" : this.props.desc}
-			</Typography>
-			<Grid className={classes.documentGrid} container spacing={16}>
-				{docList}
-			</Grid>
-			<div className={classes.buttonGroup}>
-				<Button variant="contained" className={classes.button} onClick={() => this.props.onEditClick(this.props.id)}>Edit</Button>
-        <Button variant="contained" className={classes.button} onClick={() => this.props.onDeleteClick(this.props.id)}>Delete</Button>
-			</div>
+          <div className={classes.headingDiv}>
+              <Typography className={classes.heading} variant="title">
+                {this.props.name}
+              </Typography>
+            <div>
+              <IconButton
+                onClick={(event) => this.handleMenuClick(event)}
+                aria-controls="simple-menu"
+                aria-haspopup="true"
+              >
+                <MoreVertIcon />
+              </IconButton>
+                <Menu
+                  id="long-menu"
+                  anchorEl={this.state.anchorEl}
+                  open={openMenu}
+                  onClose={() => this.handleMenuClose()}
+                  PaperProps={{
+                    style: {
+                      maxHeight: 216,
+                      width: 200,
+                    },
+                  }}
+                >
+                  <MenuItem key={0} onClick={() => {this.props.onEditClick(this.props.id); this.setState({openMenu: false})}}>
+                    Edit
+                  </MenuItem>
+                  <MenuItem key={1} onClick={() => {this.props.onDeleteClick(this.props.id); this.setState({openMenu: false})}}>
+                    Delete
+                  </MenuItem>
+                </Menu>
+            </div>
+          </div>
+
+          <Divider style={{marginBottom: "8px"}}/>
+          <Typography component="p">
+            {(this.props.desc) === "" ? "(No Description)" : this.props.desc}
+          </Typography>
+          <Grid className={classes.documentGrid} container spacing={16}>
+            {docList}
+          </Grid>
         </Paper>
       </main>
     );

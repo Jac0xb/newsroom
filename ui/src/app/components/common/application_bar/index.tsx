@@ -109,7 +109,7 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, Pri
       	<div className={classes.list}>
 			<List>
 				{[{title:'Document', url:"/"}, {title:'Workflow', url:"/workflow"}].map((text, index) => (
-					<Link key={index} to={text.url}>
+					<Link key={index} to={text.url} className={classes.itemLinks}>
 						<ListItem button>
 								<ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
 								<ListItemText primary={text.title} />
@@ -127,7 +127,7 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, Pri
 
     return (
       <div className={classes.root}>
-        <AppBar style={{backgroundColor: "#cfd8dc"}} position="static">
+        <AppBar style={{backgroundColor: "#cfd8dc", boxShadow: 'none' }} position="static">
           <Toolbar>
             <IconButton className={classes.menuButton} color="inherit" aria-label="Open drawer" onClick={this.toggleDrawer(true)}  >
               <MenuIcon/>
@@ -144,7 +144,7 @@ class PrimarySearchAppBar extends React.Component<PrimarySearchAppBar.Props, Pri
           </Drawer>
 		  	<Link style={{textDecoration: "none"}} to="/">
 				<Typography style={{textDecoration: "none"}} className={classes.title} variant="title" color="inherit" noWrap>
-				Newsroom
+				  Newsroom
 				</Typography>
 			</Link>
             <div className={classes.grow} />
