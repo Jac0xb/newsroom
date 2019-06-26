@@ -16,8 +16,6 @@ export namespace DialogItem {
         textBoxDesc: string
     }
     export interface State {
-        // textBoxName: string
-        // textBoxDesc: string
         open: boolean
     }
 }
@@ -26,21 +24,9 @@ class DialogItem extends React.Component<DialogItem.Props, DialogItem.State, any
   constructor(props: DialogItem.Props) {
       super(props)
       this.state = {
-        // textBoxName: "",
-        // textBoxDesc: "",
         open: false,
       }
   }
-  
-  // handleTextBoxesChange = (name: keyof DialogItem.State) => (event: React.ChangeEvent<HTMLInputElement>) => {
-
-  //   if(name == "textBoxName"){
-  //       this.setState({ textBoxName: event.target.value });
-  //   }
-  //   if(name == "textBoxDesc"){
-  //       this.setState({ textBoxDesc: event.target.value });
-  //   }
-  // };
   
   handleOpen(open: boolean) {
     this.setState({ open: open });

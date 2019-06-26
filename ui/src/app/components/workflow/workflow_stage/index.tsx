@@ -33,6 +33,11 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
   }
 
   componentDidMount() {
+    this.getDocuments();
+  }
+
+  // Get documents for this stage from database
+  getDocuments() {
     const stageDocuments: any[] = [] 
 
 		axios.get("/api/documents/").then((response) => {
@@ -59,14 +64,18 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
   handleMenuClose = () => {
     this.setState({ openMenu: false, anchorEl: null });
   }
+
   render() {
 
     const { classes } = this.props;
     const { openMenu, stageDocuments } = this.state;
 
+    // Get most up-to-date documents list
+    this.getDocuments();
+
     const docList = stageDocuments.map((document, i) =>
 			<DocumentTile key={i} document={document} />
-		);
+    );
 
     return (
       <main className={classes.layout}>

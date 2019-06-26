@@ -1,4 +1,4 @@
-import { Fab, Grid, Paper } from '@material-ui/core';
+import { Fab } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import PrimarySearchAppBar from 'app/components/common/application_bar';
@@ -24,8 +24,8 @@ export namespace WorkflowEditor {
     editDialogOpen: boolean
     stageID: number
     currStageIdx: number
-    textBoxName: string
-    textBoxDesc: string
+    dialogTextName: string
+    dialogTextDesc: string
   }
 }
 class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEditor.State, any> {
@@ -37,37 +37,42 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       createDialogOpen: false,
       editDialogOpen: false,
       stageID: 0,
-      textBoxName: '',
-      textBoxDesc: '',
-      currStageIdx: 0
+      dialogTextName: '',
+      dialogTextDesc: '',
+      currStageIdx: 0,
     }
   }
 
   componentDidMount() {
+    this.getStages();
+  }
+
+  // Method to get stages of current workflow from database
+  getStages() {
     const id = this.props.match.params.id;
 
     axios.get("/api/workflows/" + id + "/stages").then((response) => {
 
       const stages = response.data;
 
-      this.setState({ stages: stages })
+      this.setState({ stages })
     })
   }
 
-  handleDialogTextChange = (name: keyof WorkflowEditor.State) => (event: React.ChangeEvent<HTMLInputElement>) => {
+  handleDialogTextChange = (name: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
 
     if(name == "textBoxName"){
-        this.setState({ textBoxName: event.target.value });
+        this.setState({ dialogTextName: event.target.value });
     }
     if(name == "textBoxDesc"){
-        this.setState({ textBoxDesc: event.target.value });
+        this.setState({ dialogTextDesc: event.target.value });
     }
   };
 
   handleStageAddClick(open: boolean, id: number) {
     // Need the ID of the stage so that we know which button
     //   is being pressed and where to add the stage.
-    this.setState({ createDialogOpen: open, stageID: id });
+    this.setState({ dialogTextName: '', dialogTextDesc: '', createDialogOpen: open, stageID: id });
   };
 
   // Search and apply current stage info for dialog edit box
@@ -75,22 +80,23 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
 
     const { stages } = this.state;
 
-    var textBoxName = ""
-    var textBoxDesc = ""
+    var dialogTextName = ""
+    var dialogTextDesc = ""
 
     stages.forEach( stage => {
       if(stage.id === id){
-        textBoxName = stage.name
-        textBoxDesc = stage.description
+        dialogTextName = stage.name
+        dialogTextDesc = stage.description
       }
     });
 
-    this.setState({ textBoxName, textBoxDesc, editDialogOpen: true, stageID: id });
+    this.setState({ dialogTextName, dialogTextDesc, editDialogOpen: true, stageID: id });
 
   };
 
   handleAddStage = (textBoxName: string, textBoxDesc: string) => {
-    // The ID of the workflow.
+
+    // The ID of the current workflow.
     const id = this.props.match.params.id;
 
     axios.post("/api/workflows/" + id + "/stages/" + this.state.stageID, {
@@ -105,8 +111,8 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       // Add the stage at the correct position in the list.
       this.state.stages.splice(index, 0, response.data)
 
-      // Reset text boxes, close dialog box.
-      this.setState({ createDialogOpen: false });
+      // close dialog box, rerender stages
+      this.setState({ createDialogOpen: false, stages: this.state.stages });
     });
   };
 
@@ -119,11 +125,10 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       description: textBoxDesc,
     }).then((response) => {
 
-      // TODO
-      this.componentDidMount();
-      // WILL RERENDER LIST
+      // Render new stages edit
+      this.getStages()
 
-      // reset text boxes, close dialog
+      // close dialog
       this.setState({ editDialogOpen: false });
     });
 
@@ -135,9 +140,9 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     axios.delete("/api/workflows/" + id + "/stages/" + stageID, {
     }).then((response) => {
 
-      // TODO
-      this.componentDidMount();
-      // WILL RERENDER LIST
+      // Render new stages edit
+      this.getStages();
+
     });
 
   };
@@ -145,7 +150,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
   render() {
 
     const { classes } = this.props;
-    const { stages, createDialogOpen, editDialogOpen, textBoxName, textBoxDesc } = this.state;
+    const { stages, createDialogOpen, editDialogOpen, dialogTextName, dialogTextDesc } = this.state;
 
     return (
       <React.Fragment>
@@ -175,8 +180,8 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
                   </Fab>
                 </div>
               ))}
-              <DialogItem textBoxName={textBoxName} textBoxDesc={textBoxDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({createDialogOpen: false})}  handleSave={this.handleAddStage}/>
-              <DialogItem textBoxName={textBoxName} textBoxDesc={textBoxDesc} title={"Edit Stage"} desc={"Enter stage information"} show={editDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({editDialogOpen: false})} handleSave={this.handleStageEdit}/>
+              <DialogItem textBoxName={dialogTextName} textBoxDesc={dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({createDialogOpen: false})}  handleSave={this.handleAddStage}/>
+              <DialogItem textBoxName={dialogTextName} textBoxDesc={dialogTextDesc} title={"Edit Stage"} desc={"Enter stage information"} show={editDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({editDialogOpen: false})} handleSave={this.handleStageEdit}/>
             </div>
            </div>
           </main>
