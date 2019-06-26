@@ -2,14 +2,26 @@ import { StyleRules, Theme } from '@material-ui/core/styles';
 
 export function styles(theme: Theme) {
     return ({
-        layout: {
-            marginTop: theme.spacing.unit * 3,
+        menuGroup: {
+            position: 'fixed',
+            left: 0,
+            right: 0,
+            zIndex: 1,
+        },
+        workflowContent: {
+            // marginTop: theme.spacing.unit * 3,
             padding: theme.spacing.unit * 2,
             display: "flex",
             overflowX: "auto",
         },
-        grid: {
-            JustifyContent: "center"
+        content: {
+            display: 'inline-flex',
+        },
+        menuSpacerHeight: {
+            height: 64,
+        },
+        menuSpacerWidth: {
+            width: 250,
         },
         stagePlusButton: {
             display: "inline-flex"
@@ -23,9 +35,6 @@ export function styles(theme: Theme) {
             margin: theme.spacing.unit,
             alignSelf: "center",
         },
-        extendedIcon: {
-            marginRight: theme.spacing.unit,
-        },
         '@global': {
             '*::-webkit-scrollbar': {
                 width: '0px'
@@ -38,6 +47,6 @@ export function styles(theme: Theme) {
                 borderRadius: 10,
                 outline: '0px solid white',
             }
-        }
+        },
     } as StyleRules);
 }

@@ -11,7 +11,8 @@ export function styles(theme: Theme)  {
             flexShrink: 0,
         },
         drawerPaper: {
-            width: 240,
+            zIndex: 1,
+            minWidth: 250,
             top: 'auto',
         },
         toolbar: theme.mixins.toolbar,
