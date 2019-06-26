@@ -9,12 +9,15 @@ export namespace DialogItem {
         desc: string
         title: string
         show: boolean
-		handleSave: Function
-		handleClose: Function
-    }
-    export interface State {
+        handleTextBoxesChange: Function
+        handleSave: Function
+        handleClose: Function
         textBoxName: string
         textBoxDesc: string
+    }
+    export interface State {
+        // textBoxName: string
+        // textBoxDesc: string
         open: boolean
     }
 }
@@ -23,21 +26,21 @@ class DialogItem extends React.Component<DialogItem.Props, DialogItem.State, any
   constructor(props: DialogItem.Props) {
       super(props)
       this.state = {
-        textBoxName: "",
-        textBoxDesc: "",
+        // textBoxName: "",
+        // textBoxDesc: "",
         open: false,
       }
   }
   
-  handleTextBoxesChange = (name: keyof DialogItem.State) => (event: React.ChangeEvent<HTMLInputElement>) => {
+  // handleTextBoxesChange = (name: keyof DialogItem.State) => (event: React.ChangeEvent<HTMLInputElement>) => {
 
-    if(name == "textBoxName"){
-        this.setState({ textBoxName: event.target.value });
-    }
-    if(name == "textBoxDesc"){
-        this.setState({ textBoxDesc: event.target.value });
-    }
-  };
+  //   if(name == "textBoxName"){
+  //       this.setState({ textBoxName: event.target.value });
+  //   }
+  //   if(name == "textBoxDesc"){
+  //       this.setState({ textBoxDesc: event.target.value });
+  //   }
+  // };
   
   handleOpen(open: boolean) {
     this.setState({ open: open });
@@ -45,8 +48,8 @@ class DialogItem extends React.Component<DialogItem.Props, DialogItem.State, any
 
   render() {
 
-        const {classes, title, desc, show, handleSave, handleClose} = this.props;
-        const {textBoxName, textBoxDesc} = this.state;
+        const {classes, textBoxName, textBoxDesc, title, desc, show, handleTextBoxesChange, handleSave, handleClose} = this.props;
+        //const {textBoxName, textBoxDesc} = this.state;
 
         return (
         <div className={classes.item}>
@@ -62,14 +65,14 @@ class DialogItem extends React.Component<DialogItem.Props, DialogItem.State, any
                   label="Name"
                   className={classes.textField}
                   value={textBoxName}
-                  onChange={this.handleTextBoxesChange('textBoxName')}
+                  onChange={handleTextBoxesChange('textBoxName')}
                 />
                 <TextField
                   id="stage-desc"
                   label="Description"
                   className={classes.textField}
                   value={textBoxDesc}
-                  onChange={this.handleTextBoxesChange('textBoxDesc')}
+                  onChange={handleTextBoxesChange('textBoxDesc')}
                 />
               </form>
             </DialogContent>

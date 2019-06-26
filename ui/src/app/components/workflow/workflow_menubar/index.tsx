@@ -37,7 +37,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                 }}
             >
                 <List>
-                {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
+                {['Tool 1', 'Tool 2'].map((text, index) => (
                     <ListItem button key={text}>
                     <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
                     <ListItemText primary={text} />
@@ -46,9 +46,9 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                 </List>
                 <Divider />
                 <List>
-                {['All mail', 'Trash', 'Spam'].map((text, index) => (
+                {['Help'].map((text, index) => (
                     <ListItem button key={text}>
-                    <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
+                    {/* <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon> */}
                     <ListItemText primary={text} />
                     </ListItem>
                 ))}
