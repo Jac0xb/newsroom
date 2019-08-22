@@ -1,12 +1,14 @@
 import dotenv from "dotenv";
 import "dotenv/config";
 import express from "express";
+import fs from "fs";
 import "reflect-metadata";
-import { createConnection } from "typeorm";
-import { Server } from "typescript-rest";
-import { HttpError } from "typescript-rest/dist/server/model/errors";
-import { DocumentService } from "./services/DocumentService";
-import { WorkflowService } from "./services/WorkflowService";
+import swaggerUi from "swagger-ui-express";
+import {createConnection} from "typeorm";
+import {Server} from "typescript-rest";
+import {HttpError} from "typescript-rest/dist/server/model/errors";
+import {DocumentService} from "./services/DocumentService";
+import {WorkflowService} from "./services/WorkflowService";
 
 dotenv.config();
 
@@ -27,12 +29,25 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
         res.set("Content-Type", "application/json");
         res.status(err.statusCode);
-        res.json({ code: err.statusCode, message: err.message });
+        res.json({code: err.statusCode, message: err.message});
     } else {
         next(err);
     }
 });
 
+// Serve swagger docs on /docs
+fs.readFile("dist/swagger.json", "UTF-8", (err, data) => {
+    if (err) {
+        console.error("Error reading Swagger JSON file:", err);
+        return;
+    }
+
+    const swaggerDocument = JSON.parse(data);
+
+    app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+});
+
+// Start app server and listen for connections
 createConnection().then(async (connection) => {
     app.listen(port, () => {
         console.info(`Server started at http://localhost:${port}.`);
