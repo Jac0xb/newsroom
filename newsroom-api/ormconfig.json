@@ -5,10 +5,10 @@
   "synchronize": true,
   "logging": false,
   "entities": [
-    "../orm/dist/entity/*.js"
+    "dist/entity/*.js"
   ],
   "migrations": [
-    "../orm/dist/migration/*.js"
+    "orm/dist/migration/*.js"
   ],
   "cli": {
     "entitiesDir": "src/entity",
