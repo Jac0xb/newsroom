@@ -4,5 +4,7 @@ node_modules
 *.log
 dist
 .vscode
+.idea
+*.iml
 *.sqlite
 .DS_STORE
