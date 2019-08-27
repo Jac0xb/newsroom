@@ -1,7 +1,9 @@
 import * as React from 'react';
+import { withStyles } from '@material-ui/core/styles';
 import { RouteComponentProps } from 'react-router';
 import PrimarySearchAppBar from 'app/components/common/application_bar';
 import WorkflowOverview from 'app/components/workflow/workflow_overview';
+import { styles } from './styles';
 
 export namespace Workflow {
 	export interface Props extends RouteComponentProps<void> {
@@ -9,7 +11,7 @@ export namespace Workflow {
   }
 }
 
-export class Workflow extends React.Component<Workflow.Props> {
+class Workflow extends React.Component<Workflow.Props> {
 	static defaultProps: Partial<Workflow.Props> = {
 	};
 
@@ -26,3 +28,4 @@ export class Workflow extends React.Component<Workflow.Props> {
 		);
 	}
 }
+export default withStyles(styles, { withTheme: true })(Workflow);
