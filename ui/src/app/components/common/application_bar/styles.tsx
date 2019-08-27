@@ -71,6 +71,9 @@ export function styles(theme: Theme)  {
 			[theme.breakpoints.up('md')]: {
 				display: 'none',
 			},
-        },
+		},
+		itemLinks: {
+			textDecoration: 'none',
+		}
     } as StyleRules);
 }

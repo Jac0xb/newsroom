@@ -16,6 +16,8 @@ export namespace CreateWorkflow {
         workFlowName: string
         workFlowDesc: string
         workflows: any[]
+        dialogBoxName: string
+        dialogBoxDesc: string
     }
 }
 
@@ -24,7 +26,13 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
 
     constructor(props: CreateWorkflow.Props) {
 		super(props)
-		this.state = { workflows: [], workFlowName: "", workFlowDesc: "", showDialog: false };
+        this.state = { workflows: [], 
+            workFlowName: "", 
+            workFlowDesc: "", 
+            showDialog: false,
+            dialogBoxName: '',
+            dialogBoxDesc: '', 
+        };
     }
 
     componentDidMount() {
@@ -39,13 +47,21 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
         this.setState({ showDialog: open });
     };
 
-    handleTextBoxesChange = (name: keyof CreateWorkflow.State) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    handleTextBoxesChange = (name: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
+
+        // this.setState({ [name]: event.target.value });
 
         if(name == "workFlowName"){
             this.setState({ workFlowName: event.target.value });
         }
         if(name == "workFlowDesc"){
             this.setState({ workFlowDesc: event.target.value });
+        }
+        if(name == "textBoxName"){
+            this.setState({ dialogBoxName: event.target.value });
+        }
+        if(name == "textBoxDesc"){
+            this.setState({ dialogBoxDesc: event.target.value });
         }
     };
 
@@ -86,7 +102,7 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
 
     render() {
 
-        const { workflows } = this.state;
+        const { workflows, dialogBoxName, dialogBoxDesc } = this.state;
         const { classes } = this.props;
 
         return (
@@ -102,7 +118,7 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
 					}
 				</div>
 
-                <DialogItem title={"Create New Workflow"} desc={"Enter the name of the new workflow"} show={this.state.showDialog} handleClose={() => this.setState({showDialog: false})} handleSave={this.handleCreateNew}/>
+                <DialogItem textBoxName={dialogBoxName} textBoxDesc={dialogBoxDesc}  title={"Create New Workflow"} desc={"Enter the name of the new workflow"} show={this.state.showDialog} handleTextBoxesChange={this.handleTextBoxesChange} handleClose={() => this.setState({showDialog: false})} handleSave={this.handleCreateNew}/>
             </main>
         );
     }
