@@ -47,10 +47,11 @@ export class NRUser {
     @UpdateDateColumn()
     public lastUpdated: Date;
 
-    // Each user can have many associated roles.
+    // Many: Each user can have many associated roles.
+    // Many: Each role can be assigned to many users.
     @ManyToMany(
         (type) => NRRole,
-        (role) => role.users
+        (role) => role.users,
     )
     @JoinTable()
     public roles: NRRole[];

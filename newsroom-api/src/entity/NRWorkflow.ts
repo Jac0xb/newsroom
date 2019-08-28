@@ -1,6 +1,7 @@
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { NRDocument } from "./NRDocument";
 import { NRStage } from "./NRStage";
+import { NRPermission } from "./NRPermission";
 
 @Entity("workflow")
 export class NRWorkflow {
@@ -59,4 +60,13 @@ export class NRWorkflow {
         { eager: true },
     )
     public stages: NRStage[];
+
+    // Each workflow can have many permissions.
+    @OneToMany(
+        (type) => NRStage,
+        (permission) => permission.workflow,
+        { eager: true },
+    )
+    public permissions: NRPermission[];
+
 }

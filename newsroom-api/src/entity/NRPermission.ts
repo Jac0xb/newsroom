@@ -1,32 +1,54 @@
-import { Column, CreateDateColumn, Entity, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { CreateDateColumn, Column, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { NRRole } from "./NRRole";
+import { NRWorkflow } from "./NRWorkflow";
 
-@Entity("document")
+@Entity("permission")
 export class NRPermission {
     // Primary key.
     @PrimaryGeneratedColumn()
     public id: number;
 
-    // Name of the user role.
+    // What privilege the role has on the associated entity.
+    // 1: Write
+    // 0: Read
+    // So queries for all roles given to a user can just use
+    // MAX(), and know permissions based on the return value.
     @Column({
-        length: 256,
         nullable: false,
-        type: "varchar",
+        type: "int"
     })
     public name: string;
 
-    // The date of when this user role was created.
+    // The date of when this user permission was created.
     @CreateDateColumn()
     public created: Date;
 
-    // The date of when this user role was last edited.
+    // The date of when this user permission was last edited.
     @UpdateDateColumn()
     public lastUpdated: Date;
 
-    // Each permission can be associated with many roles.
-    @ManyToMany(
+    // Many: Each role has many associated permissions.
+    // One: Each permission as a tuple of:
+    //          (role_id, entity_id)
+    //      is only associated with one permission.
+    //      This allows roles to have permissions for each
+    //      different entity.
+    @ManyToOne(
         (type) => NRRole,
-        (role) => role.permissions
+        (role) => role.permissions,
+        { eager: true },
     )
-    public roles: NRRole[];
+    public role: NRRole;
+
+    // Many: Each workflow has many different permissions.
+    // One:  Each permission tuple of:
+    //          (role_id, workflow_id)
+    //      is only associated with one permission, hence
+    //      each workflow can have different permissions.
+    @ManyToOne(
+        (type) => NRWorkflow,
+        (workflow) => workflow.permissions,
+    )
+    public workflow: NRWorkflow;
+
 }

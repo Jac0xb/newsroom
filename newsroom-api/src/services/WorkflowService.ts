@@ -3,154 +3,19 @@ import { getManager } from "typeorm";
 import { DELETE, Errors, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 import { NotFoundError } from "typescript-rest/dist/server/model/errors";
+
 import { NRStage, NRWorkflow } from "../entity";
+import { validators } from "./Validators";
 
 /**
- * Provides API services for Workflows, and the stages associated with workflows.
+ * Provides API services for Workflows, and the stages associated
+ * with workflows.
  */
 @Path("/api/workflows")
 @Tags("Workflows")
 export class WorkflowService {
-
     /**
-     * When creating a new workflow, we need to validate that it has all the
-     * required information to define a workflow. The workflow id should always
-     * be blank because it is an auto-generated column.
-     */
-    private static createWorkflowValidator(req: express.Request) {
-        const workflow = req.body as NRWorkflow;
-
-        if (!workflow.name) {
-            throw new Errors.BadRequestError("Workflow name not present.");
-        }
-
-        if (!(typeof workflow.name === "string")) {
-            throw new Errors.BadRequestError("Workflow name was not a string.");
-        }
-
-        if (workflow.name.length > 256) {
-            throw new Errors.BadRequestError("Workflow name too long, max 256.");
-        }
-
-        if (!workflow.creator) {
-            throw new Errors.BadRequestError("Workflow creator not present.");
-        }
-
-        if (!(typeof workflow.creator === "string")) {
-            throw new Errors.BadRequestError("Workflow creator was not a string.");
-        }
-
-        if (workflow.creator.length > 256) {
-            throw new Errors.BadRequestError("Workflow creator too long, max 256.");
-        }
-
-        if (workflow.description) {
-            if (!(typeof workflow.description === "string")) {
-                throw new Errors.BadRequestError("Workflow description was not a string.");
-            }
-
-            if (workflow.description.length > 1000) {
-                throw new Errors.BadRequestError("Workflow description too long, max 1000");
-            }
-        }
-    }
-
-    /**
-     * When updating a workflow, fields may be empty because only some need to be
-     * updated.
-     */
-    private static updateWorkflowValidator(req: express.Request) {
-        const workflow = req.body as NRWorkflow;
-
-        if (workflow.name) {
-            if (!(typeof workflow.name === "string")) {
-                throw new Errors.BadRequestError("Workflow name was not a string.");
-            }
-        }
-
-        if (workflow.creator) {
-            if (!(typeof workflow.creator === "string")) {
-                throw new Errors.BadRequestError("Workflow creator was not a string.");
-            }
-        }
-
-        if (workflow.description) {
-            if (!(typeof workflow.description === "string")) {
-                throw new Errors.BadRequestError("Workflow description was not a string.");
-            }
-
-            if (workflow.description.length > 1000) {
-                throw new Errors.BadRequestError("Workflow description too long, max 1000.");
-           }
-        }
-    }
-
-    /**
-     * When adding a stage to a workflow, we need to validate that we have
-     * the necessary information within the database to create it.
-     */
-    private static addStageValidator(req: express.Request) {
-        const stage = req.body as NRStage;
-
-        if (!stage.name) {
-            throw new Errors.BadRequestError("Stage name not present.");
-        }
-
-        if (!(typeof stage.name === "string")) {
-            throw new Errors.BadRequestError("Stage name was not a string.");
-        }
-
-        if (!stage.creator) {
-            throw new Errors.BadRequestError("Stage creator not present.");
-        }
-
-        if (!(typeof stage.creator === "string")) {
-            throw new Errors.BadRequestError("Stage creator was not a string.");
-        }
-
-        if (stage.description) {
-            if (!(typeof stage.description === "string")) {
-                throw new Errors.BadRequestError("Stage description was not a string.");
-            }
-
-            if (stage.description.length > 1000) {
-                throw new Errors.BadRequestError("Stage description too long, max 1000.");
-           }
-        }
-    }
-
-    /**
-     * When updating a stage, we need to validate that we at least have an id
-     * to identify it. Other fields may be empty because only some need to be
-     * updated.
-     */
-    private static updateStageValidator(req: express.Request) {
-        const stage = req.body as NRStage;
-
-        if (stage.name) {
-            if (!(typeof stage.name === "string")) {
-                throw new Errors.BadRequestError("Stage name was not a string.");
-            }
-        }
-
-        if (stage.creator) {
-            if (!(typeof stage.creator === "string")) {
-                throw new Errors.BadRequestError("Stage creator was not a string.");
-            }
-        }
-
-        if (stage.description) {
-            if (!(typeof stage.description === "string")) {
-                throw new Errors.BadRequestError("Stage description was not a string.");
-            }
-
-            if (stage.description.length > 1000) {
-                throw new Errors.BadRequestError("Stage description too long, max 1000.");
-           }
-        }
-    }
-    /**
-     * Used to interact with any given workflow/stage in the database.
+     * Used to interact with any specified type in the database.
      */
     public workflowRepository = getManager().getRepository(NRWorkflow);
     public stageRepository = getManager().getRepository(NRStage);
@@ -164,7 +29,7 @@ export class WorkflowService {
      *      - Workflow properties are wrong type.
      */
     @POST
-    @PreProcessor(WorkflowService.createWorkflowValidator)
+    @PreProcessor(validators.createWorkflowValidator)
     public async createWorkflow(workflow: NRWorkflow): Promise<NRWorkflow> {
         return await this.workflowRepository.save(workflow);
     }
@@ -208,7 +73,7 @@ export class WorkflowService {
      */
     @PUT
     @Path("/:id")
-    @PreProcessor(WorkflowService.updateWorkflowValidator)
+    @PreProcessor(validators.updateWorkflowValidator)
     public async updateWorkflow(@IsInt @PathParam("id") workflowId: number,
                                 workflow: NRWorkflow): Promise<NRWorkflow> {
 
@@ -388,7 +253,7 @@ export class WorkflowService {
      */
     @POST
     @Path("/:id/stages/:pos")
-    @PreProcessor(WorkflowService.addStageValidator)
+    @PreProcessor(validators.addStageValidator)
     public async addStageAt(stage: NRStage,
                             @IsInt @PathParam("id") workflowId: number,
                             @IsInt @PathParam("pos") position: number): Promise<NRStage> {
@@ -521,7 +386,7 @@ export class WorkflowService {
      */
     @PUT
     @Path("/:id/stages/:sid")
-    @PreProcessor(WorkflowService.updateStageValidator)
+    @PreProcessor(validators.updateStageValidator)
     public async updateStage(@IsInt @PathParam("sid") sid: number,
                              stage: NRStage): Promise<NRStage> {
 

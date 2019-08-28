@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToMany, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { NRUser } from "./NRUser";
 import { NRPermission } from "./NRPermission";
 
@@ -24,17 +24,19 @@ export class NRRole {
     @UpdateDateColumn()
     public lastUpdated: Date;
 
-    // Each role can have many associated users.
+    // Many: Each role can be assigned to many users.
+    // Many: Each user can be assigned to many roles.
     @ManyToMany(
         (type) => NRUser,
         (user) => user.roles
     )
     public users: NRUser[];
 
-    // Each role can have many associated permissions.
-    @ManyToMany(
+    // One: Each permission is only associated with a single role (and page).
+    // Many: Each role has permissions for many different pages.
+    @OneToMany(
         (type) => NRPermission,
-        (permission) => permission.roles
+        (permission) => permission.role
     )
     public permissions: NRPermission[];
 }

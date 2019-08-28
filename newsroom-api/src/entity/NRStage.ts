@@ -1,9 +1,7 @@
-import {
-    Column, CreateDateColumn, Entity, ManyToOne, OneToMany,
-    PrimaryGeneratedColumn, UpdateDateColumn,
-} from "typeorm";
+import { JoinColumn, Column, CreateDateColumn, Entity, OneToOne, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { NRDocument } from "./NRDocument";
 import { NRWorkflow } from "./NRWorkflow";
+import { NRUser } from "./NRUser";
 
 @Entity("stage")
 export class NRStage {
@@ -23,14 +21,6 @@ export class NRStage {
     })
     public name: string;
 
-    // Name of creator of the stage.
-    @Column({
-        length: 256,
-        nullable: true,
-        type: "varchar",
-    })
-    public creator: string; // TODO: Should relate to an Account ID later.
-
     // A brief description of the stage.
     @Column({
         length: 500,
@@ -46,6 +36,13 @@ export class NRStage {
     // The Date of when this stage was last edited.
     @UpdateDateColumn()
     public lastUpdated: Date;
+
+    // One: One stage is only created by one user.
+    @OneToOne(
+        (type) => NRUser
+    )
+    @JoinColumn( {name: "creator"})
+    public creator: NRUser;
 
     // Each stage belongs to only one workflow.
     @ManyToOne(
