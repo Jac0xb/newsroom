@@ -7,7 +7,7 @@ import WorkflowTile from 'app/components/workflow/workflow_object';
 import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
 
-export namespace CreateWorkflow {
+export namespace WorkflowOverview {
     export interface Props {
         classes?: any
     }
@@ -22,9 +22,9 @@ export namespace CreateWorkflow {
 }
 
 
-class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflow.State> {
+class WorkflowOverview extends React.Component<WorkflowOverview.Props, WorkflowOverview.State> {
 
-    constructor(props: CreateWorkflow.Props) {
+    constructor(props: WorkflowOverview.Props) {
 		super(props)
         this.state = { workflows: [], 
             workFlowName: "", 
@@ -124,4 +124,4 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
     }
 }
 
-export default withStyles(styles, { withTheme: true })(CreateWorkflow);
+export default withStyles(styles, { withTheme: true })(WorkflowOverview);

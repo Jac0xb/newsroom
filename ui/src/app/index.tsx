@@ -7,7 +7,7 @@ import { Route, Switch } from 'react-router-dom';
 import Dashboard from './views/dashboard_overview';
 import DocumentEditor from './views/document_editor';
 import WorkflowEditor from './views/workflow_editor'
-import Workflow from './views/workflow_overview';
+import Workflow from './views/workflow_page';
 import DocumentCreator from './views/document_create';
 import LoginPage from './views/login_page';
 
@@ -30,7 +30,7 @@ class App extends React.Component<App.Props, App.State, any> {
 	constructor(props: App.Props) {
 		super(props)
 		this.state = {
-		  isAuthenticated: false,
+		  isAuthenticated: true,
 		}
 	}
 
