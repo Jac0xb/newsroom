@@ -19,5 +19,8 @@ export function styles(theme: Theme) {
             marginLeft: 8,
             marginRight: 8,
           },
+          register:{ 
+            marginTop: 2,
+          }
     } as StyleRules);
 }

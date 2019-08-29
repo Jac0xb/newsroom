@@ -36,6 +36,10 @@ class WorkflowOverview extends React.Component<WorkflowOverview.Props, WorkflowO
     }
 
     componentDidMount() {
+        this.getWorkflows();
+    }
+
+    getWorkflows = () => {
         axios.get("/api/workflows").then((response) => {
             console.log(response);
 
@@ -85,16 +89,11 @@ class WorkflowOverview extends React.Component<WorkflowOverview.Props, WorkflowO
 
     handleDeleteClick = (workflowID: number) => {
 
-        console.log(workflowID)
         axios.delete("/api/workflows/" + workflowID ,{
         }).then((response) => {
     
-          console.log(response);
-    
-          // TODO
-          this.componentDidMount();
-          // WILL RERENDER LIST
-
+          // Update view
+          this.getWorkflows();
           
         });
     

@@ -30,7 +30,7 @@ class App extends React.Component<App.Props, App.State, any> {
 	constructor(props: App.Props) {
 		super(props)
 		this.state = {
-		  isAuthenticated: true,
+		  isAuthenticated: false,
 		}
 	}
 
@@ -38,7 +38,12 @@ class App extends React.Component<App.Props, App.State, any> {
 	handleLoginClick = (username: string, password: string) => {
 		console.log(username, password)
         this.setState({ isAuthenticated: true })
-    };
+	};
+	// TODO: auth thro db
+	handleRegisterClick = (username: string, password: string) => {
+		console.log(username, password)
+        this.setState({ isAuthenticated: true })
+  };
 
 	render(){
 
@@ -51,7 +56,7 @@ class App extends React.Component<App.Props, App.State, any> {
 					<div className="App">
 						{
 							!isAuthenticated &&
-							<LoginPage loginClick={(username: string, password: string) => this.handleLoginClick(username, password)} /> 	
+							<LoginPage loginClick={(username: string, password: string) => this.handleLoginClick(username, password)} registerClick={this.handleRegisterClick} /> 	
 						}
 						{
 							isAuthenticated &&
@@ -60,7 +65,7 @@ class App extends React.Component<App.Props, App.State, any> {
 								<Route exact path="/document/create" component={DocumentCreator} />
 								<Route path="/document/:id/edit" component={DocumentEditor} />
 								<Route path="/workflow/:id/edit" component={WorkflowEditor} />
-								<Route path="/workflow" component={Workflow} />
+								<Route exact path="/workflow" component={Workflow} />
 								<Route exact path="/" component={Dashboard} />
 							</div>
 						}
