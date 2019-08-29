@@ -3,8 +3,8 @@ import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import PrimarySearchAppBar from 'app/components/common/application_bar';
-import StyleBar from 'app/components/common/style_bar';
+import PrimarySearchAppBar from 'app/components/common/header';
+import StyleBar from 'app/components/document/editor/StyleBar'
 import WorkflowMiniView from 'app/components/workflow/workflow_miniview';
 import { Document } from 'app/models';
 import axios from 'axios';

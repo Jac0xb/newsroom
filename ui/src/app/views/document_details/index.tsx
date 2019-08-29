@@ -6,7 +6,7 @@ import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import SectionItem from 'app/components/common/section_item';
 import Button from '@material-ui/core/Button';
-import PrimarySearchAppBar from 'app/components/common/application_bar'
+import PrimarySearchAppBar from 'app/components/common/header'
 
 export namespace DocumentDetails {
     export interface Props {

@@ -1,7 +1,7 @@
 import { Fab } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
-import PrimarySearchAppBar from 'app/components/common/application_bar';
+import PrimarySearchAppBar from 'app/components/common/header';
 import WorkflowStage from 'app/components/workflow/workflow_stage';
 import WorkflowMenuBar from 'app/components/workflow/workflow_menubar'
 import DialogItem from 'app/components/common/dialog';

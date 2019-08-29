@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { RouteComponentProps } from 'react-router';
-import PrimarySearchAppBar from 'app/components/common/application_bar';
+import PrimarySearchAppBar from 'app/components/common/header';
 import WorkflowOverview from 'app/components/workflow/workflow_overview';
 
 export namespace Workflow {

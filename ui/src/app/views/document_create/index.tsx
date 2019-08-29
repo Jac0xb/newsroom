@@ -1,5 +1,5 @@
 import * as React from 'react';
-import PrimarySearchAppBar from 'app/components/common/application_bar';
+import PrimarySearchAppBar from 'app/components/common/header';
 import { Grid, Paper, FormGroup, FormLabel, TextField, MenuItem, Button, Typography } from '@material-ui/core';
 import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
