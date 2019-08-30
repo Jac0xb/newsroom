@@ -26,6 +26,7 @@ export namespace WorkflowEditor {
     currStageIdx: number
     dialogTextName: string
     dialogTextDesc: string
+    canEdit: boolean
   }
 }
 class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEditor.State, any> {
@@ -40,11 +41,13 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       dialogTextName: '',
       dialogTextDesc: '',
       currStageIdx: 0,
+      canEdit: false
     }
   }
 
   componentDidMount() {
     this.getStages();
+    this.getRole();
   }
 
   // Method to get stages of current workflow from database
@@ -57,6 +60,14 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
 
       this.setState({ stages })
     })
+  }
+
+  // Method to get role of the user from database
+  getRole() {
+    // TODO: check role from db 
+    
+    // allow user to edit workflows
+    this.setState({ canEdit: true })
   }
 
   handleDialogTextChange = (name: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -150,7 +161,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
   render() {
 
     const { classes } = this.props;
-    const { stages, createDialogOpen, editDialogOpen, dialogTextName, dialogTextDesc } = this.state;
+    const { stages, createDialogOpen, editDialogOpen, dialogTextName, dialogTextDesc, canEdit } = this.state;
 
     return (
       <React.Fragment>
@@ -167,17 +178,23 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
             {/* Spacer width */}
             <div className={classes.menuSpacerWidth}></div>
             <div className={classes.workflowContent}>
-              <div className={classes.stagePlusButton}>
-              <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.fab}>
-                <AddIcon />
-              </Fab>
+              <div className={classes.stage}>
+                { canEdit ? 
+                  <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.addButton}>
+                    <AddIcon />
+                  </Fab> 
+                  : null 
+                }
               </div>
               {stages.map((stage, index) => (
-                <div className={classes.stagePlusButton}>
+                <div className={classes.stage}>
                   <WorkflowStage id={stage.id} name={stage.name} desc={stage.description} onEditClick={(id: number) => this.handleStageEditClick(id)} onDeleteClick={(id: number) => this.handleStageDeleteClick(id)}/>
-                  <Fab size="small" color="secondary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index + 1)} className={classes.fab}>
-                    <AddIcon />
-                  </Fab>
+                  { canEdit ? 
+                    <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.addButton}>
+                      <AddIcon />
+                    </Fab> 
+                    : null 
+                  }
                 </div>
               ))}
               <DialogItem textBoxName={dialogTextName} textBoxDesc={dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({createDialogOpen: false})}  handleSave={this.handleAddStage}/>

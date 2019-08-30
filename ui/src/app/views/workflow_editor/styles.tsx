@@ -23,17 +23,22 @@ export function styles(theme: Theme) {
         menuSpacerWidth: {
             width: 250,
         },
-        stagePlusButton: {
-            display: "inline-flex"
+        stage: {
+            display: "inline-flex",
+            margin: 8,
         },
         stageGrid: {
             margin: theme.spacing.unit,
             minWidth: "200px",
             maxWidth: "400px"
         },
-        fab: {
-            margin: theme.spacing.unit,
+        addButton: {
+            marginLeft: 12,
             alignSelf: "center",
+            backgroundColor: 'green',
+            '&:hover': {
+                backgroundColor: '#20733e',
+              },
         },
         '@global': {
             '*::-webkit-scrollbar': {
