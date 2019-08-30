@@ -1,11 +1,16 @@
-import { JoinColumn, Column, CreateDateColumn, Entity, OneToOne, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { NRDocument } from "./NRDocument";
-import { NRWorkflow } from "./NRWorkflow";
-import { NRUser } from "./NRUser";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne,
+         OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-@Entity("stage")
+import { NRDocument } from "./NRDocument";
+import { NRUser } from "./NRUser";
+import { NRWorkflow } from "./NRWorkflow";
+
+
+export const STGE_TABLE = "stage";
+
+// NRStage objects are pieced together to make a workflow.
+@Entity(STGE_TABLE)
 export class NRStage {
-    // Primary key.
     @PrimaryGeneratedColumn()
     public id: number;
 
@@ -29,29 +34,41 @@ export class NRStage {
     })
     public description: string;
 
-    // The Date of when this stage was created.
+    // The date of when this stage was created.
     @CreateDateColumn()
     public created: Date;
 
-    // The Date of when this stage was last edited.
+    // The date of when this stage was last edited.
     @UpdateDateColumn()
     public lastUpdated: Date;
 
-    // One: One stage is only created by one user.
-    @OneToOne(
+    /**
+     * Relationship: NRUser
+     *      - Many: Users can make many stages.
+     *      - One: Each stage is only created by one user. 
+     */
+    @ManyToOne(
         (type) => NRUser
     )
-    @JoinColumn( {name: "creator"})
+    @JoinColumn({ name: "creator" })
     public creator: NRUser;
 
-    // Each stage belongs to only one workflow.
+    /**
+     * Relationship: NRWorkflow
+     *      - Many: Workflows can have many stages.
+     *      - One: Each stage only belongs to a single workflow.
+     */
     @ManyToOne(
         (type) => NRWorkflow,
         (workflow) => workflow.stages,
     )
     public workflow: NRWorkflow;
 
-    // Each stage can have many associated documents.
+    /**
+     * Relationship: NRDocument
+     *      - One: Each document can only be a part of a single stage.
+     *      - Many Each stage can have many documents.
+     */
     @OneToMany(
         (type) => NRDocument,
         (document) => document.stage,

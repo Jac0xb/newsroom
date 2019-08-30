@@ -1,20 +1,34 @@
-import dotenv from "dotenv";
 import "dotenv/config";
+import "reflect-metadata";
+import dotenv from "dotenv";
 import express from "express";
 import fs from "fs";
-import "reflect-metadata";
 import swaggerUi from "swagger-ui-express";
 import {createConnection} from "typeorm";
 import {Server} from "typescript-rest";
 import {HttpError} from "typescript-rest/dist/server/model/errors";
 import {DocumentService} from "./services/DocumentService";
 import {WorkflowService} from "./services/WorkflowService";
+import {NRUser} from "./entity/NRUser";
 
 dotenv.config();
 
 const port = process.env.SERVICE_PORT || 8000;
 
 const app = express();
+
+// Demo middleware to inject a user into the request.
+app.use("/api", 
+function(req: express.Request, res: express.Response, next: express.NextFunction) {
+    // Fake user for every request with a default roleId of 1.
+    req.user = new NRUser();
+    req.user.id = 0;
+    req.user.name = "tcruise";
+    req.user.firstName = "Tom";
+    req.user.lastName = "Cruise";
+    req.user.password = "tcruise";
+    next();
+});
 
 // Build typescript-rest services.
 Server.buildServices(app, DocumentService, WorkflowService);
@@ -35,7 +49,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     }
 });
 
-// Serve swagger docs on /docs
+// Serve swagger docs on "/docs".
 fs.readFile("dist/swagger.json", "UTF-8", (err, data) => {
     if (err) {
         console.error("Error reading Swagger JSON file:", err);
@@ -47,7 +61,7 @@ fs.readFile("dist/swagger.json", "UTF-8", (err, data) => {
     app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 });
 
-// Start app server and listen for connections
+// Start app server and listen for connections.
 createConnection().then(async (connection) => {
     app.listen(port, () => {
         console.info(`Server started at http://localhost:${port}.`);

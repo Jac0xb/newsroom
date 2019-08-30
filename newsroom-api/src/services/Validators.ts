@@ -1,13 +1,12 @@
 import * as express from "express";
 import { Errors } from "typescript-rest";
-import { NRWorkflow, NRStage, NRDocument } from "../entity";
 
-export module validators {
-    /**
-     * When creating a new workflow, we need to validate that it has all the
-     * required information to define a workflow. The workflow id should always
-     * be blank because it is an auto-generated column.
-     */
+import { NRDocument, NRStage, NRWorkflow } from "../entity";
+import { NRRole } from "../entity/NRRole";
+import { NRUser } from "../entity/NRUser";
+
+// Validate form submissions on creating and updating items.
+export namespace validators {
     export function createWorkflowValidator(req: express.Request) {
         const workflow = req.body as NRWorkflow;
 
@@ -31,10 +30,6 @@ export module validators {
             throw new Errors.BadRequestError("Workflow creator was not a string.");
         }
 
-        if (workflow.creator.length > 256) {
-            throw new Errors.BadRequestError("Workflow creator too long, max 256.");
-        }
-
         if (workflow.description) {
             if (!(typeof workflow.description === "string")) {
                 throw new Errors.BadRequestError("Workflow description was not a string.");
@@ -46,10 +41,6 @@ export module validators {
         }
     }
 
-    /**
-     * When updating a workflow, fields may be empty because only some need to be
-     * updated.
-     */
     export function updateWorkflowValidator(req: express.Request) {
         const workflow = req.body as NRWorkflow;
 
@@ -76,10 +67,6 @@ export module validators {
         }
     }
 
-    /**
-     * When adding a stage to a workflow, we need to validate that we have
-     * the necessary information within the database to create it.
-     */
     export function addStageValidator(req: express.Request) {
         const stage = req.body as NRStage;
 
@@ -110,11 +97,6 @@ export module validators {
         }
     }
 
-    /**
-     * When updating a stage, we need to validate that we at least have an id
-     * to identify it. Other fields may be empty because only some need to be
-     * updated.
-     */
     export function updateStageValidator(req: express.Request) {
         const stage = req.body as NRStage;
 
@@ -141,11 +123,6 @@ export module validators {
         }
     }
 
-    /**
-     * When creating a new document, we need to validate that it has all the
-     * required information to define a document. The document id should always
-     * be blank because it is an auto-generated column.
-     */
     export function createDocumentValidator(req: express.Request) {
         const document = req.body as NRDocument;
 
@@ -198,10 +175,6 @@ export module validators {
         }
     }
 
-    /**
-     * When updating a document, fields may be empty because only some need to be
-     * updated.
-     */
     export function updateDocumentValidator(req: express.Request): void {
         const document = req.body as NRDocument;
 
@@ -254,4 +227,129 @@ export module validators {
         }
     }
 
+    export function createUserValidator(req: express.Request): void {
+        const user = req.body as NRUser;
+
+        if (!user.name) {
+            throw new Errors.BadRequestError("User name not present.");
+        }
+
+        if (!(typeof user.name === "string")) {
+            throw new Errors.BadRequestError("User name was not a string.");
+        }
+
+        if (user.name.length > 256) {
+            throw new Errors.BadRequestError("User name length is too long, max 256.");
+        }
+
+        if (!user.firstName) {
+            throw new Errors.BadRequestError("User first name not present.");
+        }
+
+        if (!(typeof user.firstName === "string")) {
+            throw new Errors.BadRequestError("User first name was not a string.");
+        }
+
+        if (user.firstName.length > 256) {
+            throw new Errors.BadRequestError("User first name length is too long, max 256.");
+        }
+
+        if (!user.lastName) {
+            throw new Errors.BadRequestError("User last name not present.");
+        }
+
+        if (!(typeof user.lastName === "string")) {
+            throw new Errors.BadRequestError("User last name was not a string.");
+        }
+
+        if (user.lastName.length > 256) {
+            throw new Errors.BadRequestError("User last name length is too long, max 256.");
+        }
+
+        if (!user.password) {
+            throw new Errors.BadRequestError("User password not present.");
+        }
+
+        if (!(typeof user.password === "string")) {
+            throw new Errors.BadRequestError("User password was not a string.");
+        }
+
+        if (user.password.length > 256) {
+            throw new Errors.BadRequestError("User password length is too long, max 256.");
+        }
+    }
+
+    export function updateUserValidator(req: express.Request): void {
+        const user = req.body as NRUser;
+
+        if (user.name) {
+            if (!(typeof user.name === "string")) {
+                throw new Errors.BadRequestError("User name was not a string.");
+            }
+
+            if (user.name.length > 256) {
+                throw new Errors.BadRequestError("User name length is too long, max 256.");
+            }
+        }
+
+        if (user.firstName) {
+            if (!(typeof user.firstName === "string")) {
+                throw new Errors.BadRequestError("User first name was not a string.");
+            }
+
+            if (user.firstName.length > 256) {
+                throw new Errors.BadRequestError("User first name length is too long, max 256.");
+            }
+        }
+
+        if (user.lastName) {
+            if (!(typeof user.lastName === "string")) {
+                throw new Errors.BadRequestError("User last name was not a string.");
+            }
+
+            if (user.lastName.length > 256) {
+                throw new Errors.BadRequestError("User last name length is too long, max 256.");
+            }
+        }
+
+        if (user.password) {
+            if (!(typeof user.password === "string")) {
+                throw new Errors.BadRequestError("User password was not a string.");
+            }
+
+            if (user.password.length > 256) {
+                throw new Errors.BadRequestError("User password length is too long, max 256.");
+            }
+        }
+    }
+
+    export function createRoleValidator(req: express.Request): void {
+        const role = req.body as NRRole;
+
+        if (!role.name) {
+            throw new Errors.BadRequestError("Role name not present.");
+        }
+
+        if (!(typeof role.name === "string")) {
+            throw new Errors.BadRequestError("Role name was not a string.");
+        }
+
+        if (role.name.length > 256) {
+            throw new Errors.BadRequestError("Role name length is too long, max 256.");
+        }
+    }
+
+    export function updateRoleValidator(req: express.Request): void {
+        const role = req.body as NRRole;
+
+        if (role.name) {
+            if (!(typeof role.name === "string")) {
+                throw new Errors.BadRequestError("Role name was not a string.");
+            }
+
+            if (role.name.length > 256) {
+                throw new Errors.BadRequestError("Role name length is too long, max 256.");
+            }
+        }
+    }
 }

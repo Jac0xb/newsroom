@@ -1,11 +1,16 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { NRDocument } from "./NRDocument";
-import { NRStage } from "./NRStage";
-import { NRPermission } from "./NRPermission";
+import { Column, CreateDateColumn, Entity, OneToMany, JoinColumn,
+         ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-@Entity("workflow")
+import { NRDocument } from "./NRDocument";
+import { NRPermission } from "./NRPermission";
+import { NRStage } from "./NRStage";
+import { NRUser } from "./NRUser";
+
+
+export const WRKF_TABLE = "workflow";
+
+@Entity(WRKF_TABLE)
 export class NRWorkflow {
-    // Primary key.
     @PrimaryGeneratedColumn()
     public id: number;
 
@@ -20,16 +25,6 @@ export class NRWorkflow {
     )
     public name: string;
 
-    // Name of creator of the workflow.
-    @Column(
-        {
-            length: 256,
-            nullable: true,
-            type: "varchar",
-        },
-    )
-    public creator: string; // TODO: Should relate to an Account ID later.
-
     // A brief description of the workflow.
     @Column({
         length: 1000,
@@ -38,22 +33,42 @@ export class NRWorkflow {
     })
     public description: string;
 
-    // The Date of when this workflow was created.
+    // The date of when this workflow was created.
     @CreateDateColumn()
     public created: Date;
 
-    // The Date of when this workflow was last edited.
+    // The date of when this workflow was last edited.
     @UpdateDateColumn()
     public lastUpdated: Date;
 
-    // Each workflow can have many associated documents.
+    /**
+     * Relationship: NRUser
+     *      - Many: Users can make many workflows.
+     *      - One: Each workflow is only created by one user. 
+     */
+    @ManyToOne(
+        (type) => NRUser,
+    )
+    @JoinColumn({ name: "creator" })
+    public creator: NRUser;
+
+
+    /**
+     * Relationship: NRDocument
+     *      - One: Each document is a part of only one workflow.
+     *      - Many: Each workflow can have many associated documents.
+     */
     @OneToMany(
         (type) => NRDocument,
         (document) => document.workflow,
     )
     public documents: NRDocument[];
 
-    // Each workflow can have many stages.
+    /**
+     * Relationship: NRStage
+     *      - One: Each document is a part of only one stage.
+     *      - Many: Each stage can have many documents.
+     */
     @OneToMany(
         (type) => NRStage,
         (stage) => stage.workflow,
@@ -61,7 +76,11 @@ export class NRWorkflow {
     )
     public stages: NRStage[];
 
-    // Each workflow can have many permissions.
+    /**
+     * Relationship: NRWorkflow
+     *      - One: Each workflow can have many permissions.
+     *      - Many: Each permission is associated with only one workflow.
+     */
     @OneToMany(
         (type) => NRStage,
         (permission) => permission.workflow,

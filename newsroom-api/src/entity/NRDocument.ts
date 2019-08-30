@@ -1,10 +1,14 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, 
+         PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+
 import { NRStage } from "./NRStage";
 import { NRWorkflow } from "./NRWorkflow";
 
-@Entity("document")
+
+export const DOCU_TABLE = "document";
+
+@Entity(DOCU_TABLE)
 export class NRDocument {
-    // Primary key.
     @PrimaryGeneratedColumn()
     public id: number;
 
@@ -39,15 +43,19 @@ export class NRDocument {
     })
     public description: string;
 
-    // The Date of when this document was created.
+    // The date of when this document was created.
     @CreateDateColumn()
     public created: Date;
 
-    // The Date of when this document was last edited.
+    // The date of when this document was last edited.
     @UpdateDateColumn()
     public lastUpdated: Date;
 
-    // Each document belongs to only one workflow.
+    /**
+     * Relationship: NRWorkflow
+     *      - Many: Workflows can have many documents.
+     *      - One: Each document is a part of only one workflow.
+     */
     @ManyToOne(
         (type) => NRWorkflow,
         (workflow) => workflow.documents,
@@ -56,6 +64,11 @@ export class NRDocument {
     public workflow: NRWorkflow;
 
     // Each document belongs to only one stage.
+    /**
+     * Relationship: NRStage
+     *      - Many: Stages can have many documents.
+     *      - One: Each document can only be in one stage.
+     */
     @ManyToOne(
         (type) => NRStage,
         (stage) => stage.documents,

@@ -13,12 +13,12 @@ import { validators } from "./Validators";
 @Path("/api/documents")
 @Tags("Documents")
 export class DocumentService {
+    public stageRepository = getManager().getRepository(NRStage);
     /**
      * Used to interact with any specified type in the database.
      */
     private documentRepository = getManager().getRepository(NRDocument);
     private workflowRepository = getManager().getRepository(NRWorkflow);
-    public stageRepository = getManager().getRepository(NRStage);
 
     /**
      * Create a new entry in the 'document' table with the specified
