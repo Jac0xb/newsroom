@@ -12,7 +12,8 @@ export namespace DocumentTile {
 	export interface Props {
 		classes?: any,
 		match?: { params: any },
-		document: Document
+        document: Document,
+        compressed?: Boolean
 	}
 }
 
@@ -39,24 +40,37 @@ class DocumentTile extends React.Component<DocumentTile.Props> {
 	render() {
 
 		const { classes, document } = this.props;
-
-		return (
-			<Paper className={classNames(classes.documentItem, classes.flexAutosize)} >
-				<Typography variant={"title"} className={classes.noWrap}>
-					{document.name}
-				</Typography>
-				<Divider />
-				<DetailRow title="Author" data={document.creator} link={"/users/" + document.creator} />
-				<DetailRow title="Workflow Type" data={document.workflow.name} link={"/workflow/" + document.workflow.id + "/edit"} />
-				<DetailRow title="Due Date" data={"duedate"} />
-				<div className={classes.buttonGroup}>
-					<Link to={"/document/" + document.id + "/edit"}>
-						<Button variant="contained" className={classes.button}>Edit</Button>
-					</Link>
-					<Button variant="contained" className={classes.button} onClick={() => this.onDeleteClick(document.id)}>Delete</Button>
-				</div>
-			</Paper>
-		);
+        
+        if (!this.props.compressed) {
+            return (
+                <Paper className={classNames(classes.documentItem, classes.flexAutosize)} >
+                    <Typography variant={"title"} className={classes.noWrap}>
+                        {document.name}
+                    </Typography>
+                    <Divider />
+                    <DetailRow title="Author" data={document.creator} link={"/users/" + document.creator} />
+                    <DetailRow title="Workflow Type" data={document.workflow.name} link={"/workflow/" + document.workflow.id + "/edit"} />
+                    <DetailRow title="Due Date" data={"duedate"} />
+                    <div className={classes.buttonGroup}>
+                        <Link to={"/document/" + document.id + "/edit"}>
+                            <Button variant="contained" className={classes.button}>Edit</Button>
+                        </Link>
+                        <Button variant="contained" className={classes.button} onClick={() => this.onDeleteClick(document.id)}>Delete</Button>
+                    </div>
+                </Paper>
+            );
+        }
+        else {
+            return (
+                <Paper className={classNames(classes.documentItem, classes.flexAutosize)} >
+                    <Link to={"/document/" + document.id + "/edit"}>
+                        <Typography variant={"body1"} className={classes.noWrap}>
+                            {document.name}
+                        </Typography>
+                    </Link>
+                </Paper >
+            )
+        }
 	}
 }
 

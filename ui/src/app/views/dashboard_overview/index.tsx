@@ -1,6 +1,6 @@
 import * as React from 'react';
 import PrimarySearchAppBar from 'app/components/common/header';
-import { Button, TextField, Typography, Divider, MenuItem } from '@material-ui/core';
+import { Button, TextField, Typography, MenuItem } from '@material-ui/core';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle'
 import { withStyles } from '@material-ui/core/styles';
 import DocumentTile from 'app/components/dashboard/DocumentTile';

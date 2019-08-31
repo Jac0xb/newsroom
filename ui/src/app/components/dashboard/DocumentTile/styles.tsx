@@ -7,9 +7,10 @@ export function styles(theme: Theme)  {
 			flex: "1 1 auto"
 		},
 		documentItem: {
-			maxWidth: "calc(600px + 38px)",
-			width: "370px",
-			padding: "16px",
+            maxWidth: "30%",
+            minWidth: "250px",
+            padding: "16px",
+            alignItems: "center",
 			"& h2": {
 				
 			},

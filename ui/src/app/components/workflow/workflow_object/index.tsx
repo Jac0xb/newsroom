@@ -7,40 +7,40 @@ import { Link } from 'react-router-dom';
 import classNames from 'classnames';
 
 export namespace Workflow {
-  export interface Props {
-    classes?: any
-    workflow: any
-    onClick: Function
-  }
+    export interface Props {
+        classes?: any
+        workflow: any
+        onClick: Function
+    }
 }
 class WorkflowTile extends React.Component<Workflow.Props, any> {
 
-  constructor(props: Workflow.Props) {
-    super(props)
-    this.state = {}
-  }
+    constructor(props: Workflow.Props) {
+        super(props)
+        this.state = {}
+    }
 
-  render() {
-    const { classes, workflow } = this.props;
+    render() {
+        const { classes, workflow } = this.props;
 
-    return (
-		<Paper className={classes.documentItem} key={workflow.id}>
-			<Typography className={classNames(classes.heading, classes.noWrap)} variant="h6">
-				{workflow.name}
-			</Typography>
-			<Divider />
-			<Typography component="p">
-				{(workflow.description === "" ? "(No Description)" : workflow.description)}
-			</Typography>
-      <div className={classes.buttonGroup}>
-        <Link to={"/workflow/" + workflow.id + "/edit"}>
-          <Button variant="contained" className={classes.button}>Edit</Button>
-        </Link>
-        <Button variant="contained" className={classes.button} onClick={() => this.props.onClick(workflow.id)}>Delete</Button>
-      </div>
-		</Paper>
-    );
-  }
+        return (
+            <Paper className={classes.documentItem} key={workflow.id}>
+                <Typography className={classNames(classes.heading, classes.noWrap)} variant="h6">
+                    {workflow.name}
+                </Typography>
+                <Divider />
+                <Typography component="p">
+                    {(workflow.description === "" ? "(No Description)" : workflow.description)}
+                </Typography>
+                <div className={classes.buttonGroup}>
+                    <Link to={"/workflow/" + workflow.id + "/edit"}>
+                        <Button variant="contained" className={classes.button}>Edit</Button>
+                    </Link>
+                    <Button variant="contained" className={classes.button} onClick={() => this.props.onClick(workflow.id)}>Delete</Button>
+                </div>
+            </Paper>
+        );
+    }
 }
 
 export default withStyles(styles, { withTheme: true })(WorkflowTile);

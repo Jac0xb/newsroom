@@ -74,7 +74,7 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
     this.getDocuments();
 
     const docList = stageDocuments.map((document, i) =>
-			<DocumentTile key={i} document={document} />
+			<DocumentTile key={i} document={document} compressed={true} />
     );
 
     return (
