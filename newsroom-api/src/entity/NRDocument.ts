@@ -1,9 +1,8 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, 
+import { Column, CreateDateColumn, Entity, ManyToOne,
          PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 import { NRStage } from "./NRStage";
 import { NRWorkflow } from "./NRWorkflow";
-
 
 export const DOCU_TABLE = "document";
 

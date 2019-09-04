@@ -5,7 +5,6 @@ import { NRDocument } from "./NRDocument";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
 
-
 export const STGE_TABLE = "stage";
 
 // NRStage objects are pieced together to make a workflow.
@@ -45,10 +44,10 @@ export class NRStage {
     /**
      * Relationship: NRUser
      *      - Many: Users can make many stages.
-     *      - One: Each stage is only created by one user. 
+     *      - One: Each stage is only created by one user.
      */
     @ManyToOne(
-        (type) => NRUser
+        (type) => NRUser,
     )
     @JoinColumn({ name: "creator" })
     public creator: NRUser;

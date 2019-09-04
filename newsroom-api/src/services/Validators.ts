@@ -51,8 +51,8 @@ export namespace validators {
         }
 
         if (workflow.creator) {
-            if (!(typeof workflow.creator === "string")) {
-                throw new Errors.BadRequestError("Workflow creator was not a string.");
+            if (!(typeof workflow.creator === "number")) {
+                throw new Errors.BadRequestError("Workflow creator was not a number.");
             }
         }
 
@@ -107,8 +107,8 @@ export namespace validators {
         }
 
         if (stage.creator) {
-            if (!(typeof stage.creator === "string")) {
-                throw new Errors.BadRequestError("Stage creator was not a string.");
+            if (!(typeof stage.creator === "number")) {
+                throw new Errors.BadRequestError("Stage creator was not a number.");
             }
         }
 
@@ -189,12 +189,8 @@ export namespace validators {
         }
 
         if (document.creator) {
-            if (!(typeof document.creator === "string")) {
-                throw new Errors.BadRequestError("Document creator was not a string.");
-            }
-
-            if (document.creator.length > 256) {
-                throw new Errors.BadRequestError("Document creator length is too long, max 256.");
+            if (!(typeof document.creator === "number")) {
+                throw new Errors.BadRequestError("Document creator was not a number.");
             }
         }
 

@@ -1,15 +1,17 @@
-import "dotenv/config";
-import "reflect-metadata";
 import dotenv from "dotenv";
+import "dotenv/config";
 import express from "express";
 import fs from "fs";
+import "reflect-metadata";
 import swaggerUi from "swagger-ui-express";
 import {createConnection} from "typeorm";
 import {Server} from "typescript-rest";
 import {HttpError} from "typescript-rest/dist/server/model/errors";
-import {DocumentService} from "./services/DocumentService";
-import {WorkflowService} from "./services/WorkflowService";
 import {NRUser} from "./entity/NRUser";
+import {DocumentService} from "./services/DocumentService";
+import {RoleService} from "./services/RoleService";
+import {UserService} from "./services/UserService";
+import {WorkflowService} from "./services/WorkflowService";
 
 dotenv.config();
 
@@ -18,7 +20,7 @@ const port = process.env.SERVICE_PORT || 8000;
 const app = express();
 
 // Demo middleware to inject a user into the request.
-app.use("/api", 
+app.use("/api",
 function(req: express.Request, res: express.Response, next: express.NextFunction) {
     // Fake user for every request with a default roleId of 1.
     req.user = new NRUser();
@@ -31,7 +33,7 @@ function(req: express.Request, res: express.Response, next: express.NextFunction
 });
 
 // Build typescript-rest services.
-Server.buildServices(app, DocumentService, WorkflowService);
+Server.buildServices(app, UserService, RoleService, DocumentService, WorkflowService);
 
 // Add error handler to return JSON error.
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

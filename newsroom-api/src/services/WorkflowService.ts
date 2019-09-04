@@ -3,13 +3,12 @@ import { getManager } from "typeorm";
 import { Context, DELETE, Errors, GET, Path, PathParam,
          POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-import { NotFoundError, ForbiddenError } from "typescript-rest/dist/server/model/errors";
 
-import { NRType } from "../entity/NRType";
 import { NRStage, STGE_TABLE } from "../entity/NRStage";
+import { NRType } from "../entity/NRType";
 import { NRWorkflow, WRKF_TABLE } from "../entity/NRWorkflow";
-import { validators } from "./Validators";
 import { common } from "./Common";
+import { validators } from "./Validators";
 
 // Provides API services for workflows, and their associated stages.
 @Path("/api/workflows")
@@ -37,15 +36,15 @@ export class WorkflowService {
     @POST
     @PreProcessor(validators.createWorkflowValidator)
     public async createWorkflow(workflow: NRWorkflow): Promise<NRWorkflow> {
-        let sessionUser = common.getUserFromContext(this.context);
-        common.checkAdmin(sessionUser);
+        const sessionUser = common.getUserFromContext(this.context);
+        await common.checkCreatePermissions(sessionUser, NRType.WRKF_KEY);
 
         return await this.workflowRepository.save(workflow);
     }
 
     /**
      * Get all existing workflows.
-     * 
+     *
      * Returns:
      *      - NRWorkflow[]
      */
@@ -65,12 +64,12 @@ export class WorkflowService {
     @GET
     @Path("/:wid")
     public async getWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRWorkflow> {
-        return common.getWorkflow(wid, this.workflowRepository)
+        return common.getWorkflow(wid, this.workflowRepository);
     }
 
     /**
      * Update information about a workflow.
-     * 
+     *
      * Returns:
      *      - NRWorkflow
      *      - BadRequestError (400)
@@ -86,9 +85,9 @@ export class WorkflowService {
     @PreProcessor(validators.updateWorkflowValidator)
     public async updateWorkflow(@IsInt @PathParam("wid") wid: number,
                                 workflow: NRWorkflow): Promise<NRWorkflow> {
-        let sessionUser = common.getUserFromContext(this.context);
-        let currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
-        await common.checkWritePermissions(sessionUser, NRType.WRKF_KEY);
+        const sessionUser = common.getUserFromContext(this.context);
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        await common.checkWritePermissions(sessionUser, NRType.WRKF_KEY, wid);
 
         // Update current stored name if given one.
         if (workflow.name) {
@@ -104,7 +103,7 @@ export class WorkflowService {
 
     /**
      * Delete a workflow and all associated stages.
-     * 
+     *
      * Returns:
      *      - ForbiddenError (403)
      *          - If request user is not allowed to delete workflows.
@@ -114,9 +113,9 @@ export class WorkflowService {
     @DELETE
     @Path("/:wid")
     public async deleteWorkflow(@IsInt @PathParam("wid") wid: number) {
-        let sessionUser = common.getUserFromContext(this.context);
-        let currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
-        await common.checkWritePermissions(sessionUser, NRType.WRKF_KEY);
+        const sessionUser = common.getUserFromContext(this.context);
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        await common.checkWritePermissions(sessionUser, NRType.WRKF_KEY, wid);
 
         await this.stageRepository
             .createQueryBuilder(STGE_TABLE)
@@ -135,7 +134,7 @@ export class WorkflowService {
 
     /**
      * Add a stage at the end of the workflow.
-     * 
+     *
      * Returns:
      *      - NRStage
      *      - BadRequestError (400)
@@ -150,10 +149,10 @@ export class WorkflowService {
     @Path("/:wid/stages")
     @PreProcessor(validators.addStageValidator)
     public async appendStage(@IsInt @PathParam("wid") wid: number,
-                             stage: NRStage, ): Promise<NRStage> {
-        let sessionUser = common.getUserFromContext(this.context);
-        let currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
-        await common.checkWritePermissions(sessionUser, NRType.WRKF_KEY);
+                             stage: NRStage ): Promise<NRStage> {
+        const sessionUser = common.getUserFromContext(this.context);
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        await common.checkWritePermissions(sessionUser, NRType.WRKF_KEY, wid);
 
         // Grab the next sequence ID for this set of workflow stages.
         const maxSeqId = await this.getMaxStageSequenceId(currWorkflow.id);
@@ -172,7 +171,7 @@ export class WorkflowService {
 
     /**
      * Get all stages for a specific workflow.
-     * 
+     *
      * Returns:
      *      - NRStage[]
      *      - NotFoundError (404)
@@ -181,7 +180,7 @@ export class WorkflowService {
     @GET
     @Path("/:wid/stages")
     public async getStages(@IsInt @PathParam("wid") wid: number): Promise<NRStage[]> {
-        let currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
 
         // Grab all the stages for this workflow.
         const stages = await this.stageRepository
@@ -196,7 +195,7 @@ export class WorkflowService {
 
     /**
      * Get a specific stage by ID.
-     * 
+     *
      * Returns:
      *      - NRStage
      *      - NotFoundError (404)
@@ -205,9 +204,9 @@ export class WorkflowService {
 
     @GET
     @Path("/:wid/stages/:sid")
-    public async getStage(@IsInt @PathParam("wid") wid: number, 
+    public async getStage(@IsInt @PathParam("wid") wid: number,
                           @IsInt @PathParam("sid") sid: number): Promise<NRStage> {
-        let currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
 
         // Grab the specified stage for the right workflow.
         const stage = await this.stageRepository
@@ -221,7 +220,7 @@ export class WorkflowService {
 
     /**
      * Add a stage at the given position in the workflow.
-     * 
+     *
      * Returns:
      *      - NRStage
      *      - BadRequestError (400)
@@ -239,13 +238,13 @@ export class WorkflowService {
                             @IsInt @PathParam("pos") position: number): Promise<NRStage> {
         // Invalid position.
         if (position < 0) {
-            const err_str = `Invalid position: ${position}`
-            throw new Errors.BadRequestError(err_str);
+            const errStr = `Invalid position: ${position}`;
+            throw new Errors.BadRequestError(errStr);
         }
 
-        let sessionUser = common.getUserFromContext(this.context);
-        let currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
-        await common.checkWritePermissions(sessionUser, NRType.WRKF_KEY);
+        const sessionUser = common.getUserFromContext(this.context);
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        await common.checkWritePermissions(sessionUser, NRType.WRKF_KEY, wid);
 
         // Grab the max/min sequenceId for this set of workflow stages.
         const maxSeqId = await this.getMaxStageSequenceId(currWorkflow.id);
@@ -253,8 +252,8 @@ export class WorkflowService {
         if (maxSeqId == null) { // No stages yet, just add it.
             stage.sequenceId = 0;
         } else if (position > maxSeqId + 1) {
-            const err_str = `Out of bound sposition: ${position}`
-            throw new Errors.BadRequestError(err_str);
+            const errStr = `Out of bound sposition: ${position}`;
+            throw new Errors.BadRequestError(errStr);
         } else { // Insert normally.
             let currSeq = maxSeqId;
 
@@ -286,7 +285,7 @@ export class WorkflowService {
 
     /**
      * Delete the given stage.
-     * 
+     *
      * Returns:
      *      - BadRequestError (400)
      *          - If the position is out of bounds or negative.
@@ -300,9 +299,9 @@ export class WorkflowService {
     @Path("/:wid/stages/:sid")
     public async deleteStage(@IsInt @PathParam("wid") wid: number,
                              @PathParam("sid") sid: number) {
-        let sessionUser = common.getUserFromContext(this.context);
-        let currStage = await common.getStage(sid, this.stageRepository);
-        await common.checkWritePermissions(sessionUser, NRType.WRKF_KEY);
+        const sessionUser = common.getUserFromContext(this.context);
+        const currStage = await common.getStage(sid, this.stageRepository);
+        await common.checkWritePermissions(sessionUser, NRType.WRKF_KEY, wid);
 
         const maxSeqId = await this.getMaxStageSequenceId(wid);
 
@@ -335,7 +334,7 @@ export class WorkflowService {
 
     /**
      * Update the given stage.
-     * 
+     *
      * Returns:
      *      - NRStage
      *      - BadRequestError (400)
@@ -351,9 +350,9 @@ export class WorkflowService {
     @PreProcessor(validators.updateStageValidator)
     public async updateStage(@IsInt @PathParam("sid") sid: number,
                              stage: NRStage): Promise<NRStage> {
-        let sessionUser = common.getUserFromContext(this.context);
-        let currStage = await common.getStage(sid, this.stageRepository);
-        await common.checkWritePermissions(sessionUser, NRType.WRKF_KEY);
+        const sessionUser = common.getUserFromContext(this.context);
+        const currStage = await common.getStage(sid, this.stageRepository);
+        await common.checkWritePermissions(sessionUser, NRType.WRKF_KEY, currStage.workflow.id);
 
         // Update current stored name if given one.
         if (stage.name) {
@@ -369,7 +368,7 @@ export class WorkflowService {
 
     // Get the maximum sequenceId for the given workflows stages.
     private async getMaxStageSequenceId(wid: number): Promise<number> {
-        let currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
 
         // Grab the next sequenceId for this set of workflow stages.
         const maxSeq = await this.stageRepository

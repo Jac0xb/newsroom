@@ -1,9 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, Column } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 import { NRUser } from "./NRUser";
 
-
-export const ADMIN_TABLE = "admin"
+export const ADMIN_TABLE = "admin";
 
 // NRAdmin objects determine whether or not users are administrators.
 @Entity(ADMIN_TABLE)
@@ -16,12 +15,12 @@ export class NRAdmin {
 
     @Column({
         nullable: false,
-        type: "int"
+        type: "int",
     })
     public flag: number;
 
     @ManyToOne(
-        (type) => NRUser
+        (type) => NRUser,
     )
     @JoinColumn({name: "user"})
     public userId: number;

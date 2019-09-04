@@ -2,45 +2,41 @@ import * as express from "express";
 import { getManager } from "typeorm";
 import { DELETE, Errors, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-import { NotFoundError } from "typescript-rest/dist/server/model/errors";
 
 import { NRRole } from "../entity/NRRole";
 import { NRUser } from "../entity/NRUser";
+import { common } from "./Common";
 import { validators } from "./Validators";
 
-/**
- * Provides API services for users.
- */
-@Path("/api/documents")
+// Provides API services for users.
+@Path("/api/users")
 @Tags("Users")
 export class UserService {
-    /**
-     * Used to interact with any specified type in the database.
-     */
+    // Database interactions managers.
     private userRepository = getManager().getRepository(NRUser);
     private roleRepository = getManager().getRepository(NRRole);
 
     /**
-     * Create a new entry in the 'user' table with the specified
-     * information.
+     * Create a new user.
      *
-     * Returns 400 if:
-     *      -
-     *
-     * Returns 404 if:
-     *      - Bad parameters.
+     * Returns:
+     *      - NRUser
+     *      - BadRequestError (400)
+     *          - If properties are missing or wrong type.
      */
     @POST
     @PreProcessor(validators.createUserValidator)
     public async createUser(user: NRUser): Promise<NRUser> {
         // Form data already validated above.
-        // TODO: Default role?
+
         return await this.userRepository.save(user);
     }
 
     /**
-     * Get all users that exist in the 'user' table under
-     * the configured connection.
+     * Get all existent users.
+     *
+     * Returns:
+     *      - NRUser[]
      */
     @GET
     public async getUsers(): Promise<NRUser[]> {
@@ -48,46 +44,35 @@ export class UserService {
     }
 
     /**
-     * Get a specific user from the 'user' table based on passed
-     * user id.
+     * Get a specific user by ID.
      *
-     * Returns 404 if:
-     *      - User now found.
+     * Returns:
+     *      - NRUser
+     *      - NotFoundError (404)
+     *          - If user not found.
      */
     @GET
-    @Path(":/id")
-    public async getUser(@IsInt @PathParam("id") userId: number): Promise<NRUser> {
-        try {
-            return await this.userRepository.findOneOrFail(userId);
-        } catch (err) {
-            console.error("Error getting User:", err);
-            throw new NotFoundError("A User with the given ID was not found.");
-        }
+    @Path(":/uid")
+    public async getUser(@IsInt @PathParam("uid") uid: number): Promise<NRUser> {
+        return await common.getUser(uid, this.userRepository);
     }
 
     /**
-     * Update an entry in the 'user' table with the specified
-     * information.
+     * Update a users information
      *
-     * Return 400 if:
-     *      - User property types incorrect.
-     *
-     * Return 404 if:
-     *      - User id field is missing or not found.
+     * Returns:
+     *      - NRUser
+     *      - BadRequestError (400)
+     *          - If form submission invalid.
+     *      - NotFoundError (404)
+     *          - If user not found.
      */
     @PUT
-    @Path("/:id")
+    @Path("/:uid")
     @PreProcessor(validators.updateUserValidator)
-    public async updateUser(@IsInt @PathParam("id") userId: number,
+    public async updateUser(@IsInt @PathParam("uid") uid: number,
                             user: NRUser): Promise<NRUser> {
-        let currUser: NRUser;
-
-        try {
-            currUser = await this.userRepository.findOneOrFail(userId);
-        } catch (err) {
-            console.error("Error getting User:", err);
-            throw new NotFoundError("A User with the given ID was not found.");
-        }
+        const currUser = await common.getUser(uid, this.userRepository);
 
         // Update current stored username if given one.
         if (user.name) {
@@ -121,16 +106,9 @@ export class UserService {
      *      - User id not found.
      */
     @DELETE
-    @Path("/:id")
-    public async deleteUser(@IsInt @PathParam("id") userId: number) {
-        let currUser: NRUser;
-
-        try {
-            currUser = await this.userRepository.findOneOrFail(userId);
-        } catch (err) {
-            console.error("Error getting User:", err);
-            throw new NotFoundError("A User with the given ID was not found.");
-        }
+    @Path("/:uid")
+    public async deleteUser(@IsInt @PathParam("uid") uid: number) {
+        const currUser = await common.getUser(uid, this.userRepository);
 
         await this.userRepository.remove(currUser);
     }
@@ -143,25 +121,11 @@ export class UserService {
      *      - Role not found.
      */
     @PUT
-    @Path("/:id/role/:rid")
-    public async addRole(@IsInt @PathParam("id") userId: number,
-                         @IsInt @PathParam("rid") roleId: number): Promise<NRUser> {
-        let currUser: NRUser;
-        let newRole: NRRole;
-
-        try {
-            currUser = await this.userRepository.findOneOrFail(userId);
-        } catch (err) {
-            console.error("Error getting User:", err);
-            throw new NotFoundError("A User with the given ID was not found.");
-        }
-
-        try {
-            newRole = await this.roleRepository.findOneOrFail(roleId);
-        } catch (err) {
-            console.error("Error getting Role:", err);
-            throw new NotFoundError("A Role with the given ID was not found.");
-        }
+    @Path("/:uid/role/:rid")
+    public async addRole(@IsInt @PathParam("uid") uid: number,
+                         @IsInt @PathParam("rid") rid: number): Promise<NRUser> {
+        const currUser = await common.getUser(uid, this.userRepository);
+        const newRole = await common.getRole(rid, this.roleRepository);
 
         currUser.roles.push(newRole);
 
@@ -169,22 +133,17 @@ export class UserService {
     }
 
     /**
-     * Get the role for a user based on id.
+     * Get the roles for a user based on id.
      *
-     * Returns 404 if:
-     *      - User not found.
+     * Returns:
+     *      - NRUser
+     *      - NotFoundError (404)
+     *          - If user not found.
      */
     @GET
-    @Path("/:id/role/:rid")
-    public async getRoles(@IsInt @PathParam("id") userId: number): Promise<NRRole[]> {
-        let currUser: NRUser;
-
-        try {
-            currUser = await this.userRepository.findOneOrFail(userId);
-        } catch (err) {
-            console.error("Error getting User:", err);
-            throw new NotFoundError("A User with the given ID was not found.");
-        }
+    @Path("/:uid/roles")
+    public async getRoles(@IsInt @PathParam("uid") uid: number): Promise<NRRole[]> {
+        const currUser = await common.getUser(uid, this.userRepository);
 
         return await currUser.roles;
     }
@@ -192,24 +151,21 @@ export class UserService {
     /**
      * Delete a role from a users set of roles.
      *
-     * Returns 404 if:
-     *      - User not found.
-     *      - Role not found.
+     * Returns:
+     *      - NRUser
+     *      - NotFoundError (404)
+     *          - If user not found.
+     *          - If role not found.
      */
     @DELETE
-    @Path("/:id/role/:rid")
-    public async deleteRole(@IsInt @PathParam("id") userId: number,
-                            @IsInt @PathParam("rid") roleId: number) {
-        let currUser: NRUser;
+    @Path("/:uid/role/:rid")
+    public async deleteRole(@IsInt @PathParam("uid") uid: number,
+                            @IsInt @PathParam("rid") rid: number) {
+        const currUser = await common.getUser(uid, this.userRepository);
+        const currRole = await common.getRole(rid, this.roleRepository);
 
-        try {
-            currUser = await this.userRepository.findOneOrFail(userId);
-        } catch (err) {
-            console.error("Error getting User:", err);
-            throw new NotFoundError("A User with the given ID was not found.");
-        }
-
-        delete currUser.roles[roleId];
+        const ind = currUser.roles.indexOf(currRole);
+        currUser.roles.splice(ind, 1);
         return await this.userRepository.save(currUser);
     }
 }

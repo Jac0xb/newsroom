@@ -1,8 +1,7 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, 
+import { Column, CreateDateColumn, Entity, ManyToOne,
          PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-         
-import { NRRole } from "./NRRole";
 
+import { NRRole } from "./NRRole";
 
 // NRPermission objects are used to track different permissions.
 @Entity("permission")
@@ -15,11 +14,11 @@ export class NRPermission {
 
     /**
      * The privilege level that a role has on an associated entity.
-     * 
+     *
      * Can be one of:
      *      - READ: 0
      *      - WRITE: 1
-     */ 
+     */
     @Column({
         nullable: false,
         type: "int",

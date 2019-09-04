@@ -1,11 +1,10 @@
-import { Column, CreateDateColumn, Entity, OneToMany, JoinColumn,
-         ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne,
+         OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 import { NRDocument } from "./NRDocument";
 import { NRPermission } from "./NRPermission";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
-
 
 export const WRKF_TABLE = "workflow";
 
@@ -44,14 +43,13 @@ export class NRWorkflow {
     /**
      * Relationship: NRUser
      *      - Many: Users can make many workflows.
-     *      - One: Each workflow is only created by one user. 
+     *      - One: Each workflow is only created by one user.
      */
     @ManyToOne(
         (type) => NRUser,
     )
     @JoinColumn({ name: "creator" })
     public creator: NRUser;
-
 
     /**
      * Relationship: NRDocument

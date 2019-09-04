@@ -1,54 +1,59 @@
 import * as express from "express";
 import { getManager } from "typeorm";
-import { DELETE, Errors, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
+import { Context, DELETE, GET, Path, PathParam,
+         POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-import { NotFoundError } from "typescript-rest/dist/server/model/errors";
 
-import { NRDocument, NRStage, NRWorkflow } from "../entity";
+import { DOCU_TABLE, NRDocument } from "../entity/NRDocument";
+import { NRStage, STGE_TABLE } from "../entity/NRStage";
+import { NRType } from "../entity/NRType";
+import { NRWorkflow, WRKF_TABLE } from "../entity/NRWorkflow";
+import { common } from "./Common";
 import { validators } from "./Validators";
 
-/**
- * Provides API services for documents.
- */
+// TODO: Use DOCU_TABLE, etc.
+// TODO: Validators need to change validating 'creator'.
+
+// Provides API services for documents.
 @Path("/api/documents")
 @Tags("Documents")
 export class DocumentService {
+
+    // Database interaction managers.
     public stageRepository = getManager().getRepository(NRStage);
-    /**
-     * Used to interact with any specified type in the database.
-     */
+    // Context manager to grab injected user from the request.
+    @Context
+    private context: ServiceContext;
     private documentRepository = getManager().getRepository(NRDocument);
     private workflowRepository = getManager().getRepository(NRWorkflow);
 
     /**
-     * Create a new entry in the 'document' table with the specified
-     * information.
+     * Create a new document based on passed information.
      *
-     * Returns a 400 if:
-     *      - Workflow id not found.
-     *      - Stage id not found.
-     *
-     * Returns 404 if:
-     *      - Bad parameters.
+     * Returns:
+     *      - NRDocument
+     *      - BadRequestError(400)
+     *          - If document properties missing.
+     *          - If document properties are wrong.
+     *      - ForbiddenError (403)
+     *          - If request user is not allowed to create documents.
      */
     @POST
     @PreProcessor(validators.createDocumentValidator)
     public async createDocument(document: NRDocument): Promise<NRDocument> {
-        let currWorkflow: NRWorkflow;
+        const sessionUser = common.getUserFromContext(this.context);
+        await common.checkCreatePermissions(sessionUser, NRType.DOCU_KEY);
 
-        try {
-            currWorkflow = await this.workflowRepository.findOneOrFail(document.workflow);
-        } catch (err) {
-            console.error("Error getting Document associated Workflow:", err);
-            throw new NotFoundError("A Workflow with the given ID was not found.");
-        }
+        const currWorkflow = await common.getWorkflow(document.workflow.id, this.workflowRepository);
+        common.checkWritePermissions(sessionUser, NRType.WRKF_KEY, currWorkflow.id);
 
+        // Assign the document to the first stage in a workflow if no stage was passed.
         if (!(document.stage)) {
             const minSeq = await this.getMinStageSequenceId(currWorkflow.id);
             let currStage: NRStage;
 
             currStage = await this.stageRepository
-                .createQueryBuilder("stage")
+                .createQueryBuilder(STGE_TABLE)
                 .where("stage.sequenceId = :sid", { sid: minSeq })
                 .andWhere("stage.workflowId = :wid ", { wid: currWorkflow.id })
                 .getOne();
@@ -60,135 +65,111 @@ export class DocumentService {
     }
 
     /**
-     * Get all documents that exist in the 'document' table under the
-     * configured connection.
+     * Get all existing documents.
+     *
+     * Returns:
+     *      - NRDocument[]
      */
     @GET
-    public getDocuments(): Promise<NRDocument[]> {
-        return this.documentRepository.find();
+    public async getDocuments(): Promise<NRDocument[]> {
+        return await this.documentRepository.find();
     }
 
     /**
-     * Get a specific document from 'document' table based on passed
-     * document id.
+     * Get a specific document by ID.
      *
-     * Returns a 400 if:
-     *      - Document id not found.
+     * Returns:
+     *      - NRDocument
+     *      - NotFoundError (404)
+     *          - If document not found.
      */
-    @Path("/:id")
+    @Path("/:did")
     @GET
-    public async getDocument(@PathParam("id") id: number): Promise<NRDocument> {
-        try {
-            return await this.documentRepository.findOneOrFail(id);
-        } catch (err) {
-            console.error("Error getting Document:", err);
-            throw new NotFoundError("A Document with the given ID was not found.");
-        }
+    public async getDocument(@PathParam("did") did: number): Promise<NRDocument> {
+        return await common.getDocument(did, this.documentRepository);
     }
 
     /**
      * Get all documents for a specific author.
      *
-     * Returns a 400 if:
-     *      - Document id not found.
+     * Returns:
+     *      - NRDocument[]
      */
-    @Path("/author/:name")
+    @Path("/author/:aid")
     @GET
-    public async getDocumentsForAuthor(@PathParam("name") authorName: string): Promise<NRDocument[]> {
+    public async getDocumentsForAuthor(@PathParam("aid") aid: number): Promise<NRDocument[]> {
         return await this.documentRepository
-            .createQueryBuilder("document")
-            .where("document.creator = :cn", { cn: authorName })
+            .createQueryBuilder(DOCU_TABLE)
+            .where("document.creator = :author", { author: aid })
             .getMany();
     }
 
     /**
-     * Get all documents for the stage based on passed stage id.
+     * Get all documents for a given stage.
      *
-     * Returns a 400 if:
-     *      - Document id not found.
-     *      - Stage id not found.
+     * Returns:
+     *      - NRDocument[]
+     *      - NotFoundError (404)
+     *          - If stage not found.
      */
     @Path("/stage/:sid")
     @GET
     public async getAllDocumentsForStage(@IsInt @PathParam("sid") sid: number): Promise<NRDocument[]> {
-        let assocStage: NRStage;
-
-        try {
-            assocStage = await this.stageRepository.findOneOrFail(sid);
-        } catch (err) {
-            console.error("Error getting Stage for Document:", err);
-            throw new NotFoundError("A Stage for the Document could not be found.");
-        }
+        const assocStage = await common.getStage(sid, this.stageRepository);
 
         return await this.documentRepository
-            .createQueryBuilder("document")
+            .createQueryBuilder(DOCU_TABLE)
             .where("stageId = :sId", { sId: assocStage.id })
             .getMany();
     }
 
     /**
-     * Get all documents for the workflow based on passed workflow id.
+     * Get all documents for a given workflow.
      *
-     * Returns a 400 if:
-     *      - Document id not found.
-     *      - Workflow id not found.
+     * Returns:
+     *      - NRDocument[]
+     *      - NotFoundError (404)
+     *          - If workflow not found.
+     *
      */
     @Path("/workflow/:wid")
     @GET
     public async getAllDocumentsForWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRDocument[]> {
-        try {
-            await this.workflowRepository.findOneOrFail(wid);
-        } catch (err) {
-            console.error("Error getting Workflow for Document:", err);
-            throw new NotFoundError("A Workflow for the Document could not be found.");
-        }
+        // Check for existence.
+        await common.getWorkflow(wid, this.workflowRepository);
 
         const allDocs = await this.documentRepository
-            .createQueryBuilder("document")
-            .where("workflowId = :wId", { wId: wid })
+            .createQueryBuilder(DOCU_TABLE)
+            .where("workflowId = :id", { id: wid })
             .getMany();
 
         return allDocs;
     }
 
     /**
-     * Update an entry in the 'document' table with the specified
-     * information.
+     * Update a document based on passed information.
      *
-     * Returns 400 if:
-     *      - Workflow id not found.
-     *      - Stage id not found.
-     *      - Document id not fount.
-     *
-     * Returns 404 if:
-     *      - Bad parameters.
+     * Returns:
+     *      - NRDocument
+     *      - BadRequestError (400)
+     *          - If bad form submission.
+     *      - NotFoundError (404)
+     *          - If document not found.
+     *          - If stage not found.
+     *          - If workflow not found.
      */
     @PUT
-    @Path("/:id")
+    @Path("/:did")
     @PreProcessor(validators.updateDocumentValidator)
-    public async updateDocument(@IsInt @PathParam("id") id: number, document: NRDocument): Promise<NRDocument> {
-        let currDocument: NRDocument;
+    public async updateDocument(@IsInt @PathParam("did") did: number,
+                                document: NRDocument): Promise<NRDocument> {
+        const sessionUser = common.getUserFromContext(this.context);
+        const currDocument = await common.getDocument(did, this.documentRepository);
+        await common.checkWritePermissions(sessionUser, NRType.DOCU_KEY, did);
 
-        try {
-            currDocument = await this.documentRepository.findOneOrFail(document.id);
-        } catch (err) {
-            console.error("Error getting Document:", err);
-            throw new NotFoundError("A Document with the given ID could not be found");
-        }
-
-        try {
-            await this.workflowRepository.findOneOrFail(document.workflow);
-        } catch (err) {
-            console.error("Error getting Workflow for Document:", err);
-            throw new NotFoundError("A Workflow for the Document could not be found.");
-        }
-
-        try {
-            await this.stageRepository.findOneOrFail(document.stage);
-        } catch (err) {
-            console.error("Error getting Stage for Document:", err);
-            throw new NotFoundError("A Stage for the Document could not be found.");
-        }
+        // Check for existence.
+        await common.getWorkflow(document.workflow.id, this.workflowRepository);
+        await common.getStage(document.stage.id, this.stageRepository);
 
         if (document.name) {
             currDocument.name = document.name;
@@ -220,82 +201,63 @@ export class DocumentService {
     /**
      * Delete a document.
      *
-     * Returns 404 if:
-     *      - Document id not found.
+     * Returns
+     *      - NotFoundError (404)
+     *          - If document not found.
      */
     @DELETE
-    @Path("/:id")
-    public async deleteDocument(@IsInt @PathParam("id") docId: number) {
-        let currDocument: NRDocument;
-
-        try {
-            currDocument = await this.documentRepository.findOneOrFail(docId);
-        } catch (err) {
-            console.error("Error getting Document:", err);
-            throw new NotFoundError("A Document with the given ID was not found.");
-        }
+    @Path("/:did")
+    public async deleteDocument(@IsInt @PathParam("did") did: number) {
+        const sessionUser = common.getUserFromContext(this.context);
+        const currDocument = await common.getDocument(did, this.documentRepository);
+        await common.checkWritePermissions(sessionUser, NRType.DOCU_KEY, did);
 
         await this.documentRepository
-            .createQueryBuilder("document")
+            .createQueryBuilder(DOCU_TABLE)
             .delete()
             .from(NRDocument)
-            .andWhere("id = :dId", { dId: currDocument.id })
+            .andWhere("id = :id", { id: currDocument.id })
             .execute();
     }
 
     /**
      * Get the next stage for a document.
      *
-     * Returns 404 if:
-     *      - Document id not found.
-     *      - Next stage not found.
+     * Returns:
+     *      - Number
+     *      - NotFoundError (404)
+     *          - If document not found.
      */
     @GET
-    @Path("/:id/next")
-    public async getNext(@IsInt @PathParam("id") docId: number): Promise<number> {
-        let currDocument: NRDocument;
-        let currStage: NRStage;
+    @Path("/:did/next")
+    public async getNext(@IsInt @PathParam("did") did: number): Promise<number> {
+        const currDocument = await common.getDocument(did, this.documentRepository);
 
-        try {
-            currDocument = await this.documentRepository.findOneOrFail(docId);
-        } catch (err) {
-            console.error("Error getting Document:", err);
-            throw new NotFoundError("A Document with the given ID could not be found");
-        }
-
-        // TODO: How to do this with TypeORM?
         const stageID = await this.documentRepository
-            .createQueryBuilder("document")
+            .createQueryBuilder(DOCU_TABLE)
             .select("document.stageId", "val")
             .where("document.id = :did", { did: currDocument.id })
             .getRawOne();
 
-        try {
-            currStage = await this.stageRepository.findOneOrFail(stageID.val);
-        } catch (err) {
-            console.error("Error getting Stage for Document:", err);
-            throw new NotFoundError("A Stage for the Document could not be found.");
-        }
+        const currStage = await common.getStage(stageID.val, this.stageRepository);
 
-        // TODO: Better way to do this with TypeORM?
-        //       currDocument.workflow.id doesn't work -> load relations?
-        const workflowId = await this.documentRepository
-            .createQueryBuilder("document")
+        const workflowID = await this.documentRepository
+            .createQueryBuilder(DOCU_TABLE)
             .select("document.workflowId", "val")
             .where("document.id = :did", { did: currDocument.id })
             .getRawOne();
 
         // Used to determine if the document is done in its workflow.
-        const maxSeq = await this.getMaxStageSequenceId(workflowId.val);
+        const maxSeq = await this.getMaxStageSequenceId(workflowID.val);
 
         // The document can be moved forward.
         if ((currStage.sequenceId + 1) <= maxSeq) {
             // Get id of next stage in sequence.
             const nextId = await this.stageRepository
-                .createQueryBuilder("stage")
+                .createQueryBuilder(STGE_TABLE)
                 .select("stage.id", "val")
                 .where("stage.sequenceId = :sid", { sid: currStage.sequenceId + 1 })
-                .andWhere("stage.workflowId = :wid", { wid: workflowId.val })
+                .andWhere("stage.workflowId = :wid", { wid: workflowID.val })
                 .getRawOne();
 
             return nextId.val;
@@ -307,24 +269,19 @@ export class DocumentService {
     /**
      * Move a document to the next stage.
      *
-     * Returns 404 if:
-     *      - Document id not found.
-     *      - Associated stage not found.
+     * Returns:
+     *      - NRDocument
+     *      - Forbidden Error (403)
+     *          - If user isn't authorized to move stage.
+     *      - NotFoundError (404)
+     *          - If document not found.
      */
     @PUT
-    @Path("/:id/next")
-    public async moveNext(@IsInt @PathParam("id") docId: number): Promise<NRDocument> {
-        let currDocument: NRDocument;
-
-        try {
-            currDocument = await this.documentRepository.findOneOrFail(docId);
-        } catch (err) {
-            console.error("Error getting Document:", err);
-            throw new NotFoundError("A Document with the given ID could not be found");
-        }
-
+    @Path("/:did/next")
+    public async moveNext(@IsInt @PathParam("did") did: number): Promise<NRDocument> {
+        const sessionUser = common.getUserFromContext(this.context);
+        const currDocument = await common.getDocument(did, this.documentRepository);
         const currStage = currDocument.stage;
-
         const workflowId = currDocument.workflow.id;
 
         // Used to determine if the document is done in its workflow.
@@ -334,11 +291,12 @@ export class DocumentService {
         if ((currStage.sequenceId + 1) <= maxSeq) {
             // Get id of next stage in sequence.
             const nextStage = await this.stageRepository
-                .createQueryBuilder("stage")
+                .createQueryBuilder(STGE_TABLE)
                 .where("stage.sequenceId = :sid", { sid: currStage.sequenceId + 1 })
                 .andWhere("stage.workflowId = :wid", { wid: workflowId })
                 .getOne();
 
+            await common.checkMoveNext(sessionUser, NRType.STGE_KEY, nextStage.id);
             currDocument.stage = nextStage;
         }
 
@@ -351,41 +309,28 @@ export class DocumentService {
     /**
      * Move a document to the next stage.
      *
-     * Returns 404 if:
-     *      - Document id not found.
-     *      - Associated stage not found.
+     * Returns:
+     *      - Number
+     *      - NotFoundError (404)
+     *          - If document not found.
+     *          - If associated stage not found.
      */
     @GET
-    @Path("/:id/prev")
-    public async getPrev(@IsInt @PathParam("id") docId: number): Promise<number> {
-        let currDocument: NRDocument;
-        let currStage: NRStage;
-
-        try {
-            currDocument = await this.documentRepository.findOneOrFail(docId);
-        } catch (err) {
-            console.error("Error getting Document:", err);
-            throw new NotFoundError("A Document with the given ID could not be found");
-        }
+    @Path("/:did/prev")
+    public async getPrev(@IsInt @PathParam("did") did: number): Promise<number> {
+        const currDocument = await common.getDocument(did, this.documentRepository);
 
         // TODO: How to do this with TypeORM?
         const stageID = await this.documentRepository
-            .createQueryBuilder("document")
+            .createQueryBuilder(DOCU_TABLE)
             .select("document.stageId", "val")
             .where("document.id = :did", { did: currDocument.id })
             .getRawOne();
 
-        try {
-            currStage = await this.stageRepository.findOneOrFail(stageID.val);
-        } catch (err) {
-            console.error("Error getting Stage for Document:", err);
-            throw new NotFoundError("A Stage for the Document could not be found.");
-        }
+        const currStage = await common.getStage(stageID.val, this.stageRepository);
 
-        // TODO: Better way to do this with TypeORM?
-        //       currDocument.workflow.id doesn't work -> load relations?
-        const workflowId = await this.documentRepository
-            .createQueryBuilder("document")
+        const workflowID = await this.documentRepository
+            .createQueryBuilder(DOCU_TABLE)
             .select("document.workflowId", "val")
             .where("document.id = :did", { did: currDocument.id })
             .getRawOne();
@@ -397,10 +342,10 @@ export class DocumentService {
         if ((currStage.sequenceId - 1) >= minSeq) {
             // Get id of next stage in sequence.
             const prevId = await this.stageRepository
-                .createQueryBuilder("stage")
+                .createQueryBuilder(STGE_TABLE)
                 .select("stage.id", "val")
                 .where("stage.sequenceId = :sid", { sid: currStage.sequenceId - 1 })
-                .andWhere("stage.workflowId = :wid", { wid: workflowId.val })
+                .andWhere("stage.workflowId = :wid", { wid: workflowID.val })
                 .getRawOne();
 
             return prevId.val;
@@ -412,24 +357,20 @@ export class DocumentService {
     /**
      * Move a document to the next stage.
      *
-     * Returns 404 if:
-     *      - Document id not found.
-     *      - Associated stage not found.
+     * Returns:
+     *      - NRDocument
+     *      - ForbiddenErrr (403)
+     *          - If user isn't authorized to move stage.
+     *      - NotFoundError (404)
+     *          - If document not found.
+     *          - If associated stage not found.
      */
     @PUT
-    @Path("/:id/prev")
-    public async movePrev(@IsInt @PathParam("id") docId: number): Promise<NRDocument> {
-        let currDocument: NRDocument;
-
-        try {
-            currDocument = await this.documentRepository.findOneOrFail(docId);
-        } catch (err) {
-            console.error("Error getting Document:", err);
-            throw new NotFoundError("A Document with the given ID could not be found");
-        }
-
+    @Path("/:did/prev")
+    public async movePrev(@IsInt @PathParam("did") did: number): Promise<NRDocument> {
+        const sessionUser = common.getUserFromContext(this.context);
+        const currDocument = await common.getDocument(did, this.documentRepository);
         const currStage = currDocument.stage;
-
         const workflowId = currDocument.workflow.id;
 
         // The first stage in any workflow is always sequence 1.
@@ -439,11 +380,12 @@ export class DocumentService {
         if ((currStage.sequenceId - 1) >= minSeq) {
             // Get id of next stage in sequence.
             const prevStage = await this.stageRepository
-                .createQueryBuilder("stage")
+                .createQueryBuilder(STGE_TABLE)
                 .where("stage.sequenceId = :sid", { sid: currStage.sequenceId - 1 })
                 .andWhere("stage.workflowId = :wid", { wid: workflowId })
                 .getOne();
 
+            await common.checkMovePrev(sessionUser, NRType.STGE_KEY, prevStage.id);
             currDocument.stage = prevStage;
         }
 
@@ -453,22 +395,13 @@ export class DocumentService {
         return await this.documentRepository.save(currDocument);
     }
 
-    /**
-     * Get the maximum sequenceId for the given workflows stages.
-     */
-    private async getMaxStageSequenceId(workflowId: number): Promise<number> {
-        let currWorkflow: NRWorkflow;
-
-        try {
-            currWorkflow = await this.workflowRepository.findOneOrFail(workflowId);
-        } catch (err) {
-            console.error("Error getting workflow:", err);
-            throw new NotFoundError("A workflow with the given id was not found.");
-        }
+    // Get the maximum sequenceId for the given workflows stages.
+    private async getMaxStageSequenceId(wid: number): Promise<number> {
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
 
         // Grab the next sequenceId for this set of workflow stages.
         const maxSeq = await this.stageRepository
-            .createQueryBuilder("stage")
+            .createQueryBuilder(STGE_TABLE)
             .select("MAX(stage.sequenceId)", "max")
             .where("stage.workflowId = :id", { id: currWorkflow.id })
             .getRawOne();
@@ -476,22 +409,13 @@ export class DocumentService {
         return maxSeq.max;
     }
 
-    /**
-     * Get the minimum sequenceId for the given workflows stages.
-     */
-    private async getMinStageSequenceId(workflowId: number): Promise<number> {
-        let currWorkflow: NRWorkflow;
-
-        try {
-            currWorkflow = await this.workflowRepository.findOneOrFail(workflowId);
-        } catch (err) {
-            console.error("Error getting workflow:", err);
-            throw new NotFoundError("A workflow with the given id was not found.");
-        }
+    // Get the minimum sequenceId for the given workflows stages.
+    private async getMinStageSequenceId(wid: number): Promise<number> {
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
 
         // Grab the next sequenceId for this set of workflow stages.
         const minSeq = await this.stageRepository
-            .createQueryBuilder("stage")
+            .createQueryBuilder(STGE_TABLE)
             .select("MIN(stage.sequenceId)", "min")
             .where("stage.workflowId = :id", { id: currWorkflow.id })
             .getRawOne();

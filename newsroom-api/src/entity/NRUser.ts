@@ -1,10 +1,9 @@
-import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, 
+import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany,
          PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 import { NRRole } from "./NRRole";
 
-
-export const USER_TABLE = "user"
+export const USER_TABLE = "user";
 
 // NRUser objects are used to track information about any user of the system.
 @Entity(USER_TABLE)

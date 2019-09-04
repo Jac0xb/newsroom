@@ -5,11 +5,13 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 import { NotFoundError } from "typescript-rest/dist/server/model/errors";
 
 import { NRDocument } from "../entity/NRDocument";
-import { NRStage } from "../entity/NRStage";
-import { NRWorkflow } from "../entity/NRWorkflow";
 import { NRPermission } from "../entity/NRPermission";
 import { NRRole } from "../entity/NRRole";
+import { NRStage } from "../entity/NRStage";
+import { NRType } from "../entity/NRType";
 import { NRUser } from "../entity/NRUser";
+import { NRWorkflow } from "../entity/NRWorkflow";
+import { common } from "./Common";
 import { validators } from "./Validators";
 
 // Provides API services for determining permissions.
@@ -24,22 +26,10 @@ export class PermissionService {
 
     // Change the permission given a role id, workflow id, and a permission.
     public async assignPermission(wid: number, rid: number, give: number): Promise<NRWorkflow> {
-        let workflow: NRWorkflow;
-        let role: NRRole;
+        const workflow = await common.getWorkflow(wid, this.workflowRepository);
 
-        try {
-            workflow = await this.workflowRepository.findOneOrFail(wid);
-        } catch (err) {
-            console.error("Error getting workflow:", err);
-            throw new NotFoundError("A workflow with the given id was not found.");
-        }
-
-        try {
-            role = await this.roleRepository.findOneOrFail(rid);
-        } catch (err) {
-            console.error("Error getting role:", err);
-            throw new NotFoundError("A role with the given id was not found.");
-        }
+        // Check existence.
+        await common.getRole(rid, this.roleRepository);
 
         // See if permissions already exists.
         const result = await this.permRepository
@@ -51,7 +41,9 @@ export class PermissionService {
 
         // Nothing exists yet, create it.
         if (result === undefined) {
+            // const newPerm = new NRPermission()
             // const newPerm:NRPermission = {
+
             //     foreignType: "workflow",
 
             // }

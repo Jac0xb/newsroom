@@ -1,9 +1,8 @@
-import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany, 
+import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany,
          PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-import { NRUser } from "./NRUser";
 import { NRPermission } from "./NRPermission";
-
+import { NRUser } from "./NRUser";
 
 export const ROLE_TABLE = "role";
 
