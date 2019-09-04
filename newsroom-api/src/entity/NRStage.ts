@@ -1,9 +1,10 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne,
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, JoinTable,
          OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 import { NRDocument } from "./NRDocument";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
+import { NRSTPermission } from "./NRSTPermission";
 
 export const STGE_TABLE = "stage";
 
@@ -73,4 +74,16 @@ export class NRStage {
         (document) => document.stage,
     )
     public documents: NRDocument[];
+
+    /**
+     * Relationship: NRSTPermission
+     *      - One: Each permission is only associated with one stage.
+     *      - Many: Each stage can have many permissions.
+     */
+    @OneToMany(
+        (type) => NRSTPermission,
+        (permission) => permission.stage
+    )
+    @JoinTable()
+    public permissions: NRSTPermission[];
 }

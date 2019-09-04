@@ -1,8 +1,10 @@
-import { Column, CreateDateColumn, Entity, ManyToOne,
-         PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, JoinTable,
+         JoinColumn, PrimaryGeneratedColumn, UpdateDateColumn, OneToMany } from "typeorm";
 
 import { NRStage } from "./NRStage";
+import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
+import { NRDCPermission } from "./NRDCPermission";
 
 export const DOCU_TABLE = "document";
 
@@ -18,14 +20,6 @@ export class NRDocument {
         type: "varchar",
     })
     public name: string;
-
-    // Name of creator of the document.
-    @Column({
-        length: 256,
-        nullable: true,
-        type: "varchar",
-    })
-    public creator: string; // TODO: Should relate to an Account ID later.
 
     // The actual plain text content of the article.
     @Column({
@@ -51,6 +45,17 @@ export class NRDocument {
     public lastUpdated: Date;
 
     /**
+     * Relationship: NRUser
+     *      - Many: Users can make many documents.
+     *      - One: Each document is only created by one user.
+     */
+    @ManyToOne(
+        (type) => NRUser,
+    )
+    @JoinColumn({ name: "creator" })
+    public creator: NRUser;
+
+    /**
      * Relationship: NRWorkflow
      *      - Many: Workflows can have many documents.
      *      - One: Each document is a part of only one workflow.
@@ -62,7 +67,6 @@ export class NRDocument {
     )
     public workflow: NRWorkflow;
 
-    // Each document belongs to only one stage.
     /**
      * Relationship: NRStage
      *      - Many: Stages can have many documents.
@@ -74,4 +78,17 @@ export class NRDocument {
         { eager: true },
     )
     public stage: NRStage;
+
+    /**
+     * Relationship: NRDCPermission
+     *      - One: Each permission is only associated with one document.
+     *      - Many: Each document can have many permissions.
+     */
+    @OneToMany(
+        (type) => NRDCPermission,
+        (permission) => permission.document
+    )
+    @JoinTable()
+    public permissions: NRDCPermission[];
+
 }

@@ -1,7 +1,9 @@
 import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany,
          PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-import { NRPermission } from "./NRPermission";
+import { NRWFPermission } from "./NRWFPermission";
+import { NRSTPermission } from "./NRSTPermission";
+import { NRDCPermission } from "./NRDCPermission";
 import { NRUser } from "./NRUser";
 
 export const ROLE_TABLE = "role";
@@ -40,13 +42,37 @@ export class NRRole {
     public users: NRUser[];
 
     /**
-     * Relationship: NRPermission
-     *      - One: Each permission is only associated with a single role.
+     * Relationship: NRWFPermission
+     *      - One: Each permission is only associated with a role.
      *      - Many: Each role can have many different permissions.
      */
     @OneToMany(
-        (type) => NRPermission,
-        (permission) => permission.role,
+        (type) => NRWFPermission,
+        (permissions) => permissions.role,
     )
-    public permissions: NRPermission[];
+    public wfpermissions: NRWFPermission[];
+
+    /**
+     * Relationship: NRSTPermission
+     *      - One: Each permission is only associated with a role.
+     *      - Many: Each role can have many different permissions.
+     */
+    @OneToMany(
+        (type) => NRSTPermission,
+        (permissions) => permissions.role,
+    )
+    public stpermissions: NRSTPermission[];
+
+/**
+     * Relationship: NRWFPermission
+     *      - One: Each permission is only associated with a role.
+     *      - Many: Each role can have many different permissions.
+     */
+    @OneToMany(
+        (type) => NRDCPermission,
+        (permissions) => permissions.role,
+    )
+    public dcpermissions: NRDCPermission[];
+
+
 }

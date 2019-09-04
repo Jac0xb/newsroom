@@ -1,8 +1,9 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne,
-         OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+         OneToMany, PrimaryGeneratedColumn, UpdateDateColumn,
+         JoinTable } from "typeorm";
 
 import { NRDocument } from "./NRDocument";
-import { NRPermission } from "./NRPermission";
+import { NRWFPermission } from "./NRWFPermission";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
 
@@ -14,14 +15,12 @@ export class NRWorkflow {
     public id: number;
 
     // Name of the workflow.
-    @Column(
-        {
+    @Column({
             length: 256,
             nullable: false,
             type: "varchar",
             unique: true,
-        },
-    )
+    })
     public name: string;
 
     // A brief description of the workflow.
@@ -75,15 +74,14 @@ export class NRWorkflow {
     public stages: NRStage[];
 
     /**
-     * Relationship: NRWorkflow
-     *      - One: Each workflow can have many permissions.
-     *      - Many: Each permission is associated with only one workflow.
+     * Relationship: NRWFPermission
+     *      - One: Each permission is only associated with one workflow.
+     *      - Many: Each workflow can have many permissions.
      */
     @OneToMany(
-        (type) => NRStage,
-        (permission) => permission.workflow,
-        { eager: true },
+        (type) => NRWFPermission,
+        (permission) => permission.workflow
     )
-    public permissions: NRPermission[];
-
+    @JoinTable()
+    public permissions: NRWFPermission[];
 }
