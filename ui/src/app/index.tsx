@@ -15,19 +15,21 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 
 // Allows for React components to be live reloaded without the loss of state.
 import { hot } from 'react-hot-loader';
+import Users from "app/views/users";
 
 export const App = hot(module)(() => (
-	<React.Fragment>
-		<CssBaseline />
-		<Switch>
-			<Route exact path="/document" component={Dashboard} />
-			<Route exact path="/document/create" component={DocumentCreator} />
-			<Route path="/document/:id/edit" component={DocumentEditor} />
-			<Route path="/workflow/:id/edit" component={WorkflowEditor} />
-			<Route path="/workflow" component={Workflow} />
-			<Route exact path="/" component={Dashboard} />
-		</Switch>
-	</React.Fragment>
+    <React.Fragment>
+        <CssBaseline/>
+        <Switch>
+            <Route exact path="/document" component={Dashboard}/>
+            <Route exact path="/document/create" component={DocumentCreator}/>
+            <Route path="/document/:id/edit" component={DocumentEditor}/>
+            <Route path="/workflow/:id/edit" component={WorkflowEditor}/>
+            <Route path="/workflow" component={Workflow}/>
+            <Route path="/users" component={Users}/>
+            <Route exact path="/" component={Dashboard}/>
+        </Switch>
+    </React.Fragment>
 ));
 
 
