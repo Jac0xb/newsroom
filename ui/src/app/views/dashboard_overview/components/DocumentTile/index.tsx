@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Button, Divider, Typography, Paper, Grid } from '@material-ui/core';
-import DetailRow from 'app/components/dashboard/DetailLine';
+import DetailRow from 'app/views/dashboard_overview/components/DetailLine';
 import { Link } from 'react-router-dom';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles';

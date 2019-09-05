@@ -1,12 +1,11 @@
 import * as React from 'react';
-import PrimarySearchAppBar from 'app/components/common/header';
-import { Button, TextField, Typography, MenuItem } from '@material-ui/core';
-import AccountCircleIcon from '@material-ui/icons/AccountCircle'
+import { Button } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import DocumentTile from 'app/components/dashboard/DocumentTile';
+import DocumentTile from 'app/views/dashboard_overview/components/DocumentTile';
 import { Document } from 'app/models';
 import { styles } from './styles';
 import { Link } from 'react-router-dom';
+import LinkedButton from './components/LinkedButton'
 import axios from 'axios';
 import _ from 'lodash-es';
 
@@ -36,64 +35,26 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
         });
     }
 
+    renderDocuments() {
+        
+        return _.map(this.state.documents, (document) =>
+            <DocumentTile key={document.id} document={document} />
+        )
+        
+    }
+
     render() {
 
         const { classes } = this.props;
-        
-        const jsxDocuments = <React.Fragment>
-            <div className={classes.outerGrid}>
-            {
-                _.map(this.state.documents, (document) =>
-                <DocumentTile key={document.id} document={document} />
-                )
-            }
-            </div>
-        </React.Fragment>
 
         return (
             <React.Fragment>
-                <PrimarySearchAppBar />
                 <div className={classes.buttonGroup}>
-                    <Link style={{ textDecoration: "none" }} to="/document/create">
-                        <Button style={{ width: "calc(3*52px)" }} variant={"contained"}>
-                            New Document
-						</Button>
-                    </Link>
-                    <Button variant="outlined" color="primary" onClick={() => {}}>
-                        <AccountCircleIcon />
-                    </Button>
-                    <form style={{ display: "flex" }}>
-                        <TextField
-                            className={classes.textField}
-                            placeholder="Filter Author"
-                            margin={"none"}
-                            style={{ width: 300, marginRight: "16px" }}
-                            value={""}
-                            disabled={false}
-                            onChange={(c) => {}}
-                        />
-                        <Typography variant={"subtitle1"} style={{ marginRight: "16px" }}>Sorting</Typography>
-                        <TextField
-                            select
-                            className={classes.textField}
-                            value={""}
-                            margin={"none"}
-                            onChange={(e) => {}}
-                            SelectProps={{
-                                MenuProps: {
-                                    className: classes.menu,
-                                },
-                            }}
-                        >
-                            {["Author", "Workflow"].map((item, i) => (
-                                <MenuItem key={i} value={i}>
-                                    {item}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                    </form>
+                    <LinkedButton />
                 </div>
-                {jsxDocuments}
+                <div className={classes.outerGrid}>
+                    {this.renderDocuments()}
+                </div>
             </React.Fragment>
         );
     }

@@ -4,11 +4,10 @@ export function styles(theme: Theme)  {
     return (
     {	
 		flexAutosize: {
-			flex: "1 1 auto"
+			flex: "flex: 1 1 0"
 		},
 		documentItem: {
-            maxWidth: "30%",
-            minWidth: "250px",
+            minWidth: "300px",
             padding: "16px",
             alignItems: "center",
 			"& h2": {

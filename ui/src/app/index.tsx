@@ -7,8 +7,9 @@ import { Route, Switch } from 'react-router-dom';
 import Dashboard from './views/dashboard_overview';
 import DocumentEditor from './views/document_editor';
 import WorkflowEditor from './views/workflow_editor'
-import { Workflow } from './views/workflow_overview';
+import Workflow from './views/workflow_overview';
 import DocumentCreator from './views/document_create';
+import PrimarySearchAppBar from 'app/components/common/header';
 
 // Style-Normalization (https://material-ui.com/style/css-baseline/)
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -19,6 +20,7 @@ import { hot } from 'react-hot-loader';
 export const App = hot(module)(() => (
 	<React.Fragment>
 		<CssBaseline />
+		<PrimarySearchAppBar />
 		<Switch>
 			<Route exact path="/document" component={Dashboard} />
 			<Route exact path="/document/create" component={DocumentCreator} />
@@ -29,6 +31,3 @@ export const App = hot(module)(() => (
 		</Switch>
 	</React.Fragment>
 ));
-
-
-// https://stackoverflow.com/questions/37843495/material-ui-adding-link-component-from-react-router/46686467#46686467

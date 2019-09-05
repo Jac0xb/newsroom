@@ -1,9 +1,8 @@
 import { Fab } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
-import PrimarySearchAppBar from 'app/components/common/header';
-import WorkflowStage from 'app/components/workflow/workflow_stage';
-import WorkflowMenuBar from 'app/components/workflow/workflow_menubar'
+import WorkflowStage from 'app/views/workflow_editor/components/workflow_stage';
+import WorkflowMenuBar from 'app/views/workflow_editor/components/workflow_menubar'
 import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
 import * as React from 'react';
@@ -156,7 +155,6 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       <React.Fragment>
         <main>
           <div className={classes.menuGroup}>
-            <PrimarySearchAppBar />
             <WorkflowMenuBar />
           </div>
 
