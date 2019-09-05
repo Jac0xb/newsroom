@@ -3,7 +3,7 @@ import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import Button from '@material-ui/core/Button';
 import { Divider } from '@material-ui/core';
-import WorkflowTile from 'app/components/workflow/workflow_object';
+import WorkflowTile from 'app/views/workflow_overview/components/workflow_object';
 import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
 

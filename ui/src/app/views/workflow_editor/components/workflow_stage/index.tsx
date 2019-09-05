@@ -3,7 +3,7 @@ import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import { Paper, Typography, Divider, Grid, Menu, MenuItem, IconButton } from '@material-ui/core';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
-import DocumentTile from 'app/components/dashboard/DocumentTile';
+import DocumentTile from 'app/views/dashboard_overview/components/DocumentTile';
 import axios from 'axios';
 
 export namespace WorkflowStage {
@@ -74,7 +74,7 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
     this.getDocuments();
 
     const docList = stageDocuments.map((document, i) =>
-			<DocumentTile key={i} document={document} />
+			<DocumentTile key={i} document={document} compressed={true} />
     );
 
     return (

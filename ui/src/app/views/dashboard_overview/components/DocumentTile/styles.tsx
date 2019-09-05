@@ -4,12 +4,12 @@ export function styles(theme: Theme)  {
     return (
     {	
 		flexAutosize: {
-			flex: "1 1 auto"
+			flex: "flex: 1 1 0"
 		},
 		documentItem: {
-			maxWidth: "calc(600px + 38px)",
-			width: "370px",
-			padding: "16px",
+            minWidth: "300px",
+            padding: "16px",
+            alignItems: "center",
 			"& h2": {
 				
 			},

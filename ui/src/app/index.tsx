@@ -9,6 +9,7 @@ import DocumentEditor from './views/document_editor';
 import WorkflowEditor from './views/workflow_editor'
 import Workflow from './views/workflow_page';
 import DocumentCreator from './views/document_create';
+import PrimarySearchAppBar from 'app/components/common/header';
 import LoginPage from './views/login_page';
 
 // Style-Normalization (https://material-ui.com/style/css-baseline/)
@@ -25,6 +26,7 @@ export namespace App {
 		isAuthenticated: Boolean,
     }
 }
+
 class App extends React.Component<App.Props, App.State, any> {
 
 	constructor(props: App.Props) {
@@ -52,6 +54,7 @@ class App extends React.Component<App.Props, App.State, any> {
 		return(
 			<React.Fragment>
 				<CssBaseline />
+				<PrimarySearchAppBar />
 				<Switch>
 					<div className="App">
 						{
@@ -76,5 +79,3 @@ class App extends React.Component<App.Props, App.State, any> {
 	}
 }
 export default hot(module)(App);
-
-// https://stackoverflow.com/questions/37843495/material-ui-adding-link-component-from-react-router/46686467#46686467

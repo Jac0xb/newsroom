@@ -3,9 +3,8 @@ import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import PrimarySearchAppBar from 'app/components/common/application_bar';
-import StyleBar from 'app/components/common/style_bar';
-import WorkflowMiniView from 'app/components/workflow/workflow_miniview';
+import StyleBar from 'app/views/document_editor/components/StyleBar'
+import WorkflowMiniView from 'app/views/document_editor/components/workflow_miniview';
 import { Document } from 'app/models';
 import axios from 'axios';
 import { convertFromRaw, convertToRaw, Editor, EditorState, RichUtils } from 'draft-js';
@@ -72,7 +71,6 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 
 		return (
 			<React.Fragment>
-				<PrimarySearchAppBar />
 				<main className={classes.layout}>
 					<Grid container spacing={24}>
 						<Grid item xs={9}>
@@ -102,7 +100,7 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 									Styles
 								</Typography>
 								<StyleBar
-									onClick={(format) => this.handleFormatChange(format)}
+									onClick={(format:string) => this.handleFormatChange(format)}
 									onCreateUpdateFormats={(updateFormats) => this.state.styleBarUpdateFormats = updateFormats} />
 							</Paper>
 							<WorkflowMiniView
