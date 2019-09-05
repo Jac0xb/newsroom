@@ -66,7 +66,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     // TODO: check role from db 
     
     // allow user to edit workflows
-    this.setState({ canEdit: false })
+    this.setState({ canEdit: true })
   }
 
   handleDialogTextChange = (name: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -186,7 +186,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
               </div>
               {stages.map((stage, index) => (
                 <div className={classes.stage}>
-                  <WorkflowStage id={stage.id} name={stage.name} desc={stage.description} onEditClick={(id: number) => this.handleStageEditClick(id)} onDeleteClick={(id: number) => this.handleStageDeleteClick(id)}/>
+                  <WorkflowStage canEdit={canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(id: number) => this.handleStageEditClick(id)} onDeleteClick={(id: number) => this.handleStageDeleteClick(id)}/>
                   { canEdit ? 
                     <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.addButton}>
                       <AddIcon />

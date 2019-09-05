@@ -14,6 +14,7 @@ export namespace WorkflowStage {
         desc: string
         onEditClick: Function
         onDeleteClick: Function
+        canEdit: boolean
     }
     export interface State {
       openMenu: boolean
@@ -84,34 +85,37 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
               <Typography className={classes.heading} variant="title">
                 {this.props.name}
               </Typography>
-            <div>
-              <IconButton
-                onClick={(event) => this.handleMenuClick(event)}
-                aria-controls="simple-menu"
-                aria-haspopup="true"
-              >
-                <MoreVertIcon />
-              </IconButton>
-                <Menu
-                  id="long-menu"
-                  anchorEl={this.state.anchorEl}
-                  open={openMenu}
-                  onClose={() => this.handleMenuClose()}
-                  PaperProps={{
-                    style: {
-                      maxHeight: 216,
-                      width: 200,
-                    },
-                  }}
-                >
-                  <MenuItem key={0} onClick={() => {this.props.onEditClick(this.props.id); this.setState({openMenu: false})}}>
-                    Edit
-                  </MenuItem>
-                  <MenuItem key={1} onClick={() => {this.props.onDeleteClick(this.props.id); this.setState({openMenu: false})}}>
-                    Delete
-                  </MenuItem>
-                </Menu>
-            </div>
+              { this.props.canEdit ? 
+                <div>
+                  <IconButton
+                    onClick={(event) => this.handleMenuClick(event)}
+                    aria-controls="simple-menu"
+                    aria-haspopup="true"
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+                    <Menu
+                      id="long-menu"
+                      anchorEl={this.state.anchorEl}
+                      open={openMenu}
+                      onClose={() => this.handleMenuClose()}
+                      PaperProps={{
+                        style: {
+                          maxHeight: 216,
+                          width: 200,
+                        },
+                      }}
+                    >
+                      <MenuItem key={0} onClick={() => {this.props.onEditClick(this.props.id); this.setState({openMenu: false})}}>
+                        Edit
+                      </MenuItem>
+                      <MenuItem key={1} onClick={() => {this.props.onDeleteClick(this.props.id); this.setState({openMenu: false})}}>
+                        Delete
+                      </MenuItem>
+                    </Menu>
+                </div>
+                : null
+              }
           </div>
 
           <Divider style={{marginBottom: "8px"}}/>
