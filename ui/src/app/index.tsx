@@ -18,6 +18,15 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 // Allows for React components to be live reloaded without the loss of state.
 import { hot } from 'react-hot-loader';
 
+export namespace App {
+    export interface Props {
+        classes?: any 
+    }
+    export interface State {
+		isAuthenticated: Boolean,
+    }
+}
+
 class App extends React.Component<App.Props, App.State, any> {
 
 	constructor(props: App.Props) {
@@ -65,5 +74,3 @@ class App extends React.Component<App.Props, App.State, any> {
 	}
 }
 export default hot(module)(App);
-
-// https://stackoverflow.com/questions/37843495/material-ui-adding-link-component-from-react-router/46686467#46686467
