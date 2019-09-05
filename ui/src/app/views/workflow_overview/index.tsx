@@ -6,6 +6,7 @@ import { Divider } from '@material-ui/core';
 import WorkflowTile from 'app/views/workflow_overview/components/workflow_object';
 import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
+import { RouteComponentProps } from 'react-router';
 
 export namespace CreateWorkflow {
     export interface Props {
@@ -20,7 +21,11 @@ export namespace CreateWorkflow {
         dialogBoxDesc: string
     }
 }
-
+export namespace Workflow {
+	export interface Props extends RouteComponentProps<void> {
+		classes?: any
+  }
+}
 
 class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflow.State> {
 
