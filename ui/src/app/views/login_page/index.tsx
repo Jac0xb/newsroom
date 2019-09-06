@@ -1,6 +1,5 @@
-import { Grid, Paper, Typography, TextField, Button, InputAdornment } from '@material-ui/core';
+import { Grid, Paper, Typography, TextField, Button } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import axios from 'axios';
 import * as React from 'react';
 import { styles } from './styles';
 

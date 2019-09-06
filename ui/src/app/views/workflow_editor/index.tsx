@@ -1,8 +1,8 @@
 import { Fab } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
-import WorkflowStage from 'app/views/workflow_editor/components/workflow_stage';
-import WorkflowMenuBar from 'app/views/workflow_editor/components/workflow_menubar'
+import WorkflowStage from 'app/views/workflow_editor/components/WorkflowStage';
+import WorkflowMenuBar from 'app/views/workflow_editor/components/WorkflowSidebar'
 import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
 import * as React from 'react';
