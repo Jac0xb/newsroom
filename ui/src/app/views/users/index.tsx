@@ -1,5 +1,4 @@
 import * as React from 'react';
-import PrimarySearchAppBar from 'app/components/common/application_bar';
 import { Avatar } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { User } from 'app/models';
@@ -54,7 +53,6 @@ class Users extends React.Component<Users.Props, Users.State> {
 
         return (
             <React.Fragment>
-                <PrimarySearchAppBar/>
                 <MaterialTable
                     columns={[
                         {title: "Avatar", render: Users.getUserAvatar},

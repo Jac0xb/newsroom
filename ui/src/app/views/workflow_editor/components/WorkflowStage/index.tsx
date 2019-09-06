@@ -3,7 +3,7 @@ import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import { Paper, Typography, Divider, Grid, Menu, MenuItem, IconButton } from '@material-ui/core';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
-import DocumentTile from 'app/components/dashboard/DocumentTile';
+import DocumentTile from 'app/views/dashboard_overview/components/DocumentTile';
 import axios from 'axios';
 
 export namespace WorkflowStage {
@@ -14,6 +14,7 @@ export namespace WorkflowStage {
         desc: string
         onEditClick: Function
         onDeleteClick: Function
+        canEdit: boolean
     }
     export interface State {
       openMenu: boolean
@@ -74,7 +75,7 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
     this.getDocuments();
 
     const docList = stageDocuments.map((document, i) =>
-			<DocumentTile key={i} document={document} />
+			<DocumentTile key={i} document={document} compressed={true} />
     );
 
     return (
@@ -84,34 +85,37 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
               <Typography className={classes.heading} variant="title">
                 {this.props.name}
               </Typography>
-            <div>
-              <IconButton
-                onClick={(event) => this.handleMenuClick(event)}
-                aria-controls="simple-menu"
-                aria-haspopup="true"
-              >
-                <MoreVertIcon />
-              </IconButton>
-                <Menu
-                  id="long-menu"
-                  anchorEl={this.state.anchorEl}
-                  open={openMenu}
-                  onClose={() => this.handleMenuClose()}
-                  PaperProps={{
-                    style: {
-                      maxHeight: 216,
-                      width: 200,
-                    },
-                  }}
-                >
-                  <MenuItem key={0} onClick={() => {this.props.onEditClick(this.props.id); this.setState({openMenu: false})}}>
-                    Edit
-                  </MenuItem>
-                  <MenuItem key={1} onClick={() => {this.props.onDeleteClick(this.props.id); this.setState({openMenu: false})}}>
-                    Delete
-                  </MenuItem>
-                </Menu>
-            </div>
+              { this.props.canEdit ? 
+                <div>
+                  <IconButton
+                    onClick={(event) => this.handleMenuClick(event)}
+                    aria-controls="simple-menu"
+                    aria-haspopup="true"
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+                    <Menu
+                      id="long-menu"
+                      anchorEl={this.state.anchorEl}
+                      open={openMenu}
+                      onClose={() => this.handleMenuClose()}
+                      PaperProps={{
+                        style: {
+                          maxHeight: 216,
+                          width: 200,
+                        },
+                      }}
+                    >
+                      <MenuItem key={0} onClick={() => {this.props.onEditClick(this.props.id); this.setState({openMenu: false})}}>
+                        Edit
+                      </MenuItem>
+                      <MenuItem key={1} onClick={() => {this.props.onDeleteClick(this.props.id); this.setState({openMenu: false})}}>
+                        Delete
+                      </MenuItem>
+                    </Menu>
+                </div>
+                : null
+              }
           </div>
 
           <Divider style={{marginBottom: "8px"}}/>

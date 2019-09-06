@@ -10,7 +10,7 @@ export function styles(theme: Theme)  {
         	flexGrow: 1,
         },
         menuButton: {
-			color: '#263238',
+			color: 'white',
 			marginLeft: -12,
 			marginRight: 20,
         },
@@ -20,6 +20,10 @@ export function styles(theme: Theme)  {
 			[theme.breakpoints.up('sm')]: {
 				display: 'block',
 			},
+        },
+        categoriesTitle: {
+            textAlign: 'center',
+            paddingTop: '19px'
         },
         search: {
 			position: 'relative',

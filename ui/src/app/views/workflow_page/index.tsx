@@ -3,9 +3,10 @@ import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import Button from '@material-ui/core/Button';
 import { Divider } from '@material-ui/core';
-import WorkflowTile from 'app/components/workflow/workflow_object';
+import WorkflowTile from 'app/views/workflow_overview/components/WorkflowObject';
 import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
+import { RouteComponentProps } from 'react-router';
 
 export namespace CreateWorkflow {
     export interface Props {
@@ -20,7 +21,11 @@ export namespace CreateWorkflow {
         dialogBoxDesc: string
     }
 }
-
+export namespace Workflow {
+	export interface Props extends RouteComponentProps<void> {
+		classes?: any
+  }
+}
 
 class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflow.State> {
 
@@ -35,6 +40,7 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
         };
     }
 
+    
     componentDidMount() {
         axios.get("/api/workflows").then((response) => {
             console.log(response);
@@ -106,20 +112,22 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
         const { classes } = this.props;
 
         return (
-            <main className={classes.layout}>
-                <div className={classes.buttonGroup}>
-                    <Button variant="contained" onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create Workflow</Button>
-                </div>
-				<Divider style={{margin: "0px 24px"}}/>
-				<div className={classes.outerGrid}>
-                    {workflows.map(workflow => (
-                    	<WorkflowTile workflow={workflow} onClick={(id: number) => this.handleDeleteClick(id)}/>
-					))
-					}
-				</div>
+			<React.Fragment>
+                <main className={classes.layout}>
+                    <div className={classes.buttonGroup}>
+                        <Button variant="contained" onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create Workflow</Button>
+                    </div>
+                    <Divider style={{margin: "0px 24px"}}/>
+                    <div className={classes.outerGrid}>
+                        {workflows.map(workflow => (
+                            <WorkflowTile workflow={workflow} onClick={(id: number) => this.handleDeleteClick(id)}/>
+                        ))
+                        }
+                    </div>
 
-                <DialogItem textBoxName={dialogBoxName} textBoxDesc={dialogBoxDesc}  title={"Create New Workflow"} desc={"Enter the name of the new workflow"} show={this.state.showDialog} handleTextBoxesChange={this.handleTextBoxesChange} handleClose={() => this.setState({showDialog: false})} handleSave={this.handleCreateNew}/>
-            </main>
+                    <DialogItem textBoxName={dialogBoxName} textBoxDesc={dialogBoxDesc}  title={"Create New Workflow"} desc={"Enter the name of the new workflow"} show={this.state.showDialog} handleTextBoxesChange={this.handleTextBoxesChange} handleClose={() => this.setState({showDialog: false})} handleSave={this.handleCreateNew}/>
+                </main>
+            </React.Fragment>
         );
     }
 }
