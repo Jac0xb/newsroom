@@ -1,17 +1,16 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 
-import { NRStage } from "./NRStage";
+import { common } from "../services/Common";
 import { NRRole } from "./NRRole";
+import { NRStage } from "./NRStage";
 
 // NRSTPermission objects track permissions between stages and roles.
-@Entity("stpermission")
+@Entity(common.STPERM_TABLE)
 export class NRSTPermission {
-    public static READ = 0;
-    public static WRITE = 1;
-
     @PrimaryGeneratedColumn()
     public id: number;
 
+    // Control READ/WRITE permissions.
     @Column({
         nullable: false,
         type: "int",
@@ -26,7 +25,7 @@ export class NRSTPermission {
     @ManyToOne(
         (type) => NRStage,
         (stage) => stage.permissions,
-        { eager: true },
+        { eager: true, onDelete: "CASCADE" },
     )
     public stage: NRStage;
 
@@ -38,7 +37,7 @@ export class NRSTPermission {
     @ManyToOne(
         (type) => NRRole,
         (role) => role.stpermissions,
-        { eager: true },
+        { eager: true, onDelete: "CASCADE" },
     )
     public role: NRRole;
 }

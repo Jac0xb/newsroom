@@ -1,10 +1,12 @@
 import * as express from "express";
 import { getManager } from "typeorm";
-import { DELETE, Errors, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
+import { DELETE, Errors, GET, Path, PathParam,
+         POST, PreProcessor, PUT } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 
-import { NRRole } from "../entity/NRRole";
-import { NRUser } from "../entity/NRUser";
+import { NRDCPermission, NRDocument, NRRole,
+         NRStage, NRSTPermission, NRUser,
+         NRWFPermission, NRWorkflow } from "../entity";
 import { common } from "./Common";
 import { validators } from "./Validators";
 
@@ -13,8 +15,8 @@ import { validators } from "./Validators";
 @Tags("Users")
 export class UserService {
     // Database interactions managers.
-    private userRepository = getManager().getRepository(NRUser);
     private roleRepository = getManager().getRepository(NRRole);
+    private userRepository = getManager().getRepository(NRUser);
 
     /**
      * Create a new user.
@@ -27,9 +29,15 @@ export class UserService {
     @POST
     @PreProcessor(validators.createUserValidator)
     public async createUser(user: NRUser): Promise<NRUser> {
-        // Form data already validated above.
+        try {
+            // Form data already validated above.
+            return await this.userRepository.save(user);
+        } catch (err) {
+            console.log(err);
 
-        return await this.userRepository.save(user);
+            const errStr = `Error creating user.`;
+            throw new Errors.InternalServerError(errStr);
+        }
     }
 
     /**
@@ -40,7 +48,14 @@ export class UserService {
      */
     @GET
     public async getUsers(): Promise<NRUser[]> {
-        return await this.userRepository.find();
+        try {
+            return await this.userRepository.find();
+        } catch (err) {
+            console.log(err);
+
+            const errStr = `Error getting users.`;
+            throw new Errors.InternalServerError(errStr);
+        }
     }
 
     /**
@@ -52,8 +67,8 @@ export class UserService {
      *          - If user not found.
      */
     @GET
-    @Path(":/uid")
-    public async getUser(@IsInt @PathParam("uid") uid: number): Promise<NRUser> {
+    @Path("/:uid")
+    public async getUser(@PathParam("uid") uid: number): Promise<NRUser> {
         return await common.getUser(uid, this.userRepository);
     }
 
@@ -94,9 +109,14 @@ export class UserService {
             currUser.password = user.password;
         }
 
-        // TODO: Do roles here?
+        try {
+            return await this.userRepository.save(currUser);
+        } catch (err) {
+            console.log(err);
 
-        return await this.userRepository.save(currUser);
+            const errStr = `Error updating user.`;
+            throw new Errors.InternalServerError(errStr);
+        }
     }
 
     /**
@@ -110,7 +130,14 @@ export class UserService {
     public async deleteUser(@IsInt @PathParam("uid") uid: number) {
         const currUser = await common.getUser(uid, this.userRepository);
 
-        await this.userRepository.remove(currUser);
+        try {
+            await this.userRepository.remove(currUser);
+        } catch (err) {
+            console.log(err);
+
+            const errStr = `Error deleting user.`;
+            throw new Errors.InternalServerError(errStr);
+        }
     }
 
     /**
@@ -129,7 +156,14 @@ export class UserService {
 
         currUser.roles.push(newRole);
 
-        return await this.userRepository.save(currUser);
+        try {
+            return await this.userRepository.save(currUser);
+        } catch (err) {
+            console.log(err);
+
+            const errStr = `Error adding role for user.`;
+            throw new Errors.InternalServerError(errStr);
+        }
     }
 
     /**
@@ -145,7 +179,14 @@ export class UserService {
     public async getRoles(@IsInt @PathParam("uid") uid: number): Promise<NRRole[]> {
         const currUser = await common.getUser(uid, this.userRepository);
 
-        return await currUser.roles;
+        try {
+            return await currUser.roles;
+        } catch (err) {
+            console.log(err);
+
+            const errStr = `Error getting roles for user.`;
+            throw new Errors.InternalServerError(errStr);
+        }
     }
 
     /**
@@ -159,13 +200,20 @@ export class UserService {
      */
     @DELETE
     @Path("/:uid/role/:rid")
-    public async deleteRole(@IsInt @PathParam("uid") uid: number,
+    public async removeRole(@IsInt @PathParam("uid") uid: number,
                             @IsInt @PathParam("rid") rid: number) {
         const currUser = await common.getUser(uid, this.userRepository);
         const currRole = await common.getRole(rid, this.roleRepository);
 
-        const ind = currUser.roles.indexOf(currRole);
-        currUser.roles.splice(ind, 1);
-        return await this.userRepository.save(currUser);
+        try {
+            const ind = currUser.roles.indexOf(currRole);
+            currUser.roles.splice(ind, 1);
+            return await this.userRepository.save(currUser);
+        } catch (err) {
+            console.log(err);
+
+            const errStr = `Error removing role from user.`;
+            throw new Errors.InternalServerError(errStr);
+        }
     }
 }

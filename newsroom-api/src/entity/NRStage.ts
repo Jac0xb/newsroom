@@ -1,15 +1,14 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, JoinTable,
+import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne,
          OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
+import { common } from "../services/Common";
 import { NRDocument } from "./NRDocument";
+import { NRSTPermission } from "./NRSTPermission";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
-import { NRSTPermission } from "./NRSTPermission";
-
-export const STGE_TABLE = "stage";
 
 // NRStage objects are pieced together to make a workflow.
-@Entity(STGE_TABLE)
+@Entity(common.STGE_TABLE)
 export class NRStage {
     @PrimaryGeneratedColumn()
     public id: number;
@@ -82,7 +81,7 @@ export class NRStage {
      */
     @OneToMany(
         (type) => NRSTPermission,
-        (permission) => permission.stage
+        (permission) => permission.stage,
     )
     @JoinTable()
     public permissions: NRSTPermission[];

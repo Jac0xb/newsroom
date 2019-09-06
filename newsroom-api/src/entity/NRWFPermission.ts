@@ -1,17 +1,16 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 
-import { NRWorkflow } from "./NRWorkflow";
+import { common } from "../services/Common";
 import { NRRole } from "./NRRole";
+import { NRWorkflow } from "./NRWorkflow";
 
 // NRWFPermission objects track permissions between workflows and roles.
-@Entity("wfpermission")
+@Entity(common.WFPERM_TABLE)
 export class NRWFPermission {
-    public static READ = 0;
-    public static WRITE = 1;
-
     @PrimaryGeneratedColumn()
     public id: number;
 
+    // Control READ/WRITE permissions.
     @Column({
         nullable: false,
         type: "int",
@@ -26,7 +25,7 @@ export class NRWFPermission {
     @ManyToOne(
         (type) => NRWorkflow,
         (workflow) => workflow.permissions,
-        { eager: true },
+        { eager: true, onDelete: "CASCADE" },
     )
     public workflow: NRWorkflow;
 
@@ -38,7 +37,7 @@ export class NRWFPermission {
     @ManyToOne(
         (type) => NRRole,
         (role) => role.wfpermissions,
-        { eager: true },
+        { eager: true, onDelete: "CASCADE" },
     )
     public role: NRRole;
 }

@@ -1,15 +1,14 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne,
-         OneToMany, PrimaryGeneratedColumn, UpdateDateColumn,
-         JoinTable } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable,
+         ManyToOne, OneToMany, PrimaryGeneratedColumn,
+         UpdateDateColumn } from "typeorm";
 
+import { common } from "../services/Common";
 import { NRDocument } from "./NRDocument";
-import { NRWFPermission } from "./NRWFPermission";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
+import { NRWFPermission } from "./NRWFPermission";
 
-export const WRKF_TABLE = "workflow";
-
-@Entity(WRKF_TABLE)
+@Entity(common.WRKF_TABLE)
 export class NRWorkflow {
     @PrimaryGeneratedColumn()
     public id: number;
@@ -80,7 +79,7 @@ export class NRWorkflow {
      */
     @OneToMany(
         (type) => NRWFPermission,
-        (permission) => permission.workflow
+        (permission) => permission.workflow,
     )
     @JoinTable()
     public permissions: NRWFPermission[];

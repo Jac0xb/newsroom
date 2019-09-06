@@ -7,24 +7,23 @@ import swaggerUi from "swagger-ui-express";
 import {createConnection} from "typeorm";
 import {Server} from "typescript-rest";
 import {HttpError} from "typescript-rest/dist/server/model/errors";
-import {NRUser} from "./entity/NRUser";
-import {DocumentService} from "./services/DocumentService";
-import {RoleService} from "./services/RoleService";
-import {UserService} from "./services/UserService";
-import {WorkflowService} from "./services/WorkflowService";
+
+import { NRUser } from "./entity";
+import { NRRole } from "./entity";
+import { DocumentService } from "./services/DocumentService";
+import { RoleService } from "./services/RoleService";
+import { UserService } from "./services/UserService";
+import { WorkflowService } from "./services/WorkflowService";
 
 dotenv.config();
-
 const port = process.env.SERVICE_PORT || 8000;
-
 const app = express();
 
 // Demo middleware to inject a user into the request.
 app.use("/api",
 function(req: express.Request, res: express.Response, next: express.NextFunction) {
-    // Fake user for every request with a default roleId of 1.
     req.user = new NRUser();
-    req.user.id = 0;
+    req.user.id = 1;
     req.user.name = "tcruise";
     req.user.firstName = "Tom";
     req.user.lastName = "Cruise";

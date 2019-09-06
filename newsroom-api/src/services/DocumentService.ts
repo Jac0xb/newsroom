@@ -4,28 +4,28 @@ import { Context, DELETE, GET, Path, PathParam,
          POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 
-import { DOCU_TABLE, NRDocument } from "../entity/NRDocument";
-import { NRStage, STGE_TABLE } from "../entity/NRStage";
-import { NRType } from "../entity/NRType";
-import { NRWorkflow, WRKF_TABLE } from "../entity/NRWorkflow";
+import { NRDCPermission, NRDocument, NRRole,
+         NRStage, NRSTPermission, NRUser,
+         NRWFPermission, NRWorkflow } from "../entity";
 import { common } from "./Common";
 import { validators } from "./Validators";
-
-// TODO: Use DOCU_TABLE, etc.
-// TODO: Validators need to change validating 'creator'.
 
 // Provides API services for documents.
 @Path("/api/documents")
 @Tags("Documents")
 export class DocumentService {
-
-    // Database interaction managers.
-    public stageRepository = getManager().getRepository(NRStage);
     // Context manager to grab injected user from the request.
     @Context
     private context: ServiceContext;
-    private documentRepository = getManager().getRepository(NRDocument);
+
+    // Database interactions managers.
+    private roleRepository = getManager().getRepository(NRRole);
+    private stageRepository = getManager().getRepository(NRStage);
     private workflowRepository = getManager().getRepository(NRWorkflow);
+    private documentRepository = getManager().getRepository(NRDocument);
+    private permWFRepository = getManager().getRepository(NRWFPermission);
+    private permSTRepository = getManager().getRepository(NRSTPermission);
+    private permDCRepository = getManager().getRepository(NRDCPermission);
 
     /**
      * Create a new document based on passed information.
@@ -41,11 +41,7 @@ export class DocumentService {
     @POST
     @PreProcessor(validators.createDocumentValidator)
     public async createDocument(document: NRDocument): Promise<NRDocument> {
-        const sessionUser = common.getUserFromContext(this.context);
-        await common.checkCreatePermissions(sessionUser, NRType.DOCU_KEY);
-
         const currWorkflow = await common.getWorkflow(document.workflow.id, this.workflowRepository);
-        common.checkWritePermissions(sessionUser, NRType.WRKF_KEY, currWorkflow.id);
 
         // Assign the document to the first stage in a workflow if no stage was passed.
         if (!(document.stage)) {
@@ -53,7 +49,7 @@ export class DocumentService {
             let currStage: NRStage;
 
             currStage = await this.stageRepository
-                .createQueryBuilder(STGE_TABLE)
+                .createQueryBuilder(common.STGE_TABLE)
                 .where("stage.sequenceId = :sid", { sid: minSeq })
                 .andWhere("stage.workflowId = :wid ", { wid: currWorkflow.id })
                 .getOne();
@@ -99,7 +95,7 @@ export class DocumentService {
     @GET
     public async getDocumentsForAuthor(@PathParam("aid") aid: number): Promise<NRDocument[]> {
         return await this.documentRepository
-            .createQueryBuilder(DOCU_TABLE)
+            .createQueryBuilder(common.DOCU_TABLE)
             .where("document.creator = :author", { author: aid })
             .getMany();
     }
@@ -118,7 +114,7 @@ export class DocumentService {
         const assocStage = await common.getStage(sid, this.stageRepository);
 
         return await this.documentRepository
-            .createQueryBuilder(DOCU_TABLE)
+            .createQueryBuilder(common.DOCU_TABLE)
             .where("stageId = :sId", { sId: assocStage.id })
             .getMany();
     }
@@ -139,7 +135,7 @@ export class DocumentService {
         await common.getWorkflow(wid, this.workflowRepository);
 
         const allDocs = await this.documentRepository
-            .createQueryBuilder(DOCU_TABLE)
+            .createQueryBuilder(common.DOCU_TABLE)
             .where("workflowId = :id", { id: wid })
             .getMany();
 
@@ -165,7 +161,7 @@ export class DocumentService {
                                 document: NRDocument): Promise<NRDocument> {
         const sessionUser = common.getUserFromContext(this.context);
         const currDocument = await common.getDocument(did, this.documentRepository);
-        await common.checkWritePermissions(sessionUser, NRType.DOCU_KEY, did);
+        await common.checkDCWritePermissions(sessionUser, did, this.permDCRepository);
 
         // Check for existence.
         await common.getWorkflow(document.workflow.id, this.workflowRepository);
@@ -210,10 +206,10 @@ export class DocumentService {
     public async deleteDocument(@IsInt @PathParam("did") did: number) {
         const sessionUser = common.getUserFromContext(this.context);
         const currDocument = await common.getDocument(did, this.documentRepository);
-        await common.checkWritePermissions(sessionUser, NRType.DOCU_KEY, did);
+        await common.checkDCWritePermissions(sessionUser, did, this.permDCRepository);
 
         await this.documentRepository
-            .createQueryBuilder(DOCU_TABLE)
+            .createQueryBuilder(common.DOCU_TABLE)
             .delete()
             .from(NRDocument)
             .andWhere("id = :id", { id: currDocument.id })
@@ -234,7 +230,7 @@ export class DocumentService {
         const currDocument = await common.getDocument(did, this.documentRepository);
 
         const stageID = await this.documentRepository
-            .createQueryBuilder(DOCU_TABLE)
+            .createQueryBuilder(common.DOCU_TABLE)
             .select("document.stageId", "val")
             .where("document.id = :did", { did: currDocument.id })
             .getRawOne();
@@ -242,7 +238,7 @@ export class DocumentService {
         const currStage = await common.getStage(stageID.val, this.stageRepository);
 
         const workflowID = await this.documentRepository
-            .createQueryBuilder(DOCU_TABLE)
+            .createQueryBuilder(common.DOCU_TABLE)
             .select("document.workflowId", "val")
             .where("document.id = :did", { did: currDocument.id })
             .getRawOne();
@@ -254,7 +250,7 @@ export class DocumentService {
         if ((currStage.sequenceId + 1) <= maxSeq) {
             // Get id of next stage in sequence.
             const nextId = await this.stageRepository
-                .createQueryBuilder(STGE_TABLE)
+                .createQueryBuilder(common.STGE_TABLE)
                 .select("stage.id", "val")
                 .where("stage.sequenceId = :sid", { sid: currStage.sequenceId + 1 })
                 .andWhere("stage.workflowId = :wid", { wid: workflowID.val })
@@ -284,6 +280,9 @@ export class DocumentService {
         const currStage = currDocument.stage;
         const workflowId = currDocument.workflow.id;
 
+        // Must have WRITE on current stage to move forward.
+        await common.checkSTWritePermissions(sessionUser, currStage.id, this.permSTRepository);
+
         // Used to determine if the document is done in its workflow.
         const maxSeq = await this.getMaxStageSequenceId(workflowId);
 
@@ -291,12 +290,11 @@ export class DocumentService {
         if ((currStage.sequenceId + 1) <= maxSeq) {
             // Get id of next stage in sequence.
             const nextStage = await this.stageRepository
-                .createQueryBuilder(STGE_TABLE)
+                .createQueryBuilder(common.STGE_TABLE)
                 .where("stage.sequenceId = :sid", { sid: currStage.sequenceId + 1 })
                 .andWhere("stage.workflowId = :wid", { wid: workflowId })
                 .getOne();
 
-            await common.checkMoveNext(sessionUser, NRType.STGE_KEY, nextStage.id);
             currDocument.stage = nextStage;
         }
 
@@ -322,7 +320,7 @@ export class DocumentService {
 
         // TODO: How to do this with TypeORM?
         const stageID = await this.documentRepository
-            .createQueryBuilder(DOCU_TABLE)
+            .createQueryBuilder(common.DOCU_TABLE)
             .select("document.stageId", "val")
             .where("document.id = :did", { did: currDocument.id })
             .getRawOne();
@@ -330,7 +328,7 @@ export class DocumentService {
         const currStage = await common.getStage(stageID.val, this.stageRepository);
 
         const workflowID = await this.documentRepository
-            .createQueryBuilder(DOCU_TABLE)
+            .createQueryBuilder(common.DOCU_TABLE)
             .select("document.workflowId", "val")
             .where("document.id = :did", { did: currDocument.id })
             .getRawOne();
@@ -342,7 +340,7 @@ export class DocumentService {
         if ((currStage.sequenceId - 1) >= minSeq) {
             // Get id of next stage in sequence.
             const prevId = await this.stageRepository
-                .createQueryBuilder(STGE_TABLE)
+                .createQueryBuilder(common.STGE_TABLE)
                 .select("stage.id", "val")
                 .where("stage.sequenceId = :sid", { sid: currStage.sequenceId - 1 })
                 .andWhere("stage.workflowId = :wid", { wid: workflowID.val })
@@ -380,12 +378,13 @@ export class DocumentService {
         if ((currStage.sequenceId - 1) >= minSeq) {
             // Get id of next stage in sequence.
             const prevStage = await this.stageRepository
-                .createQueryBuilder(STGE_TABLE)
+                .createQueryBuilder(common.STGE_TABLE)
                 .where("stage.sequenceId = :sid", { sid: currStage.sequenceId - 1 })
                 .andWhere("stage.workflowId = :wid", { wid: workflowId })
                 .getOne();
 
-            await common.checkMovePrev(sessionUser, NRType.STGE_KEY, prevStage.id);
+            // Must have WRITE on previous stage to move backward.
+            await common.checkSTWritePermissions(sessionUser, prevStage.id, this.permSTRepository);
             currDocument.stage = prevStage;
         }
 
@@ -401,7 +400,7 @@ export class DocumentService {
 
         // Grab the next sequenceId for this set of workflow stages.
         const maxSeq = await this.stageRepository
-            .createQueryBuilder(STGE_TABLE)
+            .createQueryBuilder(common.STGE_TABLE)
             .select("MAX(stage.sequenceId)", "max")
             .where("stage.workflowId = :id", { id: currWorkflow.id })
             .getRawOne();
@@ -415,7 +414,7 @@ export class DocumentService {
 
         // Grab the next sequenceId for this set of workflow stages.
         const minSeq = await this.stageRepository
-            .createQueryBuilder(STGE_TABLE)
+            .createQueryBuilder(common.STGE_TABLE)
             .select("MIN(stage.sequenceId)", "min")
             .where("stage.workflowId = :id", { id: currWorkflow.id })
             .getRawOne();

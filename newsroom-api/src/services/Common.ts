@@ -3,39 +3,26 @@ import { getManager, Repository } from "typeorm";
 import { Errors } from "typescript-rest";
 import { ServiceContext } from "typescript-rest";
 
-import { ADMIN_TABLE, NRAdmin } from "../entity/NRAdmin";
-import { DOCU_TABLE, NRDocument } from "../entity/NRDocument";
-import { NRPermission } from "../entity/NRPermission";
-import { NRRole, ROLE_TABLE } from "../entity/NRRole";
-import { NRStage, STGE_TABLE } from "../entity/NRStage";
-import { NRType, TYPE_TABLE } from "../entity/NRType";
-import { NRUser, USER_TABLE } from "../entity/NRUser";
-import { NRWorkflow, WRKF_TABLE } from "../entity/NRWorkflow";
+import { NRDCPermission, NRDocument, NRRole,
+         NRStage, NRSTPermission, NRUser,
+         NRWFPermission, NRWorkflow } from "../entity";
 
 // Common functionality used in different places.
 export namespace common {
+    export const READ = 0;
+    export const WRITE = 1;
+    export const USER_TABLE = "user";
+    export const STGE_TABLE = "stage";
+    export const ROLE_TABLE = "role";
+    export const DOCU_TABLE = "document";
+    export const WRKF_TABLE = "workflow";
+    export const WFPERM_TABLE = "wfpermission";
+    export const STPERM_TABLE = "stpermission";
+    export const DCPERM_TABLE = "dcpermission";
+
     // Get the user from the ServiceContext containing the request.
     export function getUserFromContext(context: ServiceContext) {
         return context.request.user;
-    }
-
-    // ?
-    export function getTableFromKey(key: number): string {
-        if (key === NRType.USER_KEY) {
-            return USER_TABLE;
-        }
-        if (key === NRType.STGE_KEY) {
-            return STGE_TABLE;
-        }
-        if (key === NRType.WRKF_KEY) {
-            return WRKF_TABLE;
-        }
-        if (key === NRType.DOCU_KEY) {
-            return DOCU_TABLE;
-        }
-        if (key === NRType.ROLE_KEY) {
-            return ROLE_TABLE;
-        }
     }
 
     // Get a workflow based on ID.
@@ -91,15 +78,41 @@ export namespace common {
         }
     }
 
-    // Get a permission based on ID.
-    export async function getPermission(pid: number,
-                                        repo: Repository<NRPermission>): Promise<NRPermission> {
+    // Get a workflow permission based on ID.
+    export async function getWFPermission(pid: number,
+                                          repo: Repository<NRWFPermission>): Promise<NRWFPermission> {
         try {
             return await repo.findOneOrFail(pid);
         } catch (err) {
-            console.error("Error getting permission:", err);
+            console.error("Error getting WF permission:", err);
 
-            const errStr = `Permission with ID ${pid} was not found.`;
+            const errStr = `WF permission with ID ${pid} was not found.`;
+            throw new Errors.NotFoundError(errStr);
+        }
+    }
+
+    // Get a stage permission based on ID.
+    export async function getSTPermission(pid: number,
+                                          repo: Repository<NRSTPermission>): Promise<NRSTPermission> {
+        try {
+            return await repo.findOneOrFail(pid);
+        } catch (err) {
+            console.error("Error getting ST permission:", err);
+
+            const errStr = `ST permission with ID ${pid} was not found.`;
+            throw new Errors.NotFoundError(errStr);
+        }
+    }
+
+    // Get a document permission based on ID.
+    export async function getDCPermission(pid: number,
+                                          repo: Repository<NRDCPermission>): Promise<NRDCPermission> {
+        try {
+            return await repo.findOneOrFail(pid);
+        } catch (err) {
+            console.error("Error getting DC permission:", err);
+
+            const errStr = `DC permission with ID ${pid} was not found.`;
             throw new Errors.NotFoundError(errStr);
         }
     }
@@ -117,81 +130,99 @@ export namespace common {
         }
     }
 
-    // Determine if the specified user is an admin.
-    export async function isAdmin(user: NRUser): Promise<boolean> {
-        const userRepo = getManager().getRepository(NRAdmin);
+    // Check if a user has write permissions on a workflow.
+    export async function checkWFWritePermissions(user: NRUser,
+                                                  wid: number,
+                                                  repo: Repository<NRWFPermission>) {
+        let allowed = false;
 
-        const admin = await userRepo
-            .createQueryBuilder(ADMIN_TABLE)
-            .where("admin.user = :id", { id: user.id })
-            .getMany();
+        const userRepo = getManager().getRepository(NRUser);
+        user = await getUser(user.id, userRepo);
 
-        if (admin === undefined) {
-            return false;
+        try {
+            if (!((user.roles === undefined) || (user.roles.length === 0))) {
+                for (const role of user.roles) {
+                    const roleRight = await repo
+                        .createQueryBuilder(common.WFPERM_TABLE)
+                        .select(`MAX(${common.WFPERM_TABLE}.access)`, "max")
+                        .where(`${common.WFPERM_TABLE}.roleId = :id`, { id: role.id })
+                        .andWhere(`${common.WFPERM_TABLE}.workflowId = :wfid`, { wfid: wid })
+                        .getRawOne();
+
+                    if (roleRight.max === common.WRITE) {
+                        allowed = true;
+                        break;
+                    }
+                }
+            }
+        } catch (err) {
+            console.log(err);
+
+            const errStr = `Error checking WF permissions.`;
+            throw new Errors.InternalServerError(errStr);
         }
 
-        return true;
-    }
-
-    // Return true if the user is an admin, false otherwise.
-    export async function checkAdmin(user: NRUser) {
-        const admin = await isAdmin(user);
-
-        if (!admin) {
-            const errStr = `User ${user.name} does not have the correct permissions.`;
+        if (!(allowed)) {
+            const errStr = `User with ID ${user.id} does not have WF write permissions.`;
             throw new Errors.ForbiddenError(errStr);
         }
     }
 
-    // Determine if a user has the rights to create an item based on key and value.
-    export async function checkWritePermissions(user: NRUser,
-                                                key: number,
-                                                val: number) {
-        const admin = await isAdmin(user);
-        const writePerm = true; // TODO: Actually query this.
+    // Check if a user has write permissions on a stage.
+    export async function checkSTWritePermissions(user: NRUser,
+                                                  sid: number,
+                                                  repo: Repository<NRSTPermission>) {
+        let allowed = false;
 
-        if (!(admin || writePerm)) {
-            const errStr = `User ${user.name} does not have the correct permissions.`;
+        const userRepo = getManager().getRepository(NRUser);
+        user = await getUser(user.id, userRepo);
+
+        for (const role of user.roles) {
+            const roleRight = await repo
+                .createQueryBuilder(common.STPERM_TABLE)
+                .select(`MAX(${common.STPERM_TABLE}.access)`, "max")
+                .where(`${common.STPERM_TABLE}.roleId = :id`, { id: role.id })
+                .andWhere(`${common.STPERM_TABLE}.stageId = :stid`, { stid: sid })
+                .getRawOne();
+
+            if (roleRight.max === common.WRITE) {
+                allowed = true;
+                break;
+            }
+        }
+
+        if (!(allowed)) {
+            const errStr = `User with ID ${user.id} does not have ST write permissions.`;
             throw new Errors.ForbiddenError(errStr);
         }
     }
 
-    // Determine if a user is allowed to create an item based on key type.
-    export async function checkCreatePermissions(user: NRUser,
-                                                 key: number) {
-        const admin = await isAdmin(user);
-        const createPerm = true; // TODO: Actually query this.
+    // Check if a user has write permissions on a document.
+    export async function checkDCWritePermissions(user: NRUser,
+                                                  did: number,
+                                                  repo: Repository<NRDCPermission>) {
+        let allowed = false;
 
-        if (!(admin || createPerm)) {
-            const errStr = `User ${user.name} does not have the correct permissions.`;
+        const userRepo = getManager().getRepository(NRUser);
+        user = await getUser(user.id, userRepo);
+
+        for (const role of user.roles) {
+            const roleRight = await repo
+                .createQueryBuilder(common.DCPERM_TABLE)
+                .select(`MAX(${common.DCPERM_TABLE}.access)`, "max")
+                .where(`${common.DCPERM_TABLE}.roleId = :id`, { id: role.id })
+                .andWhere(`${common.DCPERM_TABLE}.documentId = :dcid`, { dcid: did })
+                .getRawOne();
+
+            if (roleRight.max === common.WRITE) {
+                allowed = true;
+                break;
+            }
+        }
+
+        if (!(allowed)) {
+            const errStr = `User with ID ${user.id} does not have DC write permissions.`;
             throw new Errors.ForbiddenError(errStr);
         }
     }
-
-    // Determine if a user is allowed to move a document forward a stage.
-    export async function checkMoveNext(user: NRUser,
-                                        key: number,
-                                        val: number) {
-        const admin = await isAdmin(user);
-        const moveNextPerm = true;
-
-        if (!(admin || moveNextPerm)) {
-            const errStr = `User ${user.name} does not have the correct permissions.`;
-            throw new Errors.ForbiddenError(errStr);
-        }
-    }
-
-    // Determine if a user is allowed to move a document backward a stage.
-    export async function checkMovePrev(user: NRUser,
-                                        key: number,
-                                        val: number) {
-        const admin = await isAdmin(user);
-        const movePrevPerm = true;
-
-        if (!(admin || movePrevPerm)) {
-            const errStr = `User ${user.name} does not have the correct permissions.`;
-            throw new Errors.ForbiddenError(errStr);
-        }
-    }
-
 }

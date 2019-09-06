@@ -1,14 +1,13 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, JoinTable,
-         JoinColumn, PrimaryGeneratedColumn, UpdateDateColumn, OneToMany } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable,
+         ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
+import { common } from "../services/Common";
+import { NRDCPermission } from "./NRDCPermission";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
-import { NRDCPermission } from "./NRDCPermission";
 
-export const DOCU_TABLE = "document";
-
-@Entity(DOCU_TABLE)
+@Entity(common.DOCU_TABLE)
 export class NRDocument {
     @PrimaryGeneratedColumn()
     public id: number;
@@ -86,7 +85,7 @@ export class NRDocument {
      */
     @OneToMany(
         (type) => NRDCPermission,
-        (permission) => permission.document
+        (permission) => permission.document,
     )
     @JoinTable()
     public permissions: NRDCPermission[];

@@ -1,9 +1,10 @@
 import * as express from "express";
 import { Errors } from "typescript-rest";
 
-import { NRDocument, NRStage, NRWorkflow } from "../entity";
-import { NRRole } from "../entity/NRRole";
-import { NRUser } from "../entity/NRUser";
+import { NRDCPermission, NRDocument, NRRole,
+         NRStage, NRSTPermission, NRUser,
+         NRWFPermission, NRWorkflow } from "../entity";
+import { common } from "./Common";
 
 // Validate form submissions on creating and updating items.
 export namespace validators {
