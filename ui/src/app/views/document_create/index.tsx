@@ -1,5 +1,4 @@
 import * as React from 'react';
-import PrimarySearchAppBar from 'app/components/common/application_bar';
 import { Grid, Paper, FormGroup, FormLabel, TextField, MenuItem, Button, Typography } from '@material-ui/core';
 import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
@@ -46,7 +45,7 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 	onSubmit() {
 		this.setState({ flash: "" })
 
-		axios.post("/api/documents", { name: this.state.nickname, creator: this.props.cookies.get("username"), workflow: this.state.workflow }).then((response: any) => {
+		axios.post("/api/documents", { name: this.state.nickname, creator: "Test", workflow: this.state.workflow }).then((response: any) => {
 
 			if (response) {
 				this.setState({ submitted: true })
@@ -67,7 +66,6 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 
 		return (
 			<React.Fragment>
-				<PrimarySearchAppBar />
                 <div className={classes.buttonGroup}>
 					<Link style={{ textDecoration: "none" }} to="/">
 						<Button style={{ width: "calc(4*52px)" }} variant={"contained"}>

@@ -13,25 +13,73 @@ import { hot } from 'react-hot-loader';
 import Dashboard from './views/dashboard_overview';
 import DocumentEditor from './views/document_editor';
 import WorkflowEditor from './views/workflow_editor'
-import { Workflow } from './views/workflow_overview';
+import Workflow from './views/workflow_page';
 import DocumentCreator from './views/document_create';
 import Users from "app/views/users";
 import Groups from "app/views/groups";
+import PrimarySearchAppBar from 'app/components/common/header';
+import LoginPage from './views/login_page';
 
-export const App = hot(module)(() => (
-    <React.Fragment>
-        <CssBaseline/>
-        <Switch>
-            <Route exact path="/document" component={Dashboard}/>
-            <Route exact path="/document/create" component={DocumentCreator}/>
-            <Route path="/document/:id/edit" component={DocumentEditor}/>
-            <Route path="/workflow/:id/edit" component={WorkflowEditor}/>
-            <Route path="/workflow" component={Workflow}/>
-            <Route path="/users" component={Users}/>
-            <Route path="/groups" component={Groups}/>
-            <Route exact path="/" component={Dashboard}/>
-        </Switch>
-    </React.Fragment>
-));
+export namespace App {
+    export interface Props {
+        classes?: any 
+    }
+    export interface State {
+		isAuthenticated: Boolean,
+    }
+}
 
-// https://stackoverflow.com/questions/37843495/material-ui-adding-link-component-from-react-router/46686467#46686467
+class App extends React.Component<App.Props, App.State, any> {
+
+	constructor(props: App.Props) {
+		super(props)
+		this.state = {
+		  isAuthenticated: false,
+		}
+	}
+
+	// TODO: auth thro db
+	handleLoginClick = (username: string, password: string) => {
+		console.log(username, password)
+        this.setState({ isAuthenticated: true })
+	};
+	// TODO: auth thro db
+	handleRegisterClick = (username: string, password: string) => {
+		console.log(username, password)
+        this.setState({ isAuthenticated: true })
+  };
+
+	render(){
+
+		const { isAuthenticated } = this.state;
+
+		return(
+			<React.Fragment>
+				<CssBaseline />
+				<PrimarySearchAppBar />
+				<Switch>
+					<div className="App">
+						{
+							!isAuthenticated &&
+							<LoginPage loginClick={(username: string, password: string) => this.handleLoginClick(username, password)} registerClick={this.handleRegisterClick} /> 	
+						}
+						{
+							isAuthenticated &&
+							<div>
+								<Route exact path="/document" component={Dashboard} />
+								<Route exact path="/document/create" component={DocumentCreator} />
+								<Route path="/document/:id/edit" component={DocumentEditor} />
+								<Route path="/workflow/:id/edit" component={WorkflowEditor} />
+                                <Route path="/users" component={Users}/>
+                                <Route path="/groups" component={Groups}/>
+								<Route exact path="/workflow" component={Workflow} />
+								<Route exact path="/" component={Dashboard} />
+							</div>
+						}
+					</div>
+				</Switch>
+			</React.Fragment>
+		);
+	}
+}
+export default hot(module)(App);
