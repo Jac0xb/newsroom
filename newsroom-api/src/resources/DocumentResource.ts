@@ -7,13 +7,13 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 import { NRDCPermission, NRDocument, NRRole,
          NRStage, NRSTPermission, NRUser,
          NRWFPermission, NRWorkflow } from "../entity";
-import { common } from "./Common";
-import { validators } from "./Validators";
+import { common } from "../services/Common";
+import { validators } from "../services/Validators";
 
 // Provides API services for documents.
 @Path("/api/documents")
 @Tags("Documents")
-export class DocumentService {
+export class DocumentResource {
     // Context manager to grab injected user from the request.
     @Context
     private context: ServiceContext;

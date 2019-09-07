@@ -10,10 +10,10 @@ import {HttpError} from "typescript-rest/dist/server/model/errors";
 
 import { NRUser } from "./entity";
 import { NRRole } from "./entity";
-import { DocumentService } from "./services/DocumentService";
-import { RoleService } from "./services/RoleService";
-import { UserService } from "./services/UserService";
-import { WorkflowService } from "./services/WorkflowService";
+import { DocumentResource } from "./resources/DocumentResource";
+import { RoleResource } from "./resources/RoleResource";
+import { UserResource } from "./resources/UserResource";
+import { WorkflowResource } from "./resources/WorkflowResource";
 
 dotenv.config();
 const port = process.env.SERVICE_PORT || 8000;
@@ -32,7 +32,7 @@ function(req: express.Request, res: express.Response, next: express.NextFunction
 });
 
 // Build typescript-rest services.
-Server.buildServices(app, UserService, RoleService, DocumentService, WorkflowService);
+Server.buildServices(app, UserResource, RoleResource, DocumentResource, WorkflowResource);
 
 // Add error handler to return JSON error.
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
