@@ -1,22 +1,28 @@
-import * as express from "express";
-import { getManager } from "typeorm";
-import { DELETE, Errors, GET, Path, PathParam,
-         POST, PreProcessor, PUT } from "typescript-rest";
+import { Repository } from "typeorm";
+import { DELETE, Errors, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 
-import { NRDCPermission, NRDocument, NRRole,
-         NRStage, NRSTPermission, NRUser,
-         NRWFPermission, NRWorkflow } from "../entity";
+import { Inject, Service } from "typedi";
+import { InjectRepository } from "typeorm-typedi-extensions";
+import { NRRole, NRUser } from "../entity";
 import { common } from "../services/Common";
+import { UserService } from "../services/UserService";
 import { validators } from "../services/Validators";
 
 // Provides API services for users.
+@Service()
 @Path("/api/users")
 @Tags("Users")
 export class UserResource {
     // Database interactions managers.
-    private roleRepository = getManager().getRepository(NRRole);
-    private userRepository = getManager().getRepository(NRUser);
+    @InjectRepository(NRRole)
+    private roleRepository: Repository<NRRole>; // = getManager().getRepository(NRRole);
+
+    @InjectRepository(NRUser)
+    private userRepository: Repository<NRUser>; // getManager().getRepository(NRUser);
+
+    @Inject()
+    private userService: UserService;
 
     /**
      * Create a new user.
@@ -69,7 +75,7 @@ export class UserResource {
     @GET
     @Path("/:uid")
     public async getUser(@PathParam("uid") uid: number): Promise<NRUser> {
-        return await common.getUser(uid, this.userRepository);
+        return await this.userService.getUser(uid);
     }
 
     /**
@@ -87,7 +93,7 @@ export class UserResource {
     @PreProcessor(validators.updateUserValidator)
     public async updateUser(@IsInt @PathParam("uid") uid: number,
                             user: NRUser): Promise<NRUser> {
-        const currUser = await common.getUser(uid, this.userRepository);
+        const currUser = await this.userService.getUser(uid);
 
         // Update current stored username if given one.
         if (user.name) {
@@ -128,7 +134,7 @@ export class UserResource {
     @DELETE
     @Path("/:uid")
     public async deleteUser(@IsInt @PathParam("uid") uid: number) {
-        const currUser = await common.getUser(uid, this.userRepository);
+        const currUser = await this.userService.getUser(uid);
 
         try {
             await this.userRepository.remove(currUser);
@@ -151,7 +157,7 @@ export class UserResource {
     @Path("/:uid/role/:rid")
     public async addRole(@IsInt @PathParam("uid") uid: number,
                          @IsInt @PathParam("rid") rid: number): Promise<NRUser> {
-        const currUser = await common.getUser(uid, this.userRepository);
+        const currUser = await this.userService.getUser(uid);
         const newRole = await common.getRole(rid, this.roleRepository);
 
         currUser.roles.push(newRole);
@@ -177,7 +183,7 @@ export class UserResource {
     @GET
     @Path("/:uid/roles")
     public async getRoles(@IsInt @PathParam("uid") uid: number): Promise<NRRole[]> {
-        const currUser = await common.getUser(uid, this.userRepository);
+        const currUser = await this.userService.getUser(uid);
 
         try {
             return await currUser.roles;
@@ -202,7 +208,7 @@ export class UserResource {
     @Path("/:uid/role/:rid")
     public async removeRole(@IsInt @PathParam("uid") uid: number,
                             @IsInt @PathParam("rid") rid: number) {
-        const currUser = await common.getUser(uid, this.userRepository);
+        const currUser = await this.userService.getUser(uid);
         const currRole = await common.getRole(rid, this.roleRepository);
 
         try {

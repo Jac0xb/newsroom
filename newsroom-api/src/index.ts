@@ -4,35 +4,39 @@ import express from "express";
 import fs from "fs";
 import "reflect-metadata";
 import swaggerUi from "swagger-ui-express";
-import {createConnection} from "typeorm";
-import {Server} from "typescript-rest";
-import {HttpError} from "typescript-rest/dist/server/model/errors";
+import { createConnection, useContainer } from "typeorm";
+import { Server } from "typescript-rest";
+import { HttpError } from "typescript-rest/dist/server/model/errors";
 
+import { Container } from "typedi";
 import { NRUser } from "./entity";
-import { NRRole } from "./entity";
 import { DocumentResource } from "./resources/DocumentResource";
 import { RoleResource } from "./resources/RoleResource";
 import { UserResource } from "./resources/UserResource";
 import { WorkflowResource } from "./resources/WorkflowResource";
+import { TypeDIServiceFactory } from "./TypeDIServiceFactory";
 
 dotenv.config();
+
 const port = process.env.SERVICE_PORT || 8000;
 const app = express();
 
-// Demo middleware to inject a user into the request.
-app.use("/api",
-function(req: express.Request, res: express.Response, next: express.NextFunction) {
-    req.user = new NRUser();
-    req.user.id = 1;
-    req.user.name = "tcruise";
-    req.user.firstName = "Tom";
-    req.user.lastName = "Cruise";
-    req.user.password = "tcruise";
-    next();
-});
+Server.registerServiceFactory(new TypeDIServiceFactory());
 
 // Build typescript-rest services.
 Server.buildServices(app, UserResource, RoleResource, DocumentResource, WorkflowResource);
+
+// Demo middleware to inject a user into the request.
+app.use("/api",
+    function(req: express.Request, res: express.Response, next: express.NextFunction) {
+        req.user = new NRUser();
+        req.user.id = 1;
+        req.user.name = "tcruise";
+        req.user.firstName = "Tom";
+        req.user.lastName = "Cruise";
+        req.user.password = "tcruise";
+        next();
+    });
 
 // Add error handler to return JSON error.
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -61,6 +65,9 @@ fs.readFile("dist/swagger.json", "UTF-8", (err, data) => {
 
     app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 });
+
+// Register TypeDI Container with TypeORM
+useContainer(Container);
 
 // Start app server and listen for connections.
 createConnection().then(async (connection) => {

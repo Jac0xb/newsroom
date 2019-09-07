@@ -1,13 +1,23 @@
-import * as express from "express";
-import { getManager } from "typeorm";
-import { Context, DELETE, Errors, GET, Path, PathParam,
-         POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
+import { Repository } from "typeorm";
+import {
+    Context,
+    DELETE,
+    Errors,
+    GET,
+    Path,
+    PathParam,
+    POST,
+    PreProcessor,
+    PUT,
+    ServiceContext,
+} from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 
-import { NRDCPermission, NRDocument, NRRole,
-         NRStage, NRSTPermission, NRUser,
-         NRWFPermission, NRWorkflow } from "../entity";
+import { Inject } from "typedi";
+import { InjectRepository } from "typeorm-typedi-extensions";
+import { NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
 import { common } from "../services/Common";
+import { UserService } from "../services/UserService";
 import { validators } from "../services/Validators";
 
 // Provides API services for workflows, and their associated stages.
@@ -18,15 +28,20 @@ export class WorkflowResource {
     @Context
     private context: ServiceContext;
 
-    // Database interactions managers.
-    private roleRepository = getManager().getRepository(NRRole);
-    private userRepository = getManager().getRepository(NRUser);
-    private stageRepository = getManager().getRepository(NRStage);
-    private workflowRepository = getManager().getRepository(NRWorkflow);
-    private documentRepository = getManager().getRepository(NRDocument);
-    private permWFRepository = getManager().getRepository(NRWFPermission);
-    private permSTRepository = getManager().getRepository(NRSTPermission);
-    private permDCRepository = getManager().getRepository(NRDCPermission);
+    @InjectRepository(NRStage)
+    private stageRepository: Repository<NRStage>;
+
+    @InjectRepository(NRWorkflow)
+    private workflowRepository: Repository<NRWorkflow>;
+
+    @InjectRepository(NRWFPermission)
+    private permWFRepository: Repository<NRWFPermission>;
+
+    @InjectRepository(NRSTPermission)
+    private permSTRepository: Repository<NRSTPermission>;
+
+    @Inject()
+    private userService: UserService;
 
     /**
      * Create a new workflow based on the passed information.
@@ -43,10 +58,9 @@ export class WorkflowResource {
     @PreProcessor(validators.createWorkflowValidator)
     public async createWorkflow(workflow: NRWorkflow): Promise<NRWorkflow> {
         const sessionUser = await common.getUserFromContext(this.context);
-        const creator = await common.getUser(sessionUser.id, this.userRepository);
 
         // The creator is whoever is logged in.
-        workflow.creator = creator;
+        workflow.creator = await this.userService.getUser(sessionUser.id);
 
         try {
             return await this.workflowRepository.save(workflow);
@@ -152,14 +166,14 @@ export class WorkflowResource {
                 .createQueryBuilder(common.STGE_TABLE)
                 .delete()
                 .from(NRStage)
-                .andWhere("workflowId = :wid", { wid: currWorkflow.id })
+                .andWhere("workflowId = :wid", {wid: currWorkflow.id})
                 .execute();
 
             await this.workflowRepository
                 .createQueryBuilder(common.WRKF_TABLE)
                 .delete()
                 .from(NRWorkflow)
-                .andWhere("id = :wid", { wid: currWorkflow.id })
+                .andWhere("id = :wid", {wid: currWorkflow.id})
                 .execute();
         } catch (err) {
             console.log(err);
@@ -186,7 +200,7 @@ export class WorkflowResource {
     @Path("/:wid/stages")
     @PreProcessor(validators.addStageValidator)
     public async appendStage(@IsInt @PathParam("wid") wid: number,
-                             stage: NRStage ): Promise<NRStage> {
+                             stage: NRStage): Promise<NRStage> {
         const sessionUser = common.getUserFromContext(this.context);
         const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
         await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
@@ -232,7 +246,7 @@ export class WorkflowResource {
             // Grab all the stages for this workflow.
             const stages = await this.stageRepository
                 .createQueryBuilder(common.STGE_TABLE)
-                .where("stage.workflowId = :id", { id: currWorkflow.id })
+                .where("stage.workflowId = :id", {id: currWorkflow.id})
                 .getMany();
 
             // Return them in ascending sequence order.
@@ -267,8 +281,8 @@ export class WorkflowResource {
             // Grab the specified stage for the right workflow.
             const stage = await this.stageRepository
                 .createQueryBuilder(common.STGE_TABLE)
-                .where("stage.workflowId = :id", { id: currWorkflow.id })
-                .andWhere("stage.id = :stageId", { stageId: sid })
+                .where("stage.workflowId = :id", {id: currWorkflow.id})
+                .andWhere("stage.id = :stageId", {stageId: sid})
                 .getOne();
 
             return stage;
@@ -329,9 +343,9 @@ export class WorkflowResource {
                     await this.stageRepository
                         .createQueryBuilder(common.STGE_TABLE)
                         .update(NRStage)
-                        .set({ sequenceId: currSeq + 1 })
-                        .where("sequenceId = :sid ", { sid: currSeq })
-                        .andWhere("workflowId = :wid", { wid: currWorkflow.id })
+                        .set({sequenceId: currSeq + 1})
+                        .where("sequenceId = :sid ", {sid: currSeq})
+                        .andWhere("workflowId = :wid", {wid: currWorkflow.id})
                         .execute();
 
                     currSeq--;
@@ -379,7 +393,7 @@ export class WorkflowResource {
                 .createQueryBuilder(common.STGE_TABLE)
                 .delete()
                 .from(NRStage)
-                .where("id = :stageId ", { stageId: currStage.id })
+                .where("id = :stageId ", {stageId: currStage.id})
                 .execute();
 
             let currSeq = currStage.sequenceId;
@@ -394,8 +408,8 @@ export class WorkflowResource {
                 await this.stageRepository
                     .createQueryBuilder(common.STGE_TABLE)
                     .update(NRStage)
-                    .set({ sequenceId: currSeq - 1 })
-                    .where("sequenceId = :id ", { id: currSeq })
+                    .set({sequenceId: currSeq - 1})
+                    .where("sequenceId = :id ", {id: currSeq})
                     .execute();
 
                 currSeq++;
@@ -458,7 +472,7 @@ export class WorkflowResource {
         const maxSeq = await this.stageRepository
             .createQueryBuilder(common.STGE_TABLE)
             .select("MAX(stage.sequenceId)", "max")
-            .where("stage.workflowId = :id", { id: currWorkflow.id })
+            .where("stage.workflowId = :id", {id: currWorkflow.id})
             .getRawOne();
 
         return maxSeq.max;

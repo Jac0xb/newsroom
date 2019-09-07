@@ -1,12 +1,9 @@
-import * as express from "express";
-import { getManager } from "typeorm";
-import { Context, DELETE, GET, Path, PathParam,
-         POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
+import { Repository } from "typeorm";
+import { Context, DELETE, GET, Path, PathParam, POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 
-import { NRDCPermission, NRDocument, NRRole,
-         NRStage, NRSTPermission, NRUser,
-         NRWFPermission, NRWorkflow } from "../entity";
+import { InjectRepository } from "typeorm-typedi-extensions";
+import { NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow } from "../entity";
 import { common } from "../services/Common";
 import { validators } from "../services/Validators";
 
@@ -18,14 +15,20 @@ export class DocumentResource {
     @Context
     private context: ServiceContext;
 
-    // Database interactions managers.
-    private roleRepository = getManager().getRepository(NRRole);
-    private stageRepository = getManager().getRepository(NRStage);
-    private workflowRepository = getManager().getRepository(NRWorkflow);
-    private documentRepository = getManager().getRepository(NRDocument);
-    private permWFRepository = getManager().getRepository(NRWFPermission);
-    private permSTRepository = getManager().getRepository(NRSTPermission);
-    private permDCRepository = getManager().getRepository(NRDCPermission);
+    @InjectRepository(NRStage)
+    private stageRepository: Repository<NRStage>;
+
+    @InjectRepository(NRWorkflow)
+    private workflowRepository: Repository<NRWorkflow>;
+
+    @InjectRepository(NRDocument)
+    private documentRepository: Repository<NRDocument>;
+
+    @InjectRepository(NRSTPermission)
+    private permSTRepository: Repository<NRSTPermission>;
+
+    @InjectRepository(NRDCPermission)
+    private permDCRepository: Repository<NRDCPermission>;
 
     /**
      * Create a new document based on passed information.
@@ -50,8 +53,8 @@ export class DocumentResource {
 
             currStage = await this.stageRepository
                 .createQueryBuilder(common.STGE_TABLE)
-                .where("stage.sequenceId = :sid", { sid: minSeq })
-                .andWhere("stage.workflowId = :wid ", { wid: currWorkflow.id })
+                .where("stage.sequenceId = :sid", {sid: minSeq})
+                .andWhere("stage.workflowId = :wid ", {wid: currWorkflow.id})
                 .getOne();
 
             document.stage = currStage;
@@ -96,7 +99,7 @@ export class DocumentResource {
     public async getDocumentsForAuthor(@PathParam("aid") aid: number): Promise<NRDocument[]> {
         return await this.documentRepository
             .createQueryBuilder(common.DOCU_TABLE)
-            .where("document.creator = :author", { author: aid })
+            .where("document.creator = :author", {author: aid})
             .getMany();
     }
 
@@ -115,7 +118,7 @@ export class DocumentResource {
 
         return await this.documentRepository
             .createQueryBuilder(common.DOCU_TABLE)
-            .where("stageId = :sId", { sId: assocStage.id })
+            .where("stageId = :sId", {sId: assocStage.id})
             .getMany();
     }
 
@@ -136,7 +139,7 @@ export class DocumentResource {
 
         const allDocs = await this.documentRepository
             .createQueryBuilder(common.DOCU_TABLE)
-            .where("workflowId = :id", { id: wid })
+            .where("workflowId = :id", {id: wid})
             .getMany();
 
         return allDocs;
@@ -212,7 +215,7 @@ export class DocumentResource {
             .createQueryBuilder(common.DOCU_TABLE)
             .delete()
             .from(NRDocument)
-            .andWhere("id = :id", { id: currDocument.id })
+            .andWhere("id = :id", {id: currDocument.id})
             .execute();
     }
 
@@ -232,7 +235,7 @@ export class DocumentResource {
         const stageID = await this.documentRepository
             .createQueryBuilder(common.DOCU_TABLE)
             .select("document.stageId", "val")
-            .where("document.id = :did", { did: currDocument.id })
+            .where("document.id = :did", {did: currDocument.id})
             .getRawOne();
 
         const currStage = await common.getStage(stageID.val, this.stageRepository);
@@ -240,7 +243,7 @@ export class DocumentResource {
         const workflowID = await this.documentRepository
             .createQueryBuilder(common.DOCU_TABLE)
             .select("document.workflowId", "val")
-            .where("document.id = :did", { did: currDocument.id })
+            .where("document.id = :did", {did: currDocument.id})
             .getRawOne();
 
         // Used to determine if the document is done in its workflow.
@@ -252,8 +255,8 @@ export class DocumentResource {
             const nextId = await this.stageRepository
                 .createQueryBuilder(common.STGE_TABLE)
                 .select("stage.id", "val")
-                .where("stage.sequenceId = :sid", { sid: currStage.sequenceId + 1 })
-                .andWhere("stage.workflowId = :wid", { wid: workflowID.val })
+                .where("stage.sequenceId = :sid", {sid: currStage.sequenceId + 1})
+                .andWhere("stage.workflowId = :wid", {wid: workflowID.val})
                 .getRawOne();
 
             return nextId.val;
@@ -291,8 +294,8 @@ export class DocumentResource {
             // Get id of next stage in sequence.
             const nextStage = await this.stageRepository
                 .createQueryBuilder(common.STGE_TABLE)
-                .where("stage.sequenceId = :sid", { sid: currStage.sequenceId + 1 })
-                .andWhere("stage.workflowId = :wid", { wid: workflowId })
+                .where("stage.sequenceId = :sid", {sid: currStage.sequenceId + 1})
+                .andWhere("stage.workflowId = :wid", {wid: workflowId})
                 .getOne();
 
             currDocument.stage = nextStage;
@@ -322,7 +325,7 @@ export class DocumentResource {
         const stageID = await this.documentRepository
             .createQueryBuilder(common.DOCU_TABLE)
             .select("document.stageId", "val")
-            .where("document.id = :did", { did: currDocument.id })
+            .where("document.id = :did", {did: currDocument.id})
             .getRawOne();
 
         const currStage = await common.getStage(stageID.val, this.stageRepository);
@@ -330,7 +333,7 @@ export class DocumentResource {
         const workflowID = await this.documentRepository
             .createQueryBuilder(common.DOCU_TABLE)
             .select("document.workflowId", "val")
-            .where("document.id = :did", { did: currDocument.id })
+            .where("document.id = :did", {did: currDocument.id})
             .getRawOne();
 
         // The first stage in any workflow is always sequence 1.
@@ -342,8 +345,8 @@ export class DocumentResource {
             const prevId = await this.stageRepository
                 .createQueryBuilder(common.STGE_TABLE)
                 .select("stage.id", "val")
-                .where("stage.sequenceId = :sid", { sid: currStage.sequenceId - 1 })
-                .andWhere("stage.workflowId = :wid", { wid: workflowID.val })
+                .where("stage.sequenceId = :sid", {sid: currStage.sequenceId - 1})
+                .andWhere("stage.workflowId = :wid", {wid: workflowID.val})
                 .getRawOne();
 
             return prevId.val;
@@ -379,8 +382,8 @@ export class DocumentResource {
             // Get id of next stage in sequence.
             const prevStage = await this.stageRepository
                 .createQueryBuilder(common.STGE_TABLE)
-                .where("stage.sequenceId = :sid", { sid: currStage.sequenceId - 1 })
-                .andWhere("stage.workflowId = :wid", { wid: workflowId })
+                .where("stage.sequenceId = :sid", {sid: currStage.sequenceId - 1})
+                .andWhere("stage.workflowId = :wid", {wid: workflowId})
                 .getOne();
 
             // Must have WRITE on previous stage to move backward.
@@ -402,7 +405,7 @@ export class DocumentResource {
         const maxSeq = await this.stageRepository
             .createQueryBuilder(common.STGE_TABLE)
             .select("MAX(stage.sequenceId)", "max")
-            .where("stage.workflowId = :id", { id: currWorkflow.id })
+            .where("stage.workflowId = :id", {id: currWorkflow.id})
             .getRawOne();
 
         return maxSeq.max;
@@ -416,7 +419,7 @@ export class DocumentResource {
         const minSeq = await this.stageRepository
             .createQueryBuilder(common.STGE_TABLE)
             .select("MIN(stage.sequenceId)", "min")
-            .where("stage.workflowId = :id", { id: currWorkflow.id })
+            .where("stage.workflowId = :id", {id: currWorkflow.id})
             .getRawOne();
 
         return minSeq.min;

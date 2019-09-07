@@ -1,11 +1,16 @@
-import * as express from "express";
 import { getManager, Repository } from "typeorm";
-import { Errors } from "typescript-rest";
-import { ServiceContext } from "typescript-rest";
+import { Errors, ServiceContext } from "typescript-rest";
 
-import { NRDCPermission, NRDocument, NRRole,
-         NRStage, NRSTPermission, NRUser,
-         NRWFPermission, NRWorkflow } from "../entity";
+import {
+    NRDCPermission,
+    NRDocument,
+    NRRole,
+    NRStage,
+    NRSTPermission,
+    NRUser,
+    NRWFPermission,
+    NRWorkflow,
+} from "../entity";
 
 // Common functionality used in different places.
 export namespace common {
@@ -145,8 +150,8 @@ export namespace common {
                     const roleRight = await repo
                         .createQueryBuilder(common.WFPERM_TABLE)
                         .select(`MAX(${common.WFPERM_TABLE}.access)`, "max")
-                        .where(`${common.WFPERM_TABLE}.roleId = :id`, { id: role.id })
-                        .andWhere(`${common.WFPERM_TABLE}.workflowId = :wfid`, { wfid: wid })
+                        .where(`${common.WFPERM_TABLE}.roleId = :id`, {id: role.id})
+                        .andWhere(`${common.WFPERM_TABLE}.workflowId = :wfid`, {wfid: wid})
                         .getRawOne();
 
                     if (roleRight.max === common.WRITE) {
@@ -181,8 +186,8 @@ export namespace common {
             const roleRight = await repo
                 .createQueryBuilder(common.STPERM_TABLE)
                 .select(`MAX(${common.STPERM_TABLE}.access)`, "max")
-                .where(`${common.STPERM_TABLE}.roleId = :id`, { id: role.id })
-                .andWhere(`${common.STPERM_TABLE}.stageId = :stid`, { stid: sid })
+                .where(`${common.STPERM_TABLE}.roleId = :id`, {id: role.id})
+                .andWhere(`${common.STPERM_TABLE}.stageId = :stid`, {stid: sid})
                 .getRawOne();
 
             if (roleRight.max === common.WRITE) {
@@ -210,8 +215,8 @@ export namespace common {
             const roleRight = await repo
                 .createQueryBuilder(common.DCPERM_TABLE)
                 .select(`MAX(${common.DCPERM_TABLE}.access)`, "max")
-                .where(`${common.DCPERM_TABLE}.roleId = :id`, { id: role.id })
-                .andWhere(`${common.DCPERM_TABLE}.documentId = :dcid`, { dcid: did })
+                .where(`${common.DCPERM_TABLE}.roleId = :id`, {id: role.id})
+                .andWhere(`${common.DCPERM_TABLE}.documentId = :dcid`, {dcid: did})
                 .getRawOne();
 
             if (roleRight.max === common.WRITE) {

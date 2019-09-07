@@ -1,12 +1,20 @@
-import * as express from "express";
-import { getManager } from "typeorm";
-import { Context, DELETE, Errors, GET, Path, PathParam,
-         POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
+import { Repository } from "typeorm";
+import {
+    Context,
+    DELETE,
+    Errors,
+    GET,
+    Path,
+    PathParam,
+    POST,
+    PreProcessor,
+    PUT,
+    ServiceContext,
+} from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 
-import { NRDCPermission, NRDocument, NRRole,
-         NRStage, NRSTPermission, NRUser,
-         NRWFPermission, NRWorkflow } from "../entity";
+import { InjectRepository } from "typeorm-typedi-extensions";
+import { NRDCPermission, NRDocument, NRRole, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
 import { common } from "../services/Common";
 import { validators } from "../services/Validators";
 
@@ -18,14 +26,26 @@ export class RoleResource {
     @Context
     private context: ServiceContext;
 
-    // Database interactions managers.
-    private roleRepository = getManager().getRepository(NRRole);
-    private stageRepository = getManager().getRepository(NRStage);
-    private workflowRepository = getManager().getRepository(NRWorkflow);
-    private documentRepository = getManager().getRepository(NRDocument);
-    private permWFRepository = getManager().getRepository(NRWFPermission);
-    private permSTRepository = getManager().getRepository(NRSTPermission);
-    private permDCRepository = getManager().getRepository(NRDCPermission);
+    @InjectRepository(NRRole)
+    private roleRepository: Repository<NRRole>;
+
+    @InjectRepository(NRStage)
+    private stageRepository: Repository<NRStage>;
+
+    @InjectRepository(NRWorkflow)
+    private workflowRepository: Repository<NRWorkflow>;
+
+    @InjectRepository(NRDocument)
+    private documentRepository: Repository<NRDocument>;
+
+    @InjectRepository(NRWFPermission)
+    private permWFRepository: Repository<NRWFPermission>;
+
+    @InjectRepository(NRSTPermission)
+    private permSTRepository: Repository<NRSTPermission>;
+
+    @InjectRepository(NRDCPermission)
+    private permDCRepository: Repository<NRDCPermission>;
 
     /**
      * Create a new role.
@@ -257,7 +277,7 @@ export class RoleResource {
             await this.permWFRepository.save(newPerm);
             await this.documentRepository.save(doc);
             return await this.roleRepository.save(role);
-         } catch (err) {
+        } catch (err) {
             console.log(err);
 
             const errStr = `Error adding DC permission.`;
