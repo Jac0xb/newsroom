@@ -1,16 +1,7 @@
 import { getManager, Repository } from "typeorm";
 import { Errors, ServiceContext } from "typescript-rest";
 
-import {
-    NRDCPermission,
-    NRDocument,
-    NRRole,
-    NRStage,
-    NRSTPermission,
-    NRUser,
-    NRWFPermission,
-    NRWorkflow,
-} from "../entity";
+import { NRDCPermission, NRDocument, NRRole, NRStage, NRSTPermission, NRUser, NRWFPermission } from "../entity";
 
 // Common functionality used in different places.
 export namespace common {
@@ -28,19 +19,6 @@ export namespace common {
     // Get the user from the ServiceContext containing the request.
     export function getUserFromContext(context: ServiceContext) {
         return context.request.user;
-    }
-
-    // Get a workflow based on ID.
-    export async function getWorkflow(wid: number,
-                                      repo: Repository<NRWorkflow>): Promise<NRWorkflow> {
-        try {
-            return await repo.findOneOrFail(wid);
-        } catch (err) {
-            console.error("Error getting workflow:", err);
-
-            const errStr = `Workflow with ID ${wid} was not found.`;
-            throw new Errors.NotFoundError(errStr);
-        }
     }
 
     // Get a stage based on ID.

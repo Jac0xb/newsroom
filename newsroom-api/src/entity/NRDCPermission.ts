@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 import { common } from "../services/Common";
 import { NRDocument } from "./NRDocument";
@@ -25,7 +25,7 @@ export class NRDCPermission {
     @ManyToOne(
         (type) => NRDocument,
         (document) => document.permissions,
-        { eager: true, onDelete: "CASCADE" },
+        {eager: true, onDelete: "CASCADE"},
     )
     public document: NRDocument;
 
@@ -37,7 +37,7 @@ export class NRDCPermission {
     @ManyToOne(
         (type) => NRRole,
         (role) => role.dcpermissions,
-        { eager: true, onDelete: "CASCADE" },
+        {eager: true, onDelete: "CASCADE"},
     )
     public role: NRRole;
 }

@@ -2,10 +2,12 @@ import { Repository } from "typeorm";
 import { Context, DELETE, GET, Path, PathParam, POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 
+import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow } from "../entity";
 import { common } from "../services/Common";
 import { validators } from "../services/Validators";
+import { WorkflowService } from "../services/WorkflowService";
 
 // Provides API services for documents.
 @Path("/api/documents")
@@ -30,6 +32,9 @@ export class DocumentResource {
     @InjectRepository(NRDCPermission)
     private permDCRepository: Repository<NRDCPermission>;
 
+    @Inject()
+    private workflowService: WorkflowService;
+
     /**
      * Create a new document based on passed information.
      *
@@ -44,7 +49,7 @@ export class DocumentResource {
     @POST
     @PreProcessor(validators.createDocumentValidator)
     public async createDocument(document: NRDocument): Promise<NRDocument> {
-        const currWorkflow = await common.getWorkflow(document.workflow.id, this.workflowRepository);
+        const currWorkflow = await this.workflowService.getWorkflow(document.workflow.id);
 
         // Assign the document to the first stage in a workflow if no stage was passed.
         if (!(document.stage)) {
@@ -135,7 +140,7 @@ export class DocumentResource {
     @GET
     public async getAllDocumentsForWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRDocument[]> {
         // Check for existence.
-        await common.getWorkflow(wid, this.workflowRepository);
+        await this.workflowService.getWorkflow(wid);
 
         const allDocs = await this.documentRepository
             .createQueryBuilder(common.DOCU_TABLE)
@@ -167,7 +172,7 @@ export class DocumentResource {
         await common.checkDCWritePermissions(sessionUser, did, this.permDCRepository);
 
         // Check for existence.
-        await common.getWorkflow(document.workflow.id, this.workflowRepository);
+        await this.workflowService.getWorkflow(document.workflow.id);
         await common.getStage(document.stage.id, this.stageRepository);
 
         if (document.name) {
@@ -399,7 +404,7 @@ export class DocumentResource {
 
     // Get the maximum sequenceId for the given workflows stages.
     private async getMaxStageSequenceId(wid: number): Promise<number> {
-        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        const currWorkflow = await this.workflowService.getWorkflow(wid);
 
         // Grab the next sequenceId for this set of workflow stages.
         const maxSeq = await this.stageRepository
@@ -413,7 +418,7 @@ export class DocumentResource {
 
     // Get the minimum sequenceId for the given workflows stages.
     private async getMinStageSequenceId(wid: number): Promise<number> {
-        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        const currWorkflow = await this.workflowService.getWorkflow(wid);
 
         // Grab the next sequenceId for this set of workflow stages.
         const minSeq = await this.stageRepository

@@ -19,6 +19,7 @@ import { NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
 import { common } from "../services/Common";
 import { UserService } from "../services/UserService";
 import { validators } from "../services/Validators";
+import { WorkflowService } from "../services/WorkflowService";
 
 // Provides API services for workflows, and their associated stages.
 @Path("/api/workflows")
@@ -42,6 +43,9 @@ export class WorkflowResource {
 
     @Inject()
     private userService: UserService;
+
+    @Inject()
+    private workflowService: WorkflowService;
 
     /**
      * Create a new workflow based on the passed information.
@@ -101,7 +105,7 @@ export class WorkflowResource {
     @GET
     @Path("/:wid")
     public async getWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRWorkflow> {
-        return common.getWorkflow(wid, this.workflowRepository);
+        return this.workflowService.getWorkflow(wid);
     }
 
     /**
@@ -123,7 +127,7 @@ export class WorkflowResource {
     public async updateWorkflow(@IsInt @PathParam("wid") wid: number,
                                 workflow: NRWorkflow): Promise<NRWorkflow> {
         const sessionUser = common.getUserFromContext(this.context);
-        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        const currWorkflow = await this.workflowService.getWorkflow(wid);
         await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
 
         // Update current stored name if given one.
@@ -158,7 +162,7 @@ export class WorkflowResource {
     @Path("/:wid")
     public async deleteWorkflow(@IsInt @PathParam("wid") wid: number) {
         const sessionUser = common.getUserFromContext(this.context);
-        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        const currWorkflow = await this.workflowService.getWorkflow(wid);
         await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
 
         try {
@@ -202,7 +206,7 @@ export class WorkflowResource {
     public async appendStage(@IsInt @PathParam("wid") wid: number,
                              stage: NRStage): Promise<NRStage> {
         const sessionUser = common.getUserFromContext(this.context);
-        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        const currWorkflow = await this.workflowService.getWorkflow(wid);
         await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
 
         // Grab the next sequence ID for this set of workflow stages.
@@ -239,7 +243,7 @@ export class WorkflowResource {
     @Path("/:wid/stages")
     public async getStages(@IsInt @PathParam("wid") wid: number): Promise<NRStage[]> {
         const sessionUser = common.getUserFromContext(this.context);
-        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        const currWorkflow = await this.workflowService.getWorkflow(wid);
         await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
 
         try {
@@ -274,7 +278,7 @@ export class WorkflowResource {
     public async getStage(@IsInt @PathParam("wid") wid: number,
                           @IsInt @PathParam("sid") sid: number): Promise<NRStage> {
         const sessionUser = common.getUserFromContext(this.context);
-        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        const currWorkflow = await this.workflowService.getWorkflow(wid);
         await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
 
         try {
@@ -319,7 +323,7 @@ export class WorkflowResource {
         }
 
         const sessionUser = common.getUserFromContext(this.context);
-        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        const currWorkflow = await this.workflowService.getWorkflow(wid);
         await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
 
         try {
@@ -466,7 +470,7 @@ export class WorkflowResource {
 
     // Get the maximum sequenceId for the given workflows stages.
     private async getMaxStageSequenceId(wid: number): Promise<number> {
-        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        const currWorkflow = await this.workflowService.getWorkflow(wid);
 
         // Grab the next sequenceId for this set of workflow stages.
         const maxSeq = await this.stageRepository

@@ -13,10 +13,12 @@ import {
 } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 
+import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRDCPermission, NRDocument, NRRole, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
 import { common } from "../services/Common";
 import { validators } from "../services/Validators";
+import { WorkflowService } from "../services/WorkflowService";
 
 // Provides API services for roles.
 @Path("/api/roles")
@@ -46,6 +48,9 @@ export class RoleResource {
 
     @InjectRepository(NRDCPermission)
     private permDCRepository: Repository<NRDCPermission>;
+
+    @Inject()
+    private workflowService: WorkflowService;
 
     /**
      * Create a new role.
@@ -180,7 +185,7 @@ export class RoleResource {
         }
 
         const role = await common.getRole(rid, this.roleRepository);
-        const wf = await common.getWorkflow(newPerm.workflow.id, this.workflowRepository);
+        const wf = await this.workflowService.getWorkflow(newPerm.workflow.id);
 
         try {
             newPerm.workflow = wf;
