@@ -4,7 +4,7 @@ export function styles(theme: Theme)  {
     return (
     {
 		outerGrid: {
-			padding: "16px",
+			padding: "0px 24px",
 			display: "flex",
 			flexWrap: "wrap",
 			"& > *" : {
@@ -26,6 +26,8 @@ export function styles(theme: Theme)  {
 			marginTop: 0,
 			marginBottom: 0
 			
-		}
+        },
+        layout: {
+        }
     } as StyleRules);
 }

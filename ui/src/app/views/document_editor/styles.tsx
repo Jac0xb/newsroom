@@ -49,6 +49,10 @@ export function styles(theme: Theme) {
       },
       editor: {
         padding: theme.spacing.unit * 4
+      },
+      embedEditor: {
+        minWidth: "100%",
+        minHeight: "800px"
       }
 
 

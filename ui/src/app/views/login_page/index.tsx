@@ -47,7 +47,7 @@ class LoginPage extends React.Component<LoginPage.Props, LoginPage.State, any> {
         return (
         <React.Fragment>
             <main>
-                <div hidden={registering}>
+                <div className={classes.loginBox} hidden={registering}>
                     <Grid container className={classes.grid} justify="center">
                         <Paper className={classes.paper} elevation={1}>
                             <Typography variant="h5" component="h3">

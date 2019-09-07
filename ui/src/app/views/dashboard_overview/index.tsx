@@ -1,10 +1,8 @@
 import * as React from 'react';
-import { Button } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import DocumentTile from 'app/views/dashboard_overview/components/DocumentTile';
 import { Document } from 'app/models';
 import { styles } from './styles';
-import { Link } from 'react-router-dom';
 import LinkedButton from './components/LinkedButton'
 import axios from 'axios';
 import _ from 'lodash-es';
@@ -48,14 +46,14 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
         const { classes } = this.props;
 
         return (
-            <React.Fragment>
+            <main className={classes.layout}>
                 <div className={classes.buttonGroup}>
                     <LinkedButton />
                 </div>
                 <div className={classes.outerGrid}>
                     {this.renderDocuments()}
                 </div>
-            </React.Fragment>
+            </main>
         );
     }
 }

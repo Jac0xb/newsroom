@@ -7,9 +7,9 @@ export function styles(theme: Theme)  {
 			flex: "flex: 1 1 0"
 		},
 		documentItem: {
-            minWidth: "300px",
             padding: "16px",
             alignItems: "center",
+            flex: "1 1 auto",
 			"& h2": {
 				
 			},

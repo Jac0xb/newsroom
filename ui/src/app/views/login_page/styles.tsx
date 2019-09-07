@@ -2,6 +2,9 @@ import { StyleRules, Theme } from '@material-ui/core/styles';
 
 export function styles(theme: Theme) {
     return ({
+        loginBox: {
+            margin: '128px'
+        },
         grid: {
             marginTop: '20px',
           },

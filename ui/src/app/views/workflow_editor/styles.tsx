@@ -3,10 +3,7 @@ import { StyleRules, Theme } from '@material-ui/core/styles';
 export function styles(theme: Theme) {
     return ({
         menuGroup: {
-            position: 'fixed',
-            left: 0,
-            right: 0,
-            zIndex: 1,
+            
         },
         workflowContent: {
             // marginTop: theme.spacing.unit * 3,
