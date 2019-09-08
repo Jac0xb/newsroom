@@ -1,301 +1,197 @@
 import * as express from "express";
 import { getManager } from "typeorm";
-import { DELETE, Errors, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
+import { Context, DELETE, Errors, GET, Path, PathParam,
+         POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-import { NotFoundError } from "typescript-rest/dist/server/model/errors";
-import { NRStage, NRWorkflow } from "../entity";
 
-/**
- * Provides API services for Workflows, and the stages associated with workflows.
- */
+import { NRDCPermission, NRDocument, NRRole,
+         NRStage, NRSTPermission, NRUser,
+         NRWFPermission, NRWorkflow } from "../entity";
+import { common } from "./Common";
+import { validators } from "./Validators";
+
+// Provides API services for workflows, and their associated stages.
 @Path("/api/workflows")
 @Tags("Workflows")
 export class WorkflowService {
+    // Context manager to grab injected user from the request.
+    @Context
+    private context: ServiceContext;
+
+    // Database interactions managers.
+    private roleRepository = getManager().getRepository(NRRole);
+    private userRepository = getManager().getRepository(NRUser);
+    private stageRepository = getManager().getRepository(NRStage);
+    private workflowRepository = getManager().getRepository(NRWorkflow);
+    private documentRepository = getManager().getRepository(NRDocument);
+    private permWFRepository = getManager().getRepository(NRWFPermission);
+    private permSTRepository = getManager().getRepository(NRSTPermission);
+    private permDCRepository = getManager().getRepository(NRDCPermission);
 
     /**
-     * When creating a new workflow, we need to validate that it has all the
-     * required information to define a workflow. The workflow id should always
-     * be blank because it is an auto-generated column.
-     */
-    private static createWorkflowValidator(req: express.Request) {
-        const workflow = req.body as NRWorkflow;
-
-        if (!workflow.name) {
-            throw new Errors.BadRequestError("Workflow name not present.");
-        }
-
-        if (!(typeof workflow.name === "string")) {
-            throw new Errors.BadRequestError("Workflow name was not a string.");
-        }
-
-        if (workflow.name.length > 256) {
-            throw new Errors.BadRequestError("Workflow name too long, max 256.");
-        }
-
-        if (!workflow.creator) {
-            throw new Errors.BadRequestError("Workflow creator not present.");
-        }
-
-        if (!(typeof workflow.creator === "string")) {
-            throw new Errors.BadRequestError("Workflow creator was not a string.");
-        }
-
-        if (workflow.creator.length > 256) {
-            throw new Errors.BadRequestError("Workflow creator too long, max 256.");
-        }
-
-        if (workflow.description) {
-            if (!(typeof workflow.description === "string")) {
-                throw new Errors.BadRequestError("Workflow description was not a string.");
-            }
-
-            if (workflow.description.length > 1000) {
-                throw new Errors.BadRequestError("Workflow description too long, max 1000");
-            }
-        }
-    }
-
-    /**
-     * When updating a workflow, fields may be empty because only some need to be
-     * updated.
-     */
-    private static updateWorkflowValidator(req: express.Request) {
-        const workflow = req.body as NRWorkflow;
-
-        if (workflow.name) {
-            if (!(typeof workflow.name === "string")) {
-                throw new Errors.BadRequestError("Workflow name was not a string.");
-            }
-        }
-
-        if (workflow.creator) {
-            if (!(typeof workflow.creator === "string")) {
-                throw new Errors.BadRequestError("Workflow creator was not a string.");
-            }
-        }
-
-        if (workflow.description) {
-            if (!(typeof workflow.description === "string")) {
-                throw new Errors.BadRequestError("Workflow description was not a string.");
-            }
-
-            if (workflow.description.length > 1000) {
-                throw new Errors.BadRequestError("Workflow description too long, max 1000.");
-           }
-        }
-    }
-
-    /**
-     * When adding a stage to a workflow, we need to validate that we have
-     * the necessary information within the database to create it.
-     */
-    private static addStageValidator(req: express.Request) {
-        const stage = req.body as NRStage;
-
-        if (!stage.name) {
-            throw new Errors.BadRequestError("Stage name not present.");
-        }
-
-        if (!(typeof stage.name === "string")) {
-            throw new Errors.BadRequestError("Stage name was not a string.");
-        }
-
-        if (!stage.creator) {
-            throw new Errors.BadRequestError("Stage creator not present.");
-        }
-
-        if (!(typeof stage.creator === "string")) {
-            throw new Errors.BadRequestError("Stage creator was not a string.");
-        }
-
-        if (stage.description) {
-            if (!(typeof stage.description === "string")) {
-                throw new Errors.BadRequestError("Stage description was not a string.");
-            }
-
-            if (stage.description.length > 1000) {
-                throw new Errors.BadRequestError("Stage description too long, max 1000.");
-           }
-        }
-    }
-
-    /**
-     * When updating a stage, we need to validate that we at least have an id
-     * to identify it. Other fields may be empty because only some need to be
-     * updated.
-     */
-    private static updateStageValidator(req: express.Request) {
-        const stage = req.body as NRStage;
-
-        if (stage.name) {
-            if (!(typeof stage.name === "string")) {
-                throw new Errors.BadRequestError("Stage name was not a string.");
-            }
-        }
-
-        if (stage.creator) {
-            if (!(typeof stage.creator === "string")) {
-                throw new Errors.BadRequestError("Stage creator was not a string.");
-            }
-        }
-
-        if (stage.description) {
-            if (!(typeof stage.description === "string")) {
-                throw new Errors.BadRequestError("Stage description was not a string.");
-            }
-
-            if (stage.description.length > 1000) {
-                throw new Errors.BadRequestError("Stage description too long, max 1000.");
-           }
-        }
-    }
-    /**
-     * Used to interact with any given workflow/stage in the database.
-     */
-    public workflowRepository = getManager().getRepository(NRWorkflow);
-    public stageRepository = getManager().getRepository(NRStage);
-
-    /**
-     * Create a new entry in the 'workflow' table with the specified
-     * information.
+     * Create a new workflow based on the passed information.
      *
-     * Returns a 400 if:
-     *      - Workflow properties are missing.
-     *      - Workflow properties are wrong type.
+     * Returns:
+     *      - NRWorkflow
+     *      - BadRequestError (400)
+     *          - If workflow properties are missing.
+     *          - If workflow properties are wrong type.
+     *      - ForbiddenError (403)
+     *          - If request user is not allowed to create workflows.
      */
     @POST
-    @PreProcessor(WorkflowService.createWorkflowValidator)
+    @PreProcessor(validators.createWorkflowValidator)
     public async createWorkflow(workflow: NRWorkflow): Promise<NRWorkflow> {
-        return await this.workflowRepository.save(workflow);
-    }
+        const sessionUser = await common.getUserFromContext(this.context);
+        const creator = await common.getUser(sessionUser.id, this.userRepository);
 
-    /**
-     * Get all workflows that exist in the 'workflow' table under the
-     * configured connection.
-     */
-    @GET
-    public getWorkflows(): Promise<NRWorkflow[]> {
-        return this.workflowRepository.find();
-    }
+        // The creator is whoever is logged in.
+        workflow.creator = creator;
 
-    /**
-     * Get a specific workflow from 'workflow' table based on passed
-     * workflow id.
-     *
-     * Returns a 404 if:
-     *      - Workflow not found.
-     */
-    @GET
-    @Path("/:id")
-    public async getWorkflow(@IsInt @PathParam("id") workflowId: number): Promise<NRWorkflow> {
         try {
-            return await this.workflowRepository.findOneOrFail(workflowId);
+            return await this.workflowRepository.save(workflow);
         } catch (err) {
-            console.error("Error getting Workflow:", err);
-            throw new NotFoundError("A Workflow with the given ID was not found.");
+            console.log(err);
+
+            const errStr = `Error creating workflow.`;
+            throw new Errors.InternalServerError(errStr);
         }
     }
 
     /**
-     * Update an entry in the 'workflow' table with the specified
-     * information.
+     * Get all existing workflows.
      *
-     * Returna 400 if:
-     *      - Workflow property types incorrect.
+     * Returns:
+     *      - NRWorkflow[]
+     */
+    @GET
+    public async getWorkflows(): Promise<NRWorkflow[]> {
+        try {
+            return await this.workflowRepository.find();
+        } catch (err) {
+            console.log(err);
+
+            const errStr = `Error getting workflows.`;
+            throw new Errors.InternalServerError(errStr);
+        }
+    }
+
+    /**
+     * Get a specific workflow by ID.
      *
-     * Returns 404 if:
-     *      - Workflow id field is missing or not found.
+     * Returns:
+     *      - NRWorkflow
+     *      - NotFoundError (404)
+     *          - If workflow not found.
+     */
+    @GET
+    @Path("/:wid")
+    public async getWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRWorkflow> {
+        return common.getWorkflow(wid, this.workflowRepository);
+    }
+
+    /**
+     * Update information about a workflow.
+     *
+     * Returns:
+     *      - NRWorkflow
+     *      - BadRequestError (400)
+     *          - If workflow properties are missing.
+     *          - If workflow properties are wrong type.
+     *      - ForbiddenError (403)
+     *          - If request user is not allowed to update workflows.
+     *      - NotFoundError (404)
+     *          - If workflow not found.
      */
     @PUT
-    @Path("/:id")
-    @PreProcessor(WorkflowService.updateWorkflowValidator)
-    public async updateWorkflow(@IsInt @PathParam("id") workflowId: number,
+    @Path("/:wid")
+    @PreProcessor(validators.updateWorkflowValidator)
+    public async updateWorkflow(@IsInt @PathParam("wid") wid: number,
                                 workflow: NRWorkflow): Promise<NRWorkflow> {
-
-        let currWorkflow: NRWorkflow;
-
-        try {
-            currWorkflow = await this.workflowRepository.findOneOrFail(workflowId);
-        } catch (err) {
-            console.error("Error getting Workflow:", err);
-            throw new NotFoundError("A Workflow with the given ID was not found.");
-        }
+        const sessionUser = common.getUserFromContext(this.context);
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
 
         // Update current stored name if given one.
         if (workflow.name) {
             currWorkflow.name = workflow.name;
         }
 
-        // Update creator name if given one.
-        if (workflow.creator) {
-            currWorkflow.creator = workflow.creator;
-        }
-
         if (workflow.description) {
             currWorkflow.description = workflow.description;
         }
 
-        return await this.workflowRepository.save(currWorkflow);
+        try {
+            return await this.workflowRepository.save(currWorkflow);
+        } catch (err) {
+            console.log(err);
+
+            const errStr = `Error updating workflow.`;
+            throw new Errors.InternalServerError(errStr);
+        }
     }
 
     /**
      * Delete a workflow and all associated stages.
      *
-     * Returns 404 if:
-     *      - Workflow id not found.
+     * Returns:
+     *      - ForbiddenError (403)
+     *          - If request user is not allowed to delete workflows.
+     *      - NotFoundError (404)
+     *          - If workflow not found.
      */
     @DELETE
-    @Path("/:id")
-    public async deleteWorkflow(@IsInt @PathParam("id") workflowId: number) {
-        let currWorkflow: NRWorkflow;
+    @Path("/:wid")
+    public async deleteWorkflow(@IsInt @PathParam("wid") wid: number) {
+        const sessionUser = common.getUserFromContext(this.context);
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
 
         try {
-            currWorkflow = await this.workflowRepository.findOneOrFail(workflowId);
+            await this.stageRepository
+                .createQueryBuilder(common.STGE_TABLE)
+                .delete()
+                .from(NRStage)
+                .andWhere("workflowId = :wid", { wid: currWorkflow.id })
+                .execute();
+
+            await this.workflowRepository
+                .createQueryBuilder(common.WRKF_TABLE)
+                .delete()
+                .from(NRWorkflow)
+                .andWhere("id = :wid", { wid: currWorkflow.id })
+                .execute();
         } catch (err) {
-            console.error("Error getting Workflow:", err);
-            throw new NotFoundError("A Workflow with the given ID was not found.");
+            console.log(err);
+
+            const errStr = `Error updating workflow.`;
+            throw new Errors.InternalServerError(errStr);
         }
-
-        await this.stageRepository
-            .createQueryBuilder("stage")
-            .delete()
-            .from(NRStage)
-            .andWhere("workflowId = :wid", { wid: currWorkflow.id })
-            .execute();
-
-        await this.workflowRepository
-            .createQueryBuilder("workflow")
-            .delete()
-            .from(NRWorkflow)
-            .andWhere("id = :wid", { wid: currWorkflow.id })
-            .execute();
     }
 
     /**
      * Add a stage at the end of the workflow.
      *
-     * Returns 400 if:
-     *      - Stage properties missing.
-     *      - Stage property types incorrect.
-     *
-     * Returns 404 if:
-     *      - Workflow id not found.
+     * Returns:
+     *      - NRStage
+     *      - BadRequestError (400)
+     *          - If workflow properties are missing.
+     *          - If workflow properties are wrong type.
+     *      - ForbiddenError (403)
+     *          - If request user is not allowed to update workflows.
+     *      - NotFoundError (404)
+     *          - If workflow not found.
      */
     @POST
-    @Path("/:id/stages")
-    @PreProcessor(WorkflowService.addStageValidator)
-    public async appendStage(stage: NRStage, @IsInt @PathParam("id") workflowId: number): Promise<NRStage> {
+    @Path("/:wid/stages")
+    @PreProcessor(validators.addStageValidator)
+    public async appendStage(@IsInt @PathParam("wid") wid: number,
+                             stage: NRStage ): Promise<NRStage> {
+        const sessionUser = common.getUserFromContext(this.context);
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
 
-        let currWorkflow: NRWorkflow;
-
-        try {
-            currWorkflow = await this.workflowRepository.findOneOrFail(workflowId);
-        } catch (err) {
-            console.error("Error getting Workflow:", err);
-            throw new NotFoundError("A Workflow with the given ID was not found.");
-        }
-
-        // Grab the next sequenceId for this set of workflow stages.
+        // Grab the next sequence ID for this set of workflow stages.
         const maxSeqId = await this.getMaxStageSequenceId(currWorkflow.id);
 
         if (maxSeqId == null) {
@@ -304,270 +200,263 @@ export class WorkflowService {
             stage.sequenceId = maxSeqId + 1;
         }
 
-        // Establish the relationship.
-        stage.workflow = currWorkflow;
+        try {
+            // Establish the relationship and save it.
+            stage.workflow = currWorkflow;
+            await this.workflowRepository.save(currWorkflow);
+            return await this.stageRepository.save(stage);
+        } catch (err) {
+            console.log(err);
 
-        // Save the workflow so that the relationship gets saved
-        // correctly. Then save and return the stage that got
-        // created.
-        await this.workflowRepository.save(currWorkflow);
-        return await this.stageRepository.save(stage);
+            const errStr = `Error appending stage to workflow.`;
+            throw new Errors.InternalServerError(errStr);
+        }
     }
 
     /**
-     * Get all stages that exist in the 'stage' table under the
-     * configured connection for the specified workflow.
+     * Get all stages for a specific workflow.
      *
-     * Returns 404 if:
-     *      - Workflow id not found.
+     * Returns:
+     *      - NRStage[]
+     *      - NotFoundError (404)
+     *          - If workflow not found.
      */
     @GET
-    @Path("/:id/stages")
-    public async getStages(@IsInt @PathParam("id") workflowId: number): Promise<NRStage[]> {
-        let currWorkflow: NRWorkflow;
+    @Path("/:wid/stages")
+    public async getStages(@IsInt @PathParam("wid") wid: number): Promise<NRStage[]> {
+        const sessionUser = common.getUserFromContext(this.context);
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
 
         try {
-            currWorkflow = await this.workflowRepository.findOneOrFail(workflowId);
+            // Grab all the stages for this workflow.
+            const stages = await this.stageRepository
+                .createQueryBuilder(common.STGE_TABLE)
+                .where("stage.workflowId = :id", { id: currWorkflow.id })
+                .getMany();
+
+            // Return them in ascending sequence order.
+            stages.sort((a: NRStage, b: NRStage) => a.sequenceId - b.sequenceId);
+            return stages;
         } catch (err) {
-            console.error("Error getting Workflow:", err);
-            throw new NotFoundError("A Workflow with the given ID was not found.");
+            console.log(err);
+
+            const errStr = `Error getting stages for workflow.`;
+            throw new Errors.InternalServerError(errStr);
         }
-
-        // Grab all the stages for this workflow.
-        const stages = await this.stageRepository
-            .createQueryBuilder("stage")
-            .where("stage.workflowId = :id", { id: currWorkflow.id })
-            .getMany();
-
-        stages.sort((a: NRStage, b: NRStage) => a.sequenceId - b.sequenceId);
-
-        return stages;
     }
 
     /**
-     * Get a stage based on its ID and workflow.
+     * Get a specific stage by ID.
      *
-     * Returns 404 if:
-     *      - Stage id not found.
+     * Returns:
+     *      - NRStage
+     *      - NotFoundError (404)
+     *          - If workflow not found.
      */
-    @GET
-    @Path("/:id/stages/:sid")
-    public async getStage(@IsInt @PathParam("id") wid: number, @IsInt @PathParam("sid") sid: number): Promise<NRStage> {
 
-        let currWorkflow: NRWorkflow;
+    @GET
+    @Path("/:wid/stages/:sid")
+    public async getStage(@IsInt @PathParam("wid") wid: number,
+                          @IsInt @PathParam("sid") sid: number): Promise<NRStage> {
+        const sessionUser = common.getUserFromContext(this.context);
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
 
         try {
-            currWorkflow = await this.workflowRepository.findOneOrFail(wid);
+            // Grab the specified stage for the right workflow.
+            const stage = await this.stageRepository
+                .createQueryBuilder(common.STGE_TABLE)
+                .where("stage.workflowId = :id", { id: currWorkflow.id })
+                .andWhere("stage.id = :stageId", { stageId: sid })
+                .getOne();
+
+            return stage;
         } catch (err) {
-            console.error("Error getting Workflow:", err);
-            throw new NotFoundError("A Workflow with the given ID was not found.");
+            console.log(err);
+
+            const errStr = `Error getting stage for workflow.`;
+            throw new Errors.InternalServerError(errStr);
         }
-
-        // Grab the specified stage for the right workflow.
-        const stage = await this.stageRepository
-            .createQueryBuilder("stage")
-            .where("stage.workflowId = :id", { id: currWorkflow.id })
-            .andWhere("stage.id = :stageId", { stageId: sid })
-            .getOne();
-
-        return stage;
     }
 
     /**
      * Add a stage at the given position in the workflow.
      *
-     * Position is NOT zero indexed.
-     *
-     * Returns 400 if:
-     *      - Stage properties missing.
-     *      - Stage property types incorrect.
-     *      - Stage position is not > 0.
-     *
-     * Returns 404 if:
-     *      - Workflow id not found.
+     * Returns:
+     *      - NRStage
+     *      - BadRequestError (400)
+     *          - If the position is out of bounds or negative.
+     *      - ForbiddenError (403)
+     *          - If request user is not allowed to update workflows.
+     *      - NotFoundError (404)
+     *          - If workflow not found.
      */
     @POST
-    @Path("/:id/stages/:pos")
-    @PreProcessor(WorkflowService.addStageValidator)
+    @Path("/:wid/stages/:pos")
+    @PreProcessor(validators.addStageValidator)
     public async addStageAt(stage: NRStage,
-                            @IsInt @PathParam("id") workflowId: number,
+                            @IsInt @PathParam("wid") wid: number,
                             @IsInt @PathParam("pos") position: number): Promise<NRStage> {
-
         // Invalid position.
         if (position < 0) {
-            throw new Errors.BadRequestError("Stage position cannot be negative.");
+            const errStr = `Invalid position: ${position}`;
+            throw new Errors.BadRequestError(errStr);
         }
 
-        let currWorkflow: NRWorkflow;
+        const sessionUser = common.getUserFromContext(this.context);
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
+        await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
 
         try {
-            currWorkflow = await this.workflowRepository.findOneOrFail(workflowId);
-        } catch (err) {
-            console.error("Error getting Workflow:", err);
-            throw new NotFoundError("A Workflow with the given ID was not found.");
-        }
+            // Grab the max/min sequenceId for this set of workflow stages.
+            const maxSeqId = await this.getMaxStageSequenceId(currWorkflow.id);
 
-        // Grab the max/min sequenceId for this set of workflow stages.
-        const maxSeqId = await this.getMaxStageSequenceId(currWorkflow.id);
+            if (maxSeqId == null) { // No stages yet, just add it.
+                stage.sequenceId = 0;
+            } else if (position > maxSeqId + 1) {
+                const errStr = `Out of bounds position: ${position}`;
+                throw new Errors.BadRequestError(errStr);
+            } else { // Insert normally.
+                let currSeq = maxSeqId;
 
-        if (maxSeqId == null) { // No stages yet, just add it.
-            stage.sequenceId = 0;
-        } else if (position > maxSeqId + 1) {
-            throw new Errors.BadRequestError("Stage position past bounds.");
-        } else { // Insert normally.
-            let currSeq = maxSeqId;
+                // Update sequences.
+                while (currSeq >= 0) {
+                    if (currSeq === (position - 1)) {
+                        break;
+                    }
 
-            // Update sequences.
-            while (currSeq >= 0) {
-                if (currSeq === (position - 1)) {
-                    break;
+                    await this.stageRepository
+                        .createQueryBuilder(common.STGE_TABLE)
+                        .update(NRStage)
+                        .set({ sequenceId: currSeq + 1 })
+                        .where("sequenceId = :sid ", { sid: currSeq })
+                        .andWhere("workflowId = :wid", { wid: currWorkflow.id })
+                        .execute();
+
+                    currSeq--;
                 }
 
-                await this.stageRepository
-                    .createQueryBuilder("stage")
-                    .update(NRStage)
-                    .set({ sequenceId: currSeq + 1 })
-                    .where("sequenceId = :sid ", { sid: currSeq })
-                    .andWhere("workflowId = :wid", { wid: currWorkflow.id })
-                    .execute();
-
-                currSeq--;
+                stage.sequenceId = position;
             }
 
-            stage.sequenceId = position;
+            // Establish the relationship and save it.
+            stage.workflow = currWorkflow;
+            await this.workflowRepository.save(currWorkflow);
+            return await this.stageRepository.save(stage);
+        } catch (err) {
+            console.log(err);
+
+            const errStr = `Error adding stage to workflow.`;
+            throw new Errors.InternalServerError(errStr);
         }
-
-        // Establish the relationship.
-        stage.workflow = currWorkflow;
-
-        // Save the workflow so that the relationship gets saved
-        // correctly. Then save and return the stage that got
-        // created.
-        await this.workflowRepository.save(currWorkflow);
-        return await this.stageRepository.save(stage);
     }
 
     /**
      * Delete the given stage.
      *
-     * Returns 400 if:
-     *      - Stage properties missing.
-     *      - Stage property types incorrect.
-     *
-     * Returns 404 if:
-     *      - Workflow id not found.
+     * Returns:
+     *      - BadRequestError (400)
+     *          - If the position is out of bounds or negative.
+     *      - ForbiddenError (403)
+     *          - If request user is not allowed to update workflows.
+     *      - NotFoundError (404)
+     *          - If workflow not found.
+     *          - If stage not found.
      */
     @DELETE
-    @Path("/:id/stages/:sid")
-    public async deleteStage(@IsInt @PathParam("id") workflowId: number,
-                             @PathParam("sid") stageId: number) {
-
-        let currWorkflow: NRWorkflow;
-        let currStage: NRStage;
-
-        try {
-            currWorkflow = await this.workflowRepository.findOneOrFail(workflowId);
-
-        } catch (err) {
-            console.error("Error getting Workflow:", err);
-            throw new NotFoundError("A Workflow with the given ID was not found.");
-        }
+    @Path("/:wid/stages/:sid")
+    public async deleteStage(@IsInt @PathParam("wid") wid: number,
+                             @PathParam("sid") sid: number) {
+        const sessionUser = common.getUserFromContext(this.context);
+        const currStage = await common.getStage(sid, this.stageRepository);
+        await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
 
         try {
-            currStage = await this.stageRepository.findOneOrFail(stageId);
-        } catch (err) {
-            console.error("Error getting Stage:", err);
-            throw new NotFoundError("A Stage with the given ID was not found.");
-        }
+            const maxSeqId = await this.getMaxStageSequenceId(wid);
 
-        const maxSeqId = await this.getMaxStageSequenceId(workflowId);
-
-        await this.stageRepository
-            .createQueryBuilder("stage")
-            .delete()
-            .from(NRStage)
-            .where("id = :stageId ", { stageId: currStage.id })
-            .execute();
-
-        let currSeq = currStage.sequenceId;
-
-        // Nothing to update.
-        if (currSeq === maxSeqId) {
-            return;
-        }
-
-        // Update sequences.
-        while (currSeq <= maxSeqId) {
             await this.stageRepository
-                .createQueryBuilder("stage")
-                .update(NRStage)
-                .set({ sequenceId: currSeq - 1 })
-                .where("sequenceId = :id ", { id: currSeq })
+                .createQueryBuilder(common.STGE_TABLE)
+                .delete()
+                .from(NRStage)
+                .where("id = :stageId ", { stageId: currStage.id })
                 .execute();
 
-            currSeq++;
+            let currSeq = currStage.sequenceId;
+
+            // Nothing to update.
+            if (currSeq === maxSeqId) {
+                return;
+            }
+
+            // Update sequences.
+            while (currSeq <= maxSeqId) {
+                await this.stageRepository
+                    .createQueryBuilder(common.STGE_TABLE)
+                    .update(NRStage)
+                    .set({ sequenceId: currSeq - 1 })
+                    .where("sequenceId = :id ", { id: currSeq })
+                    .execute();
+
+                currSeq++;
+            }
+
+        } catch (err) {
+            console.log(err);
+
+            const errStr = `Error deleting stage in workflow.`;
+            throw new Errors.InternalServerError(errStr);
         }
     }
 
     /**
-     * Update an entry in the 'stage' table with the specified
-     * information.
+     * Update the given stage.
      *
-     * Returna 400 if:
-     *      - Stage property types incorrect.
-     *
-     * Returns 404 if:
-     *      - Stage id field is missing or not found.
+     * Returns:
+     *      - NRStage
+     *      - BadRequestError (400)
+     *          - If the position is out of bounds or negative.
+     *      - ForbiddenError (403)
+     *          - If request user is not allowed to update workflows.
+     *      - NotFoundError (404)
+     *          - If workflow not found.
+     *          - If stage not found.
      */
     @PUT
     @Path("/:id/stages/:sid")
-    @PreProcessor(WorkflowService.updateStageValidator)
+    @PreProcessor(validators.updateStageValidator)
     public async updateStage(@IsInt @PathParam("sid") sid: number,
                              stage: NRStage): Promise<NRStage> {
-
-        let currStage: NRStage;
+        const sessionUser = common.getUserFromContext(this.context);
+        const currStage = await common.getStage(sid, this.stageRepository);
+        await common.checkSTWritePermissions(sessionUser, sid, this.permSTRepository);
 
         try {
-            currStage = await this.stageRepository.findOneOrFail(sid);
+            // Update current stored name if given one.
+            if (stage.name) {
+                currStage.name = stage.name;
+            }
+
+            if (stage.description) {
+                currStage.description = stage.description;
+            }
+
+            return await this.stageRepository.save(currStage);
         } catch (err) {
-            console.error("Error getting stage:", err);
-            throw new NotFoundError("A stage with the given id was not found.");
-        }
+            console.log(err);
 
-        // Update current stored name if given one.
-        if (stage.name) {
-            currStage.name = stage.name;
+            const errStr = `Error updating stage.`;
+            throw new Errors.InternalServerError(errStr);
         }
-
-        // Update creator name if given one.
-        if (stage.creator) {
-            currStage.creator = stage.creator;
-        }
-
-        if (stage.description) {
-            currStage.description = stage.description;
-        }
-
-        // TODO: Catch more exceptions here.
-        return await this.stageRepository.save(currStage);
     }
 
-    /**
-     * Get the maximum sequenceId for the given workflows stages.
-     */
-    private async getMaxStageSequenceId(workflowId: number): Promise<number> {
-        let currWorkflow: NRWorkflow;
-
-        try {
-            currWorkflow = await this.workflowRepository.findOneOrFail(workflowId);
-        } catch (err) {
-            console.error("Error getting workflow:", err);
-            throw new NotFoundError("A workflow with the given id was not found.");
-        }
+    // Get the maximum sequenceId for the given workflows stages.
+    private async getMaxStageSequenceId(wid: number): Promise<number> {
+        const currWorkflow = await common.getWorkflow(wid, this.workflowRepository);
 
         // Grab the next sequenceId for this set of workflow stages.
         const maxSeq = await this.stageRepository
-            .createQueryBuilder("stage")
+            .createQueryBuilder(common.STGE_TABLE)
             .select("MAX(stage.sequenceId)", "max")
             .where("stage.workflowId = :id", { id: currWorkflow.id })
             .getRawOne();
