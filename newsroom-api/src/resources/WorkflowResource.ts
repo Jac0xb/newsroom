@@ -387,7 +387,7 @@ export class WorkflowResource {
     public async deleteStage(@IsInt @PathParam("wid") wid: number,
                              @PathParam("sid") sid: number) {
         const sessionUser = common.getUserFromContext(this.context);
-        const currStage = await common.getStage(sid, this.stageRepository);
+        const currStage = await this.workflowService.getStage(sid);
         await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
 
         try {
@@ -446,7 +446,7 @@ export class WorkflowResource {
     public async updateStage(@IsInt @PathParam("sid") sid: number,
                              stage: NRStage): Promise<NRStage> {
         const sessionUser = common.getUserFromContext(this.context);
-        const currStage = await common.getStage(sid, this.stageRepository);
+        const currStage = await this.workflowService.getStage(sid);
         await common.checkSTWritePermissions(sessionUser, sid, this.permSTRepository);
 
         try {

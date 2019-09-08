@@ -1,7 +1,7 @@
 import { getManager, Repository } from "typeorm";
 import { Errors, ServiceContext } from "typescript-rest";
 
-import { NRDCPermission, NRDocument, NRRole, NRStage, NRSTPermission, NRUser, NRWFPermission } from "../entity";
+import { NRDCPermission, NRDocument, NRRole, NRSTPermission, NRUser, NRWFPermission } from "../entity";
 
 // Common functionality used in different places.
 export namespace common {
@@ -19,20 +19,6 @@ export namespace common {
     // Get the user from the ServiceContext containing the request.
     export function getUserFromContext(context: ServiceContext) {
         return context.request.user;
-    }
-
-    // Get a stage based on ID.
-    export async function getStage(sid: number,
-                                   repo: Repository<NRStage>): Promise<NRStage> {
-        try {
-            return await repo.findOneOrFail(sid);
-        } catch (err) {
-            console.error("Error getting stage:", err);
-
-            const errStr = `Stage with ID ${sid} was not found.`;
-            throw new Errors.NotFoundError(errStr);
-        }
-
     }
 
     // Get a document based on ID.

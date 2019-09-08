@@ -119,7 +119,7 @@ export class DocumentResource {
     @Path("/stage/:sid")
     @GET
     public async getAllDocumentsForStage(@IsInt @PathParam("sid") sid: number): Promise<NRDocument[]> {
-        const assocStage = await common.getStage(sid, this.stageRepository);
+        const assocStage = await this.workflowService.getStage(sid);
 
         return await this.documentRepository
             .createQueryBuilder(common.DOCU_TABLE)
@@ -173,7 +173,7 @@ export class DocumentResource {
 
         // Check for existence.
         await this.workflowService.getWorkflow(document.workflow.id);
-        await common.getStage(document.stage.id, this.stageRepository);
+        await this.workflowService.getStage(document.stage.id);
 
         if (document.name) {
             currDocument.name = document.name;
@@ -243,7 +243,7 @@ export class DocumentResource {
             .where("document.id = :did", {did: currDocument.id})
             .getRawOne();
 
-        const currStage = await common.getStage(stageID.val, this.stageRepository);
+        const currStage = await this.workflowService.getStage(stageID.val);
 
         const workflowID = await this.documentRepository
             .createQueryBuilder(common.DOCU_TABLE)
@@ -333,7 +333,7 @@ export class DocumentResource {
             .where("document.id = :did", {did: currDocument.id})
             .getRawOne();
 
-        const currStage = await common.getStage(stageID.val, this.stageRepository);
+        const currStage = await this.workflowService.getStage(stageID.val);
 
         const workflowID = await this.documentRepository
             .createQueryBuilder(common.DOCU_TABLE)

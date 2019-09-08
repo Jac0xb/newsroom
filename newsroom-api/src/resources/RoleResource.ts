@@ -226,7 +226,7 @@ export class RoleResource {
             newPerm.stage = permission.stage;
         }
 
-        const stage = await common.getStage(permission.stage.id, this.stageRepository);
+        const stage = await this.workflowService.getStage(permission.stage.id);
         const role = await common.getRole(rid, this.roleRepository);
 
         try {
