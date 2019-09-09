@@ -31,7 +31,7 @@ app.use("/api",
     function(req: express.Request, res: express.Response, next: express.NextFunction) {
         req.user = new NRUser();
         req.user.id = 1;
-        req.user.name = "tcruise";
+        req.user.userName = "tcruise";
         req.user.firstName = "Tom";
         req.user.lastName = "Cruise";
         req.user.password = "tcruise";

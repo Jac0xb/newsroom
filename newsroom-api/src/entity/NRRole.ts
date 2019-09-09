@@ -13,7 +13,7 @@ export class NRRole {
     @PrimaryGeneratedColumn()
     public id: number;
 
-    // Plaintext name of the role.
+    // Plaintext userName of the role.
     @Column({
         length: 256,
         nullable: false,

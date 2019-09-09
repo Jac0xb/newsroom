@@ -6,11 +6,11 @@ export function addStageValidator(req: express.Request) {
     const stage = req.body as NRStage;
 
     if (!stage.name) {
-        throw new Errors.BadRequestError("Stage name not present.");
+        throw new Errors.BadRequestError("Stage userName not present.");
     }
 
     if (!(typeof stage.name === "string")) {
-        throw new Errors.BadRequestError("Stage name was not a string.");
+        throw new Errors.BadRequestError("Stage userName was not a string.");
     }
 
     if (!stage.creator) {
@@ -37,7 +37,7 @@ export function updateStageValidator(req: express.Request) {
 
     if (stage.name) {
         if (!(typeof stage.name === "string")) {
-            throw new Errors.BadRequestError("Stage name was not a string.");
+            throw new Errors.BadRequestError("Stage userName was not a string.");
         }
     }
 

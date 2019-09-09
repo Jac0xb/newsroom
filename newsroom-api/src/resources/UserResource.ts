@@ -99,23 +99,22 @@ export class UserResource {
         const currUser = await this.userService.getUser(uid);
 
         // Update current stored username if given one.
-        if (user.name) {
-            currUser.name = user.name;
+        if (user.userName) {
+            currUser.userName = user.userName;
         }
 
-        // Update current stored first name.
+        if (user.email) {
+            currUser.email = user.email;
+        }
+
+        // Update current stored first userName.
         if (user.firstName) {
             currUser.firstName = user.firstName;
         }
 
-        // Update current stored last name if given one.
+        // Update current stored last userName if given one.
         if (user.lastName) {
             currUser.lastName = user.lastName;
-        }
-
-        // Update current stored password if given one.
-        if (user.password) {
-            currUser.password = user.password;
         }
 
         try {

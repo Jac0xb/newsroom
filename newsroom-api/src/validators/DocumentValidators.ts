@@ -6,15 +6,15 @@ export function createDocumentValidator(req: express.Request) {
     const document = req.body as NRDocument;
 
     if (!document.name) {
-        throw new Errors.BadRequestError("Document name not present.");
+        throw new Errors.BadRequestError("Document userName not present.");
     }
 
     if (!(typeof document.name === "string")) {
-        throw new Errors.BadRequestError("Document name was not a string.");
+        throw new Errors.BadRequestError("Document userName was not a string.");
     }
 
     if (document.name.length > 256) {
-        throw new Errors.BadRequestError("Document name length is too long, max 256.");
+        throw new Errors.BadRequestError("Document userName length is too long, max 256.");
     }
 
     if (!document.creator) {
@@ -55,11 +55,11 @@ export function updateDocumentValidator(req: express.Request): void {
 
     if (document.name) {
         if (!(typeof document.name === "string")) {
-            throw new Errors.BadRequestError("Document name was not a string.");
+            throw new Errors.BadRequestError("Document userName was not a string.");
         }
 
         if (document.name.length > 256) {
-            throw new Errors.BadRequestError("Document name length is too long, max 256.");
+            throw new Errors.BadRequestError("Document userName length is too long, max 256.");
         }
     }
 

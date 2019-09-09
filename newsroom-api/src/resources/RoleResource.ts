@@ -134,7 +134,7 @@ export class RoleResource {
                             role: NRRole): Promise<NRRole> {
         const currRole = await this.roleService.getRole(rid);
 
-        // Update current stored name if given one.
+        // Update current stored userName if given one.
         if (role.name) {
             currRole.name = role.name;
         }

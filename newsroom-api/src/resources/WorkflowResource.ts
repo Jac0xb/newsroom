@@ -134,7 +134,7 @@ export class WorkflowResource {
         const currWorkflow = await this.workflowService.getWorkflow(wid);
         await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
-        // Update current stored name if given one.
+        // Update current stored userName if given one.
         if (workflow.name) {
             currWorkflow.name = workflow.name;
         }
@@ -454,7 +454,7 @@ export class WorkflowResource {
         await this.permissionService.checkWFWritePermissions(sessionUser, currStage.workflow.id);
 
         try {
-            // Update current stored name if given one.
+            // Update current stored userName if given one.
             if (stage.name) {
                 currStage.name = stage.name;
             }

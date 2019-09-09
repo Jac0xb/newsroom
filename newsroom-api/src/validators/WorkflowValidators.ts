@@ -6,15 +6,15 @@ export function createWorkflowValidator(req: express.Request) {
     const workflow = req.body as NRWorkflow;
 
     if (!workflow.name) {
-        throw new Errors.BadRequestError("Workflow name not present.");
+        throw new Errors.BadRequestError("Workflow userName not present.");
     }
 
     if (!(typeof workflow.name === "string")) {
-        throw new Errors.BadRequestError("Workflow name was not a string.");
+        throw new Errors.BadRequestError("Workflow userName was not a string.");
     }
 
     if (workflow.name.length > 256) {
-        throw new Errors.BadRequestError("Workflow name too long, max 256.");
+        throw new Errors.BadRequestError("Workflow userName too long, max 256.");
     }
 
     if (!workflow.creator) {
@@ -41,7 +41,7 @@ export function updateWorkflowValidator(req: express.Request) {
 
     if (workflow.name) {
         if (!(typeof workflow.name === "string")) {
-            throw new Errors.BadRequestError("Workflow name was not a string.");
+            throw new Errors.BadRequestError("Workflow userName was not a string.");
         }
     }
 
