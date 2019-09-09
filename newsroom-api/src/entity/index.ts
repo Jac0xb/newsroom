@@ -1,5 +1,7 @@
 import "reflect-metadata";
 
+export { DBConstants } from "./DBConstants";
+
 export { NRRole } from "./NRRole";
 export { NRUser } from "./NRUser";
 export { NRStage } from "./NRStage";

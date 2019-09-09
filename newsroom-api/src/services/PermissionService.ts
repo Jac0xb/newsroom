@@ -3,7 +3,7 @@ import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Errors } from "typescript-rest";
 import { NRDCPermission, NRSTPermission, NRUser, NRWFPermission } from "../entity";
-import { DBConstants } from "./DBConstants";
+import { DBConstants } from "../entity";
 import { UserService } from "./UserService";
 
 @Service()

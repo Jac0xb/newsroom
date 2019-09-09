@@ -5,7 +5,7 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow } from "../entity";
-import { DBConstants } from "../services/DBConstants";
+import { DBConstants } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";

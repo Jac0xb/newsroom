@@ -1,6 +1,6 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 
-import { DBConstants } from "../services/DBConstants";
+import { DBConstants } from "./DBConstants";
 import { NRRole } from "./NRRole";
 import { NRStage } from "./NRStage";
 

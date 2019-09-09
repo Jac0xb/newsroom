@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany,
          PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-import { DBConstants } from "../services/DBConstants";
+import { DBConstants } from "./DBConstants";
 import { NRRole } from "./NRRole";
 
 // NRUser objects are used to track information about any user of the system.

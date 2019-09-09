@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne,
          OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-import { DBConstants } from "../services/DBConstants";
+import { DBConstants } from "./DBConstants";
 import { NRDocument } from "./NRDocument";
 import { NRSTPermission } from "./NRSTPermission";
 import { NRUser } from "./NRUser";

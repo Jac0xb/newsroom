@@ -16,7 +16,7 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
-import { DBConstants } from "../services/DBConstants";
+import { DBConstants } from "../entity";
 import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";
 import { validators } from "../services/Validators";
