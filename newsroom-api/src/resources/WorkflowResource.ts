@@ -15,12 +15,12 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 
 import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
-import { DBConstants } from "../entity";
+import { DBConstants, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
 import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";
 import { validators } from "../services/Validators";
 import { WorkflowService } from "../services/WorkflowService";
+import { createWorkflowValidator, updateWorkflowValidator } from "../validators/WorkflowValidators";
 
 // Provides API services for workflows, and their associated stages.
 @Path("/api/workflows")
@@ -63,7 +63,7 @@ export class WorkflowResource {
      *          - If request user is not allowed to create workflows.
      */
     @POST
-    @PreProcessor(validators.createWorkflowValidator)
+    @PreProcessor(createWorkflowValidator)
     public async createWorkflow(workflow: NRWorkflow): Promise<NRWorkflow> {
         const sessionUser = await this.userService.getUserFromContext();
 
@@ -127,7 +127,7 @@ export class WorkflowResource {
      */
     @PUT
     @Path("/:wid")
-    @PreProcessor(validators.updateWorkflowValidator)
+    @PreProcessor(updateWorkflowValidator)
     public async updateWorkflow(@IsInt @PathParam("wid") wid: number,
                                 workflow: NRWorkflow): Promise<NRWorkflow> {
         const sessionUser = this.userService.getUserFromContext();
