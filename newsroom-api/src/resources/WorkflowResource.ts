@@ -18,8 +18,8 @@ import { InjectRepository } from "typeorm-typedi-extensions";
 import { DBConstants, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
 import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";
-import { validators } from "../services/Validators";
 import { WorkflowService } from "../services/WorkflowService";
+import { addStageValidator, updateStageValidator } from "../validators/StageValidators";
 import { createWorkflowValidator, updateWorkflowValidator } from "../validators/WorkflowValidators";
 
 // Provides API services for workflows, and their associated stages.
@@ -206,7 +206,7 @@ export class WorkflowResource {
      */
     @POST
     @Path("/:wid/stages")
-    @PreProcessor(validators.addStageValidator)
+    @PreProcessor(addStageValidator)
     public async appendStage(@IsInt @PathParam("wid") wid: number,
                              stage: NRStage): Promise<NRStage> {
         const sessionUser = this.userService.getUserFromContext();
@@ -316,7 +316,7 @@ export class WorkflowResource {
      */
     @POST
     @Path("/:wid/stages/:pos")
-    @PreProcessor(validators.addStageValidator)
+    @PreProcessor(addStageValidator)
     public async addStageAt(stage: NRStage,
                             @IsInt @PathParam("wid") wid: number,
                             @IsInt @PathParam("pos") position: number): Promise<NRStage> {
@@ -446,7 +446,7 @@ export class WorkflowResource {
      */
     @PUT
     @Path("/:id/stages/:sid")
-    @PreProcessor(validators.updateStageValidator)
+    @PreProcessor(updateStageValidator)
     public async updateStage(@IsInt @PathParam("sid") sid: number,
                              stage: NRStage): Promise<NRStage> {
         const sessionUser = this.userService.getUserFromContext();
