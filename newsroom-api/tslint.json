@@ -5,8 +5,7 @@
     ],
     "rules": {
         "no-console": false,
-        "only-arrow-functions": false,
-        "no-namespace": false
+        "only-arrow-functions": false
     },
     "linterOptions": {
         "exclude": [

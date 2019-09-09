@@ -19,8 +19,8 @@ import { NRDCPermission, NRDocument, NRRole, NRStage, NRSTPermission, NRWFPermis
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { RoleService } from "../services/RoleService";
-import { validators } from "../services/Validators";
 import { WorkflowService } from "../services/WorkflowService";
+import { createRoleValidator, updateRoleValidator } from "../validators/RoleValidators";
 
 // Provides API services for roles.
 @Path("/api/roles")
@@ -72,7 +72,7 @@ export class RoleResource {
      *          - If form submission data is invalid.
      */
     @POST
-    @PreProcessor(validators.createRoleValidator)
+    @PreProcessor(createRoleValidator)
     public async createRole(role: NRRole): Promise<NRRole> {
         try {
             // Form data already validated.
@@ -129,7 +129,7 @@ export class RoleResource {
      */
     @PUT
     @Path("/:rid")
-    @PreProcessor(validators.updateRoleValidator)
+    @PreProcessor(updateRoleValidator)
     public async updateRole(@IsInt @PathParam("rid") rid: number,
                             role: NRRole): Promise<NRRole> {
         const currRole = await this.roleService.getRole(rid);
