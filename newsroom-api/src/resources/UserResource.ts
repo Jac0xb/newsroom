@@ -5,7 +5,7 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 import { Inject, Service } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRRole, NRUser } from "../entity";
-import { common } from "../services/Common";
+import { RoleService } from "../services/RoleService";
 import { UserService } from "../services/UserService";
 import { validators } from "../services/Validators";
 
@@ -23,6 +23,9 @@ export class UserResource {
 
     @Inject()
     private userService: UserService;
+
+    @Inject()
+    private roleService: RoleService;
 
     /**
      * Create a new user.
@@ -158,7 +161,7 @@ export class UserResource {
     public async addRole(@IsInt @PathParam("uid") uid: number,
                          @IsInt @PathParam("rid") rid: number): Promise<NRUser> {
         const currUser = await this.userService.getUser(uid);
-        const newRole = await common.getRole(rid, this.roleRepository);
+        const newRole = await this.roleService.getRole(rid);
 
         currUser.roles.push(newRole);
 
@@ -209,7 +212,7 @@ export class UserResource {
     public async removeRole(@IsInt @PathParam("uid") uid: number,
                             @IsInt @PathParam("rid") rid: number) {
         const currUser = await this.userService.getUser(uid);
-        const currRole = await common.getRole(rid, this.roleRepository);
+        const currRole = await this.roleService.getRole(rid);
 
         try {
             const ind = currUser.roles.indexOf(currRole);

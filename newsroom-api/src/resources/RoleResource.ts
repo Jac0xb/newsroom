@@ -18,6 +18,7 @@ import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRDCPermission, NRDocument, NRRole, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
 import { common } from "../services/Common";
 import { DocumentService } from "../services/DocumentService";
+import { RoleService } from "../services/RoleService";
 import { validators } from "../services/Validators";
 import { WorkflowService } from "../services/WorkflowService";
 
@@ -55,6 +56,9 @@ export class RoleResource {
 
     @Inject()
     private documentService: DocumentService;
+
+    @Inject()
+    private roleService: RoleService;
 
     /**
      * Create a new role.
@@ -107,7 +111,7 @@ export class RoleResource {
     @GET
     @Path("/:rid")
     public async getRole(@IsInt @PathParam("rid") rid: number): Promise<NRRole> {
-        return await common.getRole(rid, this.roleRepository);
+        return await this.roleService.getRole(rid);
     }
 
     /**
@@ -125,7 +129,7 @@ export class RoleResource {
     @PreProcessor(validators.updateRoleValidator)
     public async updateRole(@IsInt @PathParam("rid") rid: number,
                             role: NRRole): Promise<NRRole> {
-        const currRole = await common.getRole(rid, this.roleRepository);
+        const currRole = await this.roleService.getRole(rid);
 
         // Update current stored name if given one.
         if (role.name) {
@@ -152,7 +156,7 @@ export class RoleResource {
     @DELETE
     @Path("/:rid")
     public async deleteRole(@IsInt @PathParam("rid") rid: number) {
-        const currRole = await common.getRole(rid, this.roleRepository);
+        const currRole = await this.roleService.getRole(rid);
 
         try {
             await this.roleRepository.remove(currRole);
@@ -188,7 +192,7 @@ export class RoleResource {
             newPerm.workflow = permission.workflow;
         }
 
-        const role = await common.getRole(rid, this.roleRepository);
+        const role = await this.roleService.getRole(rid);
         const wf = await this.workflowService.getWorkflow(newPerm.workflow.id);
 
         try {
@@ -231,7 +235,7 @@ export class RoleResource {
         }
 
         const stage = await this.workflowService.getStage(permission.stage.id);
-        const role = await common.getRole(rid, this.roleRepository);
+        const role = await this.roleService.getRole(rid);
 
         try {
             newPerm.stage = stage;
@@ -277,7 +281,7 @@ export class RoleResource {
         }
 
         const doc = await this.documentService.getDocument(newPerm.document.id);
-        const role = await common.getRole(rid, this.roleRepository);
+        const role = await this.roleService.getRole(rid);
 
         try {
             newPerm.document = doc;

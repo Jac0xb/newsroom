@@ -21,19 +21,6 @@ export namespace common {
         return context.request.user;
     }
 
-    // Get a role based on ID.
-    export async function getRole(rid: number,
-                                  repo: Repository<NRRole>): Promise<NRRole> {
-        try {
-            return await repo.findOneOrFail(rid);
-        } catch (err) {
-            console.error("Error getting role:", err);
-
-            const errStr = `Role with ID ${rid} was not found.`;
-            throw new Errors.NotFoundError(errStr);
-        }
-    }
-
     // Get a workflow permission based on ID.
     export async function getWFPermission(pid: number,
                                           repo: Repository<NRWFPermission>): Promise<NRWFPermission> {
