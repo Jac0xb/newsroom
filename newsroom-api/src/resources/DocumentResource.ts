@@ -6,6 +6,7 @@ import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow } from "../entity";
 import { common } from "../services/Common";
+import { DocumentService } from "../services/DocumentService";
 import { validators } from "../services/Validators";
 import { WorkflowService } from "../services/WorkflowService";
 
@@ -34,6 +35,9 @@ export class DocumentResource {
 
     @Inject()
     private workflowService: WorkflowService;
+
+    @Inject()
+    private documentService: DocumentService;
 
     /**
      * Create a new document based on passed information.
@@ -90,7 +94,7 @@ export class DocumentResource {
     @Path("/:did")
     @GET
     public async getDocument(@PathParam("did") did: number): Promise<NRDocument> {
-        return await common.getDocument(did, this.documentRepository);
+        return await this.documentService.getDocument(did);
     }
 
     /**
@@ -168,7 +172,7 @@ export class DocumentResource {
     public async updateDocument(@IsInt @PathParam("did") did: number,
                                 document: NRDocument): Promise<NRDocument> {
         const sessionUser = common.getUserFromContext(this.context);
-        const currDocument = await common.getDocument(did, this.documentRepository);
+        const currDocument = await this.documentService.getDocument(did);
         await common.checkDCWritePermissions(sessionUser, did, this.permDCRepository);
 
         // Check for existence.
@@ -213,7 +217,7 @@ export class DocumentResource {
     @Path("/:did")
     public async deleteDocument(@IsInt @PathParam("did") did: number) {
         const sessionUser = common.getUserFromContext(this.context);
-        const currDocument = await common.getDocument(did, this.documentRepository);
+        const currDocument = await this.documentService.getDocument(did);
         await common.checkDCWritePermissions(sessionUser, did, this.permDCRepository);
 
         await this.documentRepository
@@ -235,7 +239,7 @@ export class DocumentResource {
     @GET
     @Path("/:did/next")
     public async getNext(@IsInt @PathParam("did") did: number): Promise<number> {
-        const currDocument = await common.getDocument(did, this.documentRepository);
+        const currDocument = await this.documentService.getDocument(did);
 
         const stageID = await this.documentRepository
             .createQueryBuilder(common.DOCU_TABLE)
@@ -284,7 +288,7 @@ export class DocumentResource {
     @Path("/:did/next")
     public async moveNext(@IsInt @PathParam("did") did: number): Promise<NRDocument> {
         const sessionUser = common.getUserFromContext(this.context);
-        const currDocument = await common.getDocument(did, this.documentRepository);
+        const currDocument = await this.documentService.getDocument(did);
         const currStage = currDocument.stage;
         const workflowId = currDocument.workflow.id;
 
@@ -324,7 +328,7 @@ export class DocumentResource {
     @GET
     @Path("/:did/prev")
     public async getPrev(@IsInt @PathParam("did") did: number): Promise<number> {
-        const currDocument = await common.getDocument(did, this.documentRepository);
+        const currDocument = await this.documentService.getDocument(did);
 
         // TODO: How to do this with TypeORM?
         const stageID = await this.documentRepository
@@ -375,7 +379,7 @@ export class DocumentResource {
     @Path("/:did/prev")
     public async movePrev(@IsInt @PathParam("did") did: number): Promise<NRDocument> {
         const sessionUser = common.getUserFromContext(this.context);
-        const currDocument = await common.getDocument(did, this.documentRepository);
+        const currDocument = await this.documentService.getDocument(did);
         const currStage = currDocument.stage;
         const workflowId = currDocument.workflow.id;
 

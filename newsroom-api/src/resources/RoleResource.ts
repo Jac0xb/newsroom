@@ -17,6 +17,7 @@ import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRDCPermission, NRDocument, NRRole, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
 import { common } from "../services/Common";
+import { DocumentService } from "../services/DocumentService";
 import { validators } from "../services/Validators";
 import { WorkflowService } from "../services/WorkflowService";
 
@@ -51,6 +52,9 @@ export class RoleResource {
 
     @Inject()
     private workflowService: WorkflowService;
+
+    @Inject()
+    private documentService: DocumentService;
 
     /**
      * Create a new role.
@@ -272,7 +276,7 @@ export class RoleResource {
             newPerm.document = permission.document;
         }
 
-        const doc = await common.getDocument(permission.document.id, this.documentRepository);
+        const doc = await this.documentService.getDocument(newPerm.document.id);
         const role = await common.getRole(rid, this.roleRepository);
 
         try {

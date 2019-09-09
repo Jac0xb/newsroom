@@ -21,19 +21,6 @@ export namespace common {
         return context.request.user;
     }
 
-    // Get a document based on ID.
-    export async function getDocument(did: number,
-                                      repo: Repository<NRDocument>): Promise<NRDocument> {
-        try {
-            return await repo.findOneOrFail(did);
-        } catch (err) {
-            console.error("Error getting document:", err);
-
-            const errStr = `Document with ID ${did} was not found.`;
-            throw new Errors.NotFoundError(errStr);
-        }
-    }
-
     // Get a role based on ID.
     export async function getRole(rid: number,
                                   repo: Repository<NRRole>): Promise<NRRole> {
