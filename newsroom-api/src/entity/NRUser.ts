@@ -1,11 +1,11 @@
 import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany,
          PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-import { common } from "../services/Common";
+import { DBConstants } from "../services/DBConstants";
 import { NRRole } from "./NRRole";
 
 // NRUser objects are used to track information about any user of the system.
-@Entity(common.USER_TABLE)
+@Entity(DBConstants.USER_TABLE)
 export class NRUser {
     @PrimaryGeneratedColumn()
     public id: number;

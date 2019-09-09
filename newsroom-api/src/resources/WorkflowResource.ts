@@ -16,7 +16,7 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
-import { common } from "../services/Common";
+import { DBConstants } from "../services/DBConstants";
 import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";
 import { validators } from "../services/Validators";
@@ -171,14 +171,14 @@ export class WorkflowResource {
 
         try {
             await this.stageRepository
-                .createQueryBuilder(common.STGE_TABLE)
+                .createQueryBuilder(DBConstants.STGE_TABLE)
                 .delete()
                 .from(NRStage)
                 .andWhere("workflowId = :wid", {wid: currWorkflow.id})
                 .execute();
 
             await this.workflowRepository
-                .createQueryBuilder(common.WRKF_TABLE)
+                .createQueryBuilder(DBConstants.WRKF_TABLE)
                 .delete()
                 .from(NRWorkflow)
                 .andWhere("id = :wid", {wid: currWorkflow.id})
@@ -253,7 +253,7 @@ export class WorkflowResource {
         try {
             // Grab all the stages for this workflow.
             const stages = await this.stageRepository
-                .createQueryBuilder(common.STGE_TABLE)
+                .createQueryBuilder(DBConstants.STGE_TABLE)
                 .where("stage.workflowId = :id", {id: currWorkflow.id})
                 .getMany();
 
@@ -288,7 +288,7 @@ export class WorkflowResource {
         try {
             // Grab the specified stage for the right workflow.
             const stage = await this.stageRepository
-                .createQueryBuilder(common.STGE_TABLE)
+                .createQueryBuilder(DBConstants.STGE_TABLE)
                 .where("stage.workflowId = :id", {id: currWorkflow.id})
                 .andWhere("stage.id = :stageId", {stageId: sid})
                 .getOne();
@@ -349,7 +349,7 @@ export class WorkflowResource {
                     }
 
                     await this.stageRepository
-                        .createQueryBuilder(common.STGE_TABLE)
+                        .createQueryBuilder(DBConstants.STGE_TABLE)
                         .update(NRStage)
                         .set({sequenceId: currSeq + 1})
                         .where("sequenceId = :sid ", {sid: currSeq})
@@ -398,7 +398,7 @@ export class WorkflowResource {
             const maxSeqId = await this.getMaxStageSequenceId(wid);
 
             await this.stageRepository
-                .createQueryBuilder(common.STGE_TABLE)
+                .createQueryBuilder(DBConstants.STGE_TABLE)
                 .delete()
                 .from(NRStage)
                 .where("id = :stageId ", {stageId: currStage.id})
@@ -414,7 +414,7 @@ export class WorkflowResource {
             // Update sequences.
             while (currSeq <= maxSeqId) {
                 await this.stageRepository
-                    .createQueryBuilder(common.STGE_TABLE)
+                    .createQueryBuilder(DBConstants.STGE_TABLE)
                     .update(NRStage)
                     .set({sequenceId: currSeq - 1})
                     .where("sequenceId = :id ", {id: currSeq})
@@ -478,7 +478,7 @@ export class WorkflowResource {
 
         // Grab the next sequenceId for this set of workflow stages.
         const maxSeq = await this.stageRepository
-            .createQueryBuilder(common.STGE_TABLE)
+            .createQueryBuilder(DBConstants.STGE_TABLE)
             .select("MAX(stage.sequenceId)", "max")
             .where("stage.workflowId = :id", {id: currWorkflow.id})
             .getRawOne();

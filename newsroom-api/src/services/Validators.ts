@@ -4,7 +4,7 @@ import { Errors } from "typescript-rest";
 import { NRDCPermission, NRDocument, NRRole,
          NRStage, NRSTPermission, NRUser,
          NRWFPermission, NRWorkflow } from "../entity";
-import { common } from "./Common";
+import { DBConstants } from "./DBConstants";
 
 // Validate form submissions on creating and updating items.
 export namespace validators {

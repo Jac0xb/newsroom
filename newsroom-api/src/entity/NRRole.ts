@@ -1,14 +1,14 @@
 import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany,
          PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-import { common } from "../services/Common";
+import { DBConstants } from "../services/DBConstants";
 import { NRDCPermission } from "./NRDCPermission";
 import { NRSTPermission } from "./NRSTPermission";
 import { NRUser } from "./NRUser";
 import { NRWFPermission } from "./NRWFPermission";
 
 // NRRole objects group sets of users and tie them to permissions.
-@Entity(common.ROLE_TABLE)
+@Entity(DBConstants.ROLE_TABLE)
 export class NRRole {
     @PrimaryGeneratedColumn()
     public id: number;

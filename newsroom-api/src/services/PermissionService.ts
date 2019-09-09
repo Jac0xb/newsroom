@@ -3,7 +3,7 @@ import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Errors } from "typescript-rest";
 import { NRDCPermission, NRSTPermission, NRUser, NRWFPermission } from "../entity";
-import { common } from "./Common";
+import { DBConstants } from "./DBConstants";
 import { UserService } from "./UserService";
 
 @Service()
@@ -66,13 +66,13 @@ export class PermissionService {
             if (!((user.roles === undefined) || (user.roles.length === 0))) {
                 for (const role of user.roles) {
                     const roleRight = await this.permWFRepository
-                        .createQueryBuilder(common.WFPERM_TABLE)
-                        .select(`MAX(${common.WFPERM_TABLE}.access)`, "max")
-                        .where(`${common.WFPERM_TABLE}.roleId = :id`, {id: role.id})
-                        .andWhere(`${common.WFPERM_TABLE}.workflowId = :wfid`, {wfid: wid})
+                        .createQueryBuilder(DBConstants.WFPERM_TABLE)
+                        .select(`MAX(${DBConstants.WFPERM_TABLE}.access)`, "max")
+                        .where(`${DBConstants.WFPERM_TABLE}.roleId = :id`, {id: role.id})
+                        .andWhere(`${DBConstants.WFPERM_TABLE}.workflowId = :wfid`, {wfid: wid})
                         .getRawOne();
 
-                    if (roleRight.max === common.WRITE) {
+                    if (roleRight.max === DBConstants.WRITE) {
                         allowed = true;
                         break;
                     }
@@ -99,13 +99,13 @@ export class PermissionService {
 
         for (const role of user.roles) {
             const roleRight = await this.permSTRepository
-                .createQueryBuilder(common.STPERM_TABLE)
-                .select(`MAX(${common.STPERM_TABLE}.access)`, "max")
-                .where(`${common.STPERM_TABLE}.roleId = :id`, {id: role.id})
-                .andWhere(`${common.STPERM_TABLE}.stageId = :stid`, {stid: sid})
+                .createQueryBuilder(DBConstants.STPERM_TABLE)
+                .select(`MAX(${DBConstants.STPERM_TABLE}.access)`, "max")
+                .where(`${DBConstants.STPERM_TABLE}.roleId = :id`, {id: role.id})
+                .andWhere(`${DBConstants.STPERM_TABLE}.stageId = :stid`, {stid: sid})
                 .getRawOne();
 
-            if (roleRight.max === common.WRITE) {
+            if (roleRight.max === DBConstants.WRITE) {
                 allowed = true;
                 break;
             }
@@ -125,13 +125,13 @@ export class PermissionService {
 
         for (const role of user.roles) {
             const roleRight = await this.permDCRepository
-                .createQueryBuilder(common.DCPERM_TABLE)
-                .select(`MAX(${common.DCPERM_TABLE}.access)`, "max")
-                .where(`${common.DCPERM_TABLE}.roleId = :id`, {id: role.id})
-                .andWhere(`${common.DCPERM_TABLE}.documentId = :dcid`, {dcid: did})
+                .createQueryBuilder(DBConstants.DCPERM_TABLE)
+                .select(`MAX(${DBConstants.DCPERM_TABLE}.access)`, "max")
+                .where(`${DBConstants.DCPERM_TABLE}.roleId = :id`, {id: role.id})
+                .andWhere(`${DBConstants.DCPERM_TABLE}.documentId = :dcid`, {dcid: did})
                 .getRawOne();
 
-            if (roleRight.max === common.WRITE) {
+            if (roleRight.max === DBConstants.WRITE) {
                 allowed = true;
                 break;
             }

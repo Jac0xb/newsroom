@@ -2,13 +2,13 @@ import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable,
          ManyToOne, OneToMany, PrimaryGeneratedColumn,
          UpdateDateColumn } from "typeorm";
 
-import { common } from "../services/Common";
+import { DBConstants } from "../services/DBConstants";
 import { NRDocument } from "./NRDocument";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
 import { NRWFPermission } from "./NRWFPermission";
 
-@Entity(common.WRKF_TABLE)
+@Entity(DBConstants.WRKF_TABLE)
 export class NRWorkflow {
     @PrimaryGeneratedColumn()
     public id: number;

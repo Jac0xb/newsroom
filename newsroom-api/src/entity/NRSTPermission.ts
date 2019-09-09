@@ -1,11 +1,11 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 
-import { common } from "../services/Common";
+import { DBConstants } from "../services/DBConstants";
 import { NRRole } from "./NRRole";
 import { NRStage } from "./NRStage";
 
 // NRSTPermission objects track permissions between stages and roles.
-@Entity(common.STPERM_TABLE)
+@Entity(DBConstants.STPERM_TABLE)
 export class NRSTPermission {
     @PrimaryGeneratedColumn()
     public id: number;

@@ -1,5 +1,4 @@
-// Common functionality used in different places.
-export namespace common {
+export namespace DBConstants {
     export const READ = 0;
     export const WRITE = 1;
     export const USER_TABLE = "user";
