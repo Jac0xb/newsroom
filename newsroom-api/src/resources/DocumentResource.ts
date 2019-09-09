@@ -7,6 +7,7 @@ import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow } from "../entity";
 import { common } from "../services/Common";
 import { DocumentService } from "../services/DocumentService";
+import { PermissionService } from "../services/PermissionService";
 import { validators } from "../services/Validators";
 import { WorkflowService } from "../services/WorkflowService";
 
@@ -38,6 +39,9 @@ export class DocumentResource {
 
     @Inject()
     private documentService: DocumentService;
+
+    @Inject()
+    private permissionService: PermissionService;
 
     /**
      * Create a new document based on passed information.
@@ -173,7 +177,7 @@ export class DocumentResource {
                                 document: NRDocument): Promise<NRDocument> {
         const sessionUser = common.getUserFromContext(this.context);
         const currDocument = await this.documentService.getDocument(did);
-        await common.checkDCWritePermissions(sessionUser, did, this.permDCRepository);
+        await this.permissionService.checkDCWritePermissions(sessionUser, did);
 
         // Check for existence.
         await this.workflowService.getWorkflow(document.workflow.id);
@@ -218,7 +222,7 @@ export class DocumentResource {
     public async deleteDocument(@IsInt @PathParam("did") did: number) {
         const sessionUser = common.getUserFromContext(this.context);
         const currDocument = await this.documentService.getDocument(did);
-        await common.checkDCWritePermissions(sessionUser, did, this.permDCRepository);
+        await this.permissionService.checkDCWritePermissions(sessionUser, did);
 
         await this.documentRepository
             .createQueryBuilder(common.DOCU_TABLE)
@@ -293,7 +297,7 @@ export class DocumentResource {
         const workflowId = currDocument.workflow.id;
 
         // Must have WRITE on current stage to move forward.
-        await common.checkSTWritePermissions(sessionUser, currStage.id, this.permSTRepository);
+        await this.permissionService.checkDCWritePermissions(sessionUser, did);
 
         // Used to determine if the document is done in its workflow.
         const maxSeq = await this.getMaxStageSequenceId(workflowId);
@@ -396,7 +400,7 @@ export class DocumentResource {
                 .getOne();
 
             // Must have WRITE on previous stage to move backward.
-            await common.checkSTWritePermissions(sessionUser, prevStage.id, this.permSTRepository);
+            await this.permissionService.checkDCWritePermissions(sessionUser, did);
             currDocument.stage = prevStage;
         }
 

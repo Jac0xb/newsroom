@@ -17,6 +17,7 @@ import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
 import { common } from "../services/Common";
+import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";
 import { validators } from "../services/Validators";
 import { WorkflowService } from "../services/WorkflowService";
@@ -46,6 +47,9 @@ export class WorkflowResource {
 
     @Inject()
     private workflowService: WorkflowService;
+
+    @Inject()
+    private permissionService: PermissionService;
 
     /**
      * Create a new workflow based on the passed information.
@@ -128,7 +132,7 @@ export class WorkflowResource {
                                 workflow: NRWorkflow): Promise<NRWorkflow> {
         const sessionUser = common.getUserFromContext(this.context);
         const currWorkflow = await this.workflowService.getWorkflow(wid);
-        await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
+        await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
         // Update current stored name if given one.
         if (workflow.name) {
@@ -163,7 +167,7 @@ export class WorkflowResource {
     public async deleteWorkflow(@IsInt @PathParam("wid") wid: number) {
         const sessionUser = common.getUserFromContext(this.context);
         const currWorkflow = await this.workflowService.getWorkflow(wid);
-        await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
+        await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
         try {
             await this.stageRepository
@@ -207,7 +211,7 @@ export class WorkflowResource {
                              stage: NRStage): Promise<NRStage> {
         const sessionUser = common.getUserFromContext(this.context);
         const currWorkflow = await this.workflowService.getWorkflow(wid);
-        await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
+        await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
         // Grab the next sequence ID for this set of workflow stages.
         const maxSeqId = await this.getMaxStageSequenceId(currWorkflow.id);
@@ -244,7 +248,7 @@ export class WorkflowResource {
     public async getStages(@IsInt @PathParam("wid") wid: number): Promise<NRStage[]> {
         const sessionUser = common.getUserFromContext(this.context);
         const currWorkflow = await this.workflowService.getWorkflow(wid);
-        await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
+        await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
         try {
             // Grab all the stages for this workflow.
@@ -279,7 +283,7 @@ export class WorkflowResource {
                           @IsInt @PathParam("sid") sid: number): Promise<NRStage> {
         const sessionUser = common.getUserFromContext(this.context);
         const currWorkflow = await this.workflowService.getWorkflow(wid);
-        await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
+        await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
         try {
             // Grab the specified stage for the right workflow.
@@ -324,7 +328,7 @@ export class WorkflowResource {
 
         const sessionUser = common.getUserFromContext(this.context);
         const currWorkflow = await this.workflowService.getWorkflow(wid);
-        await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
+        await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
         try {
             // Grab the max/min sequenceId for this set of workflow stages.
@@ -388,7 +392,7 @@ export class WorkflowResource {
                              @PathParam("sid") sid: number) {
         const sessionUser = common.getUserFromContext(this.context);
         const currStage = await this.workflowService.getStage(sid);
-        await common.checkWFWritePermissions(sessionUser, wid, this.permWFRepository);
+        await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
         try {
             const maxSeqId = await this.getMaxStageSequenceId(wid);
@@ -447,7 +451,7 @@ export class WorkflowResource {
                              stage: NRStage): Promise<NRStage> {
         const sessionUser = common.getUserFromContext(this.context);
         const currStage = await this.workflowService.getStage(sid);
-        await common.checkSTWritePermissions(sessionUser, sid, this.permSTRepository);
+        await this.permissionService.checkWFWritePermissions(sessionUser, currStage.workflow.id);
 
         try {
             // Update current stored name if given one.

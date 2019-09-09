@@ -16,8 +16,8 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRDCPermission, NRDocument, NRRole, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
-import { common } from "../services/Common";
 import { DocumentService } from "../services/DocumentService";
+import { PermissionService } from "../services/PermissionService";
 import { RoleService } from "../services/RoleService";
 import { validators } from "../services/Validators";
 import { WorkflowService } from "../services/WorkflowService";
@@ -59,6 +59,9 @@ export class RoleResource {
 
     @Inject()
     private roleService: RoleService;
+
+    @Inject()
+    private permissionService: PermissionService;
 
     /**
      * Create a new role.
@@ -184,7 +187,7 @@ export class RoleResource {
         let newPerm: NRWFPermission;
 
         try {
-            newPerm = await common.getWFPermission(permission.id, this.permWFRepository);
+            newPerm = await this.permissionService.getWFPermission(permission.id);
         } catch (NotFoundError) {
             newPerm = new NRWFPermission();
             newPerm.access = permission.access;
@@ -226,7 +229,7 @@ export class RoleResource {
         let newPerm: NRSTPermission;
 
         try {
-            newPerm = await common.getSTPermission(permission.id, this.permSTRepository);
+            newPerm = await this.permissionService.getSTPermission(permission.id);
         } catch (NotFoundError) {
             newPerm = new NRSTPermission();
             newPerm.access = permission.access;
@@ -268,7 +271,7 @@ export class RoleResource {
         let newPerm: NRDCPermission;
 
         try {
-            newPerm = await common.getDCPermission(permission.id, this.permDCRepository);
+            newPerm = await this.permissionService.getDCPermission(permission.id);
             newPerm.id = permission.id;
             newPerm.access = permission.access;
             newPerm.role = permission.role;
