@@ -4,13 +4,12 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 
 import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow } from "../entity";
-import { DBConstants } from "../entity";
+import { DBConstants, NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";
-import { validators } from "../services/Validators";
 import { WorkflowService } from "../services/WorkflowService";
+import { createDocumentValidator, updateDocumentValidator } from "../validators/DocumentValidators";
 
 // Provides API services for documents.
 @Path("/api/documents")
@@ -55,7 +54,7 @@ export class DocumentResource {
      *          - If request user is not allowed to create documents.
      */
     @POST
-    @PreProcessor(validators.createDocumentValidator)
+    @PreProcessor(createDocumentValidator)
     public async createDocument(document: NRDocument): Promise<NRDocument> {
         const currWorkflow = await this.workflowService.getWorkflow(document.workflow.id);
 
@@ -172,7 +171,7 @@ export class DocumentResource {
      */
     @PUT
     @Path("/:did")
-    @PreProcessor(validators.updateDocumentValidator)
+    @PreProcessor(updateDocumentValidator)
     public async updateDocument(@IsInt @PathParam("did") did: number,
                                 document: NRDocument): Promise<NRDocument> {
         const sessionUser = this.userService.getUserFromContext();
