@@ -7,7 +7,7 @@ import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRRole, NRUser } from "../entity";
 import { RoleService } from "../services/RoleService";
 import { UserService } from "../services/UserService";
-import { validators } from "../services/Validators";
+import { createUserValidator, updateUserValidator } from "../validators/UserValidators";
 
 // Provides API services for users.
 @Service()
@@ -36,7 +36,7 @@ export class UserResource {
      *          - If properties are missing or wrong type.
      */
     @POST
-    @PreProcessor(validators.createUserValidator)
+    @PreProcessor(createUserValidator)
     public async createUser(user: NRUser): Promise<NRUser> {
         try {
             // Form data already validated above.
@@ -93,7 +93,7 @@ export class UserResource {
      */
     @PUT
     @Path("/:uid")
-    @PreProcessor(validators.updateUserValidator)
+    @PreProcessor(updateUserValidator)
     public async updateUser(@IsInt @PathParam("uid") uid: number,
                             user: NRUser): Promise<NRUser> {
         const currUser = await this.userService.getUser(uid);
