@@ -1,5 +1,5 @@
 import { Repository } from "typeorm";
-import { Context, DELETE, GET, Path, PathParam, POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
+import { DELETE, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 
 import { Inject } from "typedi";
@@ -8,6 +8,7 @@ import { NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow } from 
 import { common } from "../services/Common";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
+import { UserService } from "../services/UserService";
 import { validators } from "../services/Validators";
 import { WorkflowService } from "../services/WorkflowService";
 
@@ -15,10 +16,6 @@ import { WorkflowService } from "../services/WorkflowService";
 @Path("/api/documents")
 @Tags("Documents")
 export class DocumentResource {
-    // Context manager to grab injected user from the request.
-    @Context
-    private context: ServiceContext;
-
     @InjectRepository(NRStage)
     private stageRepository: Repository<NRStage>;
 
@@ -42,6 +39,9 @@ export class DocumentResource {
 
     @Inject()
     private permissionService: PermissionService;
+
+    @Inject()
+    private userService: UserService;
 
     /**
      * Create a new document based on passed information.
@@ -175,7 +175,7 @@ export class DocumentResource {
     @PreProcessor(validators.updateDocumentValidator)
     public async updateDocument(@IsInt @PathParam("did") did: number,
                                 document: NRDocument): Promise<NRDocument> {
-        const sessionUser = common.getUserFromContext(this.context);
+        const sessionUser = this.userService.getUserFromContext();
         const currDocument = await this.documentService.getDocument(did);
         await this.permissionService.checkDCWritePermissions(sessionUser, did);
 
@@ -220,7 +220,7 @@ export class DocumentResource {
     @DELETE
     @Path("/:did")
     public async deleteDocument(@IsInt @PathParam("did") did: number) {
-        const sessionUser = common.getUserFromContext(this.context);
+        const sessionUser = this.userService.getUserFromContext();
         const currDocument = await this.documentService.getDocument(did);
         await this.permissionService.checkDCWritePermissions(sessionUser, did);
 
@@ -291,7 +291,7 @@ export class DocumentResource {
     @PUT
     @Path("/:did/next")
     public async moveNext(@IsInt @PathParam("did") did: number): Promise<NRDocument> {
-        const sessionUser = common.getUserFromContext(this.context);
+        const sessionUser = this.userService.getUserFromContext();
         const currDocument = await this.documentService.getDocument(did);
         const currStage = currDocument.stage;
         const workflowId = currDocument.workflow.id;
@@ -382,7 +382,7 @@ export class DocumentResource {
     @PUT
     @Path("/:did/prev")
     public async movePrev(@IsInt @PathParam("did") did: number): Promise<NRDocument> {
-        const sessionUser = common.getUserFromContext(this.context);
+        const sessionUser = this.userService.getUserFromContext();
         const currDocument = await this.documentService.getDocument(did);
         const currStage = currDocument.stage;
         const workflowId = currDocument.workflow.id;

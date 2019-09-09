@@ -1,8 +1,3 @@
-import { Repository } from "typeorm";
-import { Errors, ServiceContext } from "typescript-rest";
-
-import { NRUser } from "../entity";
-
 // Common functionality used in different places.
 export namespace common {
     export const READ = 0;
@@ -15,22 +10,4 @@ export namespace common {
     export const WFPERM_TABLE = "wfpermission";
     export const STPERM_TABLE = "stpermission";
     export const DCPERM_TABLE = "dcpermission";
-
-    // Get the user from the ServiceContext containing the request.
-    export function getUserFromContext(context: ServiceContext) {
-        return context.request.user;
-    }
-
-    // Get a user based on ID.
-    export async function getUser(uid: number,
-                                  repo: Repository<NRUser>): Promise<NRUser> {
-        try {
-            return await repo.findOneOrFail(uid);
-        } catch (err) {
-            console.error("Error getting user:", err);
-
-            const errStr = `User with ID ${uid} was not found.`;
-            throw new Errors.NotFoundError(errStr);
-        }
-    }
 }

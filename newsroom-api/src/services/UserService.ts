@@ -1,13 +1,21 @@
 import { Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { Errors } from "typescript-rest";
+import { Context, Errors, ServiceContext } from "typescript-rest";
 import { NRUser } from "../entity";
 
 @Service()
 export class UserService {
+    @Context
+    private context: ServiceContext;
+
     @InjectRepository(NRUser)
     private repository: Repository<NRUser>;
+
+    // Get the user from the ServiceContext containing the request.
+    public getUserFromContext() {
+        return this.context.request.user;
+    }
 
     // Get a user based on ID.
     public async getUser(uid: number): Promise<NRUser> {
