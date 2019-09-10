@@ -47,9 +47,9 @@ class App extends React.Component<App.Props, App.State, any> {
 	handleRegisterClick = (username: string, password: string) => {
 		console.log(username, password)
         this.setState({ isAuthenticated: true })
-  };
+    };
 
-	render(){
+	render() {
 
 		const { isAuthenticated } = this.state;
 
@@ -59,12 +59,14 @@ class App extends React.Component<App.Props, App.State, any> {
 				<PrimarySearchAppBar />
 				<Switch>
 						{
-							!isAuthenticated &&
-							<LoginPage loginClick={(username: string, password: string) => this.handleLoginClick(username, password)} registerClick={this.handleRegisterClick} /> 	
+                            !isAuthenticated &&
+							<div style={{marginTop: "64px"}}>
+							    <LoginPage loginClick={(username: string, password: string) => this.handleLoginClick(username, password)} registerClick={this.handleRegisterClick} /> 	
+                            </div>
 						}
 						{
 							isAuthenticated &&
-							<div>
+							<div style={{marginTop: "64px"}}>
 								<Route exact path="/document" component={(() => Dashboard)()} />
 								<Route exact path="/document/create" component={DocumentCreator} />
 								<Route path="/document/:id/edit" component={DocumentEditor} />

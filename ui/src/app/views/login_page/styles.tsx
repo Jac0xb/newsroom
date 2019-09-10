@@ -18,6 +18,11 @@ export function styles(theme: Theme) {
             margin: theme.spacing.unit,
             textTransform: "none",
           },
+          loginButton: {
+            maxHeight: '40px',
+            margin: theme.spacing.unit,
+            textTransform: "none"
+          },
           textField: {
             marginLeft: 8,
             marginRight: 8,

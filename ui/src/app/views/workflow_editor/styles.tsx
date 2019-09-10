@@ -6,7 +6,6 @@ export function styles(theme: Theme) {
             
         },
         workflowContent: {
-            // marginTop: theme.spacing.unit * 3,
             padding: theme.spacing.unit * 2,
             display: "flex",
             overflowX: "auto",
