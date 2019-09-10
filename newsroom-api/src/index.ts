@@ -1,15 +1,15 @@
 import dotenv from "dotenv";
 import "dotenv/config";
 import express from "express";
-import fs from "fs";
 import "reflect-metadata";
-import swaggerUi from "swagger-ui-express";
 import { createConnection, useContainer } from "typeorm";
 import { Server } from "typescript-rest";
-import { HttpError, InternalServerError } from "typescript-rest/dist/server/model/errors";
+import { InternalServerError } from "typescript-rest/dist/server/model/errors";
 
 import { Container } from "typedi";
 import { NRUser } from "./entity";
+import { ErrorMapper } from "./middleware/ErrorMapper";
+import { Swagger } from "./middleware/Swagger";
 import { DocumentResource } from "./resources/DocumentResource";
 import { RoleResource } from "./resources/RoleResource";
 import { UserResource } from "./resources/UserResource";
@@ -22,17 +22,7 @@ dotenv.config();
 const port = process.env.SERVICE_PORT || 8000;
 const app = express();
 
-// Serve swagger docs on "/docs".
-fs.readFile("dist/swagger.json", "UTF-8", (err, data) => {
-    if (err) {
-        console.error("Error reading Swagger JSON file:", err);
-        return;
-    }
-
-    const swaggerDocument = JSON.parse(data);
-
-    app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-});
+Swagger.serve(app);
 
 // Register TypeDI Container with TypeORM, must be called before createConnection()
 useContainer(Container);
@@ -64,20 +54,7 @@ createConnection().then(async (connection) => {
     Server.buildServices(app, UserResource, RoleResource, DocumentResource, WorkflowResource);
 
     // Add error handler to return JSON error.
-    app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-        if (err instanceof HttpError) {
-            if (res.headersSent) {
-                // Allows default error handler to close connection if headers already sent.
-                return next(err);
-            }
-
-            res.set("Content-Type", "application/json");
-            res.status(err.statusCode);
-            res.json({code: err.statusCode, message: err.message});
-        } else {
-            next(err);
-        }
-    });
+    app.use(ErrorMapper.mapError);
 
     app.listen(port, () => {
         console.info(`Server started at http://localhost:${port}.`);
