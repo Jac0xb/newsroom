@@ -19,6 +19,8 @@ import Users from "app/views/users";
 import Groups from "app/views/groups";
 import PrimarySearchAppBar from 'app/components/common/header';
 import LoginPage from './views/login_page';
+import axios from 'axios';
+import { User } from './models';
 
 export namespace App {
     export interface Props {
@@ -26,6 +28,7 @@ export namespace App {
     }
     export interface State {
 		isAuthenticated: Boolean,
+		users: User[]
     }
 }
 
@@ -35,18 +38,62 @@ class App extends React.Component<App.Props, App.State, any> {
 		super(props)
 		this.state = {
 		  isAuthenticated: false,
+		  users: []
 		}
 	}
 
+	componentDidMount(){
+		// TODO
+		if(localStorage.getItem("userID") != null){
+			this.setState({ isAuthenticated: true })
+		}
+		else{
+			this.setState({ isAuthenticated: false })
+		}
+	};
+
 	// TODO: auth thro db
 	handleLoginClick = (username: string, password: string) => {
-		console.log(username, password)
-        this.setState({ isAuthenticated: true })
+
+		axios.get("/api/users").then((response: any) => {
+			try {
+				response.data.forEach( (user: User) => {
+						// If username and password match in the database
+						if (user.name === username && user.password === password){
+
+							// Set isAuthenticated to true and cookie to id and return
+							this.setState({ isAuthenticated: true })
+							localStorage.setItem("userID", user.id.toString())
+							return
+						}	
+				});
+
+				// TODO: Else, not found in db
+
+
+			} catch (error) {
+				console.log(error)
+			}
+		});
+		
 	};
 	// TODO: auth thro db
-	handleRegisterClick = (username: string, password: string) => {
-		console.log(username, password)
-        this.setState({ isAuthenticated: true })
+	handleRegisterClick = (username: string, firstName: string, lastName: string, password: string) => {
+		
+		axios.post("/api/users", {
+			name: username,
+			firstName: firstName,
+			lastName: lastName,
+            password: password,
+
+        }).then((response: any) => {
+            console.log(response);
+
+            // Set cookie and authenticated
+			this.setState({ isAuthenticated: true })
+			localStorage.setItem("userID", response.data.id)
+		});
+		
   };
 
 	render(){

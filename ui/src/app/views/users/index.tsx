@@ -41,7 +41,7 @@ class Users extends React.Component<Users.Props, Users.State> {
                 name: "ckuhn" + key,
                 firstName: "Connor",
                 lastName: "Kuhn",
-                email: "connor.kuhn@utah.edu"
+                password: "password"
             }
         });
 
