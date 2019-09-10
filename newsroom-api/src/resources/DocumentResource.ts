@@ -1,5 +1,5 @@
 import { Repository } from "typeorm";
-import { DELETE, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
+import { Context, DELETE, GET, Path, PathParam, POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 
 import { Inject } from "typedi";
@@ -15,6 +15,9 @@ import { createDocumentValidator, updateDocumentValidator } from "../validators/
 @Path("/api/documents")
 @Tags("Documents")
 export class DocumentResource {
+    @Context
+    private serviceContext: ServiceContext;
+
     @InjectRepository(NRStage)
     private stageRepository: Repository<NRStage>;
 
@@ -174,7 +177,7 @@ export class DocumentResource {
     @PreProcessor(updateDocumentValidator)
     public async updateDocument(@IsInt @PathParam("did") did: number,
                                 document: NRDocument): Promise<NRDocument> {
-        const sessionUser = this.userService.getUserFromContext();
+        const sessionUser = this.serviceContext.user();
         const currDocument = await this.documentService.getDocument(did);
         await this.permissionService.checkDCWritePermissions(sessionUser, did);
 
@@ -219,7 +222,7 @@ export class DocumentResource {
     @DELETE
     @Path("/:did")
     public async deleteDocument(@IsInt @PathParam("did") did: number) {
-        const sessionUser = this.userService.getUserFromContext();
+        const sessionUser = this.serviceContext.user();
         const currDocument = await this.documentService.getDocument(did);
         await this.permissionService.checkDCWritePermissions(sessionUser, did);
 
@@ -290,7 +293,7 @@ export class DocumentResource {
     @PUT
     @Path("/:did/next")
     public async moveNext(@IsInt @PathParam("did") did: number): Promise<NRDocument> {
-        const sessionUser = this.userService.getUserFromContext();
+        const sessionUser = this.serviceContext.user();
         const currDocument = await this.documentService.getDocument(did);
         const currStage = currDocument.stage;
         const workflowId = currDocument.workflow.id;
@@ -381,7 +384,7 @@ export class DocumentResource {
     @PUT
     @Path("/:did/prev")
     public async movePrev(@IsInt @PathParam("did") did: number): Promise<NRDocument> {
-        const sessionUser = this.userService.getUserFromContext();
+        const sessionUser = this.serviceContext.user();
         const currDocument = await this.documentService.getDocument(did);
         const currStage = currDocument.stage;
         const workflowId = currDocument.workflow.id;

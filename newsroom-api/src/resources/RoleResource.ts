@@ -26,9 +26,8 @@ import { createRoleValidator, updateRoleValidator } from "../validators/RoleVali
 @Path("/api/roles")
 @Tags("Roles")
 export class RoleResource {
-    // Context manager to grab injected user from the request.
     @Context
-    private context: ServiceContext;
+    private serviceContext: ServiceContext;
 
     @InjectRepository(NRRole)
     private roleRepository: Repository<NRRole>;

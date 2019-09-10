@@ -1,9 +1,8 @@
+import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
+import { InjectRepository } from "typeorm-typedi-extensions";
 import { DELETE, Errors, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-
-import { Inject, Service } from "typedi";
-import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRRole, NRUser } from "../entity";
 import { RoleService } from "../services/RoleService";
 import { UserService } from "../services/UserService";
@@ -14,12 +13,11 @@ import { createUserValidator, updateUserValidator } from "../validators/UserVali
 @Path("/api/users")
 @Tags("Users")
 export class UserResource {
-    // Database interactions managers.
     @InjectRepository(NRRole)
-    private roleRepository: Repository<NRRole>; // = getManager().getRepository(NRRole);
+    private roleRepository: Repository<NRRole>;
 
     @InjectRepository(NRUser)
-    private userRepository: Repository<NRUser>; // getManager().getRepository(NRUser);
+    private userRepository: Repository<NRUser>;
 
     @Inject()
     private userService: UserService;

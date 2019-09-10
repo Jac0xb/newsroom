@@ -1,4 +1,6 @@
+import { Inject } from "typedi";
 import { Repository } from "typeorm";
+import { InjectRepository } from "typeorm-typedi-extensions";
 import {
     Context,
     DELETE,
@@ -12,9 +14,6 @@ import {
     ServiceContext,
 } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-
-import { Inject } from "typedi";
-import { InjectRepository } from "typeorm-typedi-extensions";
 import { DBConstants, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
 import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";
@@ -26,9 +25,8 @@ import { createWorkflowValidator, updateWorkflowValidator } from "../validators/
 @Path("/api/workflows")
 @Tags("Workflows")
 export class WorkflowResource {
-    // Context manager to grab injected user from the request.
     @Context
-    private context: ServiceContext;
+    private serviceContext: ServiceContext;
 
     @InjectRepository(NRStage)
     private stageRepository: Repository<NRStage>;
@@ -65,7 +63,9 @@ export class WorkflowResource {
     @POST
     @PreProcessor(createWorkflowValidator)
     public async createWorkflow(workflow: NRWorkflow): Promise<NRWorkflow> {
-        const sessionUser = await this.userService.getUserFromContext();
+        const sessionUser = await this.serviceContext.user();
+
+        console.log(sessionUser);
 
         // The creator is whoever is logged in.
         workflow.creator = await this.userService.getUser(sessionUser.id);
@@ -130,7 +130,7 @@ export class WorkflowResource {
     @PreProcessor(updateWorkflowValidator)
     public async updateWorkflow(@IsInt @PathParam("wid") wid: number,
                                 workflow: NRWorkflow): Promise<NRWorkflow> {
-        const sessionUser = this.userService.getUserFromContext();
+        const sessionUser = this.serviceContext.user();
         const currWorkflow = await this.workflowService.getWorkflow(wid);
         await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
@@ -165,7 +165,7 @@ export class WorkflowResource {
     @DELETE
     @Path("/:wid")
     public async deleteWorkflow(@IsInt @PathParam("wid") wid: number) {
-        const sessionUser = this.userService.getUserFromContext();
+        const sessionUser = this.serviceContext.user();
         const currWorkflow = await this.workflowService.getWorkflow(wid);
         await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
@@ -209,7 +209,7 @@ export class WorkflowResource {
     @PreProcessor(addStageValidator)
     public async appendStage(@IsInt @PathParam("wid") wid: number,
                              stage: NRStage): Promise<NRStage> {
-        const sessionUser = this.userService.getUserFromContext();
+        const sessionUser = this.serviceContext.user();
         const currWorkflow = await this.workflowService.getWorkflow(wid);
         await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
@@ -246,7 +246,7 @@ export class WorkflowResource {
     @GET
     @Path("/:wid/stages")
     public async getStages(@IsInt @PathParam("wid") wid: number): Promise<NRStage[]> {
-        const sessionUser = this.userService.getUserFromContext();
+        const sessionUser = this.serviceContext.user();
         const currWorkflow = await this.workflowService.getWorkflow(wid);
         await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
@@ -281,7 +281,7 @@ export class WorkflowResource {
     @Path("/:wid/stages/:sid")
     public async getStage(@IsInt @PathParam("wid") wid: number,
                           @IsInt @PathParam("sid") sid: number): Promise<NRStage> {
-        const sessionUser = this.userService.getUserFromContext();
+        const sessionUser = this.serviceContext.user();
         const currWorkflow = await this.workflowService.getWorkflow(wid);
         await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
@@ -326,7 +326,7 @@ export class WorkflowResource {
             throw new Errors.BadRequestError(errStr);
         }
 
-        const sessionUser = this.userService.getUserFromContext();
+        const sessionUser = this.serviceContext.user();
         const currWorkflow = await this.workflowService.getWorkflow(wid);
         await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
@@ -390,7 +390,7 @@ export class WorkflowResource {
     @Path("/:wid/stages/:sid")
     public async deleteStage(@IsInt @PathParam("wid") wid: number,
                              @PathParam("sid") sid: number) {
-        const sessionUser = this.userService.getUserFromContext();
+        const sessionUser = this.serviceContext.user();
         const currStage = await this.workflowService.getStage(sid);
         await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
@@ -449,7 +449,7 @@ export class WorkflowResource {
     @PreProcessor(updateStageValidator)
     public async updateStage(@IsInt @PathParam("sid") sid: number,
                              stage: NRStage): Promise<NRStage> {
-        const sessionUser = this.userService.getUserFromContext();
+        const sessionUser = this.serviceContext.user();
         const currStage = await this.workflowService.getStage(sid);
         await this.permissionService.checkWFWritePermissions(sessionUser, currStage.workflow.id);
 
