@@ -21,6 +21,9 @@ export function styles(theme: Theme) {
           },
           register:{ 
             marginTop: 2,
-          }
+          },
+          registerFields: {
+            display: "grid",
+          },
     } as StyleRules);
 }

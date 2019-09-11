@@ -13,6 +13,8 @@ export namespace LoginPage {
     username: string
     password: string
     registering: boolean
+    firstName: string
+    lastName: string
   }
 }
 class LoginPage extends React.Component<LoginPage.Props, LoginPage.State, any> {
@@ -24,6 +26,8 @@ class LoginPage extends React.Component<LoginPage.Props, LoginPage.State, any> {
             username: '',
             password: '',
             registering: false,
+            firstName: '',
+            lastName: '',
         }
     }
 
@@ -33,16 +37,20 @@ class LoginPage extends React.Component<LoginPage.Props, LoginPage.State, any> {
             this.setState({ username: event.target.value });
         if(name == "password")
             this.setState({ password: event.target.value });
+        if(name == "firstName")
+            this.setState({ firstName: event.target.value });
+        if(name == "lastName")
+            this.setState({ lastName: event.target.value });
     };
 
     toggleRegisterForm = () => {
-        this.setState({ registering: !this.state.registering });
+        this.setState({ registering: !this.state.registering, username: '', password: '', firstName: '', lastName: '' });
     };
 
     render() {
 
         const { classes, loginClick, registerClick } = this.props;
-        const { username, password, registering } = this.state;
+        const { username, password, registering, firstName, lastName } = this.state;
 
         return (
         <React.Fragment>
@@ -91,28 +99,52 @@ class LoginPage extends React.Component<LoginPage.Props, LoginPage.State, any> {
                             <Typography variant="h5" component="h3">
                                 Register 
                             </Typography>
-                            <TextField
-                                required
-                                onChange={this.handleTextChange("username")}
-                                id="username-required"
-                                label="Username"
-                                className={classes.textField}
-                                margin="normal"
-                                variant="outlined"
-                                value={username}
-                                
-                            />
-                            <TextField
-                                required
-                                onChange={this.handleTextChange("password")}
-                                id="password-required"
-                                label="Password"
-                                className={classes.textField}
-                                margin="normal"
-                                variant="outlined"
-                                value={password}
-                                type={'password'}
-                            />
+                            <div className={classes.registerFields}>
+                                <TextField
+                                    required
+                                    onChange={this.handleTextChange("firstName")}
+                                    id="firstName-required"
+                                    label="First Name"
+                                    className={classes.textField}
+                                    margin="normal"
+                                    variant="outlined"
+                                    value={firstName}
+                                    
+                                />
+                                <TextField
+                                    required
+                                    onChange={this.handleTextChange("lastName")}
+                                    id="lastName-required"
+                                    label="Last Name"
+                                    className={classes.textField}
+                                    margin="normal"
+                                    variant="outlined"
+                                    value={lastName}
+                                    
+                                />
+                                <TextField
+                                    required
+                                    onChange={this.handleTextChange("username")}
+                                    id="username-required"
+                                    label="Username"
+                                    className={classes.textField}
+                                    margin="normal"
+                                    variant="outlined"
+                                    value={username}
+                                    
+                                />
+                                <TextField
+                                    required
+                                    onChange={this.handleTextChange("password")}
+                                    id="password-required"
+                                    label="Password"
+                                    className={classes.textField}
+                                    margin="normal"
+                                    variant="outlined"
+                                    value={password}
+                                    type={'password'}
+                                />
+                            </div>
                             <Grid container className={classes.grid} justify="center">
                                 <Button variant="contained" color="primary" className={classes.button} onClick={() => registerClick(username,password)}>Register</Button>
                             </Grid>

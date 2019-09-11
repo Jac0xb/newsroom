@@ -13,12 +13,14 @@ import { hot } from 'react-hot-loader';
 import Dashboard from './views/dashboard_overview';
 import DocumentEditor from './views/document_editor';
 import WorkflowEditor from './views/workflow_editor'
-import Workflow from './views/workflow_page';
+import Workflow from './views/workflow_overview';
 import DocumentCreator from './views/document_create';
 import Users from "app/views/users";
 import Groups from "app/views/groups";
 import PrimarySearchAppBar from 'app/components/common/header';
 import LoginPage from './views/login_page';
+import axios from 'axios';
+import { User } from './models';
 
 export namespace App {
     export interface Props {
@@ -26,6 +28,7 @@ export namespace App {
     }
     export interface State {
 		isAuthenticated: Boolean,
+		users: User[]
     }
 }
 
@@ -35,18 +38,61 @@ class App extends React.Component<App.Props, App.State, any> {
 		super(props)
 		this.state = {
 		  isAuthenticated: false,
+		  users: []
 		}
 	}
 
-	// TODO: auth thro db
-	handleLoginClick = (username: string, password: string) => {
-		console.log(username, password)
-        this.setState({ isAuthenticated: true })
+	componentDidMount(){
+		// TODO
+		if(localStorage.getItem("userID") != null){
+			this.setState({ isAuthenticated: true })
+		}
+		else{
+			this.setState({ isAuthenticated: false })
+		}
 	};
-	// TODO: auth thro db
-	handleRegisterClick = (username: string, password: string) => {
-		console.log(username, password)
-        this.setState({ isAuthenticated: true })
+
+	// Login, Auth with backend TODO: google auth
+	handleLoginClick = (username: string, password: string) => {
+
+		axios.get("/api/users").then((response: any) => {
+			try {
+				response.data.forEach( (user: User) => {
+						// If username and password match in the database
+						if (user.name === username && user.password === password){
+
+							// Set isAuthenticated to true and cookie to id and return
+							this.setState({ isAuthenticated: true })
+							localStorage.setItem("userID", user.id.toString())
+							return
+						}	
+				});
+
+				// TODO: Else, not found in db
+
+
+			} catch (error) {
+				console.log(error)
+			}
+		});
+		
+	};
+	// Add new user to backend
+	handleRegisterClick = (username: string, firstName: string, lastName: string, password: string) => {
+		
+		axios.post("/api/users", {
+			name: username,
+			firstName: firstName,
+			lastName: lastName,
+            password: password,
+
+        }).then((response: any) => {
+
+            // Set cookie and authenticated
+			this.setState({ isAuthenticated: true })
+			localStorage.setItem("userID", response.data.id)
+		});
+		
   };
 
 	render(){
