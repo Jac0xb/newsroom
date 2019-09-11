@@ -20,7 +20,7 @@ export namespace EditorContainer {
 	}
 	export interface State {
 		document?: Document
-		editorURL: string
+		editorState: EditorState
 		styleBarUpdateFormats?: (formats: string[]) => void
 		errorText?: string
 	}
@@ -29,12 +29,13 @@ export namespace EditorContainer {
 class EditorContainer extends React.Component<EditorContainer.Props, any> {
 	documentId: number
 
+	state: EditorContainer.State = {
+		editorState: EditorState.createEmpty()
+	}
+
 	constructor(props: EditorContainer.Props) {
 		super(props)
-        this.documentId = props.match.params.id;
-        this.state = {
-            editorURL: "https://docs.google.com/document/d/1vMvYBaN3CMTAYB56DP4d8yNHTVRTltH5qbP3Wmh7ksc/edit"
-        }
+		this.documentId = props.match.params.id;
 	}
 
 	componentDidMount() {
@@ -62,7 +63,7 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 	render() {
 		const { classes } = this.props;
 
-		const { document, editorURL } = this.state;
+		const { document, editorState } = this.state;
 
 		if (!document || !document.workflow || !document.stage) {
 			return <div>Document did not exist, had no workflow, or had no stage</div>;
@@ -88,12 +89,20 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 								</Typography>
 							</Paper>
 							<Paper className={classes.editor}>
-                                <iframe style={{width: "100%", height: "800px" }} src={editorURL}>
-
-                                </iframe>
+								<Editor editorState={editorState}
+									onChange={(editorState: EditorState) => this.handleChange(editorState)}
+									handleKeyCommand={(command: string, editorState: EditorState) => this.handleKeyCommand(command, editorState)} />
 							</Paper>
 						</Grid>
 						<Grid item xs={3}>
+							<Paper className={classes.paper}>
+								<Typography variant="subtitle1">
+									Styles
+								</Typography>
+								<StyleBar
+									onClick={(format:string) => this.handleFormatChange(format)}
+									onCreateUpdateFormats={(updateFormats) => this.state.styleBarUpdateFormats = updateFormats} />
+							</Paper>
 							<WorkflowMiniView
 								workflow={document.workflow}
 								currentStage={document.stage.sequenceId!}

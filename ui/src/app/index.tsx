@@ -47,27 +47,26 @@ class App extends React.Component<App.Props, App.State, any> {
 	handleRegisterClick = (username: string, password: string) => {
 		console.log(username, password)
         this.setState({ isAuthenticated: true })
-    };
+  };
 
-	render() {
+	render(){
 
 		const { isAuthenticated } = this.state;
 
 		return(
-            <div className="App" style={{height:"100vh", display:"flex", flexDirection: "column"}}>
+			<React.Fragment>
 				<CssBaseline />
 				<PrimarySearchAppBar />
 				<Switch>
+					<div className="App">
 						{
-                            !isAuthenticated &&
-							<div style={{marginTop: "64px"}}>
-							    <LoginPage loginClick={(username: string, password: string) => this.handleLoginClick(username, password)} registerClick={this.handleRegisterClick} /> 	
-                            </div>
+							!isAuthenticated &&
+							<LoginPage loginClick={(username: string, password: string) => this.handleLoginClick(username, password)} registerClick={this.handleRegisterClick} /> 	
 						}
 						{
 							isAuthenticated &&
-							<div style={{marginTop: "64px"}}>
-								<Route exact path="/document" component={(() => Dashboard)()} />
+							<div>
+								<Route exact path="/document" component={Dashboard} />
 								<Route exact path="/document/create" component={DocumentCreator} />
 								<Route path="/document/:id/edit" component={DocumentEditor} />
 								<Route path="/workflow/:id/edit" component={WorkflowEditor} />
@@ -77,8 +76,9 @@ class App extends React.Component<App.Props, App.State, any> {
 								<Route exact path="/" component={Dashboard} />
 							</div>
 						}
+					</div>
 				</Switch>
-            </div>
+			</React.Fragment>
 		);
 	}
 }

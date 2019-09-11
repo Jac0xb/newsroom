@@ -2,9 +2,6 @@ import { StyleRules, Theme } from '@material-ui/core/styles';
 
 export function styles(theme: Theme) {
     return ({
-        loginBox: {
-            margin: '128px'
-        },
         grid: {
             marginTop: '20px',
           },
@@ -17,11 +14,6 @@ export function styles(theme: Theme) {
             maxHeight: '40px',
             margin: theme.spacing.unit,
             textTransform: "none",
-          },
-          loginButton: {
-            maxHeight: '40px',
-            margin: theme.spacing.unit,
-            textTransform: "none"
           },
           textField: {
             marginLeft: 8,

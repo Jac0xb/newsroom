@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import { Paper, List, ListItem, Divider, ListItemText, ListItemIcon } from '@material-ui/core';
+import { Drawer, List, ListItem, Divider, ListItemText, ListItemIcon } from '@material-ui/core';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
 
@@ -18,14 +18,24 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
 
     constructor(props: WorkflowMenuBar.Props) {
         super(props)
+        this.state = {
+            
+        }
     }
     render() {
 
         const { classes } = this.props;
+        const {  } = this.state;
 
         return (
         <main className={classes.layout}>
-             <Paper>
+             <Drawer
+                className={classes.drawer}
+                variant="permanent"
+                classes={{
+                paper: classes.drawerPaper,
+                }}
+            >
                 <List>
                 {['Tool 1', 'Tool 2'].map((text, index) => (
                     <ListItem button key={text}>
@@ -43,7 +53,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                     </ListItem>
                 ))}
                 </List>
-            </Paper>
+            </Drawer>
         </main>
         );
     }

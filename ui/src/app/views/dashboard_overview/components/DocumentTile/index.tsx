@@ -49,7 +49,7 @@ class DocumentTile extends React.Component<DocumentTile.Props> {
                     </Typography>
                     <Divider />
                     <DetailRow title="Author" data={document.creator} link={"/users/" + document.creator} />
-                    <DetailRow title="Workflow" data={document.workflow.name} link={"/workflow/" + document.workflow.id + "/edit"} />
+                    <DetailRow title="Workflow Type" data={document.workflow.name} link={"/workflow/" + document.workflow.id + "/edit"} />
                     <DetailRow title="Due Date" data={"duedate"} />
                     <div className={classes.buttonGroup}>
                         <Link to={"/document/" + document.id + "/edit"}>
