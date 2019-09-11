@@ -6,6 +6,10 @@ export function styles(theme: Theme)  {
         root: {
         	width: '100%',
         },
+        appBar: { 
+            backgroundColor: "#2d3436", 
+            boxShadow: 'none' 
+        },
         grow: {
         	flexGrow: 1,
         },
@@ -16,7 +20,7 @@ export function styles(theme: Theme)  {
         },
         title: {
 			display: 'none',
-			color: '#263238',
+			color: '#FC427B',
 			[theme.breakpoints.up('sm')]: {
 				display: 'block',
 			},

@@ -7,7 +7,10 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import { withStyles } from '@material-ui/core/styles';
 import MenuIcon from '@material-ui/icons/Menu';
-import MailIcon from '@material-ui/icons/Mail';
+import DocumentIcon from '@material-ui/icons/DeveloperBoard';
+import GroupIcon from  '@material-ui/icons/Group';
+import WorkflowIcon from '@material-ui/icons/ThreeSixty';
+import UserIcon from '@material-ui/icons/Face'
 import Drawer from '@material-ui/core/Drawer';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -18,7 +21,8 @@ import { compose } from 'recompose';
 export namespace Header {
     export interface Category {
         title: string,
-        url: string
+        url: string,
+        icon: JSX.Element
     }
     export interface Props {
         classes: Record<string, string>
@@ -36,11 +40,11 @@ class Header extends React.Component<Header.Props, Header.State> {
 
         this.state = {
             sideMenuOpen: false,
-            categories: [
-                { title: 'Document', url: "/" },
-                { title: 'Workflow', url: "/workflow" },
-                { title: 'Users', url: '/users'},
-                { title: 'Groups', url: '/groups'}
+            categories: [   // Icon Page: https://material.io/resources/icons/?style=baseline
+                { icon: (<DocumentIcon/>), title: 'Documents', url: "/" },
+                { icon: (<WorkflowIcon/>), title: 'Workflows', url: "/workflow" },
+                { icon: (<UserIcon/>), title: 'Users', url: '/users'},
+                { icon: (<GroupIcon/>), title: 'Groups', url: '/groups'}
             ]
         }
     }
@@ -58,7 +62,7 @@ class Header extends React.Component<Header.Props, Header.State> {
                     this.state.categories.map((category, index) => (
                         <Link key={index} to={category.url} className={classes.itemLinks}>
                             <ListItem button>
-                                <ListItemIcon><MailIcon /></ListItemIcon>
+                                <ListItemIcon>{category.icon}</ListItemIcon>
                                 <ListItemText primary={category.title} />
                             </ListItem>
                         </Link>
@@ -79,12 +83,13 @@ class Header extends React.Component<Header.Props, Header.State> {
      * TODO: Document
      */
     render() {
+        
         const { sideMenuOpen } = this.state;
         const { classes } = this.props;
 
         return (
-            <div className={classes.root}>
-                <AppBar style={{ backgroundColor: "#90b3c2", boxShadow: 'none' }} position="static">
+            <header className={classes.root}>
+                <AppBar className={classes.appBar}>
                     <Toolbar>
                         <IconButton className={classes.menuButton} color="inherit" aria-label="Open Drawer" onClick={() => this.toggleDrawer(true)}  >
                             <MenuIcon />
@@ -107,7 +112,7 @@ class Header extends React.Component<Header.Props, Header.State> {
                         </Link>
                     </Toolbar>
                 </AppBar>
-            </div>
+            </header>
         );
     }
 }
