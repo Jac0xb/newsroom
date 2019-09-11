@@ -1,12 +1,11 @@
 import * as React from 'react';
-import { Button, Divider, Typography, Paper, Grid } from '@material-ui/core';
+import { Button, Divider, Typography, Paper } from '@material-ui/core';
 import DetailRow from 'app/views/dashboard_overview/components/DetailLine';
 import { Link } from 'react-router-dom';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles';
 import { Document } from 'app/models';
 import classNames from 'classnames';
-import axios from 'axios';
 
 export namespace DocumentTile {
 	export interface Props {
@@ -14,6 +13,7 @@ export namespace DocumentTile {
 		match?: { params: any },
         document: Document,
         compressed?: Boolean
+        onDelete: (id: number) => void;
 	}
 }
 
@@ -23,23 +23,9 @@ class DocumentTile extends React.Component<DocumentTile.Props> {
 		super(props, context);
 	}
 
-	onDeleteClick = (docID: number) => {
-	
-		console.log(docID);
-		axios.delete("/api/documents/" + docID  , {
-		}).then((response) => {
-	
-		  console.log(response);
-
-		  // re-render??
-		  
-		});
-		
-	  };
-	
 	render() {
 
-		const { classes, document } = this.props;
+		const { classes, document, onDelete } = this.props;
         
         if (!this.props.compressed) {
             return (
@@ -55,7 +41,7 @@ class DocumentTile extends React.Component<DocumentTile.Props> {
                         <Link to={"/document/" + document.id + "/edit"}>
                             <Button variant="contained" className={classes.button}>Edit</Button>
                         </Link>
-                        <Button variant="contained" className={classes.button} onClick={() => this.onDeleteClick(document.id)}>Delete</Button>
+                        <Button variant="contained" className={classes.button} onClick={() => onDelete(document.id)}>Delete</Button>
                     </div>
                 </Paper>
             );
