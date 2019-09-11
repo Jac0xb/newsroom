@@ -13,7 +13,7 @@ import { hot } from 'react-hot-loader';
 import Dashboard from './views/dashboard_overview';
 import DocumentEditor from './views/document_editor';
 import WorkflowEditor from './views/workflow_editor'
-import Workflow from './views/workflow_page';
+import Workflow from './views/workflow_overview';
 import DocumentCreator from './views/document_create';
 import Users from "app/views/users";
 import Groups from "app/views/groups";
@@ -52,7 +52,7 @@ class App extends React.Component<App.Props, App.State, any> {
 		}
 	};
 
-	// TODO: auth thro db
+	// Login, Auth with backend TODO: google auth
 	handleLoginClick = (username: string, password: string) => {
 
 		axios.get("/api/users").then((response: any) => {
@@ -77,7 +77,7 @@ class App extends React.Component<App.Props, App.State, any> {
 		});
 		
 	};
-	// TODO: auth thro db
+	// Add new user to backend
 	handleRegisterClick = (username: string, firstName: string, lastName: string, password: string) => {
 		
 		axios.post("/api/users", {
@@ -87,7 +87,6 @@ class App extends React.Component<App.Props, App.State, any> {
             password: password,
 
         }).then((response: any) => {
-            console.log(response);
 
             // Set cookie and authenticated
 			this.setState({ isAuthenticated: true })
