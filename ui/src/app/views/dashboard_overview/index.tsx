@@ -38,7 +38,7 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
     renderDocuments() {
         
         return _.map(this.state.documents, (document) =>
-            <DocumentTile key={document.id} document={document} />
+            <DocumentTile key={document.id} document={document} onDelete={() => {}} />
         )
         
     }
