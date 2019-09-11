@@ -1,13 +1,13 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable,
          ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-import { common } from "../services/Common";
+import { DBConstants } from "./DBConstants";
 import { NRDCPermission } from "./NRDCPermission";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
 
-@Entity(common.DOCU_TABLE)
+@Entity(DBConstants.DOCU_TABLE)
 export class NRDocument {
     @PrimaryGeneratedColumn()
     public id: number;

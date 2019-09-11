@@ -6,7 +6,7 @@
     "rules": {
         "no-console": false,
         "only-arrow-functions": false,
-        "no-namespace": false
+        "interface-name": false
     },
     "linterOptions": {
         "exclude": [

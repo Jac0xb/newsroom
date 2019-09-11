@@ -1,11 +1,11 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
-import { common } from "../services/Common";
+import { DBConstants } from "./DBConstants";
 import { NRDocument } from "./NRDocument";
 import { NRRole } from "./NRRole";
 
 // NRDCPermission objects track permissions between documents and roles.
-@Entity(common.DCPERM_TABLE)
+@Entity(DBConstants.DCPERM_TABLE)
 export class NRDCPermission {
     @PrimaryGeneratedColumn()
     public id: number;
@@ -25,7 +25,7 @@ export class NRDCPermission {
     @ManyToOne(
         (type) => NRDocument,
         (document) => document.permissions,
-        { eager: true, onDelete: "CASCADE" },
+        {eager: true, onDelete: "CASCADE"},
     )
     public document: NRDocument;
 
@@ -37,7 +37,7 @@ export class NRDCPermission {
     @ManyToOne(
         (type) => NRRole,
         (role) => role.dcpermissions,
-        { eager: true, onDelete: "CASCADE" },
+        {eager: true, onDelete: "CASCADE"},
     )
     public role: NRRole;
 }

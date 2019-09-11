@@ -1,24 +1,36 @@
-import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany,
-         PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    JoinTable,
+    ManyToMany,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from "typeorm";
 
-import { common } from "../services/Common";
+import { DBConstants } from "./DBConstants";
 import { NRRole } from "./NRRole";
 
 // NRUser objects are used to track information about any user of the system.
-@Entity(common.USER_TABLE)
+@Entity(DBConstants.USER_TABLE)
 export class NRUser {
     @PrimaryGeneratedColumn()
     public id: number;
 
-    // Chosen username for the user.
     @Column({
         length: 256,
         nullable: false,
         type: "varchar",
     })
-    public name: string;
+    public userName: string;
 
-    // First name of the user.
+    @Column({
+        length: 500,
+        nullable: false,
+        type: "varchar",
+    })
+    public email: string;
+
     @Column({
         length: 256,
         nullable: false,
@@ -26,7 +38,6 @@ export class NRUser {
     })
     public firstName: string;
 
-    // Last name of the user.
     @Column({
         length: 256,
         nullable: false,
@@ -34,19 +45,9 @@ export class NRUser {
     })
     public lastName: string;
 
-    // Plaintext password.
-    @Column({
-        length: 256,
-        nullable: false,
-        type: "varchar",
-    })
-    public password: string;
-
-    // Date of when the user was created.
     @CreateDateColumn()
     public created: Date;
 
-    // Date of when the user was last edited.
     @UpdateDateColumn()
     public lastUpdated: Date;
 
@@ -58,7 +59,7 @@ export class NRUser {
     @ManyToMany(
         (type) => NRRole,
         (role) => role.users,
-        { eager: true },
+        {eager: true},
     )
     @JoinTable()
     public roles: NRRole[];
