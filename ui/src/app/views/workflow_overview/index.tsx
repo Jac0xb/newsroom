@@ -6,8 +6,9 @@ import { Divider } from '@material-ui/core';
 import WorkflowTile from 'app/views/workflow_overview/components/WorkflowObject';
 import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
+import { RouteComponentProps } from 'react-router';
 
-export namespace WorkflowOverview {
+export namespace CreateWorkflow {
     export interface Props {
         classes?: any
     }
@@ -20,11 +21,15 @@ export namespace WorkflowOverview {
         dialogBoxDesc: string
     }
 }
+export namespace Workflow {
+	export interface Props extends RouteComponentProps<void> {
+		classes?: any
+  }
+}
 
+class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflow.State> {
 
-class WorkflowOverview extends React.Component<WorkflowOverview.Props, WorkflowOverview.State> {
-
-    constructor(props: WorkflowOverview.Props) {
+    constructor(props: CreateWorkflow.Props) {
 		super(props)
         this.state = { workflows: [], 
             workFlowName: "", 
@@ -35,14 +40,9 @@ class WorkflowOverview extends React.Component<WorkflowOverview.Props, WorkflowO
         };
     }
 
+    
     componentDidMount() {
-        this.getWorkflows();
-    }
-
-    getWorkflows = () => {
         axios.get("/api/workflows").then((response) => {
-            console.log(response);
-
             this.setState({ workflows: response.data });
         })
     }
@@ -73,11 +73,10 @@ class WorkflowOverview extends React.Component<WorkflowOverview.Props, WorkflowO
 
         axios.post("/api/workflows", {
             name: textBoxName,
-            creator: "Jacques",
+            creator: Number(localStorage.getItem("userID")),
             description: textBoxDesc,
 
         }).then((response: any) => {
-            console.log(response);
 
             const workflow = response.data
             this.state.workflows.push(workflow)
@@ -91,10 +90,7 @@ class WorkflowOverview extends React.Component<WorkflowOverview.Props, WorkflowO
 
         axios.delete("/api/workflows/" + workflowID ,{
         }).then((response) => {
-    
-          // Update view
-          this.getWorkflows();
-          
+            this.setState({ workflows: response.data });          
         });
     
       };
@@ -105,22 +101,24 @@ class WorkflowOverview extends React.Component<WorkflowOverview.Props, WorkflowO
         const { classes } = this.props;
 
         return (
-            <main className={classes.layout}>
-                <div className={classes.buttonGroup}>
-                    <Button variant="contained" onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create Workflow</Button>
-                </div>
-				<Divider style={{margin: "0px 24px"}}/>
-				<div className={classes.outerGrid}>
-                    {workflows.map(workflow => (
-                    	<WorkflowTile workflow={workflow} onClick={(id: number) => this.handleDeleteClick(id)}/>
-					))
-					}
-				</div>
+			<React.Fragment>
+                <main className={classes.layout}>
+                    <div className={classes.buttonGroup}>
+                        <Button variant="contained" onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create Workflow</Button>
+                    </div>
+                    <Divider style={{margin: "0px 24px"}}/>
+                    <div className={classes.outerGrid}>
+                        {workflows.map(workflow => (
+                            <WorkflowTile workflow={workflow} onClick={(id: number) => this.handleDeleteClick(id)}/>
+                        ))
+                        }
+                    </div>
 
-                <DialogItem textBoxName={dialogBoxName} textBoxDesc={dialogBoxDesc}  title={"Create New Workflow"} desc={"Enter the name of the new workflow"} show={this.state.showDialog} handleTextBoxesChange={this.handleTextBoxesChange} handleClose={() => this.setState({showDialog: false})} handleSave={this.handleCreateNew}/>
-            </main>
+                    <DialogItem textBoxName={dialogBoxName} textBoxDesc={dialogBoxDesc}  title={"Create New Workflow"} desc={"Enter the name of the new workflow"} show={this.state.showDialog} handleTextBoxesChange={this.handleTextBoxesChange} handleClose={() => this.setState({showDialog: false})} handleSave={this.handleCreateNew}/>
+                </main>
+            </React.Fragment>
         );
     }
 }
 
-export default withStyles(styles, { withTheme: true })(WorkflowOverview);
+export default withStyles(styles, { withTheme: true })(CreateWorkflow);
