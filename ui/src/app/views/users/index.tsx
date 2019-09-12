@@ -33,19 +33,6 @@ class Users extends React.Component<Users.Props, Users.State> {
         axios.get("/api/users").then((response) => {
             this.setState({users: response.data})
         });
-
-        // TODO Remove testing user data once API is working
-        const users = Array.from({length: 25}, (value, key) => {
-            return {
-                id: key,
-                name: "ckuhn" + key,
-                firstName: "Connor",
-                lastName: "Kuhn",
-                password: "password"
-            }
-        });
-
-        this.setState({users: users});
     }
 
     render() {

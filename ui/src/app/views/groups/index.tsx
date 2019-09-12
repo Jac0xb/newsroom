@@ -33,19 +33,6 @@ class Groups extends React.Component<Groups.Props, Groups.State> {
         axios.get("/api/roles").then((response) => {
             this.setState({groups: response.data})
         });
-
-        // TODO Remove testing user data once API is working
-        const groups = Array.from({length: 25}, (value, key) => {
-            return {
-                id: key,
-                name: "Group " + key,
-                created: new Date().toLocaleDateString(),
-                lastUpdated: new Date().toLocaleDateString(),
-                description: "A group"
-            }
-        });
-
-        this.setState({groups: groups});
     }
 
     render() {
