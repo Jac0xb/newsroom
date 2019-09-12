@@ -50,7 +50,7 @@ export class AuthConfig {
         deserializeUser(async (id, done) => {
             const user = await this.userRepository.findOne(id);
 
-            if (user.accessToken == null) {
+            if (user == null || user.accessToken == null) {
                 done(null, null);
             }
 
