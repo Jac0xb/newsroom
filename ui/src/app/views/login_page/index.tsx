@@ -15,6 +15,7 @@ export namespace LoginPage {
     registering: boolean
     firstName: string
     lastName: string
+    email: string
   }
 }
 class LoginPage extends React.Component<LoginPage.Props, LoginPage.State, any> {
@@ -28,6 +29,7 @@ class LoginPage extends React.Component<LoginPage.Props, LoginPage.State, any> {
             registering: false,
             firstName: '',
             lastName: '',
+            email: '',
         }
     }
 
@@ -41,16 +43,18 @@ class LoginPage extends React.Component<LoginPage.Props, LoginPage.State, any> {
             this.setState({ firstName: event.target.value });
         if(name == "lastName")
             this.setState({ lastName: event.target.value });
+        if(name == "email")
+            this.setState({ email: event.target.value });
     };
 
     toggleRegisterForm = () => {
-        this.setState({ registering: !this.state.registering, username: '', password: '', firstName: '', lastName: '' });
+        this.setState({ registering: !this.state.registering, username: '', password: '', firstName: '', lastName: '', email: '' });
     };
 
     render() {
 
         const { classes, loginClick, registerClick } = this.props;
-        const { username, password, registering, firstName, lastName } = this.state;
+        const { username, password, registering, firstName, lastName, email } = this.state;
 
         return (
         <React.Fragment>
@@ -135,6 +139,17 @@ class LoginPage extends React.Component<LoginPage.Props, LoginPage.State, any> {
                                 />
                                 <TextField
                                     required
+                                    onChange={this.handleTextChange("email")}
+                                    id="email-required"
+                                    label="Email"
+                                    className={classes.textField}
+                                    margin="normal"
+                                    variant="outlined"
+                                    value={email}
+                                    
+                                />
+                                <TextField
+                                    required
                                     onChange={this.handleTextChange("password")}
                                     id="password-required"
                                     label="Password"
@@ -146,7 +161,7 @@ class LoginPage extends React.Component<LoginPage.Props, LoginPage.State, any> {
                                 />
                             </div>
                             <Grid container className={classes.grid} justify="center">
-                                <Button variant="contained" color="primary" className={classes.button} onClick={() => registerClick(username, firstName, lastName, password)}>Register</Button>
+                                <Button variant="contained" color="primary" className={classes.button} onClick={() => registerClick(firstName, lastName, username, email, password)}>Register</Button>
                             </Grid>
                             <Grid container className={classes.register} justify="center">
                                 <a href="#" onClick={() => this.toggleRegisterForm()}>Have an account? Sign In</a>
