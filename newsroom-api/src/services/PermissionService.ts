@@ -1,3 +1,4 @@
+import { Recoverable } from "repl";
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
@@ -56,8 +57,8 @@ export class PermissionService {
         }
     }
 
-    // Check if a user has write permissions on a workflow.
-    public async checkWFWritePermissions(user: NRUser, wid: number) {
+    // Return if user had READ/WRITE on a workflow.
+    public async getWFWritePermission(user: NRUser, wid: number): Promise<number> {
         let allowed = false;
 
         user = await this.userService.getUser(user.id);
@@ -85,14 +86,25 @@ export class PermissionService {
             throw new Errors.InternalServerError(errStr);
         }
 
+        if (allowed) {
+            return DBConstants.WRITE;
+        } else {
+            return DBConstants.READ;
+        }
+    }
+
+    // Check if a user has write permissions on a workflow.
+    public async checkWFWritePermissions(user: NRUser, wid: number) {
+        const allowed = await this.getWFWritePermission(user, wid);
+
         if (!(allowed)) {
             const errStr = `User with ID ${user.id} does not have WF write permissions.`;
             throw new Errors.ForbiddenError(errStr);
         }
     }
 
-    // Check if a user has write permissions on a stage.
-    public async checkSTWritePermissions(user: NRUser, sid: number) {
+    // Return if user had READ/WRITE on a stage.
+    public async getSTWritePermission(user: NRUser, sid: number): Promise<number> {
         let allowed = false;
 
         user = await this.userService.getUser(user.id);
@@ -111,6 +123,17 @@ export class PermissionService {
             }
         }
 
+        if (allowed) {
+            return DBConstants.WRITE;
+        } else {
+            return DBConstants.READ;
+        }
+    }
+
+    // Check if a user has write permissions on a stage.
+    public async checkSTWritePermissions(user: NRUser, sid: number) {
+        const allowed = this.checkSTWritePermissions(user, sid);
+
         if (!(allowed)) {
             const errStr = `User with ID ${user.id} does not have ST write permissions.`;
             throw new Errors.ForbiddenError(errStr);
@@ -118,24 +141,30 @@ export class PermissionService {
     }
 
     // Check if a user has write permissions on a document.
+    public async checkDCWritePermission(user: NRUser, did: number): Promise<number> {
+        return DBConstants.WRITE;
+        // let allowed = false;
+
+        // user = await this.userService.getUser(user.id);
+
+        // for (const role of user.roles) {
+        //     const roleRight = await this.permDCRepository
+        //         .createQueryBuilder(DBConstants.DCPERM_TABLE)
+        //         .select(`MAX(${DBConstants.DCPERM_TABLE}.access)`, "max")
+        //         .where(`${DBConstants.DCPERM_TABLE}.roleId = :id`, {id: role.id})
+        //         .andWhere(`${DBConstants.DCPERM_TABLE}.documentId = :dcid`, {dcid: did})
+        //         .getRawOne();
+
+        //     if (roleRight.max === DBConstants.WRITE) {
+        //         allowed = true;
+        //         break;
+        //     }
+        // }
+    }
+
+    // Check if a user has write permissions on a document.
     public async checkDCWritePermissions(user: NRUser, did: number) {
-        let allowed = false;
-
-        user = await this.userService.getUser(user.id);
-
-        for (const role of user.roles) {
-            const roleRight = await this.permDCRepository
-                .createQueryBuilder(DBConstants.DCPERM_TABLE)
-                .select(`MAX(${DBConstants.DCPERM_TABLE}.access)`, "max")
-                .where(`${DBConstants.DCPERM_TABLE}.roleId = :id`, {id: role.id})
-                .andWhere(`${DBConstants.DCPERM_TABLE}.documentId = :dcid`, {dcid: did})
-                .getRawOne();
-
-            if (roleRight.max === DBConstants.WRITE) {
-                allowed = true;
-                break;
-            }
-        }
+        const allowed = this.checkDCWritePermission(user, did);
 
         if (!(allowed)) {
             const errStr = `User with ID ${user.id} does not have DC write permissions.`;
