@@ -36,8 +36,11 @@ export class GoogleOAuth2Provider {
                     user.userName = userName;
                     user.firstName = profile.name.givenName;
                     user.lastName = profile.name.familyName;
-                    await this.userRepository.save(user);
                 }
+
+                user.accessToken = accessToken;
+
+                await this.userRepository.save(user);
 
                 done(null, user);
             });
@@ -49,6 +52,7 @@ export class GoogleOAuth2Provider {
                 scope: [
                     "https://www.googleapis.com/auth/userinfo.profile",
                     "https://www.googleapis.com/auth/userinfo.email",
+                    "https://www.googleapis.com/auth/drive.file",
                 ],
             }));
 
