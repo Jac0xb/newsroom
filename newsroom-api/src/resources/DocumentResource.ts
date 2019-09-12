@@ -4,7 +4,7 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 
 import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { DBConstants, NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow } from "../entity";
+import { DBConstants, NRDCPermission, NRDocument, NRRole, NRStage, NRSTPermission, NRWorkflow } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";
@@ -75,7 +75,8 @@ export class DocumentResource {
             document.stage = currStage;
         }
 
-        return await this.documentRepository.save(document);
+        return await this.documentService.addPermissionsToDoc(await this.documentRepository.save(document),
+         this.serviceContext.user());
     }
 
     /**
@@ -86,7 +87,39 @@ export class DocumentResource {
      */
     @GET
     public async getDocuments(): Promise<NRDocument[]> {
-        return await this.documentRepository.find();
+        return await this.documentService.addPermissionsToDocs(await this.documentRepository.find(),
+         this.serviceContext.user());
+    }
+
+    /**
+     * Get all documents a user has write permissions on.
+     *
+     * Returns:
+     *      - NRDocument[]
+     */
+    @Path("/user")
+    @GET
+    public async getUserDocuments(): Promise<NRDocument[]> {
+        const sessionUser = this.serviceContext.user();
+        const allRoles = await this.userService.getUserRoles(sessionUser.id);
+
+        const docs: NRDocument[] = [];
+
+        for (const role of allRoles) {
+             const tmp = await this.permDCRepository
+                .createQueryBuilder(DBConstants.DCPERM_TABLE)
+                .where(`${DBConstants.DCPERM_TABLE}.roleId = :r`, {r: role.id})
+                .andWhere(`${DBConstants.DCPERM_TABLE}.access = ${DBConstants.WRITE}`)
+                .getMany();
+
+             for (const p of tmp) {
+                const doc = p.document;
+                doc.permission = DBConstants.WRITE;
+                docs.push(doc);
+            }
+        }
+
+        return docs;
     }
 
     /**
@@ -100,7 +133,8 @@ export class DocumentResource {
     @Path("/:did")
     @GET
     public async getDocument(@PathParam("did") did: number): Promise<NRDocument> {
-        return await this.documentService.getDocument(did);
+        return await this.documentService.addPermissionsToDoc(await this.documentService.getDocument(did),
+        this.serviceContext.user());
     }
 
     /**
@@ -112,10 +146,12 @@ export class DocumentResource {
     @Path("/author/:aid")
     @GET
     public async getDocumentsForAuthor(@PathParam("aid") aid: number): Promise<NRDocument[]> {
-        return await this.documentRepository
+        const docs = await this.documentRepository
             .createQueryBuilder(DBConstants.DOCU_TABLE)
             .where("document.creator = :author", {author: aid})
             .getMany();
+
+        return await this.documentService.addPermissionsToDocs(docs, this.serviceContext.user());
     }
 
     /**
@@ -131,10 +167,12 @@ export class DocumentResource {
     public async getAllDocumentsForStage(@IsInt @PathParam("sid") sid: number): Promise<NRDocument[]> {
         const assocStage = await this.workflowService.getStage(sid);
 
-        return await this.documentRepository
+        const docs = await this.documentRepository
             .createQueryBuilder(DBConstants.DOCU_TABLE)
             .where("stageId = :sId", {sId: assocStage.id})
             .getMany();
+
+        return await this.documentService.addPermissionsToDocs(docs, this.serviceContext.user());
     }
 
     /**
@@ -152,12 +190,12 @@ export class DocumentResource {
         // Check for existence.
         await this.workflowService.getWorkflow(wid);
 
-        const allDocs = await this.documentRepository
+        const docs = await this.documentRepository
             .createQueryBuilder(DBConstants.DOCU_TABLE)
             .where("workflowId = :id", {id: wid})
             .getMany();
 
-        return allDocs;
+        return await this.documentService.addPermissionsToDocs(docs, this.serviceContext.user());
     }
 
     /**
@@ -179,7 +217,7 @@ export class DocumentResource {
                                 document: NRDocument): Promise<NRDocument> {
         const sessionUser = this.serviceContext.user();
         const currDocument = await this.documentService.getDocument(did);
-        await this.permissionService.checkDCWritePermissions(sessionUser, did);
+        // await this.permissionService.checkDCWritePermissions(sessionUser, did);
 
         // Check for existence.
         await this.workflowService.getWorkflow(document.workflow.id);
@@ -224,7 +262,7 @@ export class DocumentResource {
     public async deleteDocument(@IsInt @PathParam("did") did: number) {
         const sessionUser = this.serviceContext.user();
         const currDocument = await this.documentService.getDocument(did);
-        await this.permissionService.checkDCWritePermissions(sessionUser, did);
+        // await this.permissionService.checkDCWritePermissions(sessionUser, did);
 
         await this.documentRepository
             .createQueryBuilder(DBConstants.DOCU_TABLE)
@@ -319,7 +357,7 @@ export class DocumentResource {
         // It is possible that no updates were made if document is already at the
         // end of its workflows stages.
         // TODO: Relations not loaded, doesn't return stage if at the end.
-        return await this.documentRepository.save(currDocument);
+        return await this.documentService.addPermissionsToDoc(currDocument, this.serviceContext.user());
     }
 
     /**
@@ -409,7 +447,7 @@ export class DocumentResource {
         // It is possible that no updates were made if document is already at the
         // end of its workflows stages.
         // TODO: Relations not loaded, doesn't return stage if at the beginning.
-        return await this.documentRepository.save(currDocument);
+        return await this.documentService.addPermissionsToDoc(currDocument, this.serviceContext.user());
     }
 
     // Get the maximum sequenceId for the given workflows stages.
