@@ -188,13 +188,10 @@ export class DocumentResource {
         const currDocument = await this.documentService.getDocument(did);
         await this.permissionService.checkDCWritePermissions(sessionUser, did);
 
-        // Check for existence.
-        await this.workflowService.getWorkflow(document.workflow.id);
-        await this.workflowService.getStage(document.stage.id);
-
         if (document.name) {
-            // TODO Update in GDocs
             currDocument.name = document.name;
+
+            await this.documentService.updateGoogleDocumentTitle(sessionUser, currDocument);
         }
 
         if (document.description) {
@@ -202,10 +199,14 @@ export class DocumentResource {
         }
 
         if (document.workflow) {
+            await this.workflowService.getWorkflow(document.workflow.id);
+
             currDocument.workflow = document.workflow;
         }
 
         if (document.stage) {
+            await this.workflowService.getStage(document.stage.id);
+
             currDocument.stage = document.stage;
         }
 

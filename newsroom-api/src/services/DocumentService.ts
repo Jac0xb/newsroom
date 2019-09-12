@@ -31,11 +31,7 @@ export class DocumentService {
      * Creates a Google Doc and returns the id
      */
     public async createGoogleDocument(user: NRUser, doc: NRDocument): Promise<string> {
-        const oAuth2Client = new google.auth.OAuth2(DocumentService.OAUTH_CREDS);
-
-        oAuth2Client.setCredentials({
-            access_token: user.accessToken,
-        });
+        const oAuth2Client = this.createOAuth2Client(user);
 
         const docs = google.docs({
             auth: oAuth2Client,
@@ -52,14 +48,29 @@ export class DocumentService {
     }
 
     /**
+     * Updates the title of a Google Doc
+     */
+    public async updateGoogleDocumentTitle(user: NRUser, doc: NRDocument) {
+        const oAuth2Client = this.createOAuth2Client(user);
+
+        const drive = google.drive({
+            auth: oAuth2Client,
+            version: "v3",
+        });
+
+        await drive.files.update({
+            fileId: doc.googleDocId,
+            requestBody: {
+                name: doc.name,
+            },
+        });
+    }
+
+    /**
      * Deletes a Google Doc by id
      */
     public async deleteGoogleDocument(user: NRUser, id: string) {
-        const oAuth2Client = new google.auth.OAuth2(DocumentService.OAUTH_CREDS);
-
-        oAuth2Client.setCredentials({
-            access_token: user.accessToken,
-        });
+        const oAuth2Client = this.createOAuth2Client(user);
 
         const drive = google.drive({
             auth: oAuth2Client,
@@ -69,5 +80,15 @@ export class DocumentService {
         await drive.files.delete({
             fileId: id,
         });
+    }
+
+    private createOAuth2Client(user: NRUser) {
+        const oAuth2Client = new google.auth.OAuth2(DocumentService.OAUTH_CREDS);
+
+        oAuth2Client.setCredentials({
+            access_token: user.accessToken,
+        });
+
+        return oAuth2Client;
     }
 }
