@@ -108,12 +108,14 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     // The ID of the current workflow.
     const id = this.props.match.params.id;
 
+    // TODO: not working with current backend set up
     axios.post("/api/workflows/" + id + "/stages/" , {
       sequenceId: this.state.stageID,
       name: textBoxName,
       description: textBoxDesc,
       creator: Number(localStorage.getItem("userID")),
     }).then((response) => {
+      console.log(response)
 
       // Stages have their own ID, but their position in the workflow is their 'sequenceId'.
       const index = response.data.sequenceId;
