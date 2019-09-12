@@ -45,6 +45,12 @@ export class NRUser {
     })
     public lastName: string;
 
+    @Column({
+        nullable: true,
+        type: "varchar",
+    })
+    public accessToken: string;
+
     @CreateDateColumn()
     public created: Date;
 
