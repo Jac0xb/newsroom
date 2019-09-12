@@ -2,10 +2,12 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    Index,
     JoinColumn,
     JoinTable,
     ManyToOne,
     OneToMany,
+    PrimaryColumn,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from "typeorm";
@@ -19,7 +21,12 @@ import { NRWorkflow } from "./NRWorkflow";
 @Entity(DBConstants.DOCU_TABLE)
 export class NRDocument {
     @PrimaryGeneratedColumn()
+    @PrimaryColumn()
     public id: number;
+
+    @Index()
+    @Column()
+    public googleDocId: string;
 
     // Name of the document.
     @Column({
@@ -28,13 +35,6 @@ export class NRDocument {
         type: "varchar",
     })
     public name: string;
-
-    // The actual plain text content of the article.
-    @Column({
-        nullable: true,
-        type: "clob",
-    })
-    public content: string;
 
     // A brief description of the document.
     @Column({

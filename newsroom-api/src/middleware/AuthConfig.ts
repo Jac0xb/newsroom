@@ -47,9 +47,12 @@ export class AuthConfig {
             done(null, user.id);
         });
 
-        deserializeUser((id, done) => {
-            const user = this.userRepository.findOne(id);
-            console.log(user);
+        deserializeUser(async (id, done) => {
+            const user = await this.userRepository.findOne(id);
+
+            if (user == null || user.accessToken == null) {
+                done(null, null);
+            }
 
             done(null, user);
         });
