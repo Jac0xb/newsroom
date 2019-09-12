@@ -10,7 +10,8 @@
         "start": "node .",
         "start:watch": "nodemon -e ts --watch src --exec 'yarn start'",
         "test": "ts-mocha -p tsconfig.json src/**/*.spec.ts",
-        "typeorm": "tsc && ts-node node_modules/typeorm/cli.js"
+        "typeorm": "tsc && ts-node node_modules/typeorm/cli.js",
+        "buildDB": "yarn typeorm schema:sync && yarn typeorm migration:run"
     },
     "repository": {
         "type": "git",
@@ -30,6 +31,7 @@
         "dotenv": "^7.0.0",
         "express": "^4.16.4",
         "express-session": "^1.16.2",
+        "googleapis": "^43.0.0",
         "passport": "^0.4.0",
         "passport-google-oauth": "^2.0.0",
         "reflect-metadata": "^0.1.12",
