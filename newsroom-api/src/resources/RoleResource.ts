@@ -3,6 +3,7 @@ import {
     Context,
     DELETE,
     Errors,
+    FormParam,
     GET,
     Path,
     PathParam,
@@ -183,7 +184,7 @@ export class RoleResource {
     @Path("/:rid/workflow/:wid")
     public async addWFPermission(@IsInt @PathParam("rid") rid: number,
                                  @IsInt @PathParam("wid") wid: number,
-                                 access: number): Promise<NRRole> {
+                                 access: any): Promise<NRRole> {
         let perm: NRWFPermission;
         let wf: NRWorkflow;
         let rl: NRRole;
@@ -200,7 +201,7 @@ export class RoleResource {
 
         perm.workflow = wf;
         perm.role = rl;
-        perm.access = access;
+        perm.access = access.access;
 
         await this.permWFRepository.save(perm);
         await this.workflowRepository.save(wf);
@@ -220,7 +221,7 @@ export class RoleResource {
     @Path("/:rid/stage/:sid")
     public async addSTPermission(@IsInt @PathParam("rid") rid: number,
                                  @IsInt @PathParam("sid") sid: number,
-                                 access: number): Promise<NRRole> {
+                                 access: any): Promise<NRRole> {
         let perm: NRSTPermission;
         let st: NRStage;
         let rl: NRRole;
@@ -237,7 +238,7 @@ export class RoleResource {
 
         perm.stage = st;
         perm.role = rl;
-        perm.access = access;
+        perm.access = access.access;
 
         await this.permSTRepository.save(perm);
         await this.stageRepository.save(st);
