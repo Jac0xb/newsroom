@@ -78,10 +78,11 @@ class App extends React.Component<App.Props, App.State, any> {
 		
 	};
 	// Add new user to backend
-	handleRegisterClick = (username: string, firstName: string, lastName: string, password: string) => {
-		
+	handleRegisterClick = (firstName: string, lastName: string, username: string, email: string, password: string) => {
+
 		axios.post("/api/users", {
-			name: username,
+			userName: username,
+			email: email,
 			firstName: firstName,
 			lastName: lastName,
             password: password,
