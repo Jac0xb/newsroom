@@ -84,7 +84,7 @@ class LoginPage extends React.Component<LoginPage.Props, LoginPage.State, any> {
                                 type={'password'}
                             />
                             <Grid container className={classes.grid} justify="center">
-                                <Button variant="contained" color="primary" className={classes.button} onClick={() => loginClick(username,password)}>Login</Button>
+                                <Button variant="contained" color="primary" className={classes.button} onClick={() => loginClick(username, password)}>Login</Button>
                             </Grid>
                             <Grid container className={classes.register} justify="center">
                                 <a href="#" onClick={() => this.toggleRegisterForm()}>Register</a>
@@ -146,7 +146,7 @@ class LoginPage extends React.Component<LoginPage.Props, LoginPage.State, any> {
                                 />
                             </div>
                             <Grid container className={classes.grid} justify="center">
-                                <Button variant="contained" color="primary" className={classes.button} onClick={() => registerClick(username,password)}>Register</Button>
+                                <Button variant="contained" color="primary" className={classes.button} onClick={() => registerClick(username, firstName, lastName, password)}>Register</Button>
                             </Grid>
                             <Grid container className={classes.register} justify="center">
                                 <a href="#" onClick={() => this.toggleRegisterForm()}>Have an account? Sign In</a>

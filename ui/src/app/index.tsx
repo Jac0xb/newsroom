@@ -17,6 +17,7 @@ import Workflow from './views/workflow_overview';
 import DocumentCreator from './views/document_create';
 import Users from "app/views/users";
 import Groups from "app/views/groups";
+import GroupCreate from './views/group_create';
 import PrimarySearchAppBar from 'app/components/common/header';
 import LoginPage from './views/login_page';
 import axios from 'axios';
@@ -55,43 +56,35 @@ class App extends React.Component<App.Props, App.State, any> {
 	// Login, Auth with backend TODO: google auth
 	handleLoginClick = (username: string, password: string) => {
 
-		axios.get("/api/users").then((response: any) => {
-			try {
-				response.data.forEach( (user: User) => {
-						// If username and password match in the database
-						if (user.name === username && user.password === password){
+        axios.get("/api/users").then((response: any) => {
+            console.log(response.data)
+            response.data.forEach((user: User) => {
+                // If username and password match in the database
+                if (user.name === username && user.password === password) {
 
-							// Set isAuthenticated to true and cookie to id and return
-							this.setState({ isAuthenticated: true })
-							localStorage.setItem("userID", user.id.toString())
-							return
-						}	
-				});
-
-				// TODO: Else, not found in db
-
-
-			} catch (error) {
-				console.log(error)
-			}
-		});
+                    // Set isAuthenticated to true and cookie to id and return
+                    this.setState({ isAuthenticated: true })
+                    localStorage.setItem("userID", user.id.toString())
+                    return
+                }
+            });
+        }).catch((error) => {
+            console.log(error)
+        });
 		
 	};
 	// Add new user to backend
-	handleRegisterClick = (username: string, firstName: string, lastName: string, password: string) => {
+	handleRegisterClick = (userName: string, firstName: string, lastName: string, password: string, email: string = `${Math.floor((Math.random()*1000))}@newsroom.com`) => {
 		
-		axios.post("/api/users", {
-			name: username,
-			firstName: firstName,
-			lastName: lastName,
-            password: password,
-
-        }).then((response: any) => {
+		axios.post("/api/users", { userName, firstName, lastName, password, email }).then((response: any) => {
 
             // Set cookie and authenticated
 			this.setState({ isAuthenticated: true })
-			localStorage.setItem("userID", response.data.id)
-		});
+            localStorage.setItem("userID", response.data.id)
+        
+        }).catch((error) => {
+            console.log(error)
+        });
 		
   };
 
@@ -114,12 +107,14 @@ class App extends React.Component<App.Props, App.State, any> {
 							<div>
 								<Route exact path="/document" component={Dashboard} />
 								<Route exact path="/document/create" component={DocumentCreator} />
+                                <Route exact path="/groups_create" component={GroupCreate}/>
+                                <Route exact path="/groups" component={Groups}/>
+								<Route exact path="/workflow" component={Workflow} />
+								<Route exact path="/" component={Dashboard} />
 								<Route path="/document/:id/edit" component={DocumentEditor} />
 								<Route path="/workflow/:id/edit" component={WorkflowEditor} />
                                 <Route path="/users" component={Users}/>
-                                <Route path="/groups" component={Groups}/>
-								<Route exact path="/workflow" component={Workflow} />
-								<Route exact path="/" component={Dashboard} />
+                                <Route path="/groups/:id" component={Groups}/>
 							</div>
 						}
 					</div>
