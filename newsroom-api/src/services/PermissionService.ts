@@ -33,6 +33,22 @@ export class PermissionService {
         }
     }
 
+    // Get a workflow permission based on WF and Role IDs.
+    public async getWFPermissionFromWFRL(wid: number, rid: number): Promise<NRWFPermission> {
+        try {
+            return await this.permWFRepository
+                .createQueryBuilder(DBConstants.WFPERM_TABLE)
+                .where(`${DBConstants.WFPERM_TABLE}.roleId = :rd`, { rd: rid })
+                .andWhere(`${DBConstants.WFPERM_TABLE}.workflowId = :wd`, { wd: wid })
+                .getOne();
+        } catch (err) {
+            console.error("Error getting WF permission:", err);
+
+            const errStr = `WF permission with role ${rid} and WF ${wid} was not found.`;
+            throw new Errors.NotFoundError(errStr);
+        }
+    }
+
     // Get a stage permission based on ID.
     public async getSTPermission(pid: number): Promise<NRSTPermission> {
         try {
@@ -41,6 +57,22 @@ export class PermissionService {
             console.error("Error getting ST permission:", err);
 
             const errStr = `ST permission with ID ${pid} was not found.`;
+            throw new Errors.NotFoundError(errStr);
+        }
+    }
+
+    // Get a stage permission based on ST and Role IDs.
+    public async getSTPermissionFromSTRL(sid: number, rid: number): Promise<NRSTPermission> {
+        try {
+            return await this.permSTRepository
+                .createQueryBuilder(DBConstants.STPERM_TABLE)
+                .where(`${DBConstants.STPERM_TABLE}.roleId = :rd`, { rd: rid })
+                .andWhere(`${DBConstants.STPERM_TABLE}.stageId = :sd`, { sd: sid })
+                .getOne();
+        } catch (err) {
+            console.error("Error getting ST permission:", err);
+
+            const errStr = `ST permission with role ${rid} and ST ${sid} was not found.`;
             throw new Errors.NotFoundError(errStr);
         }
     }
