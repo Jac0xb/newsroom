@@ -109,7 +109,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     const id = this.props.match.params.id;
 
     // TODO: not working with current backend set up
-    axios.post("/api/workflows/" + id + "/stages/" , {
+    axios.post("/api/workflows/" + id + "/stages" , {
       sequenceId: this.state.stageID,
       name: textBoxName,
       description: textBoxDesc,
