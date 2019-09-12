@@ -113,7 +113,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       sequenceId: this.state.stageID,
       name: textBoxName,
       description: textBoxDesc,
-      creator: Number(localStorage.getItem("userID")),
+      creator: 1, //Number(localStorage.getItem("userID"))
     }).then((response) => {
       console.log(response)
 
