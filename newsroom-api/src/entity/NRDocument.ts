@@ -1,5 +1,14 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable,
-         ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    JoinColumn,
+    JoinTable,
+    ManyToOne,
+    OneToMany,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from "typeorm";
 
 import { DBConstants } from "./DBConstants";
 import { NRDCPermission } from "./NRDCPermission";
@@ -50,8 +59,9 @@ export class NRDocument {
      */
     @ManyToOne(
         (type) => NRUser,
+        {eager: true},
     )
-    @JoinColumn({ name: "creator" })
+    @JoinColumn({name: "creator"})
     public creator: NRUser;
 
     /**
@@ -62,7 +72,7 @@ export class NRDocument {
     @ManyToOne(
         (type) => NRWorkflow,
         (workflow) => workflow.documents,
-        { eager: true },
+        {eager: true},
     )
     public workflow: NRWorkflow;
 
@@ -74,7 +84,7 @@ export class NRDocument {
     @ManyToOne(
         (type) => NRStage,
         (stage) => stage.documents,
-        { eager: true },
+        {eager: true},
     )
     public stage: NRStage;
 
