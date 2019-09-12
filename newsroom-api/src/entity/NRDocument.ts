@@ -1,5 +1,16 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable,
-         ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    Index,
+    JoinColumn,
+    JoinTable,
+    ManyToOne,
+    OneToMany,
+    PrimaryColumn,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from "typeorm";
 
 import { DBConstants } from "./DBConstants";
 import { NRDCPermission } from "./NRDCPermission";
@@ -10,7 +21,12 @@ import { NRWorkflow } from "./NRWorkflow";
 @Entity(DBConstants.DOCU_TABLE)
 export class NRDocument {
     @PrimaryGeneratedColumn()
+    @PrimaryColumn()
     public id: number;
+
+    @Index()
+    @Column()
+    public googleDocId: string;
 
     // Name of the document.
     @Column({
@@ -19,13 +35,6 @@ export class NRDocument {
         type: "varchar",
     })
     public name: string;
-
-    // The actual plain text content of the article.
-    @Column({
-        nullable: true,
-        type: "clob",
-    })
-    public content: string;
 
     // A brief description of the document.
     @Column({
@@ -51,7 +60,7 @@ export class NRDocument {
     @ManyToOne(
         (type) => NRUser,
     )
-    @JoinColumn({ name: "creator" })
+    @JoinColumn({name: "creator"})
     public creator: NRUser;
 
     /**
@@ -62,7 +71,7 @@ export class NRDocument {
     @ManyToOne(
         (type) => NRWorkflow,
         (workflow) => workflow.documents,
-        { eager: true },
+        {eager: true},
     )
     public workflow: NRWorkflow;
 
@@ -74,7 +83,7 @@ export class NRDocument {
     @ManyToOne(
         (type) => NRStage,
         (stage) => stage.documents,
-        { eager: true },
+        {eager: true},
     )
     public stage: NRStage;
 

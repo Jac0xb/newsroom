@@ -1,9 +1,8 @@
+import { Inject } from "typedi";
 import { Repository } from "typeorm";
+import { InjectRepository } from "typeorm-typedi-extensions";
 import { Context, DELETE, GET, Path, PathParam, POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-
-import { Inject } from "typedi";
-import { InjectRepository } from "typeorm-typedi-extensions";
 import { DBConstants, NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
@@ -74,6 +73,11 @@ export class DocumentResource {
 
             document.stage = currStage;
         }
+
+        document.creator = this.serviceContext.user();
+
+        const gDocId = await this.documentService.createGoogleDocument(this.serviceContext.user(), document);
+        document.googleDocId = gDocId;
 
         return await this.documentRepository.save(document);
     }
@@ -186,11 +190,8 @@ export class DocumentResource {
         await this.workflowService.getStage(document.stage.id);
 
         if (document.name) {
+            // TODO Delete in GDocs
             currDocument.name = document.name;
-        }
-
-        if (document.creator) {
-            currDocument.creator = document.creator;
         }
 
         if (document.description) {
@@ -203,10 +204,6 @@ export class DocumentResource {
 
         if (document.stage) {
             currDocument.stage = document.stage;
-        }
-
-        if (document.content) {
-            currDocument.content = document.content;
         }
 
         return await this.documentRepository.save(currDocument);
@@ -232,6 +229,8 @@ export class DocumentResource {
             .from(NRDocument)
             .andWhere("id = :id", {id: currDocument.id})
             .execute();
+
+        // TODO Delete in GDocs
     }
 
     /**
