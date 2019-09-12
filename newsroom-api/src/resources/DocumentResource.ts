@@ -58,6 +58,8 @@ export class DocumentResource {
     @POST
     @PreProcessor(createDocumentValidator)
     public async createDocument(document: NRDocument): Promise<NRDocument> {
+        const user = this.serviceContext.user();
+
         const currWorkflow = await this.workflowService.getWorkflow(document.workflow.id);
 
         // Assign the document to the first stage in a workflow if no stage was passed.
@@ -74,10 +76,11 @@ export class DocumentResource {
             document.stage = currStage;
         }
 
-        document.creator = this.serviceContext.user();
+        document.creator = user;
 
-        const gDocId = await this.documentService.createGoogleDocument(this.serviceContext.user(), document);
-        document.googleDocId = gDocId;
+        // TODO Need to give creator permission to delete document
+
+        document.googleDocId = await this.documentService.createGoogleDocument(user, document);
 
         return await this.documentRepository.save(document);
     }
@@ -190,7 +193,7 @@ export class DocumentResource {
         await this.workflowService.getStage(document.stage.id);
 
         if (document.name) {
-            // TODO Delete in GDocs
+            // TODO Update in GDocs
             currDocument.name = document.name;
         }
 
@@ -223,14 +226,9 @@ export class DocumentResource {
         const currDocument = await this.documentService.getDocument(did);
         await this.permissionService.checkDCWritePermissions(sessionUser, did);
 
-        await this.documentRepository
-            .createQueryBuilder(DBConstants.DOCU_TABLE)
-            .delete()
-            .from(NRDocument)
-            .andWhere("id = :id", {id: currDocument.id})
-            .execute();
+        await this.documentService.deleteGoogleDocument(sessionUser, currDocument.googleDocId);
 
-        // TODO Delete in GDocs
+        await this.documentRepository.delete(currDocument);
     }
 
     /**

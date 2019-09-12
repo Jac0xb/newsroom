@@ -7,6 +7,11 @@ import { NRDocument, NRUser } from "../entity";
 
 @Service()
 export class DocumentService {
+    private static readonly OAUTH_CREDS = {
+        clientId: "153384745741-7h66ureoaag1j61ei5u6un0faeh4al5h.apps.googleusercontent.com",
+        clientSecret: "u5Q2m0D1MO4DeulU-hCCHG06",
+    };
+
     @InjectRepository(NRDocument)
     private documentRepository: Repository<NRDocument>;
 
@@ -26,10 +31,7 @@ export class DocumentService {
      * Creates a Google Doc and returns the id
      */
     public async createGoogleDocument(user: NRUser, doc: NRDocument): Promise<string> {
-        const oAuth2Client = new google.auth.OAuth2({
-            clientId: "153384745741-7h66ureoaag1j61ei5u6un0faeh4al5h.apps.googleusercontent.com",
-            clientSecret: "u5Q2m0D1MO4DeulU-hCCHG06",
-        });
+        const oAuth2Client = new google.auth.OAuth2(DocumentService.OAUTH_CREDS);
 
         oAuth2Client.setCredentials({
             access_token: user.accessToken,
@@ -49,4 +51,23 @@ export class DocumentService {
         return result.data.documentId;
     }
 
+    /**
+     * Deletes a Google Doc by id
+     */
+    public async deleteGoogleDocument(user: NRUser, id: string) {
+        const oAuth2Client = new google.auth.OAuth2(DocumentService.OAUTH_CREDS);
+
+        oAuth2Client.setCredentials({
+            access_token: user.accessToken,
+        });
+
+        const drive = google.drive({
+            auth: oAuth2Client,
+            version: "v3",
+        });
+
+        await drive.files.delete({
+            fileId: id,
+        });
+    }
 }
