@@ -55,7 +55,9 @@ class App extends React.Component<App.Props, App.State, any> {
             return (
                 <React.Fragment>
                     <PrimarySearchAppBar/>
-                    <LoginPage/>
+                    <div style={{marginTop: "64px"}}>
+                        <LoginPage/>
+                    </div>
                 </React.Fragment>
             )
         }
