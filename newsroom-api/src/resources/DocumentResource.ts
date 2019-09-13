@@ -1,10 +1,9 @@
+import { Inject } from "typedi";
 import { Repository } from "typeorm";
+import { InjectRepository } from "typeorm-typedi-extensions";
 import { Context, DELETE, GET, Path, PathParam, POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-
-import { Inject } from "typedi";
-import { InjectRepository } from "typeorm-typedi-extensions";
-import { DBConstants, NRDCPermission, NRDocument, NRRole, NRStage, NRSTPermission, NRWorkflow } from "../entity";
+import { DBConstants, NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";
@@ -60,9 +59,8 @@ export class DocumentResource {
     @PreProcessor(createDocumentValidator)
     public async createDocument(document: NRDocument): Promise<NRDocument> {
         const sessionUser = this.serviceContext.user();
-        const currWorkflow = await this.workflowService.getWorkflow(document.workflow.id);
 
-        document.creator = sessionUser;
+        const currWorkflow = await this.workflowService.getWorkflow(document.workflow.id);
 
         // Assign the document to the first stage in a workflow if no stage was passed.
         if (!(document.stage)) {
@@ -77,6 +75,12 @@ export class DocumentResource {
 
             document.stage = currStage;
         }
+
+        document.creator = sessionUser;
+
+        // TODO Need to give creator permission to delete document
+
+        document.googleDocId = await this.documentService.createGoogleDocument(sessionUser, document);
 
         return await this.documentRepository.save(document);
     }
@@ -117,7 +121,7 @@ export class DocumentResource {
             // Accumulate all the documents in this stage.
             const dcs = await this.documentRepository
                 .createQueryBuilder(DBConstants.DOCU_TABLE)
-                .where(`${DBConstants.DOCU_TABLE}.stageId IN (:stagsId)`, { stageIds: stgs })
+                .where(`${DBConstants.DOCU_TABLE}.stageId IN (:stagsId)`, {stageIds: stgs})
                 .getMany();
 
             for (const d of dcs) {
@@ -216,14 +220,13 @@ export class DocumentResource {
     @PreProcessor(updateDocumentValidator)
     public async updateDocument(@IsInt @PathParam("did") did: number,
                                 document: NRDocument): Promise<NRDocument> {
+        const sessionUser = this.serviceContext.user();
         const currDocument = await this.documentService.getDocument(did);
-
-        // Check for existence.
-        await this.workflowService.getWorkflow(document.workflow.id);
-        await this.workflowService.getStage(document.stage.id);
 
         if (document.name) {
             currDocument.name = document.name;
+
+            await this.documentService.updateGoogleDocumentTitle(sessionUser, currDocument);
         }
 
         if (document.description) {
@@ -231,15 +234,15 @@ export class DocumentResource {
         }
 
         if (document.workflow) {
+            await this.workflowService.getWorkflow(document.workflow.id);
+
             currDocument.workflow = document.workflow;
         }
 
         if (document.stage) {
-            currDocument.stage = document.stage;
-        }
+            await this.workflowService.getStage(document.stage.id);
 
-        if (document.content) {
-            currDocument.content = document.content;
+            currDocument.stage = document.stage;
         }
 
         return await this.documentRepository.save(currDocument);
@@ -255,14 +258,12 @@ export class DocumentResource {
     @DELETE
     @Path("/:did")
     public async deleteDocument(@IsInt @PathParam("did") did: number) {
+        const sessionUser = this.serviceContext.user();
         const currDocument = await this.documentService.getDocument(did);
 
-        await this.documentRepository
-            .createQueryBuilder(DBConstants.DOCU_TABLE)
-            .delete()
-            .from(NRDocument)
-            .andWhere("id = :id", {id: currDocument.id})
-            .execute();
+        await this.documentService.deleteGoogleDocument(sessionUser, currDocument.googleDocId);
+
+        await this.documentRepository.delete(currDocument);
     }
 
     /**

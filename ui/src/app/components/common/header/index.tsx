@@ -14,15 +14,18 @@ import ListItem from '@material-ui/core/ListItem';
 import { Link } from 'react-router-dom';
 import { styles } from "./styles";
 import { compose } from 'recompose';
+import { Button, Grid } from "@material-ui/core";
 
 export namespace Header {
     export interface Category {
         title: string,
         url: string
     }
+
     export interface Props {
         classes: Record<string, string>
     }
+
     export interface State {
         sideMenuOpen: boolean
         categories: Category[]
@@ -37,10 +40,10 @@ class Header extends React.Component<Header.Props, Header.State> {
         this.state = {
             sideMenuOpen: false,
             categories: [
-                { title: 'Document', url: "/" },
-                { title: 'Workflow', url: "/workflow" },
-                { title: 'Users', url: '/users'},
-                { title: 'Groups', url: '/groups'}
+                {title: 'Document', url: "/"},
+                {title: 'Workflow', url: "/workflow"},
+                {title: 'Users', url: '/users'},
+                {title: 'Groups', url: '/groups'}
             ]
         }
     }
@@ -50,7 +53,7 @@ class Header extends React.Component<Header.Props, Header.State> {
      */
     createCategories() {
 
-        const { classes } = this.props;
+        const {classes} = this.props;
 
         return <div className={classes.list}>
             <List>
@@ -58,8 +61,8 @@ class Header extends React.Component<Header.Props, Header.State> {
                     this.state.categories.map((category, index) => (
                         <Link key={index} to={category.url} className={classes.itemLinks}>
                             <ListItem button>
-                                <ListItemIcon><MailIcon /></ListItemIcon>
-                                <ListItemText primary={category.title} />
+                                <ListItemIcon><MailIcon/></ListItemIcon>
+                                <ListItemText primary={category.title}/>
                             </ListItem>
                         </Link>
                     ))
@@ -72,22 +75,44 @@ class Header extends React.Component<Header.Props, Header.State> {
      * TODO: Document
      */
     toggleDrawer(open: boolean) {
-        this.setState({ sideMenuOpen: open });
+        this.setState({sideMenuOpen: open});
+    }
+
+    handleSignOut() {
+        window.location.href = "/auth/logout"
     }
 
     /**
      * TODO: Document
      */
     render() {
-        const { sideMenuOpen } = this.state;
-        const { classes } = this.props;
+        const {sideMenuOpen} = this.state;
+        const {classes} = this.props;
 
         return (
-            <AppBar className={classes.header} style={{ backgroundColor: "#90b3c2", boxShadow: 'none' }}>
+            <AppBar className={classes.header} style={{backgroundColor: "#90b3c2", boxShadow: 'none'}}>
                 <Toolbar>
-                    <IconButton className={classes.menuButton} color="inherit" aria-label="Open Drawer" onClick={() => this.toggleDrawer(true)}  >
-                        <MenuIcon />
-                    </IconButton>
+                    <Grid container justify="space-between" alignItems="center">
+                        <Grid item>
+                            <IconButton className={classes.menuButton} color="inherit" aria-label="Open Drawer"
+                                        onClick={() => this.toggleDrawer(true)}>
+                                <MenuIcon/>
+                            </IconButton>
+                        </Grid>
+                        <Grid item>
+                            <Link style={{textDecoration: "none"}} to="/">
+                                <Typography style={{textDecoration: "none", color: "white"}}
+                                            className={classes.title}
+                                            variant="title" color="inherit" noWrap>
+                                    Newsroom
+                                </Typography>
+                            </Link>
+                        </Grid>
+                        <Grid item>
+                            <Button onClick={() => this.handleSignOut()}>Sign Out</Button>
+                        </Grid>
+                    </Grid>
+
                     <Drawer open={sideMenuOpen} onClose={() => this.toggleDrawer(false)}>
                         <div
                             tabIndex={0}
@@ -99,11 +124,7 @@ class Header extends React.Component<Header.Props, Header.State> {
                             {this.createCategories()}
                         </div>
                     </Drawer>
-                    <Link style={{ textDecoration: "none" }} to="/">
-                        <Typography style={{ textDecoration: "none", color: "white" }} className={classes.title} variant="title" color="inherit" noWrap>
-                            Newsroom
-                        </Typography>
-                    </Link>
+
                 </Toolbar>
             </AppBar>
         );

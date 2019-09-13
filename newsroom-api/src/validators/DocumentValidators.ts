@@ -67,12 +67,6 @@ export function updateDocumentValidator(req: express.Request): void {
         }
     }
 
-    if (document.content) {
-        if (!(typeof document.content === "string")) {
-            throw new Errors.BadRequestError("Document content was not a string.");
-        }
-    }
-
     if (document.description) {
         if (!(typeof document.description === "string")) {
             throw new Errors.BadRequestError("Document description was not a string.");
