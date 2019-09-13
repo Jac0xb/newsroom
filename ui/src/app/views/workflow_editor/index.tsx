@@ -167,12 +167,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     return (
       <React.Fragment>
         <main>
-          {/* Spacer height */}
-          <div className={classes.menuSpacerHeight}></div>
-
           <div className={classes.content}>
-            {/* Spacer width */}
-            <div className={classes.menuSpacerWidth}></div>
             <div className={classes.workflowContent}>
               <div className={classes.stage}>
                 { canEdit ? 
