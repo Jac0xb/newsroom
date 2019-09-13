@@ -17,14 +17,6 @@ export function createWorkflowValidator(req: express.Request) {
         throw new Errors.BadRequestError("Workflow userName too long, max 256.");
     }
 
-    if (!workflow.creator) {
-        throw new Errors.BadRequestError("Workflow creator not present.");
-    }
-
-    if (!(typeof workflow.creator === "number")) {
-        throw new Errors.BadRequestError("Workflow creator was not a number.");
-    }
-
     if (workflow.description) {
         if (!(typeof workflow.description === "string")) {
             throw new Errors.BadRequestError("Workflow description was not a string.");
@@ -42,12 +34,6 @@ export function updateWorkflowValidator(req: express.Request) {
     if (workflow.name) {
         if (!(typeof workflow.name === "string")) {
             throw new Errors.BadRequestError("Workflow userName was not a string.");
-        }
-    }
-
-    if (workflow.creator) {
-        if (!(typeof workflow.creator === "number")) {
-            throw new Errors.BadRequestError("Workflow creator was not a number.");
         }
     }
 

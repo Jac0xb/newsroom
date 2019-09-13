@@ -17,14 +17,6 @@ export function createDocumentValidator(req: express.Request) {
         throw new Errors.BadRequestError("Document userName length is too long, max 256.");
     }
 
-    if (!document.creator) {
-        throw new Errors.BadRequestError("Document creator not present.");
-    }
-
-    if (!(typeof document.creator === "number")) {
-        throw new Errors.BadRequestError("Document creator was not a number.");
-    }
-
     if (!document.workflow) {
         throw new Errors.BadRequestError("Document workflow not present.");
     }
@@ -60,12 +52,6 @@ export function updateDocumentValidator(req: express.Request): void {
 
         if (document.name.length > 256) {
             throw new Errors.BadRequestError("Document userName length is too long, max 256.");
-        }
-    }
-
-    if (document.creator) {
-        if (!(typeof document.creator === "number")) {
-            throw new Errors.BadRequestError("Document creator was not a number.");
         }
     }
 

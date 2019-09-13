@@ -59,7 +59,10 @@ export class DocumentResource {
     @POST
     @PreProcessor(createDocumentValidator)
     public async createDocument(document: NRDocument): Promise<NRDocument> {
+        const sessionUser = this.serviceContext.user();
         const currWorkflow = await this.workflowService.getWorkflow(document.workflow.id);
+
+        document.creator = sessionUser;
 
         // Assign the document to the first stage in a workflow if no stage was passed.
         if (!(document.stage)) {
@@ -68,15 +71,14 @@ export class DocumentResource {
 
             currStage = await this.stageRepository
                 .createQueryBuilder(DBConstants.STGE_TABLE)
-                .where("stage.sequenceId = :sid", {sid: minSeq})
-                .andWhere("stage.workflowId = :wid ", {wid: currWorkflow.id})
+                .where(`${DBConstants.STGE_TABLE}.sequenceId = :sid`, {sid: minSeq})
+                .andWhere(`${DBConstants.STGE_TABLE}.workflowId = :wid`, {wid: currWorkflow.id})
                 .getOne();
 
             document.stage = currStage;
         }
 
-        return await this.documentService.addPermissionsToDoc(await this.documentRepository.save(document),
-         this.serviceContext.user());
+        return await this.documentRepository.save(document);
     }
 
     /**
@@ -87,8 +89,7 @@ export class DocumentResource {
      */
     @GET
     public async getDocuments(): Promise<NRDocument[]> {
-        return await this.documentService.addPermissionsToDocs(await this.documentRepository.find(),
-         this.serviceContext.user());
+        return await this.documentRepository.find();
     }
 
     /**
@@ -99,23 +100,30 @@ export class DocumentResource {
      */
     @Path("/user")
     @GET
-    public async getUserDocuments(): Promise<NRDocument[]> {
+    public async getUserDocuments(): Promise<Set<NRDocument>> {
         const sessionUser = this.serviceContext.user();
         const allRoles = await this.userService.getUserRoles(sessionUser.id);
 
-        const docs: NRDocument[] = [];
+        const docs = new Set<NRDocument>();
 
         for (const role of allRoles) {
-             const tmp = await this.permDCRepository
-                .createQueryBuilder(DBConstants.DCPERM_TABLE)
-                .where(`${DBConstants.DCPERM_TABLE}.roleId = :r`, {r: role.id})
-                .andWhere(`${DBConstants.DCPERM_TABLE}.access = ${DBConstants.WRITE}`)
+            // Get all stages this role has WRITE access to.
+            const stgs = await this.permSTRepository
+                .createQueryBuilder(DBConstants.STPERM_TABLE)
+                .where(`${DBConstants.STPERM_TABLE}.roleId = :r`, {r: role.id})
+                .andWhere(`${DBConstants.STPERM_TABLE}.access = ${DBConstants.WRITE}`)
                 .getMany();
 
-             for (const p of tmp) {
-                const doc = p.document;
-                doc.permission = DBConstants.WRITE;
-                docs.push(doc);
+            // Accumulate all the documents in this stage.
+            const dcs = await this.documentRepository
+                .createQueryBuilder(DBConstants.DOCU_TABLE)
+                .where(`${DBConstants.DOCU_TABLE}.stageId IN (:stagsId)`, { stageIds: stgs })
+                .getMany();
+
+            for (const d of dcs) {
+                // We already know they have WRITE permissions.
+                d.permission = DBConstants.WRITE;
+                docs.add(d);
             }
         }
 
@@ -133,8 +141,7 @@ export class DocumentResource {
     @Path("/:did")
     @GET
     public async getDocument(@PathParam("did") did: number): Promise<NRDocument> {
-        return await this.documentService.addPermissionsToDoc(await this.documentService.getDocument(did),
-        this.serviceContext.user());
+        return await this.documentService.getDocument(did);
     }
 
     /**
@@ -146,12 +153,10 @@ export class DocumentResource {
     @Path("/author/:aid")
     @GET
     public async getDocumentsForAuthor(@PathParam("aid") aid: number): Promise<NRDocument[]> {
-        const docs = await this.documentRepository
+        return await this.documentRepository
             .createQueryBuilder(DBConstants.DOCU_TABLE)
-            .where("document.creator = :author", {author: aid})
+            .where(`${DBConstants.DOCU_TABLE}.creator = :author`, {author: aid})
             .getMany();
-
-        return await this.documentService.addPermissionsToDocs(docs, this.serviceContext.user());
     }
 
     /**
@@ -167,12 +172,10 @@ export class DocumentResource {
     public async getAllDocumentsForStage(@IsInt @PathParam("sid") sid: number): Promise<NRDocument[]> {
         const assocStage = await this.workflowService.getStage(sid);
 
-        const docs = await this.documentRepository
+        return await this.documentRepository
             .createQueryBuilder(DBConstants.DOCU_TABLE)
             .where("stageId = :sId", {sId: assocStage.id})
             .getMany();
-
-        return await this.documentService.addPermissionsToDocs(docs, this.serviceContext.user());
     }
 
     /**
@@ -190,12 +193,10 @@ export class DocumentResource {
         // Check for existence.
         await this.workflowService.getWorkflow(wid);
 
-        const docs = await this.documentRepository
+        return await this.documentRepository
             .createQueryBuilder(DBConstants.DOCU_TABLE)
             .where("workflowId = :id", {id: wid})
             .getMany();
-
-        return await this.documentService.addPermissionsToDocs(docs, this.serviceContext.user());
     }
 
     /**
@@ -215,9 +216,7 @@ export class DocumentResource {
     @PreProcessor(updateDocumentValidator)
     public async updateDocument(@IsInt @PathParam("did") did: number,
                                 document: NRDocument): Promise<NRDocument> {
-        const sessionUser = this.serviceContext.user();
         const currDocument = await this.documentService.getDocument(did);
-        // await this.permissionService.checkDCWritePermissions(sessionUser, did);
 
         // Check for existence.
         await this.workflowService.getWorkflow(document.workflow.id);
@@ -225,10 +224,6 @@ export class DocumentResource {
 
         if (document.name) {
             currDocument.name = document.name;
-        }
-
-        if (document.creator) {
-            currDocument.creator = document.creator;
         }
 
         if (document.description) {
@@ -260,9 +255,7 @@ export class DocumentResource {
     @DELETE
     @Path("/:did")
     public async deleteDocument(@IsInt @PathParam("did") did: number) {
-        const sessionUser = this.serviceContext.user();
         const currDocument = await this.documentService.getDocument(did);
-        // await this.permissionService.checkDCWritePermissions(sessionUser, did);
 
         await this.documentRepository
             .createQueryBuilder(DBConstants.DOCU_TABLE)
@@ -287,16 +280,16 @@ export class DocumentResource {
 
         const stageID = await this.documentRepository
             .createQueryBuilder(DBConstants.DOCU_TABLE)
-            .select("document.stageId", "val")
-            .where("document.id = :did", {did: currDocument.id})
+            .select(`${DBConstants.DOCU_TABLE}.stageId`, "val")
+            .where(`${DBConstants.DOCU_TABLE}.id = :did`, {did: currDocument.id})
             .getRawOne();
 
         const currStage = await this.workflowService.getStage(stageID.val);
 
         const workflowID = await this.documentRepository
             .createQueryBuilder(DBConstants.DOCU_TABLE)
-            .select("document.workflowId", "val")
-            .where("document.id = :did", {did: currDocument.id})
+            .select(`${DBConstants.DOCU_TABLE}.workflowId`, "val")
+            .where(`${DBConstants.DOCU_TABLE}.id = :did`, {did: currDocument.id})
             .getRawOne();
 
         // Used to determine if the document is done in its workflow.
@@ -307,9 +300,9 @@ export class DocumentResource {
             // Get id of next stage in sequence.
             const nextId = await this.stageRepository
                 .createQueryBuilder(DBConstants.STGE_TABLE)
-                .select("stage.id", "val")
-                .where("stage.sequenceId = :sid", {sid: currStage.sequenceId + 1})
-                .andWhere("stage.workflowId = :wid", {wid: workflowID.val})
+                .select(`${DBConstants.STGE_TABLE}.id`, "val")
+                .where(`${DBConstants.STGE_TABLE}.sequenceId = :sid`, {sid: currStage.sequenceId + 1})
+                .andWhere(`${DBConstants.STGE_TABLE}.workflowId = :wid`, {wid: workflowID.val})
                 .getRawOne();
 
             return nextId.val;
@@ -337,7 +330,7 @@ export class DocumentResource {
         const workflowId = currDocument.workflow.id;
 
         // Must have WRITE on current stage to move forward.
-        await this.permissionService.checkDCWritePermissions(sessionUser, did);
+        await this.permissionService.checkSTWritePermissions(sessionUser, currStage.id);
 
         // Used to determine if the document is done in its workflow.
         const maxSeq = await this.getMaxStageSequenceId(workflowId);
@@ -347,8 +340,8 @@ export class DocumentResource {
             // Get id of next stage in sequence.
             const nextStage = await this.stageRepository
                 .createQueryBuilder(DBConstants.STGE_TABLE)
-                .where("stage.sequenceId = :sid", {sid: currStage.sequenceId + 1})
-                .andWhere("stage.workflowId = :wid", {wid: workflowId})
+                .where(`${DBConstants.STGE_TABLE}.sequenceId = :sid`, {sid: currStage.sequenceId + 1})
+                .andWhere(`${DBConstants.STGE_TABLE}.workflowId = :wid`, {wid: workflowId})
                 .getOne();
 
             currDocument.stage = nextStage;
@@ -357,7 +350,7 @@ export class DocumentResource {
         // It is possible that no updates were made if document is already at the
         // end of its workflows stages.
         // TODO: Relations not loaded, doesn't return stage if at the end.
-        return await this.documentService.addPermissionsToDoc(currDocument, this.serviceContext.user());
+        return currDocument;
     }
 
     /**
@@ -374,19 +367,18 @@ export class DocumentResource {
     public async getPrev(@IsInt @PathParam("did") did: number): Promise<number> {
         const currDocument = await this.documentService.getDocument(did);
 
-        // TODO: How to do this with TypeORM?
         const stageID = await this.documentRepository
             .createQueryBuilder(DBConstants.DOCU_TABLE)
-            .select("document.stageId", "val")
-            .where("document.id = :did", {did: currDocument.id})
+            .select(`${DBConstants.DOCU_TABLE}.stageId`, "val")
+            .where(`${DBConstants.DOCU_TABLE}.id = :did`, {did: currDocument.id})
             .getRawOne();
 
         const currStage = await this.workflowService.getStage(stageID.val);
 
         const workflowID = await this.documentRepository
             .createQueryBuilder(DBConstants.DOCU_TABLE)
-            .select("document.workflowId", "val")
-            .where("document.id = :did", {did: currDocument.id})
+            .select(`${DBConstants.DOCU_TABLE}.workflowId`, "val")
+            .where(`${DBConstants.DOCU_TABLE}.id = :did`, {did: currDocument.id})
             .getRawOne();
 
         // The first stage in any workflow is always sequence 1.
@@ -397,9 +389,9 @@ export class DocumentResource {
             // Get id of next stage in sequence.
             const prevId = await this.stageRepository
                 .createQueryBuilder(DBConstants.STGE_TABLE)
-                .select("stage.id", "val")
-                .where("stage.sequenceId = :sid", {sid: currStage.sequenceId - 1})
-                .andWhere("stage.workflowId = :wid", {wid: workflowID.val})
+                .select(`${DBConstants.STGE_TABLE}.id`, "val")
+                .where(`${DBConstants.STGE_TABLE}.sequenceId = :sid`, {sid: currStage.sequenceId - 1})
+                .andWhere(`${DBConstants.STGE_TABLE}.workflowId = :wid`, {wid: workflowID.val})
                 .getRawOne();
 
             return prevId.val;
@@ -427,6 +419,8 @@ export class DocumentResource {
         const currStage = currDocument.stage;
         const workflowId = currDocument.workflow.id;
 
+        await this.permissionService.checkSTWritePermissions(sessionUser, currStage.id);
+
         // The first stage in any workflow is always sequence 1.
         const minSeq = 0;
 
@@ -435,19 +429,17 @@ export class DocumentResource {
             // Get id of next stage in sequence.
             const prevStage = await this.stageRepository
                 .createQueryBuilder(DBConstants.STGE_TABLE)
-                .where("stage.sequenceId = :sid", {sid: currStage.sequenceId - 1})
-                .andWhere("stage.workflowId = :wid", {wid: workflowId})
+                .where(`${DBConstants.STGE_TABLE}.sequenceId = :sid`, {sid: currStage.sequenceId - 1})
+                .andWhere(`${DBConstants.STGE_TABLE}.workflowId = :wid`, {wid: workflowId})
                 .getOne();
 
-            // Must have WRITE on previous stage to move backward.
-            await this.permissionService.checkDCWritePermissions(sessionUser, did);
             currDocument.stage = prevStage;
         }
 
         // It is possible that no updates were made if document is already at the
         // end of its workflows stages.
         // TODO: Relations not loaded, doesn't return stage if at the beginning.
-        return await this.documentService.addPermissionsToDoc(currDocument, this.serviceContext.user());
+        return currDocument;
     }
 
     // Get the maximum sequenceId for the given workflows stages.
@@ -457,8 +449,8 @@ export class DocumentResource {
         // Grab the next sequenceId for this set of workflow stages.
         const maxSeq = await this.stageRepository
             .createQueryBuilder(DBConstants.STGE_TABLE)
-            .select("MAX(stage.sequenceId)", "max")
-            .where("stage.workflowId = :id", {id: currWorkflow.id})
+            .select(`MAX(${DBConstants.STGE_TABLE}.sequenceId)`, "max")
+            .where(`${DBConstants.STGE_TABLE}.workflowId = :id`, {id: currWorkflow.id})
             .getRawOne();
 
         return maxSeq.max;
@@ -471,8 +463,8 @@ export class DocumentResource {
         // Grab the next sequenceId for this set of workflow stages.
         const minSeq = await this.stageRepository
             .createQueryBuilder(DBConstants.STGE_TABLE)
-            .select("MIN(stage.sequenceId)", "min")
-            .where("stage.workflowId = :id", {id: currWorkflow.id})
+            .select(`MIN(${DBConstants.STGE_TABLE}.sequenceId)`, "min")
+            .where(`${DBConstants.STGE_TABLE}.workflowId = :id`, {id: currWorkflow.id})
             .getRawOne();
 
         return minSeq.min;
