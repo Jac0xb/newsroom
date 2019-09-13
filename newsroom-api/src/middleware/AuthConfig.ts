@@ -40,7 +40,7 @@ export class AuthConfig {
 
         app.get("/auth/logout", async (req, res) => {
             await req.logout();
-            res.redirect("/login");
+            res.redirect("/");
         });
 
         serializeUser((user: any, done) => {
@@ -50,11 +50,15 @@ export class AuthConfig {
         deserializeUser(async (id, done) => {
             const user = await this.userRepository.findOne(id);
 
-            if (user == null || user.accessToken == null) {
-                done(null, null);
+            if (user == null) {
+                console.log("User was null when deserializing session");
+                done(null, false);
+            } else if (user.accessToken == null) {
+                console.log("User accessToken was null when deserializing session");
+                done(null, false);
+            } else {
+                done(null, user);
             }
-
-            done(null, user);
         });
     }
 }
