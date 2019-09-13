@@ -80,8 +80,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
   };
 
   handleStageAddClick(open: boolean, id: number) {
-    // Need the ID of the stage so that we know which button
-    //   is being pressed and where to add the stage.
+    // Need the ID of the stage so that we know which button is being pressed and where to add the stage.
     this.setState({ dialogTextName: '', dialogTextDesc: '', createDialogOpen: open, stageID: id });
   };
 
@@ -109,11 +108,14 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     // The ID of the current workflow.
     const id = this.props.match.params.id;
 
-    axios.post("/api/workflows/" + id + "/stages/" + this.state.stageID, {
+    // TODO: not working with current backend set up
+    axios.post("/api/workflows/" + id + "/stages" , {
+      sequenceId: this.state.stageID,
       name: textBoxName,
-      creator: "Jacques",
       description: textBoxDesc,
+      creator: 1, //Number(localStorage.getItem("userID"))
     }).then((response) => {
+      console.log(response)
 
       // Stages have their own ID, but their position in the workflow is their 'sequenceId'.
       const index = response.data.sequenceId;
