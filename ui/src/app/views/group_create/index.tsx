@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Grid, Paper, FormGroup, FormLabel, TextField, MenuItem, Button, Typography } from '@material-ui/core';
 import axios from 'axios';
-import Select from '@material-ui/core/Select';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import { Redirect, Link } from 'react-router-dom';
@@ -16,12 +15,14 @@ export namespace GroupCreate {
     }
     export interface State {
         submitted: boolean
-        availableWorkflows: { name: string, id: number }[]
-        availableStages: { name: string, id: number }[]
+        fetchedWorkflows: { name: string, id: number }[]
+        fetchedStages: { name: string, id: number }[]
+        fetchedUsers: { name: string, id: number }[]
         flash?: string
 
         name?: string
         permissions: SimplePermission[]
+        users:  { name: string, id: number }[]
     }
     export interface SimplePermission {
         id: number
@@ -35,34 +36,57 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
 
     constructor(props: GroupCreate.Props, context?: any) {
         super(props, context);
-        this.state = { permissions: [], name: "", submitted: false, availableStages: [], availableWorkflows: [], flash: "" }
+        this.state = { 
+            permissions: [], 
+            users: [],
+            name: "", 
+            flash: "", 
+            submitted: false, 
+            fetchedUsers: [], fetchedStages: [], fetchedWorkflows: [] 
+        }
     }
 
     componentDidMount() {
-        //const id = this.props.match.params.id;
 
         axios.get("/api/workflows").then((response) => {
 
-            var availableWorkflows = response.data;
-            var availableStages = []
+            var fetchedWorkflows = response.data;
+            var fetchedStages = []
 
-            for (var i = 0; i < availableWorkflows.length; i++) {
-                for (var j = 0; j < availableWorkflows[i].stages.length; j++) {
-                    availableStages.push(availableWorkflows[i].stages[j]);
+            for (var i = 0; i < fetchedWorkflows.length; i++) {
+                for (var j = 0; j < fetchedWorkflows[i].stages.length; j++) {
+                    fetchedStages.push(fetchedWorkflows[i].stages[j]);
                 }
             }
 
-            this.setState({ availableWorkflows, availableStages })
+            this.setState({ fetchedWorkflows, fetchedStages })
+
+        }).catch((error) => {
+            console.log(error)
+        });
+
+
+        axios.get("/api/users").then((response) => {
+            
+            var fetchedUsers = response.data.map((user:any) => {
+                return {id: user.id, name: user.userName}
+            });
+
+            this.setState({ fetchedUsers })
 
         }).catch((error) => {
             console.log(error)
         });
     }
 
+    /**
+     * On submit.
+     */
     onSubmit() {
 
         this.setState({ flash: "" })
         
+        var users : {id: number}[] = [];
         var wfpermissions: GroupCreate.SimplePermission[] = [];
         var stpermissions: GroupCreate.SimplePermission[] = [];
         
@@ -93,9 +117,13 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
             }
         })
 
-        console.log({name: this.state.name, wfpermissions, stpermissions})
+        users = this.state.users.map((users) => {
+            return {id: users.id}
+        })
 
-        axios.post("/api/roles", {name: this.state.name, wfpermissions, stpermissions}).then((response: any) => {
+        console.log({name: this.state.name, wfpermissions, stpermissions, users})
+
+        axios.post("/api/roles", {name: this.state.name, wfpermissions, stpermissions, users}).then((response: any) => {
 
             if (response) {
                 this.setState({ submitted: true })
@@ -109,6 +137,16 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
     addNewPermission() {
         var newPermissions = [...this.state.permissions]
         newPermissions.push({ id: -1, type: "", access: 0 })
+        this.setState({ permissions: newPermissions })
+    }
+
+    removePermission() {
+
+        if (this.state.permissions.length <= 0)
+            return;
+
+        var newPermissions = [...this.state.permissions]
+        newPermissions.pop();
         this.setState({ permissions: newPermissions })
     }
 
@@ -141,7 +179,7 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
 
 
 
-        var renderItems = (permission.type === "Stages") ? this.state.availableStages : this.state.availableWorkflows;
+        var renderItems = (permission.type === "Stages") ? this.state.fetchedStages : this.state.fetchedWorkflows;
         var itemsElement = undefined;
 
         if (permission.type !== "") {
@@ -159,15 +197,16 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
             >
                 <MenuItem key={-1} disabled value="-1"><em>None</em></MenuItem>
                 {renderItems.map(item => (
-                    <MenuItem key={item.name} value={item.id}>
+                    <MenuItem key={item.id} value={item.id}>
                         {item.name}
                     </MenuItem>
                 ))}
             </TextField>
             <TextField
                 select
+                style={{marginTop: "16px"}}
                 label="Access Type"
-                margin="normal"
+                margin="none"
                 variant="filled"
                 value={permission.access}
                 onChange={changeAccess}
@@ -181,13 +220,14 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
             </React.Fragment>)
         }
 
-        return <React.Fragment>
-            <FormLabel>New Permission</FormLabel>
+        return <React.Fragment >
+            <div style={{paddingTop: "16px", borderBottom: "rgba(0, 0, 0, 0.26) solid 1px", marginRight: "64px"}}></div>
             <TextField
                 select
                 key={index}
+                style={{marginTop: "16px"}}
                 label="Type"
-                margin="normal"
+                margin="none"
                 variant="filled"
                 value={permission.type}
                 onChange={changeType}
@@ -202,12 +242,60 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
         </React.Fragment>
     }
 
+    addUser(e: any) {
+
+        var newUsers = [...this.state.users]
+        var newUser: any = undefined;
+
+        for (var i = 0; i < this.state.fetchedUsers.length; i++) {
+            if (this.state.fetchedUsers[i].id === e.target.value)
+            {
+                newUser = this.state.fetchedUsers[i]
+            }
+        }
+        
+        newUsers.push(newUser)
+        this.setState({users: newUsers})
+    }
+
+    renderUsers() {
+
+        return (<React.Fragment>
+            <TextField
+                select
+                label="User"
+                margin="normal"
+                variant="filled"
+                value={-1}
+                onChange={this.addUser.bind(this)}
+                InputLabelProps={{
+                    shrink: true,
+                }}
+            >
+            <MenuItem key={-1} disabled value="-1"><em>None</em></MenuItem>
+            {this.state.fetchedUsers.map((item) => (
+                <MenuItem key={item.id} value={item.id}>
+                    {item.name}
+                </MenuItem>
+            ))}
+            </TextField>
+            {
+                this.state.users.map((users) => {
+                    return (
+                        <div key={users.id}>
+                            {users.name}
+                        </div>
+                    )
+                })
+            }
+        </React.Fragment>)
+    }
+
     render() {
 
         if (this.state.submitted) {
             return <Redirect push to="/" />;
         }
-
         const { classes } = this.props;
         
         return (
@@ -231,11 +319,14 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
                                 <div></div>
                             }
                             <FormGroup>
-                                <FormLabel>Create Group</FormLabel>
+                                <FormLabel style={{marginTop:"16px"}}>
+                                    Create Group
+                                </FormLabel>
                                 <TextField
                                     label="Group Name"
                                     placeholder="Sports Editor Group"
-                                    margin="normal"
+                                    style={{marginTop: "16px"}}
+                                    margin="none"
                                     variant="filled"
                                     value={this.state.name}
                                     onChange={(c) => this.setState({ name: c.target.value })}
@@ -243,14 +334,26 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
                                         shrink: true,
                                     }}
                                 />
-                                <Button style={{ width: "calc(3*52px)" }} variant={"contained"} onClick={this.addNewPermission.bind(this)}>
-                                    Add New Permission
-                                </Button>
+                                <FormLabel style={{marginTop:"16px"}}>
+                                    Permissions
+                                </FormLabel>
                                 {this.state.permissions.map((permission, index: number) => {
                                     return this.renderPermission(index, permission)
                                 })}
+                                <div style={{display: "flex", justifyContent:"space-evenly"}}>
+                                    <Button style={{marginTop: "16px", width: "calc(4*52px)" }} variant={"contained"} onClick={this.addNewPermission.bind(this)}>
+                                        New Permission
+                                    </Button>
+                                    <Button style={{marginTop: "16px", width: "calc(4*52px)" }} variant={"contained"} onClick={this.removePermission.bind(this)}>
+                                        Remove Permission
+                                    </Button>
+                                </div>
+                                <FormLabel style={{marginTop:"16px"}}>
+                                    Users
+                                </FormLabel>
+                                {this.renderUsers()}
                             </FormGroup>
-                            <Button variant="contained" onClick={this.onSubmit.bind(this)} className={classes.button}>Create</Button>
+                            <Button variant="contained" onClick={this.onSubmit.bind(this)} style={{marginTop: "16px"}} className={classes.button}>Create</Button>
                         </Paper>
                     </Grid>
                 </Grid>
