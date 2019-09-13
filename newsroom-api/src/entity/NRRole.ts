@@ -1,5 +1,12 @@
-import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany,
-         PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    ManyToMany,
+    OneToMany,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from "typeorm";
 
 import { DBConstants } from "./DBConstants";
 import { NRDCPermission } from "./NRDCPermission";
@@ -20,6 +27,18 @@ export class NRRole {
         type: "varchar",
     })
     public name: string;
+
+    @Column({
+        nullable: true,
+        type: "varchar",
+    })
+    public description: string;
+
+    @CreateDateColumn()
+    public created: Date;
+
+    @UpdateDateColumn()
+    public lastUpdated: Date;
 
     /**
      * Relationship: NRUser

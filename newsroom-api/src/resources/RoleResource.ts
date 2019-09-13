@@ -3,7 +3,6 @@ import {
     Context,
     DELETE,
     Errors,
-    FormParam,
     GET,
     Path,
     PathParam,
@@ -134,9 +133,12 @@ export class RoleResource {
                             role: NRRole): Promise<NRRole> {
         const currRole = await this.roleService.getRole(rid);
 
-        // Update current stored userName if given one.
         if (role.name) {
             currRole.name = role.name;
+        }
+
+        if (role.description) {
+            currRole.description = role.description;
         }
 
         try {
