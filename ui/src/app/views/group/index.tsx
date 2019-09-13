@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Grid, Paper, FormGroup, FormLabel, TextField, MenuItem, Button, Typography } from '@material-ui/core';
 import axios from 'axios';
-import Select from '@material-ui/core/Select';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import { Redirect, Link } from 'react-router-dom';
@@ -39,8 +38,7 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
     }
 
     componentDidMount() {
-        //const id = this.props.match.params.id;
-
+        
         axios.get("/api/workflows").then((response) => {
 
             var availableWorkflows = response.data;
@@ -62,10 +60,10 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
     onSubmit() {
 
         this.setState({ flash: "" })
-        
+
         var wfpermissions: GroupCreate.SimplePermission[] = [];
         var stpermissions: GroupCreate.SimplePermission[] = [];
-        
+
         for (var i = 0; i < this.state.permissions.length; i++) {
             if (this.state.permissions[i].id === -1) {
                 this.setState({ flash: "No type/item was designated for one of your permissions." });
@@ -84,18 +82,18 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
         }
 
         this.state.permissions.map((permission) => {
-            
+
             if (permission.type === "Stages") {
-                stpermissions.push({id: permission.id, access: permission.access})
+                stpermissions.push({ id: permission.id, access: permission.access })
             }
             else {
-                wfpermissions.push({id: permission.id, access: permission.access})
+                wfpermissions.push({ id: permission.id, access: permission.access })
             }
         })
 
-        console.log({name: this.state.name, wfpermissions, stpermissions})
+        console.log({ name: this.state.name, wfpermissions, stpermissions })
 
-        axios.post("/api/roles", {name: this.state.name, wfpermissions, stpermissions}).then((response: any) => {
+        axios.post("/api/roles", { name: this.state.name, wfpermissions, stpermissions }).then((response: any) => {
 
             if (response) {
                 this.setState({ submitted: true })
@@ -146,38 +144,38 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
 
         if (permission.type !== "") {
             itemsElement = (<React.Fragment>
-            <TextField
-                select
-                label={permission.type}
-                margin="normal"
-                variant="filled"
-                value={permission.id}
-                onChange={changeID}
-                InputLabelProps={{
-                    shrink: true,
-                }}
-            >
-                <MenuItem key={-1} disabled value="-1"><em>None</em></MenuItem>
-                {renderItems.map(item => (
-                    <MenuItem key={item.name} value={item.id}>
-                        {item.name}
-                    </MenuItem>
-                ))}
-            </TextField>
-            <TextField
-                select
-                label="Access Type"
-                margin="normal"
-                variant="filled"
-                value={permission.access}
-                onChange={changeAccess}
-                InputLabelProps={{
-                    shrink: true,
-                }}
-            >
-                <MenuItem key={0} value="0">Read</MenuItem>
-                <MenuItem key={1} value="1">Write</MenuItem>
-            </TextField>
+                <TextField
+                    select
+                    label={permission.type}
+                    margin="normal"
+                    variant="filled"
+                    value={permission.id}
+                    onChange={changeID}
+                    InputLabelProps={{
+                        shrink: true,
+                    }}
+                >
+                    <MenuItem key={-1} disabled value="-1"><em>None</em></MenuItem>
+                    {renderItems.map(item => (
+                        <MenuItem key={item.name} value={item.id}>
+                            {item.name}
+                        </MenuItem>
+                    ))}
+                </TextField>
+                <TextField
+                    select
+                    label="Access Type"
+                    margin="normal"
+                    variant="filled"
+                    value={permission.access}
+                    onChange={changeAccess}
+                    InputLabelProps={{
+                        shrink: true,
+                    }}
+                >
+                    <MenuItem key={0} value="0">Read</MenuItem>
+                    <MenuItem key={1} value="1">Write</MenuItem>
+                </TextField>
             </React.Fragment>)
         }
 
@@ -209,7 +207,7 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
         }
 
         const { classes } = this.props;
-        
+
         return (
             <React.Fragment>
                 <div className={classes.buttonGroup}>

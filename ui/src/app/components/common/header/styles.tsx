@@ -6,6 +6,9 @@ export function styles(theme: Theme)  {
         root: {
         	width: '100%',
         },
+        header: {
+            position: "fixed"
+        },
         grow: {
         	flexGrow: 1,
         },

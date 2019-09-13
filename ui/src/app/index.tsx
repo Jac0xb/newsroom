@@ -91,36 +91,36 @@ class App extends React.Component<App.Props, App.State, any> {
 
 	render(){
 
-		const { isAuthenticated } = this.state;
+        const { isAuthenticated } = this.state;
+        
+        if (!isAuthenticated) {
+            return(
+                <React.Fragment>
+                    <PrimarySearchAppBar />
+                    <LoginPage loginClick={(username: string, password: string) => this.handleLoginClick(username, password)} registerClick={this.handleRegisterClick} />
+                </React.Fragment>
+            )
+        }
 
 		return(
-			<React.Fragment>
-				<CssBaseline />
-				<PrimarySearchAppBar />
-				<Switch>
-					<div className="App">
-						{
-							!isAuthenticated &&
-							<LoginPage loginClick={(username: string, password: string) => this.handleLoginClick(username, password)} registerClick={this.handleRegisterClick} /> 	
-						}
-						{
-							isAuthenticated &&
-							<div>
-								<Route exact path="/document" component={Dashboard} />
-								<Route exact path="/document/create" component={DocumentCreator} />
-                                <Route exact path="/groups_create" component={GroupCreate}/>
-                                <Route exact path="/groups" component={Groups}/>
-								<Route exact path="/workflow" component={Workflow} />
-								<Route exact path="/" component={Dashboard} />
-								<Route path="/document/:id/edit" component={DocumentEditor} />
-								<Route path="/workflow/:id/edit" component={WorkflowEditor} />
-                                <Route path="/users" component={Users}/>
-                                <Route path="/groups/:id" component={Group}/>
-							</div>
-						}
-					</div>
-				</Switch>
-			</React.Fragment>
+            <React.Fragment>
+                <CssBaseline />
+                <PrimarySearchAppBar />
+                <div style={{ marginTop: "64px" }}>
+                    <Switch>
+                        <Route exact path="/document" component={Dashboard} />
+                        <Route exact path="/document/create" component={DocumentCreator} />
+                        <Route exact path="/groups_create" component={GroupCreate} />
+                        <Route exact path="/groups" component={Groups} />
+                        <Route exact path="/workflow" component={Workflow} />
+                        <Route exact path="/" component={Dashboard} />
+                        <Route path="/document/:id/edit" component={DocumentEditor} />
+                        <Route path="/workflow/:id/edit" component={WorkflowEditor} />
+                        <Route path="/users" component={Users} />
+                        <Route path="/groups/:id" component={Group} />
+                    </Switch>
+                </div>
+            </React.Fragment>
 		);
 	}
 }

@@ -83,31 +83,29 @@ class Header extends React.Component<Header.Props, Header.State> {
         const { classes } = this.props;
 
         return (
-            <div className={classes.root}>
-                <AppBar style={{ backgroundColor: "#90b3c2", boxShadow: 'none' }} position="static">
-                    <Toolbar>
-                        <IconButton className={classes.menuButton} color="inherit" aria-label="Open Drawer" onClick={() => this.toggleDrawer(true)}  >
-                            <MenuIcon />
-                        </IconButton>
-                        <Drawer open={sideMenuOpen} onClose={() => this.toggleDrawer(false)}>
-                            <div
-                                tabIndex={0}
-                                role="button"
-                                onClick={() => this.toggleDrawer(false)}
-                                onKeyDown={() => this.toggleDrawer(false)}
-                            >
-                                <Typography variant="overline" className={classes.categoriesTitle}>Views</Typography>
-                                {this.createCategories()}
-                            </div>
-                        </Drawer>
-                        <Link style={{ textDecoration: "none" }} to="/">
-                            <Typography style={{ textDecoration: "none", color: "white" }} className={classes.title} variant="title" color="inherit" noWrap>
-                                Newsroom
-                            </Typography>
-                        </Link>
-                    </Toolbar>
-                </AppBar>
-            </div>
+            <AppBar className={classes.header} style={{ backgroundColor: "#90b3c2", boxShadow: 'none' }}>
+                <Toolbar>
+                    <IconButton className={classes.menuButton} color="inherit" aria-label="Open Drawer" onClick={() => this.toggleDrawer(true)}  >
+                        <MenuIcon />
+                    </IconButton>
+                    <Drawer open={sideMenuOpen} onClose={() => this.toggleDrawer(false)}>
+                        <div
+                            tabIndex={0}
+                            role="button"
+                            onClick={() => this.toggleDrawer(false)}
+                            onKeyDown={() => this.toggleDrawer(false)}
+                        >
+                            <Typography variant="overline" className={classes.categoriesTitle}>Views</Typography>
+                            {this.createCategories()}
+                        </div>
+                    </Drawer>
+                    <Link style={{ textDecoration: "none" }} to="/">
+                        <Typography style={{ textDecoration: "none", color: "white" }} className={classes.title} variant="title" color="inherit" noWrap>
+                            Newsroom
+                        </Typography>
+                    </Link>
+                </Toolbar>
+            </AppBar>
         );
     }
 }

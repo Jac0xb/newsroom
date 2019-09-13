@@ -113,7 +113,7 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
                 stpermissions.push({id: permission.id, access: permission.access})
             }
             else {
-                wfpermissions.push({id: permission.id, access: permission.access})
+                wfpermissions.push({id: permission.id, access: permission.access}) 
             }
         })
 
@@ -247,13 +247,19 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
         var newUsers = [...this.state.users]
         var newUser: any = undefined;
 
+        for (var i = 0; i < this.state.users.length; i++) {
+            if (this.state.users[i].id === e.target.value)
+            {
+                return;
+            }
+        }
         for (var i = 0; i < this.state.fetchedUsers.length; i++) {
             if (this.state.fetchedUsers[i].id === e.target.value)
             {
                 newUser = this.state.fetchedUsers[i]
             }
         }
-        
+
         newUsers.push(newUser)
         this.setState({users: newUsers})
     }
