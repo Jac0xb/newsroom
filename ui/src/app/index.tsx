@@ -17,6 +17,7 @@ import Workflow from './views/workflow_overview';
 import DocumentCreator from './views/document_create';
 import Users from "app/views/users";
 import Groups from "app/views/groups";
+import Group from "app/views/group";
 import GroupCreate from './views/group_create';
 import PrimarySearchAppBar from 'app/components/common/header';
 import LoginPage from './views/login_page';
@@ -114,7 +115,7 @@ class App extends React.Component<App.Props, App.State, any> {
 								<Route path="/document/:id/edit" component={DocumentEditor} />
 								<Route path="/workflow/:id/edit" component={WorkflowEditor} />
                                 <Route path="/users" component={Users}/>
-                                <Route path="/groups/:id" component={Groups}/>
+                                <Route path="/groups/:id" component={Group}/>
 							</div>
 						}
 					</div>

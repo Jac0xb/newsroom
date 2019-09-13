@@ -21,7 +21,12 @@ export namespace GroupCreate {
         flash?: string
 
         name?: string
-        permissions: { id: number, type: string }[]
+        permissions: SimplePermission[]
+    }
+    export interface SimplePermission {
+        id: number
+        access: number
+        type?: string
     }
 }
 
@@ -37,21 +42,17 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
         //const id = this.props.match.params.id;
 
         axios.get("/api/workflows").then((response) => {
-            console.log(response.data);
 
-            const workflows = response.data;
+            var availableWorkflows = response.data;
+            var availableStages = []
 
-            this.setState({ availableWorkflows: workflows })
-
-            var stages = []
-
-            for (var i = 0; i < workflows.length; i++) {
-                for (var j = 0; j < workflows[i].stages.length; j++) {
-                    stages.push(workflows[i].stages[j]);
+            for (var i = 0; i < availableWorkflows.length; i++) {
+                for (var j = 0; j < availableWorkflows[i].stages.length; j++) {
+                    availableStages.push(availableWorkflows[i].stages[j]);
                 }
             }
 
-            this.setState({ availableStages: stages })
+            this.setState({ availableWorkflows, availableStages })
 
         }).catch((error) => {
             console.log(error)
@@ -59,9 +60,42 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
     }
 
     onSubmit() {
-        this.setState({ flash: "" })
 
-        axios.post("/api/documents", { name: this.state.name }).then((response: any) => {
+        this.setState({ flash: "" })
+        
+        var wfpermissions: GroupCreate.SimplePermission[] = [];
+        var stpermissions: GroupCreate.SimplePermission[] = [];
+        
+        for (var i = 0; i < this.state.permissions.length; i++) {
+            if (this.state.permissions[i].id === -1) {
+                this.setState({ flash: "No type/item was designated for one of your permissions." });
+                return;
+            }
+        }
+
+        if (this.state.permissions.length === 0) {
+            this.setState({ flash: "You have not given this group any permissions." });
+            return;
+        }
+
+        if (this.state.name === "") {
+            this.setState({ flash: "No group name was given." });
+            return;
+        }
+
+        this.state.permissions.map((permission) => {
+            
+            if (permission.type === "Stages") {
+                stpermissions.push({id: permission.id, access: permission.access})
+            }
+            else {
+                wfpermissions.push({id: permission.id, access: permission.access})
+            }
+        })
+
+        console.log({name: this.state.name, wfpermissions, stpermissions})
+
+        axios.post("/api/roles", {name: this.state.name, wfpermissions, stpermissions}).then((response: any) => {
 
             if (response) {
                 this.setState({ submitted: true })
@@ -74,17 +108,17 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
 
     addNewPermission() {
         var newPermissions = [...this.state.permissions]
-        newPermissions.push({ id: -1, type: "" })
+        newPermissions.push({ id: -1, type: "", access: 0 })
         this.setState({ permissions: newPermissions })
     }
 
-    modifyPermission(index: number, permission: { id: number, type: string }) {
+    modifyPermission(index: number, permission: GroupCreate.SimplePermission) {
         var newPermissions = [...this.state.permissions]
         newPermissions[index] = permission;
         this.setState({ permissions: newPermissions })
     }
 
-    renderPermission(index: number, permission: { id: number, type: string }) {
+    renderPermission(index: number, permission: GroupCreate.SimplePermission) {
 
         var changeType = (c: any) => {
             var newPermission = Object.assign({}, permission);
@@ -99,12 +133,20 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
             this.modifyPermission(index, newPermission)
         }
 
+        var changeAccess = (c: any) => {
+            var newPermission = Object.assign({}, permission);
+            newPermission.access = parseInt(c.target.value);
+            this.modifyPermission(index, newPermission)
+        }
 
-        var renderItems = (permission.type === "Stages") ? this.state.availableWorkflows : this.state.availableStages;
+
+
+        var renderItems = (permission.type === "Stages") ? this.state.availableStages : this.state.availableWorkflows;
         var itemsElement = undefined;
 
         if (permission.type !== "") {
-            itemsElement = <TextField
+            itemsElement = (<React.Fragment>
+            <TextField
                 select
                 label={permission.type}
                 margin="normal"
@@ -115,19 +157,35 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
                     shrink: true,
                 }}
             >
-                <MenuItem disabled value="-1"><em>None</em></MenuItem>
+                <MenuItem key={-1} disabled value="-1"><em>None</em></MenuItem>
                 {renderItems.map(item => (
                     <MenuItem key={item.name} value={item.id}>
                         {item.name}
                     </MenuItem>
                 ))}
             </TextField>
+            <TextField
+                select
+                label="Access Type"
+                margin="normal"
+                variant="filled"
+                value={permission.access}
+                onChange={changeAccess}
+                InputLabelProps={{
+                    shrink: true,
+                }}
+            >
+                <MenuItem key={0} value="0">Read</MenuItem>
+                <MenuItem key={1} value="1">Write</MenuItem>
+            </TextField>
+            </React.Fragment>)
         }
 
         return <React.Fragment>
-            <FormLabel>New Group</FormLabel>
+            <FormLabel>New Permission</FormLabel>
             <TextField
                 select
+                key={index}
                 label="Type"
                 margin="normal"
                 variant="filled"
@@ -137,8 +195,8 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
                     shrink: true,
                 }}
             >
-                <MenuItem key="Workflow" value="Workflow">Workflow</MenuItem>
-                <MenuItem key="Stages" value="Stage">Stage</MenuItem>
+                <MenuItem key="Workflows" value="Workflows">Workflows</MenuItem>
+                <MenuItem key="Stages" value="Stages">Stages</MenuItem>
             </TextField>
             {itemsElement}
         </React.Fragment>

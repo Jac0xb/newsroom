@@ -62,7 +62,7 @@ class Groups extends React.Component<Groups.Props, Groups.State> {
                 <MaterialTable
                     columns={[
                         {title: "Avatar", render: Groups.getGroupAvatar},
-                        {title: "Name", field: "name"},
+                        {title: "Name", render: Groups.getGroupName},
                         {title: "Created", field: "created"},
                         {title: "Last Updated", field: "lastUpdated"},
                         {title: "Description", field: "description"}
@@ -76,6 +76,12 @@ class Groups extends React.Component<Groups.Props, Groups.State> {
     static getGroupAvatar(group: any) {
         // TODO Get Image Avatar
         return <Avatar>{group.name.substring(0, 2)}</Avatar>
+    }
+
+    static getGroupName(group: any) {
+        return <Link style={{ textDecoration: "none" }} to={`/groups/${group.id}`}>
+            {group.name}
+        </Link>
     }
 }
 
