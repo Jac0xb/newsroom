@@ -2,7 +2,7 @@ import { Fab } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import WorkflowStage from 'app/views/workflow_editor/components/WorkflowStage';
-import WorkflowMenuBar from 'app/views/workflow_editor/components/WorkflowSidebar'
+// import WorkflowMenuBar from 'app/views/workflow_editor/components/WorkflowSidebar'
 import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
 import * as React from 'react';
@@ -22,7 +22,7 @@ export namespace WorkflowEditor {
     createDialogOpen: boolean
     editDialogOpen: boolean
     stageID: number
-    currStageIdx: number
+    seqID: number
     dialogTextName: string
     dialogTextDesc: string
     canEdit: boolean
@@ -37,9 +37,9 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       createDialogOpen: false,
       editDialogOpen: false,
       stageID: 0,
+      seqID: 0,
       dialogTextName: '',
       dialogTextDesc: '',
-      currStageIdx: 0,
       canEdit: false
     }
   }
@@ -79,43 +79,46 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     }
   };
 
-  handleStageAddClick(open: boolean, id: number) {
+  handleStageAddClick(open: boolean, seqID: number) {
     // Need the ID of the stage so that we know which button is being pressed and where to add the stage.
-    this.setState({ dialogTextName: '', dialogTextDesc: '', createDialogOpen: open, stageID: id });
+    this.setState({ dialogTextName: '', dialogTextDesc: '', createDialogOpen: open, seqID });
   };
 
   // Search and apply current stage info for dialog edit box
-  handleStageEditClick = (id: number) => {
+  handleStageEditClick = (stageID: number) => {
 
     const { stages } = this.state;
 
     var dialogTextName = ""
     var dialogTextDesc = ""
+    var seqID = 0;
 
-    stages.forEach( stage => {
-      if(stage.id === id){
+    stages.forEach( (stage, index) => {
+      if(stage.id === stageID){
         dialogTextName = stage.name
         dialogTextDesc = stage.description
+        seqID = index
       }
     });
 
-    this.setState({ dialogTextName, dialogTextDesc, editDialogOpen: true, stageID: id });
+    // Update view
+    this.setState({ dialogTextName, dialogTextDesc, editDialogOpen: true, stageID, seqID });
 
   };
 
-  handleAddStage = (textBoxName: string, textBoxDesc: string) => {
+  handleStageAdd = (textBoxName: string, textBoxDesc: string) => {
 
-    // The ID of the current workflow.
-    const id = this.props.match.params.id;
+    // The ID of the current workflow, the sequence id of the stage.
+    const wfId = this.props.match.params.id;
+    const seqID = this.state.seqID;
 
-    // TODO: not working with current backend set up
-    axios.post("/api/workflows/" + id + "/stages" , {
-      sequenceId: this.state.stageID,
+    // Post new stage req to backend
+    axios.post("/api/workflows/" + wfId + "/stages/" +  seqID, {
+      sequenceId: seqID,
       name: textBoxName,
       description: textBoxDesc,
-      creator: 1, //Number(localStorage.getItem("userID"))
+      creator: Number(localStorage.getItem("userID")),
     }).then((response) => {
-      console.log(response)
 
       // Stages have their own ID, but their position in the workflow is their 'sequenceId'.
       const index = response.data.sequenceId;
@@ -128,15 +131,20 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     });
   };
 
+  // TODO: does not work with backend
   handleStageEdit = (textBoxName: string, textBoxDesc: string) => {
-    const id = this.props.match.params.id;
 
-    axios.put("/api/workflows/" + id + "/stages/" + this.state.stageID, {
+    // The ID of the current workflow, the sequence id of the stage, the id of the stage.
+    const wfId = this.props.match.params.id;
+    const seqID = this.state.seqID;
+    const stageID = this.state.stageID
+
+    axios.put("/api/workflows/" + wfId + "/stages/" + stageID, {
+      sequenceId: seqID,
       name: textBoxName,
-      creator: "Jacques",
       description: textBoxDesc,
+      creator: Number(localStorage.getItem("userID")),
     }).then((response) => {
-
       // Render new stages edit
       this.getStages()
 
@@ -146,10 +154,10 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
 
   };
 
-  handleStageDeleteClick = (stageID: number) => {
-    const id = this.props.match.params.id;
+  handleStageDeleteClick = (seqID: number) => {
+    const wfId = this.props.match.params.id;
 
-    axios.delete("/api/workflows/" + id + "/stages/" + stageID, {
+    axios.delete("/api/workflows/" + wfId + "/stages/" + seqID, {
     }).then((response) => {
 
       // Render new stages edit
@@ -179,16 +187,16 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
               </div>
               {stages.map((stage, index) => (
                 <div className={classes.stage}>
-                  <WorkflowStage canEdit={canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(id: number) => this.handleStageEditClick(id)} onDeleteClick={(id: number) => this.handleStageDeleteClick(id)}/>
+                  <WorkflowStage canEdit={canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(stageID: number) => this.handleStageEditClick(stageID)} onDeleteClick={(seqID: number) => this.handleStageDeleteClick(seqID)}/>
                   { canEdit ? 
-                    <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.addButton}>
+                    <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index+1)} className={classes.addButton}>
                       <AddIcon />
                     </Fab> 
                     : null 
                   }
                 </div>
               ))}
-              <DialogItem textBoxName={dialogTextName} textBoxDesc={dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({createDialogOpen: false})}  handleSave={this.handleAddStage}/>
+              <DialogItem textBoxName={dialogTextName} textBoxDesc={dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({createDialogOpen: false})}  handleSave={this.handleStageAdd}/>
               <DialogItem textBoxName={dialogTextName} textBoxDesc={dialogTextDesc} title={"Edit Stage"} desc={"Enter stage information"} show={editDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({editDialogOpen: false})} handleSave={this.handleStageEdit}/>
             </div>
            </div>
