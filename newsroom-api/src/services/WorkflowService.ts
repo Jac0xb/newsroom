@@ -74,15 +74,15 @@ export class WorkflowService {
     }
 
     // Add permission field to a single workflow.
-    public async addPermissionsToWF(wf: NRWorkflow, user: NRUser): Promise<NRWorkflow> {
+    public async getPermissionsForWF(wf: NRWorkflow, user: NRUser): Promise<NRWorkflow> {
         wf.permission = await this.getWorkflowPermissionForUser(wf, user);
         return wf;
     }
 
     // Add permission field to many workflows.
-    public async addPermissionsToWFS(wfs: NRWorkflow[], user: NRUser): Promise<NRWorkflow[]> {
+    public async getPermissionsForWFS(wfs: NRWorkflow[], user: NRUser): Promise<NRWorkflow[]> {
         for (let wf of wfs) {
-            wf = await this.addPermissionsToWF(wf, user);
+            wf = await this.getPermissionsForWF(wf, user);
         }
 
         return wfs;
@@ -95,7 +95,7 @@ export class WorkflowService {
         let allowed = false;
 
         for (const role of allRoles) {
-            const roleRight = await this.permWFRepository
+            const roleRight = await this.permSTRepository
                 .createQueryBuilder(DBConstants.STPERM_TABLE)
                 .select(`MAX(${DBConstants.STPERM_TABLE}.access)`, "max")
                 .where(`${DBConstants.STPERM_TABLE}.roleId = :id`, {id: role.id})
@@ -116,15 +116,15 @@ export class WorkflowService {
     }
 
     // Add permission field to a single stage.
-    public async addPermissionsToST(st: NRStage, user: NRUser): Promise<NRStage> {
+    public async getPermissionsForST(st: NRStage, user: NRUser): Promise<NRStage> {
         st.permission = await this.getStagePermissionForUser(st, user);
         return st;
     }
 
     // Add permission field to many stage.
-    public async addPermissionsToStages(stgs: NRStage[], user: NRUser): Promise<NRStage[]> {
+    public async getPermissionsForSTGS(stgs: NRStage[], user: NRUser): Promise<NRStage[]> {
         for (let st of stgs) {
-            st = await this.addPermissionsToST(st, user);
+            st = await this.getPermissionsForST(st, user);
         }
 
         return stgs;

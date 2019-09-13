@@ -13,14 +13,6 @@ export function addStageValidator(req: express.Request) {
         throw new Errors.BadRequestError("Stage userName was not a string.");
     }
 
-    if (!stage.creator) {
-        throw new Errors.BadRequestError("Stage creator not present.");
-    }
-
-    if (!(typeof stage.creator === "number")) {
-        throw new Errors.BadRequestError("Stage creator was not a number.");
-    }
-
     if (stage.description) {
         if (!(typeof stage.description === "string")) {
             throw new Errors.BadRequestError("Stage description was not a string.");
@@ -38,12 +30,6 @@ export function updateStageValidator(req: express.Request) {
     if (stage.name) {
         if (!(typeof stage.name === "string")) {
             throw new Errors.BadRequestError("Stage userName was not a string.");
-        }
-    }
-
-    if (stage.creator) {
-        if (!(typeof stage.creator === "number")) {
-            throw new Errors.BadRequestError("Stage creator was not a number.");
         }
     }
 
