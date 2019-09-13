@@ -90,43 +90,43 @@ class Header extends React.Component<Header.Props, Header.State> {
         const {classes} = this.props;
 
         return (
-            <div className={classes.root}>
-                <AppBar style={{backgroundColor: "#90b3c2", boxShadow: 'none'}} position="static">
-                    <Toolbar>
-                        <Grid container justify="space-between" alignItems="center">
-                            <Grid item>
-                                <IconButton className={classes.menuButton} color="inherit" aria-label="Open Drawer"
-                                            onClick={() => this.toggleDrawer(true)}>
-                                    <MenuIcon/>
-                                </IconButton>
-                            </Grid>
-                            <Grid item>
-                                <Link style={{textDecoration: "none"}} to="/">
-                                    <Typography style={{textDecoration: "none", color: "white"}}
-                                                className={classes.title}
-                                                variant="title" color="inherit" noWrap>
-                                        Newsroom
-                                    </Typography>
-                                </Link>
-                            </Grid>
-                            <Grid item>
-                                <Button onClick={() => this.handleSignOut()}>Sign Out</Button>
-                            </Grid>
+            <AppBar className={classes.header} style={{backgroundColor: "#90b3c2", boxShadow: 'none'}}>
+                <Toolbar>
+                    <Grid container justify="space-between" alignItems="center">
+                        <Grid item>
+                            <IconButton className={classes.menuButton} color="inherit" aria-label="Open Drawer"
+                                        onClick={() => this.toggleDrawer(true)}>
+                                <MenuIcon/>
+                            </IconButton>
                         </Grid>
+                        <Grid item>
+                            <Link style={{textDecoration: "none"}} to="/">
+                                <Typography style={{textDecoration: "none", color: "white"}}
+                                            className={classes.title}
+                                            variant="title" color="inherit" noWrap>
+                                    Newsroom
+                                </Typography>
+                            </Link>
+                        </Grid>
+                        <Grid item>
+                            <Button onClick={() => this.handleSignOut()}>Sign Out</Button>
+                        </Grid>
+                    </Grid>
 
-                        <Drawer open={sideMenuOpen} onClose={() => this.toggleDrawer(false)}>
-                            <div
-                                tabIndex={0}
-                                role="button"
-                                onClick={() => this.toggleDrawer(false)}
-                                onKeyDown={() => this.toggleDrawer(false)}>
-                                <Typography variant="overline" className={classes.categoriesTitle}>Views</Typography>
-                                {this.createCategories()}
-                            </div>
-                        </Drawer>
-                    </Toolbar>
-                </AppBar>
-            </div>
+                    <Drawer open={sideMenuOpen} onClose={() => this.toggleDrawer(false)}>
+                        <div
+                            tabIndex={0}
+                            role="button"
+                            onClick={() => this.toggleDrawer(false)}
+                            onKeyDown={() => this.toggleDrawer(false)}
+                        >
+                            <Typography variant="overline" className={classes.categoriesTitle}>Views</Typography>
+                            {this.createCategories()}
+                        </div>
+                    </Drawer>
+
+                </Toolbar>
+            </AppBar>
         );
     }
 }

@@ -52,6 +52,9 @@ export class NRDocument {
     @UpdateDateColumn()
     public lastUpdated: Date;
 
+    // Populated and returned on request.
+    public permission: number;
+
     /**
      * Relationship: NRUser
      *      - Many: Users can make many documents.

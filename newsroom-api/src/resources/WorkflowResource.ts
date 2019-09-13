@@ -63,15 +63,15 @@ export class WorkflowResource {
     @POST
     @PreProcessor(createWorkflowValidator)
     public async createWorkflow(workflow: NRWorkflow): Promise<NRWorkflow> {
-        const sessionUser = await this.serviceContext.user();
-
-        console.log(sessionUser);
+        const sessionUser = this.serviceContext.user();
 
         // The creator is whoever is logged in.
         workflow.creator = await this.userService.getUser(sessionUser.id);
 
         try {
-            return await this.workflowRepository.save(workflow);
+            // Append the permissions to the response.
+            return await this.workflowService.getPermissionsForWF(await this.workflowRepository.save(workflow),
+                                                                  this.serviceContext.user());
         } catch (err) {
             console.log(err);
 
@@ -89,7 +89,9 @@ export class WorkflowResource {
     @GET
     public async getWorkflows(): Promise<NRWorkflow[]> {
         try {
-            return await this.workflowRepository.find();
+            // Append permissions to response.
+            return await this.workflowService.getPermissionsForWFS(await this.workflowRepository.find(),
+            this.serviceContext.user());
         } catch (err) {
             console.log(err);
 
@@ -109,7 +111,8 @@ export class WorkflowResource {
     @GET
     @Path("/:wid")
     public async getWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRWorkflow> {
-        return this.workflowService.getWorkflow(wid);
+        const wf = await this.workflowService.getWorkflow(wid);
+        return await this.workflowService.getPermissionsForWF(wf, this.serviceContext.user());
     }
 
     /**
@@ -144,7 +147,7 @@ export class WorkflowResource {
         }
 
         try {
-            return await this.workflowRepository.save(currWorkflow);
+            return await this.workflowService.getPermissionsForWF(currWorkflow, this.serviceContext.user());
         } catch (err) {
             console.log(err);
 
@@ -225,8 +228,10 @@ export class WorkflowResource {
         try {
             // Establish the relationship and save it.
             stage.workflow = currWorkflow;
+            stage.creator = sessionUser;
             await this.workflowRepository.save(currWorkflow);
-            return await this.stageRepository.save(stage);
+            const st = await this.stageRepository.save(stage);
+            return await this.workflowService.getPermissionsForST(st, sessionUser);
         } catch (err) {
             console.log(err);
 
@@ -248,7 +253,6 @@ export class WorkflowResource {
     public async getStages(@IsInt @PathParam("wid") wid: number): Promise<NRStage[]> {
         const sessionUser = this.serviceContext.user();
         const currWorkflow = await this.workflowService.getWorkflow(wid);
-        await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
         try {
             // Grab all the stages for this workflow.
@@ -259,7 +263,7 @@ export class WorkflowResource {
 
             // Return them in ascending sequence order.
             stages.sort((a: NRStage, b: NRStage) => a.sequenceId - b.sequenceId);
-            return stages;
+            return await this.workflowService.getPermissionsForSTGS(stages, sessionUser);
         } catch (err) {
             console.log(err);
 
@@ -283,7 +287,6 @@ export class WorkflowResource {
                           @IsInt @PathParam("sid") sid: number): Promise<NRStage> {
         const sessionUser = this.serviceContext.user();
         const currWorkflow = await this.workflowService.getWorkflow(wid);
-        await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
         try {
             // Grab the specified stage for the right workflow.
@@ -293,7 +296,7 @@ export class WorkflowResource {
                 .andWhere("stage.id = :stageId", {stageId: sid})
                 .getOne();
 
-            return stage;
+            return await this.workflowService.getPermissionsForST(stage, sessionUser);
         } catch (err) {
             console.log(err);
 
@@ -330,6 +333,8 @@ export class WorkflowResource {
         const currWorkflow = await this.workflowService.getWorkflow(wid);
         await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
+        stage.creator = sessionUser;
+
         try {
             // Grab the max/min sequenceId for this set of workflow stages.
             const maxSeqId = await this.getMaxStageSequenceId(currWorkflow.id);
@@ -365,7 +370,8 @@ export class WorkflowResource {
             // Establish the relationship and save it.
             stage.workflow = currWorkflow;
             await this.workflowRepository.save(currWorkflow);
-            return await this.stageRepository.save(stage);
+            stage = await this.stageRepository.save(stage);
+            return await this.workflowService.getPermissionsForST(stage, sessionUser);
         } catch (err) {
             console.log(err);
 
@@ -450,7 +456,7 @@ export class WorkflowResource {
     public async updateStage(@IsInt @PathParam("sid") sid: number,
                              stage: NRStage): Promise<NRStage> {
         const sessionUser = this.serviceContext.user();
-        const currStage = await this.workflowService.getStage(sid);
+        let currStage = await this.workflowService.getStage(sid);
         await this.permissionService.checkWFWritePermissions(sessionUser, currStage.workflow.id);
 
         try {
@@ -463,7 +469,8 @@ export class WorkflowResource {
                 currStage.description = stage.description;
             }
 
-            return await this.stageRepository.save(currStage);
+            currStage = await this.stageRepository.save(currStage);
+            return await this.workflowService.getPermissionsForST(currStage, sessionUser);
         } catch (err) {
             console.log(err);
 

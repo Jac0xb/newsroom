@@ -41,6 +41,9 @@ export class NRStage {
     @UpdateDateColumn()
     public lastUpdated: Date;
 
+    // Populate and return on request.
+    public permission: number;
+
     /**
      * Relationship: NRUser
      *      - Many: Users can make many stages.

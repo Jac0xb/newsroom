@@ -43,7 +43,7 @@ class Users extends React.Component<Users.Props, Users.State> {
                 <MaterialTable
                     columns={[
                         {title: "Avatar", render: Users.getUserAvatar},
-                        {title: "User Name", field: "name"},
+                        {title: "User Name", field: "userName"},
                         {title: "First Name", field: "firstName"},
                         {title: "Last Name", field: "lastName"},
                         {title: "Email", field: "email"}

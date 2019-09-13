@@ -6,15 +6,21 @@ export function createRoleValidator(req: express.Request): void {
     const role = req.body as NRRole;
 
     if (!role.name) {
-        throw new Errors.BadRequestError("Role userName not present.");
+        throw new Errors.BadRequestError("Role name not present.");
     }
 
     if (!(typeof role.name === "string")) {
-        throw new Errors.BadRequestError("Role userName was not a string.");
+        throw new Errors.BadRequestError("Role name was not a string.");
     }
 
     if (role.name.length > 256) {
-        throw new Errors.BadRequestError("Role userName length is too long, max 256.");
+        throw new Errors.BadRequestError("Role name length is too long, max 256.");
+    }
+
+    if (role.description) {
+        if (!(typeof role.description === "string")) {
+            throw new Errors.BadRequestError("Role name was not a string.");
+        }
     }
 }
 
@@ -23,11 +29,17 @@ export function updateRoleValidator(req: express.Request): void {
 
     if (role.name) {
         if (!(typeof role.name === "string")) {
-            throw new Errors.BadRequestError("Role userName was not a string.");
+            throw new Errors.BadRequestError("Role name was not a string.");
         }
 
         if (role.name.length > 256) {
-            throw new Errors.BadRequestError("Role userName length is too long, max 256.");
+            throw new Errors.BadRequestError("Role name length is too long, max 256.");
+        }
+    }
+
+    if (role.description) {
+        if (!(typeof role.description === "string")) {
+            throw new Errors.BadRequestError("Role name was not a string.");
         }
     }
 }

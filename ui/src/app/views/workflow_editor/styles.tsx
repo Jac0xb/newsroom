@@ -17,12 +17,6 @@ export function styles(theme: Theme) {
         content: {
             display: 'inline-flex',
         },
-        menuSpacerHeight: {
-            height: 64,
-        },
-        menuSpacerWidth: {
-            width: 250,
-        },
         stage: {
             display: "inline-flex",
             margin: 8,

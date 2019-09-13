@@ -133,9 +133,12 @@ export class RoleResource {
                             role: NRRole): Promise<NRRole> {
         const currRole = await this.roleService.getRole(rid);
 
-        // Update current stored userName if given one.
         if (role.name) {
             currRole.name = role.name;
+        }
+
+        if (role.description) {
+            currRole.description = role.description;
         }
 
         try {
@@ -180,36 +183,31 @@ export class RoleResource {
      *          - If workflow not found.
      */
     @PUT
-    @Path("/:rid/workflow")
+    @Path("/:rid/workflow/:wid")
     public async addWFPermission(@IsInt @PathParam("rid") rid: number,
-                                 permission: NRWFPermission): Promise<NRRole> {
-        let newPerm: NRWFPermission;
+                                 @IsInt @PathParam("wid") wid: number,
+                                 access: any): Promise<NRRole> {
+        let perm: NRWFPermission;
+        let wf: NRWorkflow;
+        let rl: NRRole;
 
         try {
-            newPerm = await this.permissionService.getWFPermission(permission.id);
+            perm = await this.permissionService.getWFPermissionFromWFRL(wid, rid);
+            wf = perm.workflow;
+            rl = perm.role;
         } catch (NotFoundError) {
-            newPerm = new NRWFPermission();
-            newPerm.access = permission.access;
-            newPerm.role = permission.role;
-            newPerm.workflow = permission.workflow;
+            perm = new NRWFPermission();
+            rl = await this.roleService.getRole(rid);
+            wf = await this.workflowService.getWorkflow(wid);
         }
 
-        const role = await this.roleService.getRole(rid);
-        const wf = await this.workflowService.getWorkflow(newPerm.workflow.id);
+        perm.workflow = wf;
+        perm.role = rl;
+        perm.access = access.access;
 
-        try {
-            newPerm.workflow = wf;
-            newPerm.role = role;
-
-            await this.permWFRepository.save(newPerm);
-            await this.workflowRepository.save(wf);
-            return await this.roleRepository.save(role);
-        } catch (err) {
-            console.log(err);
-
-            const errStr = `Error adding WF permission.`;
-            throw new Errors.InternalServerError(errStr);
-        }
+        await this.permWFRepository.save(perm);
+        await this.workflowRepository.save(wf);
+        return await this.roleRepository.save(rl);
     }
 
     /**
@@ -219,39 +217,34 @@ export class RoleResource {
      *      - NRRole
      *      - NotFoundError (404)
      *          - If role not found.
-     *          - If workflow not found.
+     *          - If stage not found.
      */
     @PUT
-    @Path("/:rid/stage")
+    @Path("/:rid/stage/:sid")
     public async addSTPermission(@IsInt @PathParam("rid") rid: number,
-                                 permission: NRSTPermission): Promise<NRRole> {
-        let newPerm: NRSTPermission;
+                                 @IsInt @PathParam("sid") sid: number,
+                                 access: any): Promise<NRRole> {
+        let perm: NRSTPermission;
+        let st: NRStage;
+        let rl: NRRole;
 
         try {
-            newPerm = await this.permissionService.getSTPermission(permission.id);
+            perm = await this.permissionService.getSTPermissionFromSTRL(sid, rid);
+            st = perm.stage;
+            rl = perm.role;
         } catch (NotFoundError) {
-            newPerm = new NRSTPermission();
-            newPerm.access = permission.access;
-            newPerm.role = permission.role;
-            newPerm.stage = permission.stage;
+            perm = new NRSTPermission();
+            rl = await this.roleService.getRole(rid);
+            st = await this.workflowService.getStage(sid);
         }
 
-        const stage = await this.workflowService.getStage(permission.stage.id);
-        const role = await this.roleService.getRole(rid);
+        perm.stage = st;
+        perm.role = rl;
+        perm.access = access.access;
 
-        try {
-            newPerm.stage = stage;
-            newPerm.role = role;
-
-            await this.permWFRepository.save(newPerm);
-            await this.stageRepository.save(stage);
-            return await this.roleRepository.save(role);
-        } catch (err) {
-            console.log(err);
-
-            const errStr = `Error adding ST permission.`;
-            throw new Errors.InternalServerError(errStr);
-        }
+        await this.permSTRepository.save(perm);
+        await this.stageRepository.save(st);
+        return await this.roleRepository.save(rl);
     }
 
     /**

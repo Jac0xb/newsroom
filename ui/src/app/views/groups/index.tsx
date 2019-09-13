@@ -1,10 +1,11 @@
 import * as React from 'react';
-import { Avatar } from '@material-ui/core';
+import { Avatar, Button } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { Group } from 'app/models';
 import { styles } from './styles';
 import axios from 'axios';
 import MaterialTable from "material-table";
+import { Link } from 'react-router-dom';
 
 export namespace Groups {
     export interface Props {
@@ -39,24 +40,35 @@ class Groups extends React.Component<Groups.Props, Groups.State> {
         const {groups} = this.state;
 
         return (
-            <React.Fragment>
+            <div style={{margin: "0px 30px"}}>
+                <Link to={"/groups_create"}>
+                    <Button variant="contained" style={{margin: "30px 0px"}} >
+                        Add Group
+                    </Button>
+                </Link>
                 <MaterialTable
                     columns={[
                         {title: "Avatar", render: Groups.getGroupAvatar},
-                        {title: "Name", field: "name"},
+                        {title: "Name", render: Groups.getGroupName},
                         {title: "Created", field: "created"},
                         {title: "Last Updated", field: "lastUpdated"},
                         {title: "Description", field: "description"}
                     ]}
                     data={groups}
                     title="Groups"/>
-            </React.Fragment>
+            </div>
         );
     }
 
     static getGroupAvatar(group: any) {
         // TODO Get Image Avatar
         return <Avatar>{group.name.substring(0, 2)}</Avatar>
+    }
+
+    static getGroupName(group: any) {
+        return <Link style={{ textDecoration: "none" }} to={`/groups/${group.id}`}>
+            {group.name}
+        </Link>
     }
 }
 
