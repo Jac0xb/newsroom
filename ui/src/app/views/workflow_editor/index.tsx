@@ -114,7 +114,6 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
 
     // Post new stage req to backend
     axios.post("/api/workflows/" + wfId + "/stages/" +  seqID, {
-      sequenceId: seqID,
       name: textBoxName,
       description: textBoxDesc,
       creator: Number(localStorage.getItem("userID")),
@@ -131,7 +130,6 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     });
   };
 
-  // TODO: does not work with backend
   handleStageEdit = (textBoxName: string, textBoxDesc: string) => {
 
     // The ID of the current workflow, the sequence id of the stage, the id of the stage.
@@ -154,10 +152,10 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
 
   };
 
-  handleStageDeleteClick = (seqID: number) => {
+  handleStageDeleteClick = (stageID: number) => {
     const wfId = this.props.match.params.id;
 
-    axios.delete("/api/workflows/" + wfId + "/stages/" + seqID, {
+    axios.delete("/api/workflows/" + wfId + "/stages/" + stageID, {
     }).then((response) => {
 
       // Render new stages edit
@@ -187,7 +185,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
               </div>
               {stages.map((stage, index) => (
                 <div className={classes.stage}>
-                  <WorkflowStage canEdit={canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(stageID: number) => this.handleStageEditClick(stageID)} onDeleteClick={(seqID: number) => this.handleStageDeleteClick(seqID)}/>
+                  <WorkflowStage canEdit={canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(stageID: number) => this.handleStageEditClick(stageID)} onDeleteClick={(stageID: number) => this.handleStageDeleteClick(stageID)}/>
                   { canEdit ? 
                     <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index+1)} className={classes.addButton}>
                       <AddIcon />

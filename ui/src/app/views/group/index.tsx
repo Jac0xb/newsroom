@@ -76,26 +76,36 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
             return;
         }
 
-        if (this.state.name === "") {
-            this.setState({ flash: "No group name was given." });
-            return;
-        }
+        // get role id from url, not ideal, not a fan
+        var getUrl = (window.location.href).split('/')
+        var roleID = getUrl[getUrl.length-1]
+
+        // quick fix, real bad, not a fan
+        var url = "/api/roles/" + roleID + "/";
+        var access = 0;
 
         this.state.permissions.map((permission) => {
 
+            access = permission.access
+
             if (permission.type === "Stages") {
-                stpermissions.push({ id: permission.id, access: permission.access })
+                // /api/roles/rid/stage/sid
+                url += "stage/"+ permission.id
+                // stpermissions.push({ id: permission.id, access: permission.access })
             }
             else {
-                wfpermissions.push({ id: permission.id, access: permission.access })
+                // /api/roles/rid/workflow/wid
+                url += "workflow/"+ permission.id
+                // wfpermissions.push({ id: permission.id, access: permission.access })
             }
         })
 
         console.log({ name: this.state.name, wfpermissions, stpermissions })
 
-        axios.post("/api/roles", { name: this.state.name, wfpermissions, stpermissions }).then((response: any) => {
+        axios.put(url, { access }).then((response: any) => {
 
             if (response) {
+                console.log(response)
                 this.setState({ submitted: true })
             }
 
@@ -229,18 +239,7 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
                                 <div></div>
                             }
                             <FormGroup>
-                                <FormLabel>Create Group</FormLabel>
-                                <TextField
-                                    label="Group Name"
-                                    placeholder="Sports Editor Group"
-                                    margin="normal"
-                                    variant="filled"
-                                    value={this.state.name}
-                                    onChange={(c) => this.setState({ name: c.target.value })}
-                                    InputLabelProps={{
-                                        shrink: true,
-                                    }}
-                                />
+                                <FormLabel>Add Permission</FormLabel>
                                 <Button style={{ width: "calc(3*52px)" }} variant={"contained"} onClick={this.addNewPermission.bind(this)}>
                                     Add New Permission
                                 </Button>
