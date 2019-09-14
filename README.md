@@ -12,14 +12,10 @@ Jacob Brown, Connor Kuhn, August Masquelier, Jacob Valentine
 2. Install yarn globally: `npm install -g yarn`
 3. Install dependencies for all submodules: `yarn install`
 4. Build all submodules: `yarn build`
-5. Start newsroom-api: `yarn workspace newsroom-api start` or `cd newsroom-api && yarn start`.
-6. Star UI: ?
+5. Start newsroom-api: `cd newsroom-api && yarn run start`
+6. Star UI: `cd ui && yarn run start`
 
 ## Architecture
-
-### [orm](orm)
-
-Contains code that provides common ORM Entities for all modules, subject to moving.
 
 ### [ui](ui)
 
@@ -27,7 +23,7 @@ React.js based code for the UI of the app.
 
 ### [newsroom-api](newsroom-api)
 
-Currently contains the `/documents` and `/workflows` APIs. Subject to renaming
-if other microservices are added.
+Contains endpoints for workflows, stages, users, and roles as well as different
+database entity infrastructure and migrations.
 
 Copyright &copy; 2019 Jacob Brown, Connor Kuhn, August Masquelier, Jacob Valentine
