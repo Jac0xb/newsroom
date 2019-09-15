@@ -53,7 +53,7 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 			}
 
 		}).catch((error) => {
-            this.setState({ flash: error.response.data.message, pendingSubmission: false });
+            this.setState({ flash: error.response.data.message || "Something has gone terribly wrong. We don't even know.", pendingSubmission: false });
             
 		});
 	}

@@ -110,7 +110,7 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
             }
 
         }).catch((error) => {
-            this.setState({ flash: error.response.data.message });
+            this.setState({ flash: error.response.data.message || "Something has gone terribly wrong. We don't even know." });
         });
     }
 
