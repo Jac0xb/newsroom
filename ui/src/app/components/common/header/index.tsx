@@ -16,7 +16,7 @@ import { styles } from "./styles";
 import { compose } from 'recompose';
 import { Button, Grid } from "@material-ui/core";
 
-export namespace Header {
+export namespace HeaderComponent {
     export interface Category {
         title: string,
         url: string
@@ -24,6 +24,7 @@ export namespace Header {
 
     export interface Props {
         classes: Record<string, string>
+        loggedOut?: boolean
     }
 
     export interface State {
@@ -32,9 +33,9 @@ export namespace Header {
     }
 }
 
-class Header extends React.Component<Header.Props, Header.State> {
+class HeaderComponent extends React.Component<HeaderComponent.Props, HeaderComponent.State> {
 
-    constructor(props: Header.Props) {
+    constructor(props: HeaderComponent.Props) {
         super(props)
 
         this.state = {
@@ -87,17 +88,20 @@ class Header extends React.Component<Header.Props, Header.State> {
      */
     render() {
         const {sideMenuOpen} = this.state;
-        const {classes} = this.props;
+        const {classes, loggedOut} = this.props;
 
         return (
-            <AppBar className={classes.header} style={{backgroundColor: "#90b3c2", boxShadow: 'none'}}>
+            <AppBar className={classes.header} style={{backgroundColor: "#222f3e", boxShadow: 'none'}}>
                 <Toolbar>
                     <Grid container justify="space-between" alignItems="center">
                         <Grid item>
+                        { (!loggedOut) ?  (
                             <IconButton className={classes.menuButton} color="inherit" aria-label="Open Drawer"
                                         onClick={() => this.toggleDrawer(true)}>
                                 <MenuIcon/>
                             </IconButton>
+                        ): []
+                        }
                         </Grid>
                         <Grid item>
                             <Link style={{textDecoration: "none"}} to="/">
@@ -109,7 +113,7 @@ class Header extends React.Component<Header.Props, Header.State> {
                             </Link>
                         </Grid>
                         <Grid item>
-                            <Button onClick={() => this.handleSignOut()}>Sign Out</Button>
+                            { (!loggedOut) ?  (<Button style={{color: "white"}} onClick={() => this.handleSignOut()}>Sign Out</Button>) : [] }
                         </Grid>
                     </Grid>
 
@@ -131,6 +135,4 @@ class Header extends React.Component<Header.Props, Header.State> {
     }
 }
 
-export default compose<Header.Props, {}>(
-    withStyles(styles)
-)(Header);
+export default withStyles(styles)(HeaderComponent);

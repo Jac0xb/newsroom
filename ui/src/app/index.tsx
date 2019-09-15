@@ -5,7 +5,6 @@ import { Route, Switch } from 'react-router-dom';
 import CssBaseline from '@material-ui/core/CssBaseline';
 // Allows for React components to be live reloaded without the loss of state.
 import { hot } from 'react-hot-loader';
-// Newsroom the application.
 import Dashboard from './views/dashboard_overview';
 import DocumentEditor from './views/document_editor';
 import WorkflowEditor from './views/workflow_editor'
@@ -15,7 +14,7 @@ import Users from "app/views/users";
 import Groups from "app/views/groups";
 import Group from "app/views/group";
 import GroupCreate from './views/group_create';
-import PrimarySearchAppBar from 'app/components/common/header';
+import AppHeader from 'app/components/common/header';
 import LoginPage from './views/login_page';
 import axios from 'axios';
 import { User } from './models';
@@ -54,7 +53,7 @@ class App extends React.Component<App.Props, App.State, any> {
         if (!isAuthenticated) {
             return (
                 <React.Fragment>
-                    <PrimarySearchAppBar/>
+                    <AppHeader loggedOut={true}/>
                     <div style={{marginTop: "64px"}}>
                         <LoginPage/>
                     </div>
@@ -65,7 +64,7 @@ class App extends React.Component<App.Props, App.State, any> {
         return (
             <React.Fragment>
                 <CssBaseline/>
-                <PrimarySearchAppBar/>
+                <AppHeader />
                 <div style={{marginTop: "64px"}}>
                     <Switch>
                         <Route exact path="/document" component={Dashboard}/>
