@@ -308,15 +308,15 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
     render() {
 
         if (this.state.submitted) {
-            return <Redirect push to="/"/>;
+            return <Redirect push to="/groups"/>;
         }
         const {classes} = this.props;
 
         return (
-            <React.Fragment>
+            <main className={classes.main}>
                 <div className={classes.buttonGroup}>
                     <Link style={{textDecoration: "none"}} to="/groups">
-                        <Button style={{width: "calc(4*52px)"}} variant={"contained"}>
+                        <Button style={{width: "calc(100px)"}} variant={"contained"}>
                             Back
                         </Button>
                     </Link>
@@ -387,7 +387,7 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
                         </Paper>
                     </Grid>
                 </Grid>
-            </React.Fragment>
+            </main>
         );
     }
 }

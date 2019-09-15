@@ -36,7 +36,7 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
     }
 
     renderDocuments() {
-        
+        console.log(this.state.documents)
         return _.map(this.state.documents, (document) =>
             <DocumentTile key={document.id} document={document} onDelete={() => {}} />
         )
@@ -48,14 +48,14 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
         const { classes } = this.props;
 
         return (
-            <React.Fragment>
+            <main className={classes.main}>
                 <div className={classes.buttonGroup}>
                     <LinkedButton />
                 </div>
-                <div className={classes.outerGrid}>
+                <div className={classes.documentGrid}>
                     {this.renderDocuments()}
                 </div>
-            </React.Fragment>
+            </main>
         );
     }
 }

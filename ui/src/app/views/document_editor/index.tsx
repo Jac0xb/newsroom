@@ -69,48 +69,46 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 			return <div>Document did not exist, had no workflow, or had no stage</div>;
 		}
 
-		return (
-			<React.Fragment>
-				<main className={classes.layout}>
-					<Grid container spacing={24}>
-						<Grid item xs={9}>
-							<Paper className={classes.documentTitlePaper}>
-								<Typography variant="h5">
-									<TextField
-										fullWidth
-										id="document-name"
-										label="Document Name"
-										placeholder="Document Name"
-										className={classes.documentTitleTextField}
-										margin="normal"
-										defaultValue={document.name}
-										onChange={(event) => this.handleDocumentNameChange(event)}
-										error={!!this.state.errorText} />
+        return (
+            <main className={classes.main}>
+                <Grid container spacing={24}>
+                    <Grid item xs={9}>
+                        <Paper className={classes.documentTitlePaper}>
+                            <Typography variant="h5">
+                                <TextField
+                                    fullWidth
+                                    id="document-name"
+                                    label="Document Name"
+                                    placeholder="Document Name"
+                                    className={classes.documentTitleTextField}
+                                    margin="normal"
+                                    defaultValue={document.name}
+                                    onChange={(event) => this.handleDocumentNameChange(event)}
+                                    error={!!this.state.errorText} />
+                            </Typography>
+                        </Paper>
+                        <Paper className={classes.editor}>
+                            <Editor editorState={editorState}
+                                onChange={(editorState: EditorState) => this.handleChange(editorState)}
+                                handleKeyCommand={(command: string, editorState: EditorState) => this.handleKeyCommand(command, editorState)} />
+                        </Paper>
+                    </Grid>
+                    <Grid item xs={3}>
+                        <Paper className={classes.paper}>
+                            <Typography variant="subtitle1">
+                                Styles
 								</Typography>
-							</Paper>
-							<Paper className={classes.editor}>
-								<Editor editorState={editorState}
-									onChange={(editorState: EditorState) => this.handleChange(editorState)}
-									handleKeyCommand={(command: string, editorState: EditorState) => this.handleKeyCommand(command, editorState)} />
-							</Paper>
-						</Grid>
-						<Grid item xs={3}>
-							<Paper className={classes.paper}>
-								<Typography variant="subtitle1">
-									Styles
-								</Typography>
-								<StyleBar
-									onClick={(format:string) => this.handleFormatChange(format)}
-									onCreateUpdateFormats={(updateFormats) => this.state.styleBarUpdateFormats = updateFormats} />
-							</Paper>
-							<WorkflowMiniView
-								workflow={document.workflow}
-								currentStage={document.stage.sequenceId!}
-								onMove={(direction:string) => this.handleMove(direction)} />
-						</Grid>
-					</Grid>
-				</main>
-			</React.Fragment>
+                            <StyleBar
+                                onClick={(format: string) => this.handleFormatChange(format)}
+                                onCreateUpdateFormats={(updateFormats) => this.state.styleBarUpdateFormats = updateFormats} />
+                        </Paper>
+                        <WorkflowMiniView
+                            workflow={document.workflow}
+                            currentStage={document.stage.sequenceId!}
+                            onMove={(direction: string) => this.handleMove(direction)} />
+                    </Grid>
+                </Grid>
+            </main>
 		);
 	}
 

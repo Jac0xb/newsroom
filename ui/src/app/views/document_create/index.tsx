@@ -17,7 +17,8 @@ export namespace DocumentCreate {
 		nickname?: string
 		workflow?: number
 		availableWorkflows: { name: string, id: number }[]
-		submitted: boolean
+        submitted: boolean
+        pendingSubmission: boolean
 		flash?: string
 	}
 }
@@ -27,7 +28,7 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 
 	constructor(props: DocumentCreate.Props, context?: any) {
 		super(props, context);
-		this.state = { nickname: "", workflow: -1, availableWorkflows: [], submitted: false, flash: "" }
+		this.state = { nickname: "", workflow: -1, availableWorkflows: [], submitted: false, pendingSubmission: false, flash: "" }
 	}
 
 	componentDidMount() {
@@ -43,7 +44,7 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 	}
 
 	onSubmit() {
-		this.setState({ flash: "" })
+		this.setState({ flash: "", pendingSubmission: true })
 
 		axios.post("/api/documents", { name: this.state.nickname, creator: "Test", workflow: this.state.workflow }).then((response: any) => {
 
@@ -52,7 +53,8 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 			}
 
 		}).catch((error) => {
-			this.setState({ flash: error.response.data.message });
+            this.setState({ flash: error.response.data.message, pendingSubmission: false });
+            
 		});
 	}
 
@@ -65,7 +67,7 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 		const { classes, cookies } = this.props;
 
 		return (
-			<React.Fragment>
+			<main className={classes.main}>
                 <div className={classes.buttonGroup}>
 					<Link style={{ textDecoration: "none" }} to="/">
 						<Button style={{ width: "calc(4*52px)" }} variant={"contained"}>
@@ -75,7 +77,7 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 				</div>
 				<Grid className={classes.outerGrid} alignContent={"center"} container spacing={24} direction="row" justify="center" alignItems="center">
 					<Grid item xs={8} md={6}>
-						<Paper className={classes.formGroup}>
+						<Paper className={classes.formPaper}>
 							{(this.state.flash != "") ?
 								<Paper className={classes.flashMessage}>
 									<Typography variant="caption">
@@ -84,7 +86,7 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 								</Paper> :
 								<div></div>
 							}
-							<FormGroup>
+							<FormGroup className={classes.formGroup}>
 								<FormLabel>Document Creator</FormLabel>
 								<TextField
 									label="Document Nickname"
@@ -126,11 +128,13 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 									}}
 								/>
 							</FormGroup>
-							<Button variant="contained" onClick={this.onSubmit.bind(this)} className={classes.button}>Create</Button>
+                            <div className={classes.formButtonGroup}>
+							    <Button variant="contained" disabled={this.state.pendingSubmission} onClick={this.onSubmit.bind(this)} className={classes.button}>Create</Button>
+                            </div>
 						</Paper>
 					</Grid>
 				</Grid>
-			</React.Fragment>
+			</main>
 		);
 	}
 }

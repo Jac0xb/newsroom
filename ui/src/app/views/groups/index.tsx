@@ -37,26 +37,29 @@ class Groups extends React.Component<Groups.Props, Groups.State> {
     }
 
     render() {
+        const {classes} = this.props;
         const {groups} = this.state;
 
         return (
-            <div style={{margin: "0px 30px"}}>
+            <main className={classes.main}>
                 <Link to={"/groups_create"}>
-                    <Button variant="contained" style={{margin: "30px 0px"}} >
+                    <Button variant="contained" className={classes.buttonGroup} >
                         Add Group
                     </Button>
                 </Link>
-                <MaterialTable
-                    columns={[
-                        {title: "Avatar", render: Groups.getGroupAvatar},
-                        {title: "Name", render: Groups.getGroupName},
-                        {title: "Created", field: "created"},
-                        {title: "Last Updated", field: "lastUpdated"},
-                        {title: "Description", field: "description"}
-                    ]}
-                    data={groups}
-                    title="Groups"/>
-            </div>
+                <div className={classes.table}>
+                    <MaterialTable
+                        columns={[
+                            {title: "Avatar", render: Groups.getGroupAvatar},
+                            {title: "Name", render: Groups.getGroupName},
+                            {title: "Created", field: "created"},
+                            {title: "Last Updated", field: "lastUpdated"},
+                            {title: "Description", field: "description"}
+                        ]}
+                        data={groups}
+                        title="Groups"/>
+                </div>
+            </main>
         );
     }
 

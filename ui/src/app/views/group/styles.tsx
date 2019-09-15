@@ -4,7 +4,7 @@ export function styles(theme: Theme)  {
     return (
     {
 		outerGrid: {
-			padding: "24px"
+			padding: "32px"
 		},
 		formGroup: {
 			padding: "16px"
