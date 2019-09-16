@@ -217,20 +217,25 @@ export class PermissionService {
         }
 
         if (allowed) {
+            console.log(`PermissionService.getSTWritePermission, returning=WRITE`);
             return DBConstants.WRITE;
         } else {
+            console.log(`PermissionService.getSTWritePermission, returning=READ`);
             return DBConstants.READ;
         }
     }
 
     // Check if a user has write permissions on a stage.
     public async checkSTWritePermissions(user: NRUser, sid: number) {
-        const allowed = this.getSTWritePermission(user, sid);
+        const allowed = await this.getSTWritePermission(user, sid);
 
         if (!(allowed)) {
+            console.log(`PermissionService.checkSTWritePermissions, ERRORING`);
             const errStr = `User with ID ${user.id} does not have ST write permissions.`;
             throw new Errors.ForbiddenError(errStr);
         }
+
+        console.log(`PermissionService.checkSTWritePermissions, ALLOWING`);
     }
 
     // Check if a user has write permissions on a document.
@@ -257,7 +262,7 @@ export class PermissionService {
 
     // Check if a user has write permissions on a document.
     public async checkDCWritePermissions(user: NRUser, did: number) {
-        const allowed = this.checkDCWritePermission(user, did);
+        const allowed = await this.checkDCWritePermission(user, did);
 
         if (!(allowed)) {
             const errStr = `User with ID ${user.id} does not have DC write permissions.`;
