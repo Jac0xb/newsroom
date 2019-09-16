@@ -21,12 +21,12 @@ export function createDocumentValidator(req: express.Request) {
         throw new Errors.BadRequestError("Document workflow not present.");
     }
 
-    if (!(typeof document.workflow === "number")) {
+    if (!(typeof document.workflow.id === "number")) {
         throw new Errors.BadRequestError("Document workflow was not a number.");
     }
 
     if (document.stage) {
-        if (!(typeof document.stage === "number")) {
+        if (!(typeof document.stage.id === "number")) {
             throw new Errors.BadRequestError("Document stage was not a number.");
         }
     }
@@ -56,13 +56,13 @@ export function updateDocumentValidator(req: express.Request): void {
     }
 
     if (document.workflow) {
-        if (!(typeof document.workflow === "number")) {
+        if (!(typeof document.workflow.id === "number")) {
             throw new Errors.BadRequestError("Document workflow was not a number.");
         }
     }
 
     if (document.stage) {
-        if (!(typeof document.stage === "number")) {
+        if (!(typeof document.stage.id === "number")) {
             throw new Errors.BadRequestError("Document stage was not a number.");
         }
     }

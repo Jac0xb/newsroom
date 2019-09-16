@@ -177,19 +177,20 @@ export class WorkflowResource {
         await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
         try {
-            await this.stageRepository
-                .createQueryBuilder(DBConstants.STGE_TABLE)
-                .delete()
-                .from(NRStage)
-                .andWhere("workflowId = :wid", {wid: currWorkflow.id})
-                .execute();
+            await this.workflowRepository.remove(currWorkflow);
+            // await this.stageRepository
+            //     .createQueryBuilder(DBConstants.STGE_TABLE)
+            //     .delete()
+            //     .from(NRStage)
+            //     .andWhere("workflowId = :wid", {wid: currWorkflow.id})
+            //     .execute();
 
-            await this.workflowRepository
-                .createQueryBuilder(DBConstants.WRKF_TABLE)
-                .delete()
-                .from(NRWorkflow)
-                .andWhere("id = :wid", {wid: currWorkflow.id})
-                .execute();
+            // await this.workflowRepository
+            //     .createQueryBuilder(DBConstants.WRKF_TABLE)
+            //     .delete()
+            //     .from(NRWorkflow)
+            //     .andWhere("id = :wid", {wid: currWorkflow.id})
+            //     .execute();
         } catch (err) {
             console.log(err);
 
