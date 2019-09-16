@@ -39,6 +39,12 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
 
     componentDidMount() {
         
+        var { match } = this.props;
+
+        if (match) {
+            axios.get(`/api/roles/${match.params.id}`).then((data) => console.log(data))
+        }
+
         axios.get("/api/workflows").then((response) => {
 
             var availableWorkflows = response.data;

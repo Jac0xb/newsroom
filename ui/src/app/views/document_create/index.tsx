@@ -45,7 +45,7 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 
 	onSubmit() {
         this.setState({ flash: "", pendingSubmission: true })
-        var postMessage = { name: this.state.nickname, creator: {id: 1}, workflow: this.state.workflow }
+        var postMessage = { name: this.state.nickname, creator: {id: 1}, workflow: { id: this.state.workflow } }
         
         console.log(postMessage)
 

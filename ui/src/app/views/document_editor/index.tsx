@@ -44,18 +44,9 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 		axios.get("/api/documents/" + documentId).then((response) => {
 			console.log(response);
 
-			const document = response.data;
-
-			let editorState: EditorState
-			try {
-				editorState = EditorState.createWithContent(convertFromRaw(JSON.parse(document.content)));
-			} catch (e) {
-				editorState = EditorState.createEmpty();
-			}
-
+            const document = response.data;
 			this.setState({
-				document: document,
-				editorState: editorState
+				document: document
 			});
 		});
 	}
@@ -88,9 +79,9 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
                             </Typography>
                         </Paper>
                         <Paper className={classes.editor}>
-                            <Editor editorState={editorState}
-                                onChange={(editorState: EditorState) => this.handleChange(editorState)}
-                                handleKeyCommand={(command: string, editorState: EditorState) => this.handleKeyCommand(command, editorState)} />
+                            <iframe style={{width: "100%", height: "500px"}} src={`https://docs.google.com/document/d/${document.googleDocId}/edit`}>
+
+                            </iframe>
                         </Paper>
                     </Grid>
                     <Grid item xs={3}>
