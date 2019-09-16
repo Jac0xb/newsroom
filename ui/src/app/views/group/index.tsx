@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Grid, Paper, FormGroup, FormLabel, TextField, MenuItem, Button, Typography } from '@material-ui/core';
+import { Divider, Grid, Paper, FormGroup, FormLabel, TextField, MenuItem, Button, Typography } from '@material-ui/core';
 import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
@@ -18,8 +18,8 @@ export namespace GroupCreate {
         availableWorkflows: { name: string, id: number }[]
         availableStages: { name: string, id: number }[]
         flash?: string
-
         name?: string
+        group?: any
         permissions: SimplePermission[]
     }
     export interface SimplePermission {
@@ -34,7 +34,15 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
 
     constructor(props: GroupCreate.Props, context?: any) {
         super(props, context);
-        this.state = { permissions: [], name: "", submitted: false, availableStages: [], availableWorkflows: [], flash: "" }
+        this.state = { 
+            permissions: [], 
+            name: "", 
+            submitted: false, 
+            availableStages: [], 
+            availableWorkflows: [], 
+            flash: "",
+            group: {name: ""}
+        }
     }
 
     componentDidMount() {
@@ -42,7 +50,10 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
         var { match } = this.props;
 
         if (match) {
-            axios.get(`/api/roles/${match.params.id}`).then((data) => console.log(data))
+            axios.get(`/api/roles/${match.params.id}`).then((response) => {
+                console.log(response.data)
+                this.setState({group: response.data})
+            })
         }
 
         axios.get("/api/workflows").then((response) => {
@@ -196,7 +207,7 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
         }
 
         return <React.Fragment key={index}>
-            <FormLabel style={{ marginBottom: "16px" }}>New Permission</FormLabel>
+            <FormLabel style={{ marginTop: "16px" }}>New Permission</FormLabel>
             <TextField
                 select
                 key={index}
@@ -244,7 +255,11 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
                                 </Paper> :
                                 <div></div>
                             }
-                            <FormGroup>
+                            <Typography variant="h3">
+                                {this.state.group.name}
+                            </Typography>
+                            <Divider style={{margin: "16px"}}/>
+                            <FormGroup style={{marginTop: "16px"}}>
                                 <FormLabel>Add Permission</FormLabel>
                                 <Button style={{}} variant={"contained"} onClick={this.addNewPermission.bind(this)}>
                                     Add New Permission
@@ -253,7 +268,8 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
                                     return this.renderPermission(index, permission)
                                 })}
                             </FormGroup>
-                            <Button variant="contained" onClick={this.onSubmit.bind(this)} className={classes.button}>Create</Button>
+                            <Button style={{marginTop: "16px"}} variant="contained" onClick={this.onSubmit.bind(this)} className={classes.button}>Create</Button>
+
                         </Paper>
                     </Grid>
                 </Grid>

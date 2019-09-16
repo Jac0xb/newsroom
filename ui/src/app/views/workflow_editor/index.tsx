@@ -135,7 +135,8 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
 
         if (error.response.status == 403)
             this.setState({ flash: "You lack permissions to add stages in this workflow." });
-            this.setState({ createDialogOpen: false });
+        
+        this.setState({ createDialogOpen: false });
     });
   };
 
