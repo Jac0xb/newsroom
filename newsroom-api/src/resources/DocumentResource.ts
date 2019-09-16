@@ -272,12 +272,14 @@ export class DocumentResource {
     @DELETE
     @Path("/:did")
     public async deleteDocument(@IsInt @PathParam("did") did: number) {
-        const sessionUser = this.serviceContext.user();
+        console.log(`DocumentResource.deleteDocument, action=try to delete document, document_id=${did}`);
         const currDocument = await this.documentService.getDocument(did);
+        console.log(`DocumentResource.deleteDocument, action=got document, document_id=${currDocument.id}`);
 
         // await this.documentService.deleteGoogleDocument(sessionUser, currDocument.googleDocId);
 
-        await this.documentRepository.delete(currDocument);
+        await this.documentRepository.remove(currDocument);
+        console.log(`DocumentResource.deleteDocument, action=deleted document`);
     }
 
     /**
