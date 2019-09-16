@@ -275,7 +275,7 @@ export class DocumentResource {
         const sessionUser = this.serviceContext.user();
         const currDocument = await this.documentService.getDocument(did);
 
-        await this.documentService.deleteGoogleDocument(sessionUser, currDocument.googleDocId);
+        // await this.documentService.deleteGoogleDocument(sessionUser, currDocument.googleDocId);
 
         await this.documentRepository.delete(currDocument);
     }
