@@ -41,7 +41,7 @@ class DocumentTile extends React.Component<DocumentTile.Props> {
                     <DetailRow title="Due Date" data={"duedate"}/>
                     <div className={classes.buttonGroup}>
                         <Link to={"/document/" + document.id + "/edit"}>
-                            <Button variant="contained" className={classes.button}>Edit</Button>
+                            <Button style={{marginRight: "16px"}} variant="contained" className={classes.button}>Edit</Button>
                         </Link>
                         <Button variant="contained" className={classes.button}
                                 onClick={() => onDelete(document.id)}>Delete</Button>

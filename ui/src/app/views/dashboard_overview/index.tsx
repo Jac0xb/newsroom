@@ -1,11 +1,10 @@
 import * as React from 'react';
-import { Button } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import DocumentTile from 'app/views/dashboard_overview/components/DocumentTile';
 import { Document } from 'app/models';
 import { styles } from './styles';
-import { Link } from 'react-router-dom';
 import LinkedButton from './components/LinkedButton'
+import { Divider } from '@material-ui/core';
 import axios from 'axios';
 import _ from 'lodash-es';
 
@@ -60,6 +59,7 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
                 <div className={classes.buttonGroup}>
                     <LinkedButton />
                 </div>
+                <Divider style={{ margin: "0px 24px" }} />
                 <div className={classes.documentGrid}>
                     {this.renderDocuments()}
                 </div>
