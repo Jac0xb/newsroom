@@ -54,7 +54,7 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 	render() {
 		const { classes } = this.props;
 
-		const { document, editorState } = this.state;
+		const { document } = this.state;
 
 		if (!document || !document.workflow || !document.stage) {
 			return <div>Document did not exist, had no workflow, or had no stage</div>;
@@ -79,20 +79,12 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
                             </Typography>
                         </Paper>
                         <Paper className={classes.editor}>
-                            <iframe style={{width: "100%", height: "500px"}} src={`https://docs.google.com/document/d/${document.googleDocId}/edit`}>
+                            <iframe style={{width: "100%", height: "900px"}} src={`https://docs.google.com/document/d/${document.googleDocId}/edit`}>
 
                             </iframe>
                         </Paper>
                     </Grid>
                     <Grid item xs={3}>
-                        <Paper className={classes.paper}>
-                            <Typography variant="subtitle1">
-                                Styles
-								</Typography>
-                            <StyleBar
-                                onClick={(format: string) => this.handleFormatChange(format)}
-                                onCreateUpdateFormats={(updateFormats) => this.state.styleBarUpdateFormats = updateFormats} />
-                        </Paper>
                         <WorkflowMiniView
                             workflow={document.workflow}
                             currentStage={document.stage.sequenceId!}

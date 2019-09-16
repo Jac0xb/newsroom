@@ -54,7 +54,8 @@ class Groups extends React.Component<Groups.Props, Groups.State> {
                             {title: "Name", render: Groups.getGroupName},
                             {title: "Created", field: "created"},
                             {title: "Last Updated", field: "lastUpdated"},
-                            {title: "Description", field: "description"}
+                            {title: "Description", field: "description"},
+                            {title: "", render: (group: any) => this.deleteGroup.bind(this)(group)}
                         ]}
                         data={groups}
                         title="Groups"/>
@@ -72,6 +73,22 @@ class Groups extends React.Component<Groups.Props, Groups.State> {
         return <Link style={{ textDecoration: "none" }} to={`/groups/${group.id}`}>
             {group.name}
         </Link>
+    }
+
+    deleteGroup(group: any) {
+
+        var onClick = async () => {
+            
+            await axios.delete(`/api/roles/${group.id}`);
+
+            var response = await axios.get("/api/roles")
+                
+            this.setState({groups: response.data})
+        } 
+
+        return (<Button variant="contained" onClick={onClick}>
+            Remove
+        </Button>)
     }
 }
 

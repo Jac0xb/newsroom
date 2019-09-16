@@ -109,7 +109,7 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
                 <Divider style={{ margin: "0px 24px" }} />
                 <div className={classes.outerGrid}>
                     {workflows.map(workflow => (
-                        <WorkflowTile workflow={workflow} onClick={(id: number) => this.handleDeleteClick(id)} />
+                        <WorkflowTile key={workflow.id} workflow={workflow} onClick={(id: number) => this.handleDeleteClick(id)} />
                     ))
                     }
                 </div>

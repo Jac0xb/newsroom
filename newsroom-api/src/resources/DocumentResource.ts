@@ -349,11 +349,16 @@ export class DocumentResource {
         // Must have WRITE on current stage to move forward.
         await this.permissionService.checkSTWritePermissions(sessionUser, currStage.id);
 
+        console.log(`DocumentResource.moveNext, action=getting maxSeq,
+        currStage=${currStage.id}, currSeq=${currStage.sequenceId}`);
         // Used to determine if the document is done in its workflow.
         const maxSeq = await this.getMaxStageSequenceId(workflowId);
+        console.log(`DocumentResource.moveNext, action=got maxSeq, maxSeq=${maxSeq}`);
 
         // The document can be moved forward.
         if ((currStage.sequenceId + 1) <= maxSeq) {
+            console.log(`DocumentResource.moveNext, action=actually moving the document`);
+
             // Get id of next stage in sequence.
             const nextStage = await this.stageRepository
                 .createQueryBuilder(DBConstants.STGE_TABLE)
@@ -364,6 +369,9 @@ export class DocumentResource {
             currDocument.stage = nextStage;
         }
 
+        return this.documentRepository.save(currDocument);
+
+        console.log(`DocumentResource.moveNext, action=moving to next stage, currStage=${currDocument.stage.id}`);
         // It is possible that no updates were made if document is already at the
         // end of its workflows stages.
         // TODO: Relations not loaded, doesn't return stage if at the end.
@@ -452,6 +460,8 @@ export class DocumentResource {
 
             currDocument.stage = prevStage;
         }
+
+        return this.documentRepository.save(currDocument);
 
         // It is possible that no updates were made if document is already at the
         // end of its workflows stages.

@@ -27,7 +27,7 @@ class LoginPage extends React.Component<LoginPage.Props> {
                     <Typography className={classes.title} variant="h5" component="h3">
                         User Login
                     </Typography>
-                    <Typography className={classes.subtitle} variant="body1" component="body">
+                    <Typography className={classes.subtitle} variant="body1" component="div">
                         To login, please click the link below.
                     </Typography>
                     <Button variant="contained"

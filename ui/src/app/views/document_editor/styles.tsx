@@ -11,7 +11,7 @@ export function styles(theme: Theme) {
           marginLeft: '10px',
           marginRight: '10px'
         },
-        paddingTop: "64px",
+        paddingTop: "16px",
       },
       documentTitlePaper: {
         marginTop: theme.spacing.unit,
