@@ -3,6 +3,7 @@ import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Context, DELETE, GET, Path, PathParam, POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
+import { BadRequestError } from "typescript-rest/dist/server/model/errors";
 import { DBConstants, NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
@@ -65,6 +66,18 @@ export class DocumentResource {
         // Assign the document to the first stage in a workflow if no stage was passed.
         if (!(document.stage)) {
             const minSeq = await this.getMinStageSequenceId(currWorkflow.id);
+
+            console.log(`DocumentResource.createDocument, action=get stage for new document, minseq=${minSeq}`);
+
+            if (minSeq === -1) {
+                const errStr = `Can't create a document in a workflow ${currWorkflow.id} with no stages.`;
+
+                console.log(errStr);
+                throw new BadRequestError(errStr);
+            }
+
+            console.log(`DocumentResource.createDocument, action=continue, message=stage(s) exists`);
+
             let currStage: NRStage;
 
             currStage = await this.stageRepository
@@ -74,11 +87,12 @@ export class DocumentResource {
                 .getOne();
 
             document.stage = currStage;
+        } else {
+            // Verify that the specified stage actually exists.
+            await this.stageRepository.findOneOrFail(document.stage.id);
         }
 
         document.creator = sessionUser;
-
-        // TODO Need to give creator permission to delete document
 
         document.googleDocId = await this.documentService.createGoogleDocument(sessionUser, document);
 
@@ -459,7 +473,21 @@ export class DocumentResource {
 
     // Get the minimum sequenceId for the given workflows stages.
     private async getMinStageSequenceId(wid: number): Promise<number> {
+        console.log(`DocumentResource.getMinStageSequenceId, action=start, wid=${wid}`);
         const currWorkflow = await this.workflowService.getWorkflow(wid);
+
+        // Hacky way to fix documents being created for workflows with no stages.
+        const exists = await this.stageRepository
+            .createQueryBuilder(DBConstants.STGE_TABLE)
+            .where(`${DBConstants.STGE_TABLE}.workflowId = :id`, {id: currWorkflow.id})
+            .getMany();
+
+        console.log(`DocumentResource.getMinStageSequenceId, action=checking existence, result=${exists.length}`);
+
+        if (exists.length === 0) {
+            console.log(`DocumentResource.getMinStageSequenceId, action=returning -1`);
+            return -1;
+        }
 
         // Grab the next sequenceId for this set of workflow stages.
         const minSeq = await this.stageRepository
