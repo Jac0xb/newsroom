@@ -33,7 +33,11 @@ export function styles(theme: Theme)  {
 				"& > *" : {
 					margin: "16px"
 				}
-			}
+            },
+            flashMessage: {
+                padding: "16px",
+                margin: "16px"
+            }
 
     } as StyleRules);
 }

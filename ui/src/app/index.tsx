@@ -43,7 +43,7 @@ class App extends React.Component<App.Props, App.State, any> {
     componentDidMount() {
         axios.get("/api/users/1").then((response) => {
             this.setState({isAuthenticated: response.status != 401});
-        });
+        }).catch((error) => console.log(error))
     };
 
     render() {

@@ -7,6 +7,7 @@ import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
 import * as React from 'react';
 import { styles } from './styles';
+import { Divider, Paper, Typography } from '@material-ui/core';
 
 export namespace WorkflowEditor {
   export interface Props {
@@ -26,22 +27,24 @@ export namespace WorkflowEditor {
     dialogTextName: string
     dialogTextDesc: string
     canEdit: boolean
+    flash: string
   }
 }
 class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEditor.State, any> {
 
   constructor(props: WorkflowEditor.Props) {
-    super(props)
-    this.state = {
-      stages: [],
-      createDialogOpen: false,
-      editDialogOpen: false,
-      stageID: 0,
-      seqID: 0,
-      dialogTextName: '',
-      dialogTextDesc: '',
-      canEdit: false
-    }
+        super(props)
+        this.state = {
+            flash: "",
+            stages: [],
+            createDialogOpen: false,
+            editDialogOpen: false,
+            stageID: 0,
+            seqID: 0,
+            dialogTextName: '',
+            dialogTextDesc: '',
+            canEdit: false
+        }
   }
 
   componentDidMount() {
@@ -127,6 +130,12 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
 
       // close dialog box, rerender stages
       this.setState({ createDialogOpen: false, stages: this.state.stages });
+
+    }).catch((error) => {
+
+        if (error.response.status == 403)
+            this.setState({ flash: "You lack permissions to add stages in this workflow." });
+            this.setState({ createDialogOpen: false });
     });
   };
 
@@ -148,6 +157,12 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
 
       // close dialog
       this.setState({ editDialogOpen: false });
+    }).catch((error) => {
+
+        if (error.response.status == 403) {
+            this.setState({ flash: "You lack permissions to edit a stage in this workflow" });
+            this.setState({ createDialogOpen: false });
+        }
     });
 
   };
@@ -161,6 +176,10 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       // Render new stages edit
       this.getStages();
 
+    }).catch((error) => {
+
+        if (error.response.status == 403)
+            this.setState({ flash: "You lack permissions to delete a stage in this workflow." });
     });
 
   };
@@ -168,11 +187,19 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
   render() {
 
     const { classes } = this.props;
-    const { stages, createDialogOpen, editDialogOpen, dialogTextName, dialogTextDesc, canEdit } = this.state;
+    const { stages, createDialogOpen, editDialogOpen, dialogTextName, dialogTextDesc, canEdit, flash } = this.state;
 
     return (
       <React.Fragment>
-        <main>
+        <main className={classes.main}>
+        {(this.state.flash != "") ?
+            <Paper className={classes.flashMessage}>
+                <Typography variant="caption">
+                    {this.state.flash}
+                </Typography>
+            </Paper> :
+            <div></div>
+            }
           <div className={classes.content}>
             <div className={classes.workflowContent}>
               <div className={classes.stage}>

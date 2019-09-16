@@ -2,6 +2,9 @@ import { StyleRules, Theme } from '@material-ui/core/styles';
 
 export function styles(theme: Theme) {
     return ({
+        main: {
+            marginTop: "16px"
+        },
         menuGroup: {
             position: 'fixed',
             left: 0,
@@ -47,5 +50,9 @@ export function styles(theme: Theme) {
                 outline: '0px solid white',
             }
         },
+        flashMessage: {
+            padding: "16px",
+            margin: "16px"
+        }
     } as StyleRules);
 }
