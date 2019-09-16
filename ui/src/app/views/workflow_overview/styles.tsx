@@ -27,10 +27,11 @@ export function styles(theme: Theme)  {
 			},		
 			outerGrid: {
 				padding: "16px",
-				display: "flex",
+                display: "flex",
+                justifyContent: "center",
 				flexWrap: "wrap",
 				"& > *" : {
-					margin: "8px"
+					margin: "16px"
 				}
 			}
 

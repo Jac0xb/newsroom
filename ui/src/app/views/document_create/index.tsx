@@ -44,9 +44,12 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 	}
 
 	onSubmit() {
-		this.setState({ flash: "", pendingSubmission: true })
+        this.setState({ flash: "", pendingSubmission: true })
+        var postMessage = { name: this.state.nickname, creator: {id: 1}, workflow: this.state.workflow }
+        
+        console.log(postMessage)
 
-		axios.post("/api/documents", { name: this.state.nickname, creator: "Test", workflow: this.state.workflow }).then((response: any) => {
+		axios.post("/api/documents", postMessage).then((response: any) => {
 
 			if (response) {
 				this.setState({ submitted: true })

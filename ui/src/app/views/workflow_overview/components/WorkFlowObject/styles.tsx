@@ -8,7 +8,7 @@ export function styles(theme: Theme)  {
             marginTop: theme.spacing.unit,
           },
           documentItem: {
-          width: "300px",
+          maxWidth: "300px",
           padding: "16px",
           flex: "1 1 26%",
           minWidth: "200px",

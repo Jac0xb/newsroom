@@ -102,7 +102,7 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
         const { classes } = this.props;
 
         return (
-            <main className={classes.layout}>
+            <main className={classes.main}>
                 <div className={classes.buttonGroup}>
                     <Button variant="contained" onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create Workflow</Button>
                 </div>

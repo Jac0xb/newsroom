@@ -36,9 +36,17 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
     }
 
     renderDocuments() {
-        console.log(this.state.documents)
         return _.map(this.state.documents, (document) =>
-            <DocumentTile key={document.id} document={document} onDelete={() => {}} />
+            <DocumentTile key={document.id} document={document} onDelete={() => {
+                axios.delete(`/api/documents/${document.id}`).then((response) => {
+
+                    console.log(response)
+
+                    axios.get("/api/documents").then((response) => {
+                        this.setState({ documents: response.data })
+                    });     
+                });
+            }} />
         )
         
     }
