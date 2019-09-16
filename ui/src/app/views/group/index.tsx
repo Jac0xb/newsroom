@@ -195,8 +195,8 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
             </React.Fragment>)
         }
 
-        return <React.Fragment>
-            <FormLabel>New Permission</FormLabel>
+        return <React.Fragment key={index}>
+            <FormLabel style={{ marginBottom: "16px" }}>New Permission</FormLabel>
             <TextField
                 select
                 key={index}
@@ -246,7 +246,7 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
                             }
                             <FormGroup>
                                 <FormLabel>Add Permission</FormLabel>
-                                <Button style={{ width: "calc(3*52px)" }} variant={"contained"} onClick={this.addNewPermission.bind(this)}>
+                                <Button style={{}} variant={"contained"} onClick={this.addNewPermission.bind(this)}>
                                     Add New Permission
                                 </Button>
                                 {this.state.permissions.map((permission, index: number) => {

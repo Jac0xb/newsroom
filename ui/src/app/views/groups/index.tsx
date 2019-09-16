@@ -43,8 +43,8 @@ class Groups extends React.Component<Groups.Props, Groups.State> {
         return (
             <main className={classes.main}>
                 <Link to={"/groups_create"}>
-                    <Button variant="contained" className={classes.buttonGroup} >
-                        Add Group
+                    <Button style={{ textDecoration: "none" }} variant="contained" className={classes.buttonGroup} >
+                        Create Group
                     </Button>
                 </Link>
                 <div className={classes.table}>
