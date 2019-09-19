@@ -8,7 +8,7 @@ import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRUser } from "../entity";
 
 /**
- * Configure session storage, auth check, and passport generic stuff.
+ * Configure session storage, auth check, and passport.
  */
 @Service()
 export class AuthConfig {
@@ -16,7 +16,7 @@ export class AuthConfig {
     private userRepository: Repository<NRUser>;
 
     public configure(app: Express) {
-        // TODO Put keys in config
+        // TODO: Put keys in config.
         app.use(cookieSession({
             keys: ["newsroom session key"],
             maxAge: 24 * 60 * 60 * 1000,
@@ -31,7 +31,7 @@ export class AuthConfig {
         app.use("/api", async (req: Request, res: Response, next: NextFunction) => {
             if (!req.user) {
                 res.status(401).json({
-                    message: "Please Authenticate User",
+                    message: "Please authenticate user.",
                 });
             } else {
                 next();
@@ -51,10 +51,10 @@ export class AuthConfig {
             const user = await this.userRepository.findOne(id);
 
             if (user == null) {
-                console.log("User was null when deserializing session");
+                console.log("User was null when deserializing session.");
                 done(null, false);
             } else if (user.accessToken == null) {
-                console.log("User accessToken was null when deserializing session");
+                console.log("User accessToken was null when deserializing session.");
                 done(null, false);
             } else {
                 done(null, user);

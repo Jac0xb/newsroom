@@ -2,10 +2,10 @@ import dotenv from "dotenv";
 import "dotenv/config";
 import express from "express";
 import "reflect-metadata";
+import { Container } from "typedi";
 import { createConnection, useContainer } from "typeorm";
 import { Server } from "typescript-rest";
 
-import { Container } from "typedi";
 import { AuthConfig } from "./middleware/AuthConfig";
 import { ErrorMapper } from "./middleware/ErrorMapper";
 import { GoogleOAuth2Provider } from "./middleware/GoogleOAuth2Provider";
@@ -24,16 +24,17 @@ const app = express();
 
 Swagger.serve(app);
 
-// Register TypeDI Container with TypeORM, must be called before createConnection()
+// Register TypeDI Container with TypeORM, must be called before createConnection().
 useContainer(Container);
 
 // Start app server and listen for connections.
 createConnection().then(async (connection) => {
+    console.log("Running server...");
     Container.get(AuthConfig).configure(app);
 
     Container.get(GoogleOAuth2Provider).configure(app);
 
-    // Make sure ServiceContext gets extended
+    // Make sure ServiceContext gets extended.
     extendServiceContext();
 
     // Build typescript-rest services.
@@ -51,3 +52,5 @@ createConnection().then(async (connection) => {
 }).catch((error) => {
     console.error("Error creating DB connection.", error);
 });
+
+export default app;
