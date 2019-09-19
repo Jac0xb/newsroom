@@ -4,12 +4,18 @@ import App from './app';
 import { Router } from 'react-router-dom';
 import { CookiesProvider } from 'react-cookie';
 
+import { Provider } from 'react-redux'
+import configureStore from "./store";
+const store = configureStore();
+
 import { createBrowserHistory } from 'history';
 const history = createBrowserHistory();
 
 ReactDOM.render(
 	<Router history={history}>
-		<App />
+		<Provider store={store}>
+			<App />
+		</Provider>
 	</Router>,
     document.getElementById('root')
 );
