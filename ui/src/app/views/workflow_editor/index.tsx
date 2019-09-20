@@ -8,7 +8,28 @@ import axios from 'axios';
 import * as React from 'react';
 import { styles } from './styles';
 import { Divider, Paper, Typography } from '@material-ui/core';
+import { Stage } from 'app/models';
 
+
+interface WorkflowEditorProps {
+  stages: Array<any>;
+  addStage: (stage: Stage) => void;
+  classes?: any
+  match: {
+    params: {
+      id: number
+    }
+  }
+  // createDialogOpen: boolean
+  // editDialogOpen: boolean
+  // stageID: number
+  // seqID: number
+  // dialogTextName: string
+  // dialogTextDesc: string
+  // canEdit: boolean
+  // flash: string
+}
+  
 export namespace WorkflowEditor {
   export interface Props {
     classes?: any
@@ -30,9 +51,12 @@ export namespace WorkflowEditor {
     flash: string
   }
 }
-class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEditor.State, any> {
+class WorkflowEditor extends React.Component<WorkflowEditorProps, WorkflowEditor.State, any>{
+// const WorkflowEditor: React.SFC<WorkflowEditorProps> = ({
+//     addStage
+//   }) => {
 
-  constructor(props: WorkflowEditor.Props) {
+  constructor(props: WorkflowEditorProps) {
         super(props)
         this.state = {
             flash: "",
@@ -108,6 +132,10 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     this.setState({ dialogTextName, dialogTextDesc, editDialogOpen: true, stageID, seqID });
 
   };
+
+  send(stage: Stage) {
+    this.props.addStage(stage);
+  }
 
   handleStageAdd = (textBoxName: string, textBoxDesc: string) => {
 
@@ -222,7 +250,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
                   }
                 </div>
               ))}
-              <DialogItem textBoxName={dialogTextName} textBoxDesc={dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({createDialogOpen: false})}  handleSave={this.handleStageAdd}/>
+              <DialogItem textBoxName={dialogTextName} textBoxDesc={dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({createDialogOpen: false})}  handleSave={this.send}/>
               <DialogItem textBoxName={dialogTextName} textBoxDesc={dialogTextDesc} title={"Edit Stage"} desc={"Enter stage information"} show={editDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({editDialogOpen: false})} handleSave={this.handleStageEdit}/>
             </div>
            </div>

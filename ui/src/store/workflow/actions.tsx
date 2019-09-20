@@ -1,8 +1,8 @@
-import { WorkflowState, UPDATE_SESSION } from "./types";
+import { WorkflowState, ADD_STATE } from "./types";
 
-export function updateSession(newSession: WorkflowState) {
+export function addStage(newState: WorkflowState) {
   return {
-    type: UPDATE_SESSION,
-    payload: newSession
+    type: ADD_STATE,
+    payload: newState
   };
 }
