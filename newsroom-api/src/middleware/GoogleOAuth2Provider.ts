@@ -7,7 +7,7 @@ import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRUser } from "../entity";
 
 /**
- * Configures passportjs's Google OAuth2 provider
+ * Configures passportjs's Google OAuth2 provider.
  */
 @Service()
 export class GoogleOAuth2Provider {
@@ -17,7 +17,7 @@ export class GoogleOAuth2Provider {
     private userRepository: Repository<NRUser>;
 
     public configure(app: Express) {
-        // TODO Put keys in config
+        // TODO: Put keys in config.
         const strategy = new OAuth2Strategy({
                 callbackURL: GoogleOAuth2Provider.CALLBACK_URL,
                 clientID: "153384745741-7h66ureoaag1j61ei5u6un0faeh4al5h.apps.googleusercontent.com",
