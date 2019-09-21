@@ -3,6 +3,7 @@ import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Context, DELETE, GET, Path, PathParam, POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
+import { BadRequestError } from "typescript-rest/dist/server/model/errors";
 import { DBConstants, NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
@@ -65,6 +66,18 @@ export class DocumentResource {
         // Assign the document to the first stage in a workflow if no stage was passed.
         if (!(document.stage)) {
             const minSeq = await this.getMinStageSequenceId(currWorkflow.id);
+
+            console.log(`DocumentResource.createDocument, action=get stage for new document, minseq=${minSeq}`);
+
+            if (minSeq === -1) {
+                const errStr = `Can't create a document in a workflow ${currWorkflow.id} with no stages.`;
+
+                console.log(errStr);
+                throw new BadRequestError(errStr);
+            }
+
+            console.log(`DocumentResource.createDocument, action=continue, message=stage(s) exists`);
+
             let currStage: NRStage;
 
             currStage = await this.stageRepository
@@ -74,11 +87,12 @@ export class DocumentResource {
                 .getOne();
 
             document.stage = currStage;
+        } else {
+            // Verify that the specified stage actually exists.
+            await this.stageRepository.findOneOrFail(document.stage.id);
         }
 
         document.creator = sessionUser;
-
-        // TODO Need to give creator permission to delete document
 
         document.googleDocId = await this.documentService.createGoogleDocument(sessionUser, document);
 
@@ -258,12 +272,14 @@ export class DocumentResource {
     @DELETE
     @Path("/:did")
     public async deleteDocument(@IsInt @PathParam("did") did: number) {
-        const sessionUser = this.serviceContext.user();
+        console.log(`DocumentResource.deleteDocument, action=try to delete document, document_id=${did}`);
         const currDocument = await this.documentService.getDocument(did);
+        console.log(`DocumentResource.deleteDocument, action=got document, document_id=${currDocument.id}`);
 
-        await this.documentService.deleteGoogleDocument(sessionUser, currDocument.googleDocId);
+        // await this.documentService.deleteGoogleDocument(sessionUser, currDocument.googleDocId);
 
-        await this.documentRepository.delete(currDocument);
+        await this.documentRepository.remove(currDocument);
+        console.log(`DocumentResource.deleteDocument, action=deleted document`);
     }
 
     /**
@@ -333,11 +349,16 @@ export class DocumentResource {
         // Must have WRITE on current stage to move forward.
         await this.permissionService.checkSTWritePermissions(sessionUser, currStage.id);
 
+        console.log(`DocumentResource.moveNext, action=getting maxSeq,
+        currStage=${currStage.id}, currSeq=${currStage.sequenceId}`);
         // Used to determine if the document is done in its workflow.
         const maxSeq = await this.getMaxStageSequenceId(workflowId);
+        console.log(`DocumentResource.moveNext, action=got maxSeq, maxSeq=${maxSeq}`);
 
         // The document can be moved forward.
         if ((currStage.sequenceId + 1) <= maxSeq) {
+            console.log(`DocumentResource.moveNext, action=actually moving the document`);
+
             // Get id of next stage in sequence.
             const nextStage = await this.stageRepository
                 .createQueryBuilder(DBConstants.STGE_TABLE)
@@ -348,6 +369,9 @@ export class DocumentResource {
             currDocument.stage = nextStage;
         }
 
+        return this.documentRepository.save(currDocument);
+
+        console.log(`DocumentResource.moveNext, action=moving to next stage, currStage=${currDocument.stage.id}`);
         // It is possible that no updates were made if document is already at the
         // end of its workflows stages.
         // TODO: Relations not loaded, doesn't return stage if at the end.
@@ -437,6 +461,8 @@ export class DocumentResource {
             currDocument.stage = prevStage;
         }
 
+        return this.documentRepository.save(currDocument);
+
         // It is possible that no updates were made if document is already at the
         // end of its workflows stages.
         // TODO: Relations not loaded, doesn't return stage if at the beginning.
@@ -459,7 +485,21 @@ export class DocumentResource {
 
     // Get the minimum sequenceId for the given workflows stages.
     private async getMinStageSequenceId(wid: number): Promise<number> {
+        console.log(`DocumentResource.getMinStageSequenceId, action=start, wid=${wid}`);
         const currWorkflow = await this.workflowService.getWorkflow(wid);
+
+        // Hacky way to fix documents being created for workflows with no stages.
+        const exists = await this.stageRepository
+            .createQueryBuilder(DBConstants.STGE_TABLE)
+            .where(`${DBConstants.STGE_TABLE}.workflowId = :id`, {id: currWorkflow.id})
+            .getMany();
+
+        console.log(`DocumentResource.getMinStageSequenceId, action=checking existence, result=${exists.length}`);
+
+        if (exists.length === 0) {
+            console.log(`DocumentResource.getMinStageSequenceId, action=returning -1`);
+            return -1;
+        }
 
         // Grab the next sequenceId for this set of workflow stages.
         const minSeq = await this.stageRepository

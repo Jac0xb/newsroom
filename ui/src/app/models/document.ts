@@ -10,4 +10,5 @@ export interface Document {
     description: string
     workflow: Workflow
     stage: Stage
+    googleDocId: string
 }

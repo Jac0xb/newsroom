@@ -3,10 +3,13 @@ import { StyleRules, Theme } from '@material-ui/core/styles';
 export function styles(theme: Theme)  {
     return (
     {
+        main: {
+            paddingTop: "32px"
+        },
 		outerGrid: {
 			padding: "24px"
 		},
-		formGroup: {
+		formPaper: {
 			padding: "16px"
 		},
 		flashMessage: {
@@ -22,14 +25,21 @@ export function styles(theme: Theme)  {
 		},
 		buttonGroup: {
 			display: "flex",
-			margin: "24px 24px 24px 24px",
+			margin: "0px 24px 24px 24px",
 			"& button": {
 				heightMax: "36px",
 				height: "36px",
 				marginRight: "16px"
 			},
 			flexWrap: 'wrap'
-		}
+        },
+        formGroup: {
+            marginBottom: "16px"
+        },
+        formButtonGroup: {
+            display: "flex",
+            flexDirection: "row-reverse"
+        }
     } as StyleRules);
 }
 

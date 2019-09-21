@@ -2,7 +2,7 @@ import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import Button from '@material-ui/core/Button';
-import { Divider } from '@material-ui/core';
+import { Divider, Paper, Typography } from '@material-ui/core';
 import WorkflowTile from 'app/views/workflow_overview/components/WorkflowObject';
 import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
@@ -19,6 +19,7 @@ export namespace CreateWorkflow {
         workflows: any[]
         dialogBoxName: string
         dialogBoxDesc: string
+        flash: string
     }
 }
 export namespace Workflow {
@@ -38,6 +39,7 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
             showDialog: false,
             dialogBoxName: '',
             dialogBoxDesc: '',
+            flash: ""
         };
     }
 
@@ -92,24 +94,35 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
         axios.delete("/api/workflows/" + workflowID, {
         }).then((response) => {
             this.setState({ workflows: response.data });
-        });
+        }).catch((error) => {
 
+            if (error.response.status == 403)
+                this.setState({ flash: "You lack permissions to delete this workflow" });
+        });
     };
 
     render() {
 
-        const { workflows, dialogBoxName, dialogBoxDesc } = this.state;
+        const { workflows, dialogBoxName, dialogBoxDesc, flash } = this.state;
         const { classes } = this.props;
 
         return (
-            <main className={classes.layout}>
+            <main className={classes.main}>
                 <div className={classes.buttonGroup}>
                     <Button variant="contained" onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create Workflow</Button>
                 </div>
                 <Divider style={{ margin: "0px 24px" }} />
+                {(this.state.flash != "") ?
+                <Paper className={classes.flashMessage}>
+                    <Typography variant="caption">
+                        {this.state.flash}
+                    </Typography>
+                </Paper> :
+                <div></div>
+                }
                 <div className={classes.outerGrid}>
                     {workflows.map(workflow => (
-                        <WorkflowTile workflow={workflow} onClick={(id: number) => this.handleDeleteClick(id)} />
+                        <WorkflowTile key={workflow.id} workflow={workflow} onClick={(id: number) => this.handleDeleteClick(id)} />
                     ))
                     }
                 </div>

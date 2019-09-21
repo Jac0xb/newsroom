@@ -75,7 +75,17 @@ export class RoleResource {
     public async createRole(role: NRRole): Promise<NRRole> {
         try {
             // Form data already validated.
-            return await this.roleRepository.save(role);
+            const newRole = await this.roleRepository.save(role);
+
+            // for (const wfPerm of newRole.wfpermissions) {
+            //     await this.permWFRepository.save(wfPerm);
+            // }
+
+            // for (const stPerm of newRole.stpermissions) {
+            //     await this.permSTRepository.save(stPerm);
+            // }
+
+            return newRole;
         } catch (err) {
             console.log(err);
 
@@ -113,7 +123,12 @@ export class RoleResource {
     @GET
     @Path("/:rid")
     public async getRole(@IsInt @PathParam("rid") rid: number): Promise<NRRole> {
-        return await this.roleService.getRole(rid);
+        const role = await this.roleService.getRole(rid);
+
+        role.stpermissions = await this.permissionService.getAllSTPermissionsForRole(rid);
+        role.wfpermissions = await this.permissionService.getAllWFPermissionsForRole(rid);
+
+        return role;
     }
 
     /**

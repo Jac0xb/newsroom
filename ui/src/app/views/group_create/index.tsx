@@ -129,19 +129,28 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
         const newRole = {
             name: this.state.name,
             description: this.state.description,
-            wfpermissions,
-            stpermissions,
             users
         };
 
-        axios.post("/api/roles", newRole).then((response: any) => {
+        axios.post("/api/roles", newRole).then(async (response: any) => {
+            
+            var roleId = response.data.id
+
+            for (var i = 0; i < wfpermissions.length; i++) {
+                console.log(`/api/roles/${roleId}/workflow/${wfpermissions[i].id}`)
+                console.log({access: wfpermissions[i].access})
+                await axios.put(`/api/roles/${roleId}/workflow/${wfpermissions[i].id}`, {access: wfpermissions[i].access})
+            }
+            for (var i = 0; i < stpermissions.length; i++) {
+                await axios.put(`/api/roles/${roleId}/stage/${stpermissions[i].id}`, {access: stpermissions[i].access})
+            }
 
             if (response) {
                 this.setState({submitted: true})
             }
 
         }).catch((error) => {
-            this.setState({flash: error.response.data.message});
+            this.setState({flash: error.response.data.message || "Something has gone terribly wrong. We don't even know."});
         });
     }
 
@@ -230,11 +239,10 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
             </React.Fragment>)
         }
 
-        return <React.Fragment>
+        return <React.Fragment key={index}>
             <div style={{paddingTop: "16px", borderBottom: "rgba(0, 0, 0, 0.26) solid 1px", marginRight: "64px"}}></div>
             <TextField
                 select
-                key={index}
                 style={{marginTop: "16px"}}
                 label="Type"
                 margin="none"
@@ -308,15 +316,15 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
     render() {
 
         if (this.state.submitted) {
-            return <Redirect push to="/"/>;
+            return <Redirect push to="/groups"/>;
         }
         const {classes} = this.props;
 
         return (
-            <React.Fragment>
+            <main className={classes.main}>
                 <div className={classes.buttonGroup}>
                     <Link style={{textDecoration: "none"}} to="/groups">
-                        <Button style={{width: "calc(4*52px)"}} variant={"contained"}>
+                        <Button style={{width: "calc(100px)"}} variant={"contained"}>
                             Back
                         </Button>
                     </Link>
@@ -387,7 +395,7 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
                         </Paper>
                     </Grid>
                 </Grid>
-            </React.Fragment>
+            </main>
         );
     }
 }

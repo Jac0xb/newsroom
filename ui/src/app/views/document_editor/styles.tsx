@@ -3,7 +3,7 @@ import { StyleRules, Theme } from '@material-ui/core/styles';
 export function styles(theme: Theme) {
   return (
     {
-      layout: {
+      main: {
         width: 'auto',
         marginLeft: theme.spacing.unit * 1,
         marginRight: theme.spacing.unit * 1,
@@ -11,6 +11,7 @@ export function styles(theme: Theme) {
           marginLeft: '10px',
           marginRight: '10px'
         },
+        paddingTop: "16px",
       },
       documentTitlePaper: {
         marginTop: theme.spacing.unit,

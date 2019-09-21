@@ -75,7 +75,7 @@ export class NRDocument {
     @ManyToOne(
         (type) => NRWorkflow,
         (workflow) => workflow.documents,
-        {eager: true},
+        { eager: true, onDelete: "CASCADE" },
     )
     public workflow: NRWorkflow;
 
@@ -87,7 +87,7 @@ export class NRDocument {
     @ManyToOne(
         (type) => NRStage,
         (stage) => stage.documents,
-        {eager: true},
+        { eager: true },
     )
     public stage: NRStage;
 

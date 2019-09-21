@@ -3,17 +3,20 @@ import { StyleRules, Theme } from '@material-ui/core/styles';
 export function styles(theme: Theme)  {
     return (
     {
-		outerGrid: {
-			padding: "16px",
+        main: {
+            paddingTop: "32px",
+        },
+		documentGrid: {
 			display: "flex",
 			flexWrap: "wrap",
 			"& > *" : {
-				margin: "8px"
-			}
+				margin: "16px"
+            },
+            justifyContent: "center"
 		},
 		buttonGroup: {
 			display: "flex",
-			margin: "24px 24px 24px 24px",
+			margin: "0px 24px 24px 24px",
 			"& button": {
 				heightMax: "36px",
 				height: "36px",

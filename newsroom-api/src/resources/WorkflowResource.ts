@@ -15,6 +15,7 @@ import {
 } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 import { DBConstants, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
+import { RoleResource } from "../resources/RoleResource";
 import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";
 import { WorkflowService } from "../services/WorkflowService";
@@ -48,6 +49,9 @@ export class WorkflowResource {
 
     @Inject()
     private permissionService: PermissionService;
+
+    @Inject()
+    private roleResource: RoleResource;
 
     /**
      * Create a new workflow based on the passed information.
@@ -173,19 +177,20 @@ export class WorkflowResource {
         await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
         try {
-            await this.stageRepository
-                .createQueryBuilder(DBConstants.STGE_TABLE)
-                .delete()
-                .from(NRStage)
-                .andWhere("workflowId = :wid", {wid: currWorkflow.id})
-                .execute();
+            await this.workflowRepository.remove(currWorkflow);
+            // await this.stageRepository
+            //     .createQueryBuilder(DBConstants.STGE_TABLE)
+            //     .delete()
+            //     .from(NRStage)
+            //     .andWhere("workflowId = :wid", {wid: currWorkflow.id})
+            //     .execute();
 
-            await this.workflowRepository
-                .createQueryBuilder(DBConstants.WRKF_TABLE)
-                .delete()
-                .from(NRWorkflow)
-                .andWhere("id = :wid", {wid: currWorkflow.id})
-                .execute();
+            // await this.workflowRepository
+            //     .createQueryBuilder(DBConstants.WRKF_TABLE)
+            //     .delete()
+            //     .from(NRWorkflow)
+            //     .andWhere("id = :wid", {wid: currWorkflow.id})
+            //     .execute();
         } catch (err) {
             console.log(err);
 
@@ -457,6 +462,7 @@ export class WorkflowResource {
                              stage: NRStage): Promise<NRStage> {
         const sessionUser = this.serviceContext.user();
         let currStage = await this.workflowService.getStage(sid);
+
         await this.permissionService.checkWFWritePermissions(sessionUser, currStage.workflow.id);
 
         try {

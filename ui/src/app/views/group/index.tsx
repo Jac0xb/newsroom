@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Grid, Paper, FormGroup, FormLabel, TextField, MenuItem, Button, Typography } from '@material-ui/core';
+import { Divider, Grid, Paper, FormGroup, FormLabel, TextField, MenuItem, Button, Typography } from '@material-ui/core';
 import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
@@ -18,8 +18,8 @@ export namespace GroupCreate {
         availableWorkflows: { name: string, id: number }[]
         availableStages: { name: string, id: number }[]
         flash?: string
-
         name?: string
+        group?: any
         permissions: SimplePermission[]
     }
     export interface SimplePermission {
@@ -34,11 +34,28 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
 
     constructor(props: GroupCreate.Props, context?: any) {
         super(props, context);
-        this.state = { permissions: [], name: "", submitted: false, availableStages: [], availableWorkflows: [], flash: "" }
+        this.state = { 
+            permissions: [], 
+            name: "", 
+            submitted: false, 
+            availableStages: [], 
+            availableWorkflows: [], 
+            flash: "",
+            group: {name: ""}
+        }
     }
 
     componentDidMount() {
         
+        var { match } = this.props;
+
+        if (match) {
+            axios.get(`/api/roles/${match.params.id}`).then((response) => {
+                console.log(response.data)
+                this.setState({group: response.data})
+            })
+        }
+
         axios.get("/api/workflows").then((response) => {
 
             var availableWorkflows = response.data;
@@ -76,31 +93,41 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
             return;
         }
 
-        if (this.state.name === "") {
-            this.setState({ flash: "No group name was given." });
-            return;
-        }
+        // get role id from url, not ideal, not a fan
+        var getUrl = (window.location.href).split('/')
+        var roleID = getUrl[getUrl.length-1]
+
+        // quick fix, real bad, not a fan
+        var url = "/api/roles/" + roleID + "/";
+        var access = 0;
 
         this.state.permissions.map((permission) => {
 
+            access = permission.access
+
             if (permission.type === "Stages") {
-                stpermissions.push({ id: permission.id, access: permission.access })
+                // /api/roles/rid/stage/sid
+                url += "stage/"+ permission.id
+                // stpermissions.push({ id: permission.id, access: permission.access })
             }
             else {
-                wfpermissions.push({ id: permission.id, access: permission.access })
+                // /api/roles/rid/workflow/wid
+                url += "workflow/"+ permission.id
+                // wfpermissions.push({ id: permission.id, access: permission.access })
             }
         })
 
         console.log({ name: this.state.name, wfpermissions, stpermissions })
 
-        axios.post("/api/roles", { name: this.state.name, wfpermissions, stpermissions }).then((response: any) => {
+        axios.put(url, { access }).then((response: any) => {
 
             if (response) {
+                console.log(response)
                 this.setState({ submitted: true })
             }
 
         }).catch((error) => {
-            this.setState({ flash: error.response.data.message });
+            this.setState({ flash: error.response.data.message || "Something has gone terribly wrong. We don't even know." });
         });
     }
 
@@ -179,8 +206,8 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
             </React.Fragment>)
         }
 
-        return <React.Fragment>
-            <FormLabel>New Permission</FormLabel>
+        return <React.Fragment key={index}>
+            <FormLabel style={{ marginTop: "16px" }}>New Permission</FormLabel>
             <TextField
                 select
                 key={index}
@@ -228,27 +255,21 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
                                 </Paper> :
                                 <div></div>
                             }
-                            <FormGroup>
-                                <FormLabel>Create Group</FormLabel>
-                                <TextField
-                                    label="Group Name"
-                                    placeholder="Sports Editor Group"
-                                    margin="normal"
-                                    variant="filled"
-                                    value={this.state.name}
-                                    onChange={(c) => this.setState({ name: c.target.value })}
-                                    InputLabelProps={{
-                                        shrink: true,
-                                    }}
-                                />
-                                <Button style={{ width: "calc(3*52px)" }} variant={"contained"} onClick={this.addNewPermission.bind(this)}>
+                            <Typography variant="h3">
+                                {this.state.group.name}
+                            </Typography>
+                            <Divider style={{margin: "16px"}}/>
+                            <FormGroup style={{marginTop: "16px"}}>
+                                <FormLabel>Add Permission</FormLabel>
+                                <Button style={{}} variant={"contained"} onClick={this.addNewPermission.bind(this)}>
                                     Add New Permission
                                 </Button>
                                 {this.state.permissions.map((permission, index: number) => {
                                     return this.renderPermission(index, permission)
                                 })}
                             </FormGroup>
-                            <Button variant="contained" onClick={this.onSubmit.bind(this)} className={classes.button}>Create</Button>
+                            <Button style={{marginTop: "16px"}} variant="contained" onClick={this.onSubmit.bind(this)} className={classes.button}>Create</Button>
+
                         </Paper>
                     </Grid>
                 </Grid>

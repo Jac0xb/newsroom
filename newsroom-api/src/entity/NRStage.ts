@@ -74,6 +74,7 @@ export class NRStage {
     @OneToMany(
         (type) => NRDocument,
         (document) => document.stage,
+        { onDelete: "CASCADE"},
     )
     public documents: NRDocument[];
 

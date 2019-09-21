@@ -37,7 +37,17 @@ export class WorkflowService {
     // Get a stage based on ID.
     public async getStage(sid: number): Promise<NRStage> {
         try {
-            return await this.stageRepository.findOneOrFail(sid);
+            const st = await this.stageRepository
+                .createQueryBuilder(DBConstants.STGE_TABLE)
+                .select("workflowId", "val")
+                .where(`${DBConstants.STGE_TABLE}.id = :s`, { s: sid })
+                .getRawOne();
+
+            const wf = await this.workflowRepository.findOne({ where: { workflow: st.val }});
+
+            const stage = await this.stageRepository.findOneOrFail(sid);
+            stage.workflow = wf;
+            return stage;
         } catch (err) {
             console.error("Error getting stage:", err);
 
