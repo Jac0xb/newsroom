@@ -8,7 +8,7 @@ import axios from 'axios';
 import * as React from 'react';
 import { styles } from './styles';
 import { Paper, Typography } from '@material-ui/core';
-
+  
 export namespace WorkflowEditor {
   export interface Props {
     classes?: any
@@ -239,7 +239,7 @@ class WorkflowEditor extends React.Component<WorkflowEditorProps, WorkflowEditor
                   }
                 </div>
               ))}
-              <DialogItem textBoxName={dialogTextName} textBoxDesc={dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({createDialogOpen: false})}  handleSave={this.handleStageAdd}/>
+              <DialogItem textBoxName={dialogTextName} textBoxDesc={dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({createDialogOpen: false})} handleSave={this.handleStageAdd}/>
               <DialogItem textBoxName={dialogTextName} textBoxDesc={dialogTextDesc} title={"Edit Stage"} desc={"Enter stage information"} show={editDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({editDialogOpen: false})} handleSave={this.handleStageEdit}/>
             </div>
            </div>
