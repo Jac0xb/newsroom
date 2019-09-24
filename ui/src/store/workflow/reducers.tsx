@@ -1,9 +1,8 @@
-import { UPDATE_SESSION, WorkflowState, WorkflowActionTypes } from "./types";
+import { ADD_STAGE, UPDATE_ID, WorkflowState, WorkflowActionTypes } from "./types";
 
 const initialState: WorkflowState = {
-  loggedIn: false,
-  session: "",
-  userName: ""
+  stages: [],
+  updateStageId: 0
 };
 
 export function workflowReducer(
@@ -11,10 +10,16 @@ export function workflowReducer(
   action: WorkflowActionTypes
 ): WorkflowState {
   switch (action.type) {
-    case UPDATE_SESSION: {
+    case ADD_STAGE: {
       return {
-        ...state,
-        ...action.payload
+        stages: [...state.stages, action.payload],
+        updateStageId: 0
+      };
+    }
+    case UPDATE_ID: {
+      return {
+        stages: [],
+        updateStageId: action.payload
       };
     }
     default:

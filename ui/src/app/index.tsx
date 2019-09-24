@@ -8,7 +8,7 @@ import { hot } from 'react-hot-loader';
 import Dashboard from './views/dashboard_overview';
 import DocumentEditor from './views/document_editor';
 import WorkflowEditor from './views/workflow_editor'
-import Workflow from './views/workflow_overview';
+import WorkflowOverview from '../app/views/workflow_overview/index';
 import DocumentCreator from './views/document_create';
 import Users from "app/views/users";
 import Groups from "app/views/groups";
@@ -18,6 +18,10 @@ import AppHeader from 'app/components/common/header';
 import LoginPage from './views/login_page';
 import axios from 'axios';
 import { User } from './models';
+
+// Store
+import { WorkflowState } from "../store/workflow/types"
+import { addStage } from "../store/workflow/actions";
 
 export namespace App {
     export interface Props {
@@ -29,6 +33,11 @@ export namespace App {
         users: User[]
     }
 }
+
+interface AppProps {
+    addStage: typeof addStage;
+    workflow: WorkflowState;
+  }
 
 class App extends React.Component<App.Props, App.State, any> {
 
@@ -71,7 +80,7 @@ class App extends React.Component<App.Props, App.State, any> {
                         <Route exact path="/document/create" component={DocumentCreator}/>
                         <Route exact path="/groups_create" component={GroupCreate}/>
                         <Route exact path="/groups" component={Groups}/>
-                        <Route exact path="/workflow" component={Workflow}/>
+                        <Route exact path="/workflow" component={WorkflowOverview}/>
                         <Route exact path="/" component={Dashboard}/>
                         <Route path="/document/:id/edit" component={DocumentEditor}/>
                         <Route path="/workflow/:id/edit" component={WorkflowEditor}/>
@@ -83,5 +92,9 @@ class App extends React.Component<App.Props, App.State, any> {
         );
     }
 }
+
+// const mapStateToProps = (state: AppState) => ({
+//     workflow: state.workflow,
+//   });
 
 export default hot(module)(App);

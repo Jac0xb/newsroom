@@ -8,7 +8,7 @@ import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
 import { RouteComponentProps } from 'react-router';
 
-export namespace CreateWorkflow {
+export namespace WorkflowOverview {
     export interface Props {
         classes?: any
     }
@@ -22,15 +22,15 @@ export namespace CreateWorkflow {
         flash: string
     }
 }
-export namespace Workflow {
+export namespace WorkflowOverview {
     export interface Props extends RouteComponentProps<void> {
         classes?: any
     }
 }
 
-class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflow.State> {
+class WorkflowOverview extends React.Component<WorkflowOverview.Props, WorkflowOverview.State> {
 
-    constructor(props: CreateWorkflow.Props) {
+    constructor(props: WorkflowOverview.Props) {
         super(props)
         this.state = {
             workflows: [],
@@ -112,7 +112,7 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
                     <Button variant="contained" onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create Workflow</Button>
                 </div>
                 <Divider style={{ margin: "0px 24px" }} />
-                {(this.state.flash != "") ?
+                {(flash != "") ?
                 <Paper className={classes.flashMessage}>
                     <Typography variant="caption">
                         {this.state.flash}
@@ -133,4 +133,4 @@ class CreateWorkflow extends React.Component<CreateWorkflow.Props, CreateWorkflo
     }
 }
 
-export default withStyles(styles, { withTheme: true })(CreateWorkflow);
+export default withStyles(styles, { withTheme: true })(WorkflowOverview);

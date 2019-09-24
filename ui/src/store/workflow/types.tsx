@@ -1,17 +1,22 @@
 // Describing the shape of the system's slice of state
 export interface WorkflowState {
-    loggedIn: boolean;
-    session: string;
-    userName: string;
+    stages: Array<any>
+    updateStageId: number
   }
   
   // Describing the different ACTION NAMES available
-  export const UPDATE_SESSION = "UPDATE_SESSION";
+  export const ADD_STAGE = "ADD_STAGE";
+  export const UPDATE_ID = "UPDATE_ID";
   
-  interface UpdateSessionAction {
-    type: typeof UPDATE_SESSION;
+  interface UpdateWorkflowAction {
+    type: typeof ADD_STAGE;
     payload: WorkflowState;
   }
+
+  interface UpdateStageIDAction {
+    type: typeof UPDATE_ID;
+    payload: number;
+  }
   
-  export type WorkflowActionTypes = UpdateSessionAction;
+  export type WorkflowActionTypes = UpdateWorkflowAction | UpdateStageIDAction;
   

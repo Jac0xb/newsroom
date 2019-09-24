@@ -7,7 +7,7 @@ import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
 import * as React from 'react';
 import { styles } from './styles';
-import { Divider, Paper, Typography } from '@material-ui/core';
+import { Paper, Typography } from '@material-ui/core';
 
 export namespace WorkflowEditor {
   export interface Props {
@@ -30,9 +30,21 @@ export namespace WorkflowEditor {
     flash: string
   }
 }
-class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEditor.State, any> {
 
-  constructor(props: WorkflowEditor.Props) {
+interface WorkflowEditorProps {
+  stages: Array<any>
+  stageID: number;
+  updateStageId: (id: number) => void;
+  classes?: any
+  match: {
+    params: {
+      id: number
+    }
+  }
+}
+class WorkflowEditor extends React.Component<WorkflowEditorProps, WorkflowEditor.State, any> {
+
+  constructor(props: WorkflowEditorProps) {
         super(props)
         this.state = {
             flash: "",
@@ -121,6 +133,11 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
       description: textBoxDesc,
       creator: Number(localStorage.getItem("userID")),
     }).then((response) => {
+
+      // TODO:
+      console.log(response.data)
+      this.props.updateStageId(1)
+      console.log("done")
 
       // Stages have their own ID, but their position in the workflow is their 'sequenceId'.
       const index = response.data.sequenceId;
