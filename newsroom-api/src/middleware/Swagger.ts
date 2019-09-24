@@ -14,6 +14,10 @@ export class Swagger {
             const swaggerDocument = JSON.parse(data);
 
             app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+            app.use("/oauth2-redirect.html", (req, res) => {
+                res.redirect("/docs/oauth2-redirect.html");
+            });
         });
     }
 }
