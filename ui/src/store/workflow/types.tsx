@@ -1,7 +1,7 @@
 // Describing the shape of the system's slice of state
 export interface WorkflowState {
     stages: Array<any>
-    updateStageId: number
+    stageId: number
   }
   
   // Describing the different ACTION NAMES available

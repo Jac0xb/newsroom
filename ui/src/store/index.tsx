@@ -5,7 +5,7 @@ import { composeWithDevTools } from "redux-devtools-extension";
 import { workflowReducer } from "./workflow/reducers";
 
 const rootReducer = combineReducers({
-  worflow: workflowReducer
+  workflow: workflowReducer
 });
 
 export type AppState = ReturnType<typeof rootReducer>;

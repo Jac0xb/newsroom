@@ -7,7 +7,7 @@ export function addStage(newStage: WorkflowState) {
   };
 }
 
-export function updateStageId(newID: WorkflowState) {
+export function updateStageId(newID: number) {
   return {
     type: UPDATE_ID,
     payload: newID

@@ -2,7 +2,7 @@ import { ADD_STAGE, UPDATE_ID, WorkflowState, WorkflowActionTypes } from "./type
 
 const initialState: WorkflowState = {
   stages: [],
-  updateStageId: 0
+  stageId: 0
 };
 
 export function workflowReducer(
@@ -13,13 +13,13 @@ export function workflowReducer(
     case ADD_STAGE: {
       return {
         stages: [...state.stages, action.payload],
-        updateStageId: 0
+        stageId: 0
       };
     }
     case UPDATE_ID: {
       return {
         stages: [],
-        updateStageId: action.payload
+        stageId: action.payload
       };
     }
     default:
