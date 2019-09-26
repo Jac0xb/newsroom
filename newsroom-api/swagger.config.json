@@ -9,13 +9,8 @@
       "googleOAuth": {
         "type": "oauth2",
         "name": "Google OAuth Login",
-        "flow": "implicit",
-        "authorizationUrl": "https://accounts.google.com/o/oauth2/v2/auth",
-        "scopes": {
-          "https://www.googleapis.com/auth/userinfo.profile": "profile",
-          "https://www.googleapis.com/auth/userinfo.email": "email",
-          "https://www.googleapis.com/auth/drive.file": "files"
-        }
+        "flow": "authorizationCode",
+        "authorizationUrl": "/auth/google?redirect=docs"
       }
     }
   }
