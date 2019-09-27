@@ -1,8 +1,15 @@
-import { ADD_STAGE, UPDATE_ID, WorkflowState, WorkflowActionTypes } from "./types";
+import { ADD_STAGE, SET_STAGES, ADD_STAGE_CLICK,  WorkflowState, WorkflowActionTypes } from "./types";
 
 const initialState: WorkflowState = {
   stages: [],
-  stageId: 0
+  flash: "",
+  createDialogOpen: false,
+  editDialogOpen: false,
+  stageID: 0,
+  seqID: 0,
+  dialogTextName: "",
+  dialogTextDesc: "",
+  canEdit: true
 };
 
 export function workflowReducer(
@@ -12,14 +19,25 @@ export function workflowReducer(
   switch (action.type) {
     case ADD_STAGE: {
       return {
-        stages: [...state.stages, action.payload],
-        stageId: 0
+        ...state,
+        stages: [...state.stages.slice(0, action.index), action.payload, ...state.stages.slice(action.index)],
+        createDialogOpen: false,
+
       };
     }
-    case UPDATE_ID: {
+    case SET_STAGES: {
       return {
-        stages: [],
-        stageId: action.payload
+        ...state,
+        stages: action.payload,
+      };
+    }
+    case ADD_STAGE_CLICK: {
+      return {
+        ...state,
+        createDialogOpen: true,
+        dialogTextName: "",
+        dialogTextDesc: "",
+        seqID: action.seqID
       };
     }
     default:

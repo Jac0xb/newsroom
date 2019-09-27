@@ -19,12 +19,6 @@ import LoginPage from './views/login_page';
 import axios from 'axios';
 import { User } from './models';
 
-// Store
-import { connect } from "react-redux";
-import { AppState } from "../store";
-import { WorkflowState } from "../store/workflow/types"
-import { updateStageId } from "../store/workflow/actions";
-
 export namespace App {
     export interface Props {
         classes?: any
@@ -34,18 +28,12 @@ export namespace App {
         isAuthenticated: Boolean,
         users: User[]
     }
-
-    export interface AppProps {
-        classes?: any;
-        workflow?: WorkflowState;
-        updateStageId?: typeof updateStageId;
-      }
 }
 
 
-class App extends React.Component<App.AppProps, App.State, any> {
+class App extends React.Component<App.Props, App.State, any> {
 
-    constructor(props: App.AppProps) {
+    constructor(props: App.Props) {
         super(props);
         this.state = {
             isAuthenticated: false,
@@ -57,9 +45,6 @@ class App extends React.Component<App.AppProps, App.State, any> {
         axios.get("/api/users/1").then((response) => {
             this.setState({isAuthenticated: response.status != 401});
         }).catch((error) => console.log(error))
-
-        // TEST
-        this.props.updateStageId(1)
     };
 
     render() {
@@ -100,12 +85,4 @@ class App extends React.Component<App.AppProps, App.State, any> {
     }
 }
 
-const mapStateToProps = (state: AppState) => ({
-    workflow: state.workflow,
-});
-
-// export default hot(module)(App);
-export default connect(
-    mapStateToProps,
-    { updateStageId }
-  )(hot(module)(App));
+export default hot(module)(App);

@@ -8,6 +8,15 @@ import axios from 'axios';
 import * as React from 'react';
 import { styles } from './styles';
 import { Paper, Typography } from '@material-ui/core';
+
+// TODO
+import { connect } from "react-redux";
+import { AppState } from 'store';
+import { WorkflowActionTypes, WorkflowState } from "../../../store/workflow/types";
+import { dispatchAddStage, dispatchSetStages, dispatchStageAddClick } from "../../../store/workflow//actions";
+import { Dispatch, bindActionCreators } from "redux";
+import { ThunkDispatch } from "redux-thunk";
+import { Stage } from 'app/models';
   
 export namespace WorkflowEditor {
   export interface Props {
@@ -17,9 +26,13 @@ export namespace WorkflowEditor {
         id: number
       }
     }
+    workflowState: WorkflowState
+    dispatchSetStages: (stages: Array<Stage>) => void
+    dispatchAddStage: (stage: Stage, index: number) => void
+    dispatchStageAddClick: (seqID: number) => void
   }
   export interface State {
-    stages: Array<any>
+    stages: Array<Stage>
     createDialogOpen: boolean
     editDialogOpen: boolean
     stageID: number
@@ -31,20 +44,9 @@ export namespace WorkflowEditor {
   }
 }
 
-interface WorkflowEditorProps {
-  stages: Array<any>
-  stageID: number;
-  updateStageId: (id: number) => void;
-  classes?: any
-  match: {
-    params: {
-      id: number
-    }
-  }
-}
-class WorkflowEditor extends React.Component<WorkflowEditorProps, WorkflowEditor.State, any> {
+class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEditor.State, any> {
 
-  constructor(props: WorkflowEditorProps) {
+  constructor(props: WorkflowEditor.Props) {
         super(props)
         this.state = {
             flash: "",
@@ -71,8 +73,7 @@ class WorkflowEditor extends React.Component<WorkflowEditorProps, WorkflowEditor
     axios.get("/api/workflows/" + id + "/stages").then((response) => {
 
       const stages = response.data;
-
-      this.setState({ stages })
+      this.props.dispatchSetStages(stages)
     })
   }
 
@@ -81,7 +82,7 @@ class WorkflowEditor extends React.Component<WorkflowEditorProps, WorkflowEditor
     // TODO: check role from db 
     
     // allow user to edit workflows
-    this.setState({ canEdit: true })
+    // set state
   }
 
   handleDialogTextChange = (name: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,7 +97,7 @@ class WorkflowEditor extends React.Component<WorkflowEditorProps, WorkflowEditor
 
   handleStageAddClick(open: boolean, seqID: number) {
     // Need the ID of the stage so that we know which button is being pressed and where to add the stage.
-    this.setState({ dialogTextName: '', dialogTextDesc: '', createDialogOpen: open, seqID });
+    this.props.dispatchStageAddClick(seqID)
   };
 
   // Search and apply current stage info for dialog edit box
@@ -125,7 +126,7 @@ class WorkflowEditor extends React.Component<WorkflowEditorProps, WorkflowEditor
 
     // The ID of the current workflow, the sequence id of the stage.
     const wfId = this.props.match.params.id;
-    const seqID = this.state.seqID;
+    const seqID = this.props.workflowState.seqID;
 
     // Post new stage req to backend
     axios.post("/api/workflows/" + wfId + "/stages/" +  seqID, {
@@ -134,19 +135,11 @@ class WorkflowEditor extends React.Component<WorkflowEditorProps, WorkflowEditor
       creator: Number(localStorage.getItem("userID")),
     }).then((response) => {
 
-      // TODO:
-      console.log(response.data)
-      this.props.updateStageId(1)
-      console.log("done")
-
       // Stages have their own ID, but their position in the workflow is their 'sequenceId'.
       const index = response.data.sequenceId;
 
-      // Add the stage at the correct position in the list.
-      this.state.stages.splice(index, 0, response.data)
-
-      // close dialog box, rerender stages
-      this.setState({ createDialogOpen: false, stages: this.state.stages });
+      // Add Stage to correct position in array
+      this.props.dispatchAddStage(response.data, index)
 
     }).catch((error) => {
 
@@ -204,7 +197,7 @@ class WorkflowEditor extends React.Component<WorkflowEditorProps, WorkflowEditor
 
   render() {
 
-    const { classes } = this.props;
+    const { classes, workflowState } = this.props;
     const { stages, createDialogOpen, editDialogOpen, dialogTextName, dialogTextDesc, canEdit, flash } = this.state;
 
     return (
@@ -221,17 +214,17 @@ class WorkflowEditor extends React.Component<WorkflowEditorProps, WorkflowEditor
           <div className={classes.content}>
             <div className={classes.workflowContent}>
               <div className={classes.stage}>
-                { canEdit ? 
+                { workflowState.canEdit ? 
                   <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.addButton}>
                     <AddIcon />
                   </Fab> 
                   : null 
                 }
               </div>
-              {stages.map((stage, index) => (
+              {workflowState.stages.map((stage, index) => (
                 <div className={classes.stage}>
-                  <WorkflowStage canEdit={canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(stageID: number) => this.handleStageEditClick(stageID)} onDeleteClick={(stageID: number) => this.handleStageDeleteClick(stageID)}/>
-                  { canEdit ? 
+                  <WorkflowStage canEdit={workflowState.canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(stageID: number) => this.handleStageEditClick(stageID)} onDeleteClick={(stageID: number) => this.handleStageDeleteClick(stageID)}/>
+                  { workflowState.canEdit ? 
                     <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index+1)} className={classes.addButton}>
                       <AddIcon />
                     </Fab> 
@@ -239,7 +232,7 @@ class WorkflowEditor extends React.Component<WorkflowEditorProps, WorkflowEditor
                   }
                 </div>
               ))}
-              <DialogItem textBoxName={dialogTextName} textBoxDesc={dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({createDialogOpen: false})} handleSave={this.handleStageAdd}/>
+              <DialogItem textBoxName={dialogTextName} textBoxDesc={dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={workflowState.createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({createDialogOpen: false})} handleSave={this.handleStageAdd}/>
               <DialogItem textBoxName={dialogTextName} textBoxDesc={dialogTextDesc} title={"Edit Stage"} desc={"Enter stage information"} show={editDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({editDialogOpen: false})} handleSave={this.handleStageEdit}/>
             </div>
            </div>
@@ -249,4 +242,18 @@ class WorkflowEditor extends React.Component<WorkflowEditorProps, WorkflowEditor
   }
 }
 
-export default withStyles(styles, { withTheme: true })(WorkflowEditor);
+// Map to store
+const mapStateToProps = (state: AppState, ownProps: WorkflowEditor.Props) => ({
+  workflowState: state.workflow,
+});
+
+const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, WorkflowActionTypes>, ownProps: WorkflowEditor.Props) => ({
+  dispatchSetStages: bindActionCreators(dispatchSetStages, dispatch),
+  dispatchAddStage: bindActionCreators(dispatchAddStage, dispatch),
+  dispatchStageAddClick: bindActionCreators(dispatchStageAddClick, dispatch),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withStyles(styles, { withTheme: true })(WorkflowEditor));

@@ -1,22 +1,39 @@
-// Describing the shape of the system's slice of state
+import { Stage } from "app/models";
+
+// Workflow state 
 export interface WorkflowState {
-    stages: Array<any>
-    stageId: number
+    stages: Array<Stage>
+    flash: string,
+    createDialogOpen: boolean,
+    editDialogOpen: boolean,
+    stageID: number,
+    seqID: number,
+    dialogTextName: string,
+    dialogTextDesc: string,
+    canEdit: boolean
   }
   
   // Describing the different ACTION NAMES available
   export const ADD_STAGE = "ADD_STAGE";
-  export const UPDATE_ID = "UPDATE_ID";
+  export const SET_STAGES = "SET_STAGES";
+  export const ADD_STAGE_CLICK = "ADD_STAGE_CLICK";
   
-  interface UpdateWorkflowAction {
+  interface AddStageAction {
     type: typeof ADD_STAGE;
-    payload: WorkflowState;
+    payload: Stage;
+    index: number;
   }
 
-  interface UpdateStageIDAction {
-    type: typeof UPDATE_ID;
-    payload: number;
+  interface SetStagesAction {
+    type: typeof SET_STAGES;
+    payload: Array<Stage>;
   }
-  
-  export type WorkflowActionTypes = UpdateWorkflowAction | UpdateStageIDAction;
+
+  interface StageAddClickAction {
+    type: typeof ADD_STAGE_CLICK;
+    seqID: number;
+  }
+
+  export type WorkflowActionTypes = AddStageAction | SetStagesAction | StageAddClickAction;
+
   
