@@ -1,10 +1,9 @@
 import "dotenv/config";
 import express from "express";
 import "reflect-metadata";
-import { createConnection, useContainer } from "typeorm";
-import { Server } from "typescript-rest";
-
 import { Container } from "typedi";
+import { Connection, createConnection, getConnection, useContainer } from "typeorm";
+import { Server } from "typescript-rest";
 import { AuthConfig } from "./middleware/AuthConfig";
 import { ErrorMapper } from "./middleware/ErrorMapper";
 import { FakeAuthConfig } from "./middleware/FakeAuthConfig";
@@ -55,6 +54,10 @@ class App {
         });
 
         return this.express;
+    }
+
+    public getDBConnection(): Connection {
+        return getConnection();
     }
 }
 

@@ -151,7 +151,8 @@ export class WorkflowResource {
         }
 
         try {
-            return await this.workflowService.getPermissionsForWF(currWorkflow, this.serviceContext.user());
+            return await this.workflowService.getPermissionsForWF(await this.workflowRepository.save(currWorkflow), 
+                                                                  this.serviceContext.user());
         } catch (err) {
             console.log(err);
 
@@ -171,26 +172,16 @@ export class WorkflowResource {
      */
     @DELETE
     @Path("/:wid")
-    public async deleteWorkflow(@IsInt @PathParam("wid") wid: number) {
+    public async deleteWorkflow(@IsInt @PathParam("wid") wid: number): Promise<string> {
         const sessionUser = this.serviceContext.user();
         const currWorkflow = await this.workflowService.getWorkflow(wid);
         await this.permissionService.checkWFWritePermissions(sessionUser, wid);
 
         try {
             await this.workflowRepository.remove(currWorkflow);
-            // await this.stageRepository
-            //     .createQueryBuilder(DBConstants.STGE_TABLE)
-            //     .delete()
-            //     .from(NRStage)
-            //     .andWhere("workflowId = :wid", {wid: currWorkflow.id})
-            //     .execute();
 
-            // await this.workflowRepository
-            //     .createQueryBuilder(DBConstants.WRKF_TABLE)
-            //     .delete()
-            //     .from(NRWorkflow)
-            //     .andWhere("id = :wid", {wid: currWorkflow.id})
-            //     .execute();
+            // TODO: There has to be a better way to make this return a 200 OK.
+            return "";
         } catch (err) {
             console.log(err);
 
