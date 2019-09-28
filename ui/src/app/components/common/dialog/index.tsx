@@ -51,14 +51,14 @@ class DialogItem extends React.Component<DialogItem.Props, DialogItem.State, any
                   label="Name"
                   className={classes.textField}
                   value={textBoxName}
-                  onChange={handleTextBoxesChange('textBoxName')}
+                  onChange={handleTextBoxesChange('dialogTextName')}
                 />
                 <TextField
                   id="stage-desc"
                   label="Description"
                   className={classes.textField}
                   value={textBoxDesc}
-                  onChange={handleTextBoxesChange('textBoxDesc')}
+                  onChange={handleTextBoxesChange('dialogTextDesc')}
                 />
               </form>
             </DialogContent>

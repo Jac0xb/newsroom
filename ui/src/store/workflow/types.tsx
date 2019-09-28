@@ -15,13 +15,20 @@ export interface WorkflowState {
   
   // Describing the different ACTION NAMES available
   export const ADD_STAGE = "ADD_STAGE";
+  export const EDIT_STAGE = "EDIT_STAGE";
   export const SET_STAGES = "SET_STAGES";
   export const ADD_STAGE_CLICK = "ADD_STAGE_CLICK";
+  export const EDIT_STAGE_CLICK = "EDIT_STAGE_CLICK";
+  export const TEXT_CHANGE = "TEXT_CHANGE";
   
   interface AddStageAction {
     type: typeof ADD_STAGE;
     payload: Stage;
     index: number;
+  }
+
+  interface EditStageAction {
+    type: typeof EDIT_STAGE;
   }
 
   interface SetStagesAction {
@@ -34,6 +41,20 @@ export interface WorkflowState {
     seqID: number;
   }
 
-  export type WorkflowActionTypes = AddStageAction | SetStagesAction | StageAddClickAction;
+  interface StageEditClickAction {
+    type: typeof EDIT_STAGE_CLICK;
+    stageID: number;
+    seqID: number;
+    name: string;
+    desc: string;
+  }
+
+  interface StageTextChangeAction {
+    type: typeof TEXT_CHANGE;
+    fieldName: string;
+    newValue: string;
+  }
+
+  export type WorkflowActionTypes = AddStageAction | EditStageAction | SetStagesAction | StageAddClickAction | StageTextChangeAction | StageEditClickAction;
 
   
