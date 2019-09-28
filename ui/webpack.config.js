@@ -3,7 +3,7 @@ var path = require('path');
 var package = require('./package.json');
 
 // Whether or not the package is in production or not.
-var isProduction = process.argv.indexOf('-p') >= 0 || process.env.NODE_ENV === 'production'; 
+var isProduction = process.argv.indexOf('-p') >= 0 || process.env.NODE_ENV === 'production';
 
 // Package source folder.
 var sourcePath = path.join(__dirname, './src');

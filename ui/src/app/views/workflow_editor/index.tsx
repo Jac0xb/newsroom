@@ -11,9 +11,9 @@ import { Paper, Typography } from '@material-ui/core';
 
 // Redux
 import { connect } from "react-redux";
-import { AppState } from 'store';
-import { WorkflowActionTypes, WorkflowState } from "../../../store/workflow/types";
-import { dispatchAddStage, dispatchEditStage, dispatchSetStages, dispatchStageAddClick, dispatchTextBoxChange, dispatchStageEditClick } from "../../../store/workflow//actions";
+import { AppState } from 'app/store';
+import { WorkflowActionTypes, WorkflowState } from "app/store/workflow/types";
+import { dispatchAddStage, dispatchEditStage, dispatchSetStages, dispatchStageAddClick, dispatchTextBoxChange, dispatchStageEditClick } from "app/store/workflow/actions";
 import { Dispatch, bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 import { Stage } from 'app/models';

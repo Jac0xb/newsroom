@@ -1,6 +1,6 @@
 import { WorkflowActionTypes, ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK } from "./types";
 import { Dispatch } from "redux";
-import { AppState } from "store";
+import { AppState } from "app/store";
 import { Stage } from "app/models";
 
 export function addStage(newStage: Stage, index: number): WorkflowActionTypes {

@@ -1,19 +1,19 @@
 {
-  "name": "react-redux-typescript-boilerplate",
-  "version": "1.0.1",
+  "name": "newsroom-ui",
+  "version": "0.1.0",
   "private": true,
-  "description": "A frontend boilerplate with React, Redux and Typescript",
-  "homepage": "https://rokoroku.github.io/react-redux-typescript-boilerplate",
+  "description": "An ECM System for School Newspaper Organizations.",
+  "homepage": "https://www.newsroom.net",
   "keywords": [
     "react",
     "redux",
     "typescript",
-    "boilerplate",
-    "todomvc"
+    "enteprise content management",
+    "ecm",
+    "journalism"
   ],
   "main": "index.js",
   "scripts": {
-    "test": "true",
     "start": "webpack-dev-server --mode development --hot --progress --color --port 3000 --open",
     "build": "webpack -p --progress --colors",
     "prettier": "prettier --write \"src/**/*.{ts,tsx,css}\""

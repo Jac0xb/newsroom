@@ -5,7 +5,7 @@ import { Router } from 'react-router-dom';
 import { CookiesProvider } from 'react-cookie';
 
 import { Provider } from 'react-redux'
-import configureStore from "./store";
+import configureStore from "./app/store";
 const store = configureStore();
 
 import { createBrowserHistory } from 'history';

@@ -3,10 +3,12 @@ import thunkMiddleware from "redux-thunk";
 import { composeWithDevTools } from "redux-devtools-extension";
 
 import { workflowReducer } from "./workflow/reducers";
+import { dashboardReducer } from "./dashboard/reducers";
 
 // Combine all reducers
 const rootReducer = combineReducers({
-  workflow: workflowReducer
+  workflow: workflowReducer,
+  dashboard: dashboardReducer
 });
 
 // Create AppState

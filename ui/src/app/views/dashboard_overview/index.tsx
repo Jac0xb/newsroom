@@ -5,8 +5,14 @@ import { Document } from 'app/models';
 import { styles } from './styles';
 import LinkedButton from './components/LinkedButton'
 import { Divider } from '@material-ui/core';
+import { connect } from "react-redux";
 import axios from 'axios';
 import _ from 'lodash-es';
+import { AppState } from 'app/store';
+import { bindActionCreators } from "redux";
+import { ThunkDispatch } from "redux-thunk";
+import { DashboardActionTypes } from 'app/store/dashboard/types';
+import { dispatchFetchDocumentsPending, dispatchFetchDocumentsSuccess, dispatchFetchDocumentsError } from "app/store/dashboard/actions";
 
 export namespace Dashboard {
 
@@ -68,4 +74,17 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
     }
 }
 
-export default withStyles(styles, { withTheme: true })(Dashboard);
+const mapStateToProps = (state: AppState, ownProps: Dashboard.Props) => ({
+    dashboardState: state.dashboard
+});
+
+const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, DashboardActionTypes>, ownProps: Dashboard.Props) => ({
+    dispatchFetchDocumentsPending: bindActionCreators(dispatchFetchDocumentsPending, dispatch),
+    dispatchFetchDocumentsSuccess: bindActionCreators(dispatchFetchDocumentsSuccess, dispatch),
+    dispatchFetchDocumentsError: bindActionCreators(dispatchFetchDocumentsError, dispatch)
+});
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(withStyles(styles, { withTheme: true })(Dashboard));
