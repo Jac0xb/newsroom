@@ -3,10 +3,12 @@ import request, { Response } from "supertest";
 import { Connection, getRepository, Repository } from "typeorm";
 import App from "../app";
 
-import { NRWorkflow, NRUser, NRRole, NRStage } from "../entity";
+import { DBConstants, NRRole, NRStage, NRUser, NRWorkflow, NRDocument } from "../entity";
 
 // TODO:
 //   - Test validators.
+//   - Verify creator.
+//   - Fix 413 for 1 workflow, 5 stages, 2 documents in each stage?
 
 // Globals used by all tests.
 let app: express.Express;
@@ -14,6 +16,7 @@ let conn: Connection;
 let user: NRUser;
 let wfRep: Repository<NRWorkflow>;
 let stRep: Repository<NRStage>;
+let dcRep: Repository<NRDocument>;
 let usrRep: Repository<NRUser>;
 let rlRep: Repository<NRRole>;
 
@@ -22,18 +25,21 @@ const WF_NAME = "TEST_WORKFLOW_";
 const WF_DESC = "TEST_WF_DESC_";
 const ST_NAME = "TEST_STAGE_";
 const ST_DESC = "TEST_STAGE_DESC_";
+const DC_NAME = "TEST_DOC_";
+const DC_DESC = "TEST_DOC_DESC_";
 
 beforeAll(async (done) => {
-    // Configure without oauth.
-    app = await App.configure(false);
+    // Configure without oauth, and no Google Document creation.
+    app = await App.configure(false, false);
 
-    // Can't have two active connections to the DB, so just use 
+    // Can't have two active connections to the DB, so just use
     // the one made by the app.
     conn = App.getDBConnection();
 
     // DB connections for different objects.
     wfRep = getRepository(NRWorkflow);
     stRep = getRepository(NRStage);
+    dcRep = getRepository(NRDocument);
     usrRep = getRepository(NRUser);
     rlRep = getRepository(NRRole);
 
@@ -67,7 +73,7 @@ describe("POST /workflows", () => {
         //    the created workflow.
 
         // Create 1 workflow with READ permissions.
-        await createWorkflowsVerifyResp(1, 'READ', 200, 0);
+        await createWorkflowsVerifyResp(1, "READ", 200, 0, 0);
     });
 });
 
@@ -86,10 +92,10 @@ describe("GET /workflows", () => {
         const wfNum = 5;
 
         // Create 'wfNum' workflows with READ permissions.
-        const ret = await createWorkflowsVerifyResp(wfNum, 'READ', 200, 0);
-        const wfs: NRWorkflow[] = ret.get('wfs');
-        const wfResps: NRWorkflow[] = ret.get('wfResps');
-        const resps: Response[] = ret.get('resps');
+        const ret = await createWorkflowsVerifyResp(wfNum, "READ", 200, 0, 0);
+        const wfs: NRWorkflow[] = ret.get("wfs");
+        const wfResps: NRWorkflow[] = ret.get("wfResps");
+        const resps: Response[] = ret.get("resps");
 
         // Get all workflows.
         const resp = await request(app)
@@ -117,10 +123,10 @@ describe("GET /workflow/:wid", () => {
         const wfNum = 5;
 
         // Create 'wfNum' workflows with READ permissions.
-        const ret = await createWorkflowsVerifyResp(wfNum, 'READ', 200, 0);
-        const wfs: NRWorkflow[] = ret.get('wfs');
-        const wfResps: NRWorkflow[] = ret.get('wfResps');
-        const resps: Response[] = ret.get('resps');
+        const ret = await createWorkflowsVerifyResp(wfNum, "READ", 200, 0, 0);
+        const wfs: NRWorkflow[] = ret.get("wfs");
+        const wfResps: NRWorkflow[] = ret.get("wfResps");
+        const resps: Response[] = ret.get("resps");
 
         // Get each specific workflow.
         for (let i = 0; i < wfs.length; i++) {
@@ -148,10 +154,10 @@ describe("PUT /workflows/:wid", () => {
         const wfNum = 5;
 
         // Create 'wfNum' workflows with WRITE permissions.
-        const ret = await createWorkflowsVerifyResp(wfNum, 'WRITE', 200, 0);
-        const wfs: NRWorkflow[] = ret.get('wfs');
-        const wfResps: NRWorkflow[] = ret.get('wfResps');
-        const resps: Response[] = ret.get('resps');
+        const ret = await createWorkflowsVerifyResp(wfNum, "WRITE", 200, 0, 0);
+        const wfs: NRWorkflow[] = ret.get("wfs");
+        const wfResps: NRWorkflow[] = ret.get("wfResps");
+        const resps: Response[] = ret.get("resps");
 
         // Update each specific workflow.
         for (let i = 0; i < wfResps.length; i++) {
@@ -166,10 +172,10 @@ describe("PUT /workflows/:wid", () => {
             await verifyWorkflowResp(resp.body, wfResps[i], resp, 200, true);
 
             // Verify only the right workflow changed in the DB.
-            for (let j = 0; j < wfResps.length; j++) {
-                const wfdb = await wfRep.findOne({ where: { id: wfResps[j].id }});
-                expect(wfResps[j].name).toEqual(wfdb.name);
-                expect(wfResps[j].description).toEqual(wfdb.description);
+            for (const wf of wfResps) {
+                const wfdb = await wfRep.findOne({ where: { id: wf.id }});
+                expect(wf.name).toEqual(wfdb.name);
+                expect(wf.description).toEqual(wfdb.description);
             }
         }
     });
@@ -182,10 +188,10 @@ describe("PUT /workflows/:wid", () => {
         //  - We get a 403 due to lack of permissions to update the workflow.
 
         // Create 1 workflow with READ permissions.
-        const ret = await createWorkflowsVerifyResp(1, 'READ', 200, 0);
-        const wfs: NRWorkflow[] = ret.get('wfs');
-        const wfResps: NRWorkflow[] = ret.get('wfResps');
-        const resps: Response[] = ret.get('resps');
+        const ret = await createWorkflowsVerifyResp(1, "READ", 200, 0, 0);
+        const wfs: NRWorkflow[] = ret.get("wfs");
+        const wfResps: NRWorkflow[] = ret.get("wfResps");
+        const resps: Response[] = ret.get("resps");
 
         wfResps[0].name = `UPDATE_NAME_${0}`;
         wfResps[0].description = `UPDATE_DESC_${0}`;
@@ -200,9 +206,7 @@ describe("PUT /workflows/:wid", () => {
 });
 
 // TODO:
-//   Test permissions returned properly with workflow object.
-//   Do something with leftover stages?
-//   Test with documents added as well.
+//   Test workflow deletion when it's stages contain documents.
 describe("DELETE /workflow/:wid", () => {
     it("Test deleting a workflow WITH permissions, no stages or documents.", async () => {
         // Verify:
@@ -212,11 +216,11 @@ describe("DELETE /workflow/:wid", () => {
         //  - The workflow is no longer present in the DB.
         const wfNum = 1;
 
-        // Create 'wfNum' workflows with READ permissions.
-        const ret = await createWorkflowsVerifyResp(wfNum, 'WRITE', 200, 0);
-        const wfs: NRWorkflow[] = ret.get('wfs');
-        const wfResps: NRWorkflow[] = ret.get('wfResps');
-        const resps: Response[] = ret.get('resps');
+        // Create 'wfNum' workflows with WRITE permissions.
+        const ret = await createWorkflowsVerifyResp(wfNum, "WRITE", 200, 0, 0);
+        const wfs: NRWorkflow[] = ret.get("wfs");
+        const wfResps: NRWorkflow[] = ret.get("wfResps");
+        const resps: Response[] = ret.get("resps");
 
         const resp = await request(app)
                             .delete(`/api/workflows/${wfResps[0].id}`)
@@ -237,10 +241,10 @@ describe("DELETE /workflow/:wid", () => {
         const wfNum = 1;
 
         // Create 'wfNum' workflows with READ permissions.
-        const ret = await createWorkflowsVerifyResp(wfNum, 'READ', 200, 0);
-        const wfs: NRWorkflow[] = ret.get('wfs');
-        const wfResps: NRWorkflow[] = ret.get('wfResps');
-        const resps: Response[] = ret.get('resps');
+        const ret = await createWorkflowsVerifyResp(wfNum, "READ", 200, 0, 0);
+        const wfs: NRWorkflow[] = ret.get("wfs");
+        const wfResps: NRWorkflow[] = ret.get("wfResps");
+        const resps: Response[] = ret.get("resps");
 
         const resp = await request(app)
                             .delete(`/api/workflows/${wfResps[0].id}`)
@@ -258,17 +262,14 @@ describe("DELETE /workflow/:wid", () => {
         //  - Returned name and description is correct for
         //    each created workflow.
         //  - The workflow is no longer present in the DB.
+        //  - Each stage is no longer present in the DB.
         const wfNum = 1;
 
-        // Create 'wfNum' workflows with READ permissions.
-        const ret = await createWorkflowsVerifyResp(wfNum, 'WRITE', 200, 5);
-        const wfs: NRWorkflow[] = ret.get('wfs');
-        const wfResps: NRWorkflow[] = ret.get('wfResps');
-        const resps: Response[] = ret.get('resps');
-
-        for (let wf of wfResps) {
-            console.log(wf);
-        }
+        // Create 'wfNum' workflows with WRITE permissions.
+        const ret = await createWorkflowsVerifyResp(wfNum, "WRITE", 200, 5, 0);
+        const wfs: NRWorkflow[] = ret.get("wfs");
+        const wfResps: NRWorkflow[] = ret.get("wfResps");
+        const resps: Response[] = ret.get("resps");
 
         const resp = await request(app)
                             .delete(`/api/workflows/${wfResps[0].id}`)
@@ -278,12 +279,152 @@ describe("DELETE /workflow/:wid", () => {
         // Verify it no longer exists in the DB.
         const wfdb = await wfRep.findOne({ where: { id: wfResps[0].id }});
         expect(wfdb).toEqual(undefined);
-        
-        // // Verify that the stages no longer exist.
-        // for (let stage in wfResps[0].stages) {
-        //     const stdb = await stRep.findOne({ where: { id: stage.id }});
-        //     expect(stdb).toEqual(undefined);
-        // }
+
+        // Verify that the stages no longer exist.
+        for (let stage of wfResps[0].stages) {
+            const stdb = await stRep.findOne({ where: { id: stage.id }});
+            expect(stdb).toEqual(undefined);
+        }
+    });
+
+    it("Test deleting a workflow WITH permissions, stages, and documents.", async () => {
+        // Verify:
+        //  - Response status is 200 OK for each created workflow.
+        //  - Returned name and description is correct for
+        //    each created workflow.
+        //  - The workflow is no longer present in the DB.
+        //  - Each stage is no longer present in the DB.
+        //  - Each document is still present in the DB.
+        const wfNum = 1;
+
+        // Create 'wfNum' workflows with WRITE permissions.
+        const ret = await createWorkflowsVerifyResp(wfNum, "WRITE", 200, 5, 1);
+        const wfs: NRWorkflow[] = ret.get("wfs");
+        const wfResps: NRWorkflow[] = ret.get("wfResps");
+        const resps: Response[] = ret.get("resps");
+
+        const resp = await request(app)
+                            .delete(`/api/workflows/${wfResps[0].id}`)
+                            .set("User-Id", `${user.id}`);
+        expect(resp.status).toEqual(200);
+
+        // Verify it no longer exists in the DB.
+        const wfdb = await wfRep.findOne({ where: { id: wfResps[0].id }});
+        expect(wfdb).toEqual(undefined);
+
+        // Verify that the stages no longer exist.
+        for (let stage of wfResps[0].stages) {
+            const stdb = await stRep.findOne({ where: { id: stage.id }});
+            expect(stdb).toEqual(undefined);
+
+            // Verify that the documents do exist, and their relationships are NULL.
+            for (let doc of stage.documents) {
+                const dcdb = await dcRep.findOne({ where: { id: doc.id }});
+                expect(dcdb.id).toEqual(doc.id);
+
+                // TODO: Undefined because relationships aren't 'eager'.
+                expect(dcdb.workflow).toEqual(undefined);
+                expect(dcdb.stage).toEqual(undefined);
+            }
+        }
+    });
+});
+
+describe("POST /workflows/:wid/stages", () => {
+    it("Test appending a stage to empty workflows.", async () => {
+        // Verify:
+        //  - Response status is 200 OK for each created workflow.
+        //  - Returned name and description is correct for
+        //    each created workflow.
+        //  - Appending a stage to the workflow returns 200 OK.
+        //  - The stage information is correct in the DB.
+        const wfNum = 2;
+
+        // Create 'wfNum' workflows with WRITE permissions.
+        const ret = await createWorkflowsVerifyResp(wfNum, "WRITE", 200, 0, 0);
+        const wfs: NRWorkflow[] = ret.get("wfs");
+        const wfResps: NRWorkflow[] = ret.get("wfResps");
+        const resps: Response[] = ret.get("resps");
+
+        for (const wf of wfResps) {
+            // Append a stage.
+            const st = new NRStage();
+            st.name = ST_NAME + '0';
+            st.name = ST_DESC + '0';
+            st.workflow = wf;
+
+            const resp = await request(app)
+                                .post(`/api/workflows/${wf.id}/stages`)
+                                .send(st)
+                                .set("User-Id", `${user.id}`);
+            expect(resp.status).toEqual(200);
+
+            // Verify stages in the DB.
+            const stdb = await stRep.findOne({ where: { id: resp.body.id }});
+            expect(stdb.sequenceId).toEqual(1);
+        }
+    });
+
+    it("Test appending a stage to workflows that already have stages.", async () => {
+        // Verify:
+        //  - Response status is 200 OK for each created workflow.
+        //  - Returned name and description is correct for
+        //    each created workflow.
+        //  - Appending a stage to the workflow returns 200 OK.
+        //  - The stage information is correct in the DB.
+        const wfNum = 2;
+        const stNum = 2;
+        const dcNum = 2;
+
+        // Create 'wfNum' workflows with WRITE permissions.
+        const ret = await createWorkflowsVerifyResp(wfNum, "WRITE", 200, stNum, dcNum);
+        const wfs: NRWorkflow[] = ret.get("wfs");
+        const wfResps: NRWorkflow[] = ret.get("wfResps");
+        const resps: Response[] = ret.get("resps");
+
+        for (const wf of wfResps) {
+            // Append multiple stages.
+            for (let i = 0; i < stNum; i++) {
+                const st = new NRStage();
+                st.name = ST_NAME + `${stNum + i + 1}`;
+                st.name = ST_NAME + `${stNum + i + 1}`;
+                st.workflow = wf;
+
+                const resp = await request(app)
+                                    .post(`/api/workflows/${wf.id}/stages`)
+                                    .send(st)
+                                    .set("User-Id", `${user.id}`);
+                expect(resp.status).toEqual(200);
+
+                // Track the stage we got as a response.
+                wf.stages.push(resp.body);
+
+                // Verify stages in the DB.
+                const stdb = await stRep.findOne({ where: { id: resp.body.id }});
+                expect(stdb.sequenceId).toEqual(stNum + i + 1);
+            }
+        }
+
+        // Verify that documents stay in the right stages.
+        for (const wf of wfResps) {
+            for (const st of wf.stages) {
+                if (st.documents === undefined) {
+                    continue;
+                }
+
+                for (const doc of st.documents) {
+                    const dcdb = await dcRep.findOne({ where: { id: doc.id }});
+
+                    const stageID = await dcRep
+                        .createQueryBuilder(DBConstants.DOCU_TABLE)
+                        .select(`${DBConstants.DOCU_TABLE}.stageId`, "val")
+                        .where(`${DBConstants.DOCU_TABLE}.id = :did`, {did: dcdb.id})
+                        .getRawOne();
+
+                    expect(stageID.val).toEqual(doc.stage.id);
+                }
+            }
+        }
     });
 
 });
@@ -291,25 +432,27 @@ describe("DELETE /workflow/:wid", () => {
 /**
  * Create 'num' number of workflows with 'perm' permissions, verify that each
  * POST has 'status' response.
- * 
+ *
  * num: The number of workflows to create.
  * perm: The permissions to give on each workflow.
  * status: The status to verify for each response.
  * user: The user to give the permissions to.
  * stages: The number of stages each workflow should have.
- * 
+ * docs: The number of documents each stage should have.
  * return: A Map<string, object> with keys:
  *      'wfs': The NRWorkflow objects created to send.
  *      'wfResps': The NRWorkflow objects returned from the POST.
  *      'resps': The raw Response to each POST.
  */
-async function createWorkflowsVerifyResp(num: number, perm: string, status: number, stages: number) {
-    let wfs: NRWorkflow[] = [];
-    let wfResps: NRWorkflow[] = [];
-    let resps: Response[] = [];
+async function createWorkflowsVerifyResp(num: number, perm: string, status: number, 
+                                         stages: number, docs: number) {
+    const wfs: NRWorkflow[] = [];
+    const wfResps: NRWorkflow[] = [];
+    const resps: Response[] = [];
 
+    // Create 'num' number of workflows.
     for (let i = 0; i < num; i++) {
-        const wf = new NRWorkflow;
+        const wf = new NRWorkflow();
         wf.name = WF_NAME + `${i}`;
         wf.description = WF_DESC + `${i}`;
         wfs.push(wf);
@@ -325,16 +468,17 @@ async function createWorkflowsVerifyResp(num: number, perm: string, status: numb
 
         // Create a group to formulate permissions.
         const res = await addUserToGroup("TEST_GROUP_0", user, 200);
-        const role: NRRole = res.get('role');
+        const role: NRRole = res.get("role");
 
         // Add 'perm' permissions between the group and workflow.
         await setWFPermForGroup(role, resp.body, perm, 200);
     }
 
-    for (let i = 0; i < num; i++ ) {
+    // Create 'stages' number of stages for each workflow. 
+    for (let i = 0; i < num; i++) {
         wfResps[i].stages = [];
         for (let j = 0; j < stages; j++) {
-            const st = new NRStage();
+            let st = new NRStage();
             st.name = ST_NAME + `${wfResps[i].name}_${j}`;
             st.description = ST_DESC + `${wfResps[i].name}_${j}`;
 
@@ -342,34 +486,52 @@ async function createWorkflowsVerifyResp(num: number, perm: string, status: numb
                                 .post(`/api/workflows/${wfResps[i].id}/stages`)
                                 .send(st)
                                 .set("User-Id", `${user.id}`);
-
             expect(resp.status).toEqual(200);
+            st = resp.body;
+            st.documents = [];
+
+            // Create 'docs' number of documents for each stage.
+            for (let k = 0; k < docs; k++) {
+                const dc = new NRDocument();
+                dc.name = DC_NAME + `${k}`;
+                dc.description = DC_DESC + `${k}`;
+                dc.workflow = wfResps[i];
+                dc.stage = st;
+
+                const dresp = await request(app)
+                                      .post(`/api/documents/`)
+                                      .send(dc)
+                                      .set("User-Id", `${user.id}`);
+                expect(dresp.status).toEqual(200);
+
+                st.documents.push(dresp.body);
+            }
 
             // Update what is returned so it has stages.
-            wfResps[i].stages.push(resp.body);
+            wfResps[i].stages.push(st);
         }
     }
 
-    let ret = new Map<string, any>();
-    ret.set('wfs', wfs);
-    ret.set('wfResps', wfResps);
-    ret.set('resps', resps);
+    const ret = new Map<string, any>();
+    ret.set("wfs", wfs);
+    ret.set("wfResps", wfResps);
+    ret.set("resps", resps);
 
     return ret;
 }
 
 /**
- * Create a group and add the given user to it. 
- * 
+ * Create a group and add the given user to it.
+ *
  * If the group already exists, the user will simply be added to the group.
  * If the user doesn't exist, it will be created.
- * 
+ *
  * groupName: The name for the group to create.
  * user: The user to add to the created group.
- * status: The status that adding the user to the group is 
+ * status: The status that adding the user to the group is
  *         expected to return.
  */
-async function addUserToGroup(groupName: string, user: NRUser, status: number) {
+async function addUserToGroup(groupName: string, currUser: NRUser, status: number) {
     let role: NRRole;
     let dbUser: NRUser;
 
@@ -385,34 +547,34 @@ async function addUserToGroup(groupName: string, user: NRUser, status: number) {
 
     // See if the user exists, or create it.
     try {
-        dbUser = await usrRep.findOneOrFail({ where: { name: user.userName }});
+        dbUser = await usrRep.findOneOrFail({ where: { name: currUser.userName }});
     } catch (err) {
-        dbUser = await usrRep.save(user);
+        dbUser = await usrRep.save(currUser);
     }
 
     // Add the user to the group.
     const resp = await request(app)
                         .put(`/api/users/${dbUser.id}/role/${role.id}`)
-                        .set("User-Id", `${user.id}`);
+                        .set("User-Id", `${currUser.id}`);
     expect(resp.status).toEqual(status);
 
-    let ret = new Map<string, any>();
-    ret.set('user', dbUser);
-    ret.set('role', role);
+    const ret = new Map<string, any>();
+    ret.set("user", dbUser);
+    ret.set("role", role);
 
     return ret;
 }
 
 /**
  * Set the permissions for a group and a workflow.
- * 
+ *
  * If the group doesn't exist, it will be created.
  * The workflow must exist already.
- * 
+ *
  * role: The role to give the permissions to.
  * wf: The workflow to set the permissions on.
  * perm: The permission to give.
- * status: The status that adding the user to the group is 
+ * status: The status that adding the user to the group is
  *         expected to return.
  */
 async function setWFPermForGroup(role: NRRole, wf: NRWorkflow, perm: string, status: number) {
@@ -427,12 +589,12 @@ async function setWFPermForGroup(role: NRRole, wf: NRWorkflow, perm: string, sta
     }
 
     // WRITE = 1, READ = 0.
-    const resPerm = (perm === 'WRITE') ? 1 : 0;
+    const resPerm = (perm === "WRITE") ? 1 : 0;
 
     // Add the user to the group.
     const resp = await request(app)
                         .put(`/api/roles/${role.id}/workflow/${wf.id}`)
-                        .send({"access": resPerm})
+                        .send({access: resPerm})
                         .set("User-Id", `${user.id}`);
     expect(resp.status).toEqual(status);
 }
@@ -440,7 +602,7 @@ async function setWFPermForGroup(role: NRRole, wf: NRWorkflow, perm: string, sta
 /**
  * Validate different aspects of workflows and responses based
  * on passed parameters.
- * 
+ *
  * wf1: The first workflow to be used in the comparison.
  * wf2: The second workflow to be used in the comparison, this
  *      workflow is queried from the DB so this has to be the one
@@ -449,7 +611,7 @@ async function setWFPermForGroup(role: NRRole, wf: NRWorkflow, perm: string, sta
  * status: The status expected on above, or null if validation should be skipped.
  * ids: Whether or not to verify IDs between wf1 and wf2.
  */
-async function verifyWorkflowResp(wf1: NRWorkflow, 
+async function verifyWorkflowResp(wf1: NRWorkflow,
                                   wf2: NRWorkflow,
                                   resp: Response,
                                   status: number,

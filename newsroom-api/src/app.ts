@@ -23,10 +23,16 @@ class App {
         this.express = express();
     }
 
-    public async configure(auth: boolean): Promise<express.Express> {
+    /**
+     * Configure this app to run.
+     * 
+     * auth: Whether or not to do real user authentication.
+     * docCreate: Whether or not to create actual Google Documents.
+     */
+    public async configure(auth: boolean, docCreate: boolean): Promise<express.Express> {
         Swagger.serve(this.express);
 
-        // Register TypeDI Container with TypeORM, must be called before createConnection()
+        // Register TypeDI Container with TypeORM, must be called before createConnection().
         useContainer(Container);
 
         // Start app server and listen for connections.
@@ -39,7 +45,11 @@ class App {
                 Container.get(FakeAuthConfig).configure(this.express);
             }
 
-            // Make sure ServiceContext gets extended
+            if (!(docCreate)) {
+                process.env.DOC_SKIP = 'Y';
+            }
+
+            // Make sure ServiceContext gets extended.
             extendServiceContext();
 
             // Build typescript-rest services.

@@ -62,7 +62,7 @@ export class NRDocument {
      */
     @ManyToOne(
         (type) => NRUser,
-        {eager: true},
+        { eager: true },
     )
     @JoinColumn({name: "creator"})
     public creator: NRUser;
@@ -75,7 +75,7 @@ export class NRDocument {
     @ManyToOne(
         (type) => NRWorkflow,
         (workflow) => workflow.documents,
-        { eager: true, onDelete: "CASCADE" },
+        { onDelete: "SET NULL" },
     )
     public workflow: NRWorkflow;
 
@@ -87,7 +87,7 @@ export class NRDocument {
     @ManyToOne(
         (type) => NRStage,
         (stage) => stage.documents,
-        { eager: true },
+        { onDelete: "SET NULL" },
     )
     public stage: NRStage;
 

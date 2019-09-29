@@ -3,7 +3,7 @@ import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Context, DELETE, GET, Path, PathParam, POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-import { BadRequestError } from "typescript-rest/dist/server/model/errors";
+import { BadRequestError, ForbiddenError } from "typescript-rest/dist/server/model/errors";
 import { DBConstants, NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
@@ -89,7 +89,14 @@ export class DocumentResource {
             document.stage = currStage;
         } else {
             // Verify that the specified stage actually exists.
-            await this.stageRepository.findOneOrFail(document.stage.id);
+            try {
+                await this.stageRepository.findOneOrFail(document.stage.id);
+            } catch (err) {
+                const errStr = `Passed stage ${document.stage.id} doesn't exist.`;
+
+                console.log(errStr);
+                throw new BadRequestError(errStr);
+            }
         }
 
         document.creator = sessionUser;

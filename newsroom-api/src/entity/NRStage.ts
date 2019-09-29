@@ -63,6 +63,7 @@ export class NRStage {
     @ManyToOne(
         (type) => NRWorkflow,
         (workflow) => workflow.stages,
+        { onDelete: "CASCADE" },
     )
     public workflow: NRWorkflow;
 

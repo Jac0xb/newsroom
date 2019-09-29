@@ -71,7 +71,7 @@ export class NRWorkflow {
     @OneToMany(
         (type) => NRStage,
         (stage) => stage.workflow,
-        { eager: true },
+        { eager: true }
     )
     public stages: NRStage[];
 
