@@ -10,3 +10,4 @@ export { NRWorkflow } from "./NRWorkflow";
 export { NRWFPermission } from "./NRWFPermission";
 export { NRDCPermission } from "./NRDCPermission";
 export { NRSTPermission } from "./NRSTPermission";
+export { NRTrigger } from "./NRTrigger";
