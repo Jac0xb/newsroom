@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
-import DocumentTile from 'app/views/dashboard_overview/components/DocumentTile';
+import DocumentTile from 'app/views/dashboard/components/DocumentTile';
 import { Document } from 'app/models';
 import { styles } from './styles';
 import LinkedButton from './components/LinkedButton'

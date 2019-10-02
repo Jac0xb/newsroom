@@ -3,12 +3,9 @@ import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import StyleBar from 'app/views/document_editor/components/StyleBar'
-import WorkflowMiniView from 'app/views/document_editor/components/WorkflowMiniview';
+import WorkflowMiniView from 'app/views/document_edit/components/WorkflowMiniview';
 import { Document } from 'app/models';
 import axios from 'axios';
-import { convertFromRaw, convertToRaw, Editor, EditorState, RichUtils } from 'draft-js';
-import 'draft-js/dist/Draft.css';
 import * as React from 'react';
 import { styles } from './styles';
 
@@ -20,18 +17,14 @@ export namespace EditorContainer {
 	}
 	export interface State {
 		document?: Document
-		editorState: EditorState
 		styleBarUpdateFormats?: (formats: string[]) => void
 		errorText?: string
 	}
 }
 
-class EditorContainer extends React.Component<EditorContainer.Props, any> {
-	documentId: number
-
-	state: EditorContainer.State = {
-		editorState: EditorState.createEmpty()
-	}
+class EditorContainer extends React.Component<EditorContainer.Props, EditorContainer.State> {
+    
+    documentId: number
 
 	constructor(props: EditorContainer.Props) {
 		super(props)
@@ -95,39 +88,7 @@ class EditorContainer extends React.Component<EditorContainer.Props, any> {
 		);
 	}
 
-	saveContent(editorState: EditorState) {
-		const rawJson = JSON.stringify(convertToRaw(editorState.getCurrentContent()));
-
-		axios.put("/api/documents/" + this.props.match.params.id, {
-			content: rawJson
-		}).then((response) => {
-			console.log(response);
-		});
-	}
-
-	handleChange(editorState: EditorState) {
-		const updateFormats = this.state.styleBarUpdateFormats;
-		if (updateFormats) {
-			updateFormats(editorState.getCurrentInlineStyle().toArray());
-		}
-
-		this.setState({ editorState: editorState });
-
-		this.saveContent(editorState);
-	}
-
-	handleFormatChange(format: string) {
-		this.handleChange(RichUtils.toggleInlineStyle(this.state.editorState, format));
-	}
-
-	handleKeyCommand(command: string, editorState: EditorState) {
-		const newState = RichUtils.handleKeyCommand(editorState, command);
-		if (newState) {
-			this.handleChange(newState);
-			return 'handled';
-		}
-
-		return 'not-handled';
+	saveContent() {
 	}
 
 	handleMove(direction: string) {

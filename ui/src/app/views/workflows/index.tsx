@@ -3,7 +3,7 @@ import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import Button from '@material-ui/core/Button';
 import { Divider, Paper, Typography } from '@material-ui/core';
-import WorkflowTile from 'app/views/workflow_overview/components/WorkflowObject';
+import WorkflowTile from 'app/views/workflows/components/WorkflowObject';
 import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
 import { RouteComponentProps } from 'react-router';
