@@ -276,7 +276,6 @@ export class WorkflowResource {
      *      - NotFoundError (404)
      *          - If workflow not found.
      */
-
     @GET
     @Path("/:wid/stages/:sid")
     public async getStage(@IsInt @PathParam("wid") wid: number,
@@ -306,8 +305,6 @@ export class WorkflowResource {
      *
      * Returns:
      *      - NRStage
-     *      - BadRequestError (400)
-     *          - If the position is out of bounds or negative.
      *      - ForbiddenError (403)
      *          - If request user is not allowed to update workflows.
      *      - NotFoundError (404)
@@ -321,8 +318,7 @@ export class WorkflowResource {
                             @IsInt @PathParam("pos") position: number): Promise<NRStage> {
         // Invalid position.
         if (position < 0) {
-            const errStr = `Invalid position: ${position}`;
-            throw new Errors.BadRequestError(errStr);
+            position = 0;
         }
 
         const sessionUser = this.serviceContext.user();
@@ -338,8 +334,7 @@ export class WorkflowResource {
             if (maxSeqId == null) { // No stages yet, just add it.
                 stage.sequenceId = 0;
             } else if (position > maxSeqId + 1) {
-                const errStr = `Out of bounds position: ${position}`;
-                throw new Errors.BadRequestError(errStr);
+                position = maxSeqId + 1;
             } else { // Insert normally.
                 let currSeq = maxSeqId;
 
@@ -391,7 +386,7 @@ export class WorkflowResource {
     @DELETE
     @Path("/:wid/stages/:sid")
     public async deleteStage(@IsInt @PathParam("wid") wid: number,
-                             @PathParam("sid") sid: number) {
+                             @PathParam("sid") sid: number): Promise<any> {
         const sessionUser = this.serviceContext.user();
         const currStage = await this.workflowService.getStage(sid);
         await this.permissionService.checkWFWritePermissions(sessionUser, wid);
@@ -410,7 +405,9 @@ export class WorkflowResource {
 
             // Nothing to update.
             if (currSeq === maxSeqId) {
-                return;
+                // TODO: Has to be a better way to make this return a 200 OK,
+                //       or just return 204?
+                return "";
             }
 
             // Update sequences.
@@ -424,6 +421,10 @@ export class WorkflowResource {
 
                 currSeq++;
             }
+
+            // TODO: Has to be a better way to make this return a 200 OK,
+            //       or just return 204?
+            return "";
 
         } catch (err) {
             console.log(err);

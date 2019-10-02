@@ -56,7 +56,7 @@ export class WorkflowService {
 
             // Can't have an 'eager' relationship both ways, so grab the workflow object
             // manually and attach it to the returned stage.
-            const wf = await this.workflowRepository.findOne({ where: { workflow: st.val }});
+            const wf = await this.workflowRepository.findOne({ where: { id: st.val }});
             const stage = await this.stageRepository.findOneOrFail(sid);
             stage.workflow = wf;
 
