@@ -1,9 +1,10 @@
 import { WebClient } from "@slack/web-api";
-import { Service } from "typedi";
+import { Inject, Service } from "typedi";
 
 @Service()
 export class ChannelIdService {
-    private readonly slackWebClient: WebClient = new WebClient(process.env.SLACK_TOKEN);
+    @Inject()
+    private readonly slackWebClient: WebClient;
 
     public async getChannelId(name: string): Promise<string> {
         const response = await this.slackWebClient.conversations.list();

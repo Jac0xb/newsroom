@@ -1,10 +1,10 @@
 import "dotenv/config";
 import express from "express";
 import "reflect-metadata";
+import { Container } from "typedi";
 import { createConnection, useContainer } from "typeorm";
 import { Server } from "typescript-rest";
-
-import { Container } from "typedi";
+import { SlackWebClientBeanProvider } from "./configs/SlackWebClientBeanProvider";
 import { AuthConfig } from "./middleware/AuthConfig";
 import { ErrorMapper } from "./middleware/ErrorMapper";
 import { FakeAuthConfig } from "./middleware/FakeAuthConfig";
@@ -27,6 +27,8 @@ class App {
 
     public async configure(auth: boolean): Promise<express.Express> {
         Swagger.serve(this.express);
+
+        SlackWebClientBeanProvider.configure();
 
         // Register TypeDI Container with TypeORM, must be called before createConnection()
         useContainer(Container);

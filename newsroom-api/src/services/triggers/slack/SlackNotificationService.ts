@@ -5,7 +5,8 @@ import { ChannelIdService } from "./ChannelIdService";
 
 @Service()
 export class SlackNotificationService {
-    private readonly slackWebClient: WebClient = new WebClient(process.env.SLACK_TOKEN);
+    @Inject()
+    private readonly slackWebClient: WebClient;
 
     @Inject()
     private readonly channelIdService: ChannelIdService;
