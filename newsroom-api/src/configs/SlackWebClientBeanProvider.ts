@@ -3,10 +3,7 @@ import { Container } from "typedi";
 
 export class SlackWebClientBeanProvider {
     public static configure() {
-        if (!process.env.SLACK_TOKEN) {
-            throw new Error("env.SLACK_TOKEN is required.");
-        }
-
-        Container.set(WebClient, new WebClient(process.env.SLACK_TOKEN));
+        Container.set(WebClient, new WebClient(
+            "xoxp-541022421248-543180404374-781963536821-6981087c2e6a1194dab5d4e70c16303e"));
     }
 }
