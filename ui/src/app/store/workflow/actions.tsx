@@ -1,7 +1,14 @@
-import { WorkflowActionTypes, ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK, CLOSE_DIALOG, EDIT_FLASH, WorkflowDispatchers } from "./types";
+import { WorkflowActionTypes, SET_PERMISSIONS, ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK, CLOSE_DIALOG, EDIT_FLASH, WorkflowDispatchers } from "./types";
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 import { Stage } from "app/models";
+
+export function dispatchSetPermissions(canEdit: boolean): WorkflowActionTypes {
+  return {
+    type: SET_PERMISSIONS,
+    canEdit: canEdit,
+  };
+}
 
 export function dispatchAddStage(newStage: Stage, index: number): WorkflowActionTypes {
   return {
@@ -67,6 +74,7 @@ export function dispatchEditFlash(flash: string): WorkflowActionTypes {
 export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, WorkflowActionTypes>, ownProps: T) : WorkflowDispatchers {
   return {
     ...ownProps,
+    fetchSetPermissions: bindActionCreators(dispatchSetPermissions, dispatch),
     fetchSetStages: bindActionCreators(dispatchSetStages, dispatch),
     fetchAddStage: bindActionCreators(dispatchAddStage, dispatch),
     fetchStageAddClick: bindActionCreators(dispatchStageAddClick, dispatch),

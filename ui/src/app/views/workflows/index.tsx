@@ -64,16 +64,15 @@ class Workflows extends React.Component<Workflows.Props, Workflows.State> {
         if (name == "workFlowDesc") {
             this.setState({ workFlowDesc: event.target.value });
         }
-        if (name == "textBoxName") {
+        if (name == "dialogTextName") {
             this.setState({ dialogBoxName: event.target.value });
         }
-        if (name == "textBoxDesc") {
+        if (name == "dialogTextDesc") {
             this.setState({ dialogBoxDesc: event.target.value });
         }
     };
 
     handleCreateNew = (textBoxName: string, textBoxDesc: string) => {
-
         axios.post("/api/workflows", {
             name: textBoxName,
             creator: Number(localStorage.getItem("userID")),

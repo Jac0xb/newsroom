@@ -1,5 +1,6 @@
 import { AppState } from "app/store";
 import { 
+  SET_PERMISSIONS,
   ADD_STAGE,
   EDIT_STAGE, 
   SET_STAGES, 
@@ -21,7 +22,7 @@ const initialState: WorkflowState = {
   seqID: 0,
   dialogTextName: "",
   dialogTextDesc: "",
-  canEdit: true
+  canEdit: false
 };
 
 export function workflowReducer(
@@ -29,6 +30,12 @@ export function workflowReducer(
   action: WorkflowActionTypes
 ): WorkflowState {
   switch (action.type) {
+    case SET_PERMISSIONS: {
+      return {
+        ...state,
+        canEdit: action.canEdit,
+      };
+    }
     case ADD_STAGE: {
       return {
         ...state,

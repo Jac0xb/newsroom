@@ -52,10 +52,24 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
   // Method to get role of the user from database
   getRole() {
-    // TODO: check role from db 
-    
-    // allow user to edit workflows
-    // set state
+    // TODO: Set User edit permissions
+    const wfId = this.props.match.params.id;
+    var user = Number(localStorage.getItem("userID"))
+
+    //get users roles
+    axios.get("/api/users/" + user + "/roles").then((response) => {
+      var role = response.data[0].id
+      // get permissions for this role
+      axios.get("/api/roles/" + role ).then((res) => {
+        var wfpermissions = res.data.wfpermissions
+        wfpermissions.forEach((wf: any) => {
+          if(wf.id == wfId && wf.access == 1){
+            // set perm
+            this.props.fetchSetPermissions(true)
+          }
+        });
+      })
+    })
   }
 
   // Change text dialog text boxes
@@ -85,7 +99,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
       }
     });
 
-    // Update view
+    // Show Dialog with current stage info
     this.props.fetchStageEditClick(stageID, seqID, dialogTextName, dialogTextDesc)
 
   };

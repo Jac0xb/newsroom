@@ -14,6 +14,7 @@ export interface WorkflowState {
 }
   
 // Describing the different ACTION NAMES available
+export const SET_PERMISSIONS = "SET_PERMISSIONS";
 export const ADD_STAGE = "ADD_STAGE";
 export const EDIT_STAGE = "EDIT_STAGE";
 export const SET_STAGES = "SET_STAGES";
@@ -23,6 +24,11 @@ export const TEXT_CHANGE = "TEXT_CHANGE";
 export const CLOSE_DIALOG = "CLOSE_DIALOG";
 export const EDIT_FLASH = "EDIT_FLASH";
   
+interface SetPermissionsAction {
+  type: typeof SET_PERMISSIONS;
+  canEdit: boolean;
+}
+
 interface AddStageAction {
   type: typeof ADD_STAGE;
   payload: Stage;
@@ -68,6 +74,7 @@ interface EditFlashAction {
 
 // Define Dispatchers
 export interface WorkflowDispatchers {
+  fetchSetPermissions: (canEdit: boolean) => WorkflowActionTypes
   fetchSetStages: (stages: Array<Stage>) => WorkflowActionTypes
   fetchAddStage: (stage: Stage, index: number) => WorkflowActionTypes
   fetchStageAddClick: (seqID: number) => WorkflowActionTypes
@@ -86,6 +93,7 @@ export type WorkflowActionTypes =
   | StageTextChangeAction 
   | StageEditClickAction 
   | CloseDialogAction 
-  | EditFlashAction;
+  | EditFlashAction
+  | SetPermissionsAction;
 
   
