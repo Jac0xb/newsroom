@@ -6,16 +6,16 @@ import { Typography, Divider, Button } from '@material-ui/core';
 import { Link } from 'react-router-dom';
 import classNames from 'classnames';
 
-export namespace Workflow {
+export namespace WorkflowTile {
     export interface Props {
         classes?: any
         workflow: any
         onClick: Function
     }
 }
-class WorkflowTile extends React.Component<Workflow.Props, any> {
+class WorkflowTile extends React.Component<WorkflowTile.Props, any> {
 
-    constructor(props: Workflow.Props) {
+    constructor(props: WorkflowTile.Props) {
         super(props)
         this.state = {}
     }
