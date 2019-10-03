@@ -1,4 +1,4 @@
-import { ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK, WorkflowState, WorkflowActionTypes } from "./types";
+import { ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK, CLOSE_DIALOG, WorkflowState, WorkflowActionTypes } from "./types";
 
 const initialState: WorkflowState = {
   stages: [],
@@ -29,6 +29,13 @@ export function workflowReducer(
       return {
         ...state,
         editDialogOpen: false,
+      };
+    }
+    case CLOSE_DIALOG: {
+      return {
+        ...state,
+        editDialogOpen: false,
+        createDialogOpen: false,
       };
     }
     case SET_STAGES: {

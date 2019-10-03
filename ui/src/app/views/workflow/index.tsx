@@ -12,7 +12,7 @@ import { Paper, Typography } from '@material-ui/core';
 import { connect } from "react-redux";
 import { AppState } from 'app/store';
 import { WorkflowActionTypes, WorkflowState } from "app/store/workflow/types";
-import { dispatchAddStage, dispatchEditStage, dispatchSetStages, dispatchStageAddClick, dispatchTextBoxChange, dispatchStageEditClick } from "app/store/workflow/actions";
+import { dispatchAddStage, dispatchEditStage, dispatchSetStages, dispatchStageAddClick, dispatchCloseDialog, dispatchTextBoxChange, dispatchStageEditClick } from "app/store/workflow/actions";
 import { Dispatch, bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 import { Stage } from 'app/models';
@@ -32,6 +32,7 @@ export namespace WorkflowEditor {
     dispatchTextBoxChange: (fieldName: string, newValue: string) => void
     dispatchStageEditClick: (stageID: number, seqID: number, newName: string, newDesc: string) => void
     dispatchEditStage: () => void
+    dispatchCloseDialog: () => void
   }
   export interface State {
     stages: Array<Stage>
@@ -230,8 +231,8 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
                   }
                 </div>
               ))}
-              <DialogItem textBoxName={workflowState.dialogTextName} textBoxDesc={workflowState.dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={workflowState.createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({createDialogOpen: false})} handleSave={this.handleStageAdd}/>
-              <DialogItem textBoxName={workflowState.dialogTextName} textBoxDesc={workflowState.dialogTextDesc} title={"Edit Stage"} desc={"Enter stage information"} show={workflowState.editDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.setState({editDialogOpen: false})} handleSave={this.handleStageEdit}/>
+              <DialogItem textBoxName={workflowState.dialogTextName} textBoxDesc={workflowState.dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={workflowState.createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.props.dispatchCloseDialog()} handleSave={this.handleStageAdd}/>
+              <DialogItem textBoxName={workflowState.dialogTextName} textBoxDesc={workflowState.dialogTextDesc} title={"Edit Stage"} desc={"Enter stage information"} show={workflowState.editDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.props.dispatchCloseDialog()} handleSave={this.handleStageEdit}/>
             </div>
            </div>
           </main>
@@ -251,6 +252,7 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, WorkflowActionType
   dispatchStageAddClick: bindActionCreators(dispatchStageAddClick, dispatch),
   dispatchTextBoxChange: bindActionCreators(dispatchTextBoxChange, dispatch),
   dispatchStageEditClick: bindActionCreators(dispatchStageEditClick, dispatch),
+  dispatchCloseDialog: bindActionCreators(dispatchCloseDialog, dispatch),
   dispatchEditStage: bindActionCreators(dispatchEditStage, dispatch),
 });
 

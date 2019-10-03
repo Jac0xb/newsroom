@@ -1,4 +1,4 @@
-import { WorkflowActionTypes, ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK } from "./types";
+import { WorkflowActionTypes, ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK, CLOSE_DIALOG } from "./types";
 import { Dispatch } from "redux";
 import { AppState } from "app/store";
 import { Stage } from "app/models";
@@ -14,6 +14,12 @@ export function addStage(newStage: Stage, index: number): WorkflowActionTypes {
 export function editStage(): WorkflowActionTypes {
   return {
     type: EDIT_STAGE,
+  };
+}
+
+export function closeDialog(): WorkflowActionTypes {
+  return {
+    type: CLOSE_DIALOG,
   };
 }
 
@@ -61,6 +67,12 @@ export const dispatchAddStage = (newStage: Stage, index: number) => {
 export const dispatchEditStage = () => {
   return (dispatch: Dispatch<WorkflowActionTypes>, getState: () => AppState) => {
     dispatch(editStage());
+  };
+};
+
+export const dispatchCloseDialog = () => {
+  return (dispatch: Dispatch<WorkflowActionTypes>, getState: () => AppState) => {
+    dispatch(closeDialog());
   };
 };
 
