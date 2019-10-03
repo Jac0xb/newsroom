@@ -1,4 +1,4 @@
-import { WorkflowActionTypes, ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK, CLOSE_DIALOG } from "./types";
+import { WorkflowActionTypes, ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK, CLOSE_DIALOG, EDIT_FLASH } from "./types";
 import { Dispatch } from "redux";
 import { AppState } from "app/store";
 import { Stage } from "app/models";
@@ -37,7 +37,6 @@ export function stageAddClick(seqID: number): WorkflowActionTypes {
   };
 }
 
-// dialogTextName, dialogTextDesc, editDialogOpen: true, stageID, seqID
 export function stageEditClick(stageID: number, seqID: number, name: string, desc: string): WorkflowActionTypes {
   return {
     type: EDIT_STAGE_CLICK,
@@ -54,6 +53,13 @@ export function textBoxChange(fieldName: string, newValue: string): WorkflowActi
     type: TEXT_CHANGE,
     fieldName: fieldName,
     newValue: newValue
+  };
+}
+
+export function editFlash(flash: string): WorkflowActionTypes {
+  return {
+    type: EDIT_FLASH,
+    flash: flash
   };
 }
 
@@ -99,3 +105,10 @@ export const dispatchTextBoxChange = (fieldName: string, newValue: string) => {
     dispatch(textBoxChange(fieldName, newValue));
   };
 };
+
+export const dispatchEditFlash = (flash: string) => {
+  return (dispatch: Dispatch<WorkflowActionTypes>, getState: () => AppState) => {
+    dispatch(editFlash(flash));
+  };
+};
+

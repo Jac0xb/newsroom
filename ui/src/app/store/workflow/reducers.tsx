@@ -1,4 +1,4 @@
-import { ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK, CLOSE_DIALOG, WorkflowState, WorkflowActionTypes } from "./types";
+import { ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK, CLOSE_DIALOG, WorkflowState, WorkflowActionTypes, EDIT_FLASH } from "./types";
 
 const initialState: WorkflowState = {
   stages: [],
@@ -67,6 +67,12 @@ export function workflowReducer(
       return {
         ...state,
         [action.fieldName]: action.newValue,
+      };
+    }
+    case EDIT_FLASH: {
+      return {
+        ...state,
+        flash: action.flash,
       };
     }
     default:

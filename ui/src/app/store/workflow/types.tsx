@@ -21,6 +21,7 @@ export interface WorkflowState {
   export const EDIT_STAGE_CLICK = "EDIT_STAGE_CLICK";
   export const TEXT_CHANGE = "TEXT_CHANGE";
   export const CLOSE_DIALOG = "CLOSE_DIALOG";
+  export const EDIT_FLASH = "EDIT_FLASH";
   
   interface AddStageAction {
     type: typeof ADD_STAGE;
@@ -60,6 +61,11 @@ export interface WorkflowState {
     newValue: string;
   }
 
-  export type WorkflowActionTypes = AddStageAction | EditStageAction | SetStagesAction | StageAddClickAction | StageTextChangeAction | StageEditClickAction | CloseDialogAction;
+  interface EditFlashAction {
+    type: typeof EDIT_FLASH;
+    flash: string;
+  }
+
+  export type WorkflowActionTypes = AddStageAction | EditStageAction | SetStagesAction | StageAddClickAction | StageTextChangeAction | StageEditClickAction | CloseDialogAction | EditFlashAction;
 
   

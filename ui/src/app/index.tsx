@@ -11,8 +11,8 @@ import { hot } from 'react-hot-loader';
 
 import Dashboard from 'app/views/dashboard';
 import DocumentEditor from 'app/views/document_edit';
-import WorkflowEditor from 'app/views/workflow';
-import WorkflowOverview from 'app/views/workflow';
+import Workflow from 'app/views/workflow';
+import Workflows from 'app/views/workflows';
 import DocumentCreator from 'app/views/document_create';
 import Users from "app/views/users";
 import Groups from "app/views/groups";
@@ -78,9 +78,9 @@ class App extends React.Component<App.Props, App.State, any> {
                         <Route exact path="/document/create" component={DocumentCreator}/>
                         <Route exact path="/groups" component={Groups}/>
                         <Route exact path="/groups/create" component={GroupCreate}/>
-                        <Route exact path="/workflow" component={WorkflowOverview}/>
+                        <Route exact path="/workflow" component={Workflows}/>
                         <Route path="/document/:id/edit" component={DocumentEditor}/>
-                        <Route path="/workflow/:id/edit" component={WorkflowEditor}/>
+                        <Route path="/workflow/:id/edit" component={Workflow}/>
                         <Route path="/users" component={Users}/>
                         <Route path="/groups/:id" component={Group}/>
                     </Switch>

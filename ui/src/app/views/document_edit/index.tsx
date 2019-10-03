@@ -104,7 +104,7 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
 		if (name.trim().length === 0) {
 			this.setState({ errorText: "Name must not be empty" })
 		} else {
-			this.setState({ errorText: null });
+			// this.setState({ errorText: null });
 
 			if (this.state.document) {
 				this.state.document.name = name

@@ -8,7 +8,7 @@ import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
 import { RouteComponentProps } from 'react-router';
 
-export namespace WorkflowOverview {
+export namespace Workflows{
     export interface Props {
         classes?: any
     }
@@ -22,15 +22,15 @@ export namespace WorkflowOverview {
         flash: string
     }
 }
-export namespace WorkflowOverview {
+export namespace Workflows {
     export interface Props extends RouteComponentProps<void> {
         classes?: any
     }
 }
 
-class WorkflowOverview extends React.Component<WorkflowOverview.Props, WorkflowOverview.State> {
+class Workflows extends React.Component<Workflows.Props, Workflows.State> {
 
-    constructor(props: WorkflowOverview.Props) {
+    constructor(props: Workflows.Props) {
         super(props)
         this.state = {
             workflows: [],
@@ -133,4 +133,4 @@ class WorkflowOverview extends React.Component<WorkflowOverview.Props, WorkflowO
     }
 }
 
-export default withStyles(styles, { withTheme: true })(WorkflowOverview);
+export default withStyles(styles, { withTheme: true })(Workflows);

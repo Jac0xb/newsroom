@@ -12,12 +12,12 @@ import { Paper, Typography } from '@material-ui/core';
 import { connect } from "react-redux";
 import { AppState } from 'app/store';
 import { WorkflowActionTypes, WorkflowState } from "app/store/workflow/types";
-import { dispatchAddStage, dispatchEditStage, dispatchSetStages, dispatchStageAddClick, dispatchCloseDialog, dispatchTextBoxChange, dispatchStageEditClick } from "app/store/workflow/actions";
+import { dispatchAddStage, dispatchEditStage, dispatchSetStages, dispatchStageAddClick, dispatchCloseDialog, dispatchTextBoxChange, dispatchStageEditClick, dispatchEditFlash } from "app/store/workflow/actions";
 import { Dispatch, bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 import { Stage } from 'app/models';
   
-export namespace WorkflowEditor {
+export namespace Workflow {
   export interface Props {
     classes?: any
     match: {
@@ -33,35 +33,17 @@ export namespace WorkflowEditor {
     dispatchStageEditClick: (stageID: number, seqID: number, newName: string, newDesc: string) => void
     dispatchEditStage: () => void
     dispatchCloseDialog: () => void
+    dispatchEditFlash: (flash: string) => void
   }
   export interface State {
-    stages: Array<Stage>
-    createDialogOpen: boolean
-    editDialogOpen: boolean
-    stageID: number
-    seqID: number
-    dialogTextName: string
-    dialogTextDesc: string
-    canEdit: boolean
-    flash: string
   }
 }
 
-class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEditor.State, any> {
+class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
-  constructor(props: WorkflowEditor.Props) {
+  constructor(props: Workflow.Props) {
         super(props)
-        this.state = {
-            flash: "",
-            stages: [],
-            createDialogOpen: false,
-            editDialogOpen: false,
-            stageID: 0,
-            seqID: 0,
-            dialogTextName: '',
-            dialogTextDesc: '',
-            canEdit: false
-        }
+        this.state = { }
   }
 
   componentDidMount() {
@@ -117,7 +99,6 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
 
     // Update view
     this.props.dispatchStageEditClick(stageID, seqID, dialogTextName, dialogTextDesc)
-    // this.setState({ dialogTextName, dialogTextDesc, editDialogOpen: true, stageID, seqID });
 
   };
 
@@ -142,19 +123,21 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
 
     }).catch((error) => {
 
-        if (error.response.status == 403)
-            this.setState({ flash: "You lack permissions to add stages in this workflow." });
-        
-        this.setState({ createDialogOpen: false });
+      if (error.response.status == 403){
+        this.props.dispatchEditFlash("You lack permissions to add stages in this workflow.")
+        this.props.dispatchCloseDialog()
+      }
     });
   };
 
   handleStageEdit = (textBoxName: string, textBoxDesc: string) => {
 
+    const { workflowState } = this.props;
+
     // The ID of the current workflow, the sequence id of the stage, the id of the stage.
     const wfId = this.props.match.params.id;
-    const seqID = this.state.seqID;
-    const stageID = this.state.stageID
+    const seqID = workflowState.seqID;
+    const stageID = workflowState.stageID
 
     axios.put("/api/workflows/" + wfId + "/stages/" + stageID, {
       sequenceId: seqID,
@@ -170,8 +153,8 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     }).catch((error) => {
 
         if (error.response.status == 403) {
-            this.setState({ flash: "You lack permissions to edit a stage in this workflow" });
-            this.setState({ createDialogOpen: false });
+            this.props.dispatchEditFlash("You lack permissions to edit a stage in this workflow.")
+            this.props.dispatchCloseDialog()
         }
     });
 
@@ -189,7 +172,7 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     }).catch((error) => {
 
         if (error.response.status == 403)
-            this.setState({ flash: "You lack permissions to delete a stage in this workflow." });
+            this.props.dispatchEditFlash("You lack permissions to delete a stage in this workflow.")
     });
 
   };
@@ -202,10 +185,10 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
     return (
       <React.Fragment>
         <main className={classes.main}>
-        {(this.state.flash != "") ?
+        {(workflowState.flash != "") ?
             <Paper className={classes.flashMessage}>
                 <Typography variant="caption">
-                    {this.state.flash}
+                    {workflowState.flash}
                 </Typography>
             </Paper> :
             <div></div>
@@ -242,11 +225,11 @@ class WorkflowEditor extends React.Component<WorkflowEditor.Props, WorkflowEdito
 }
 
 // Map to store
-const mapStateToProps = (state: AppState, ownProps: WorkflowEditor.Props) => ({
+const mapStateToProps = (state: AppState, ownProps: Workflow.Props) => ({
   workflowState: state.workflow,
 });
 
-const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, WorkflowActionTypes>, ownProps: WorkflowEditor.Props) => ({
+const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, WorkflowActionTypes>, ownProps: Workflow.Props) => ({
   dispatchSetStages: bindActionCreators(dispatchSetStages, dispatch),
   dispatchAddStage: bindActionCreators(dispatchAddStage, dispatch),
   dispatchStageAddClick: bindActionCreators(dispatchStageAddClick, dispatch),
@@ -254,9 +237,10 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, WorkflowActionType
   dispatchStageEditClick: bindActionCreators(dispatchStageEditClick, dispatch),
   dispatchCloseDialog: bindActionCreators(dispatchCloseDialog, dispatch),
   dispatchEditStage: bindActionCreators(dispatchEditStage, dispatch),
+  dispatchEditFlash: bindActionCreators(dispatchEditFlash, dispatch),
 });
 
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withStyles(styles, { withTheme: true })(WorkflowEditor));
+)(withStyles(styles, { withTheme: true })(Workflow));
