@@ -1,6 +1,6 @@
 import { Document } from "app/models";
 
-// Workflow state 
+// Dashboard state 
 export interface DashboardReducerState {
     documents: Document[]
     pending: boolean

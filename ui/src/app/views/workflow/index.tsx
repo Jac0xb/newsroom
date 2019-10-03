@@ -7,33 +7,21 @@ import axios from 'axios';
 import * as React from 'react';
 import { styles } from './styles';
 import { Paper, Typography } from '@material-ui/core';
-
 // Redux
+import { mapStateToProps  } from 'app/store/workflow/reducers';
+import { mapDispatchToProps } from "app/store/workflow/actions";
 import { connect } from "react-redux";
-import { AppState } from 'app/store';
-import { WorkflowActionTypes, WorkflowState } from "app/store/workflow/types";
-import { dispatchAddStage, dispatchEditStage, dispatchSetStages, dispatchStageAddClick, dispatchCloseDialog, dispatchTextBoxChange, dispatchStageEditClick, dispatchEditFlash } from "app/store/workflow/actions";
-import { Dispatch, bindActionCreators } from "redux";
-import { ThunkDispatch } from "redux-thunk";
-import { Stage } from 'app/models';
+import { WorkflowDispatchers, WorkflowState } from "app/store/workflow/types";
+
   
 export namespace Workflow {
-  export interface Props {
+  export interface Props extends WorkflowDispatchers, WorkflowState{
     classes?: any
     match: {
       params: {
         id: number
       }
     }
-    workflowState: WorkflowState
-    dispatchSetStages: (stages: Array<Stage>) => Promise<void>
-    dispatchAddStage: (stage: Stage, index: number) => Promise<void>
-    dispatchStageAddClick: (seqID: number) => Promise<void>
-    dispatchTextBoxChange: (fieldName: string, newValue: string) => Promise<void>
-    dispatchStageEditClick: (stageID: number, seqID: number, newName: string, newDesc: string) => Promise<void>
-    dispatchEditStage: () => Promise<void>
-    dispatchCloseDialog: () => Promise<void>
-    dispatchEditFlash: (flash: string) => Promise<void>
   }
   export interface State {
   }
@@ -58,7 +46,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
     axios.get("/api/workflows/" + id + "/stages").then((response) => {
 
       const stages = response.data;
-      this.props.dispatchSetStages(stages);
+      this.props.fetchSetStages(stages);
     })
   }
 
@@ -72,18 +60,18 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
   // Change text dialog text boxes
   handleDialogTextChange = (name: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.props.dispatchTextBoxChange(name, event.target.value)
+    this.props.fetchTextBoxChange(name, event.target.value)
   };
 
   handleStageAddClick(open: boolean, seqID: number) {
     // Need the ID of the stage so that we know which button is being pressed and where to add the stage.
-    this.props.dispatchStageAddClick(seqID)
+    this.props.fetchStageAddClick(seqID)
   };
 
   // Search and apply current stage info for dialog edit box
   handleStageEditClick = (stageID: number) => {
 
-    const { stages } = this.props.workflowState;
+    const { stages } = this.props;
 
     var dialogTextName = ""
     var dialogTextDesc = ""
@@ -98,7 +86,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
     });
 
     // Update view
-    this.props.dispatchStageEditClick(stageID, seqID, dialogTextName, dialogTextDesc)
+    this.props.fetchStageEditClick(stageID, seqID, dialogTextName, dialogTextDesc)
 
   };
 
@@ -106,7 +94,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
     // The ID of the current workflow, the sequence id of the stage.
     const wfId = this.props.match.params.id;
-    const seqID = this.props.workflowState.seqID;
+    const seqID = this.props.seqID;
 
     // Post new stage req to backend
     axios.post("/api/workflows/" + wfId + "/stages/" +  seqID, {
@@ -119,25 +107,22 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
       const index = response.data.sequenceId;
 
       // Add Stage to correct position in array
-      this.props.dispatchAddStage(response.data, index)
+      this.props.fetchAddStage(response.data, index)
 
     }).catch((error) => {
 
       if (error.response.status == 403){
-        this.props.dispatchEditFlash("You lack permissions to add stages in this workflow.")
-        this.props.dispatchCloseDialog()
+        this.props.fetchEditFlash("You lack permissions to add stages in this workflow.")
+        this.props.fetchCloseDialog()
       }
     });
   };
 
   handleStageEdit = (textBoxName: string, textBoxDesc: string) => {
 
-    const { workflowState } = this.props;
-
+    const { seqID, stageID } = this.props;
     // The ID of the current workflow, the sequence id of the stage, the id of the stage.
     const wfId = this.props.match.params.id;
-    const seqID = workflowState.seqID;
-    const stageID = workflowState.stageID
 
     axios.put("/api/workflows/" + wfId + "/stages/" + stageID, {
       sequenceId: seqID,
@@ -149,12 +134,12 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
       this.getStages()
 
       // close dialog
-      this.props.dispatchEditStage()
+      this.props.fetchEditStage()
     }).catch((error) => {
 
         if (error.response.status == 403) {
-            this.props.dispatchEditFlash("You lack permissions to edit a stage in this workflow.")
-            this.props.dispatchCloseDialog()
+            this.props.fetchEditFlash("You lack permissions to edit a stage in this workflow.")
+            this.props.fetchCloseDialog()
         }
     });
 
@@ -172,23 +157,23 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
     }).catch((error) => {
 
         if (error.response.status == 403)
-            this.props.dispatchEditFlash("You lack permissions to delete a stage in this workflow.")
+            this.props.fetchEditFlash("You lack permissions to delete a stage in this workflow.")
     });
 
   };
 
   render() {
 
-    const { classes, workflowState } = this.props;
+    const { classes } = this.props;
     const {} = this.state;
 
     return (
       <React.Fragment>
         <main className={classes.main}>
-        {(workflowState.flash != "") ?
+        {(this.props.flash != "") ?
             <Paper className={classes.flashMessage}>
                 <Typography variant="caption">
-                    {workflowState.flash}
+                    {this.props.flash}
                 </Typography>
             </Paper> :
             <div></div>
@@ -196,17 +181,17 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
           <div className={classes.content}>
             <div className={classes.workflowContent}>
               <div className={classes.stage}>
-                { workflowState.canEdit ? 
+                { this.props.canEdit ? 
                   <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.addButton}>
                     <AddIcon />
                   </Fab> 
                   : null 
                 }
               </div>
-              {workflowState.stages.map((stage, index) => (
+              {this.props.stages.map((stage, index) => (
                 <div className={classes.stage}>
-                  <WorkflowStage canEdit={workflowState.canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(stageID: number) => this.handleStageEditClick(stageID)} onDeleteClick={(stageID: number) => this.handleStageDeleteClick(stageID)}/>
-                  { workflowState.canEdit ? 
+                  <WorkflowStage canEdit={this.props.canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(stageID: number) => this.handleStageEditClick(stageID)} onDeleteClick={(stageID: number) => this.handleStageDeleteClick(stageID)}/>
+                  { this.props.canEdit ? 
                     <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index+1)} className={classes.addButton}>
                       <AddIcon />
                     </Fab> 
@@ -214,8 +199,8 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                   }
                 </div>
               ))}
-              <DialogItem textBoxName={workflowState.dialogTextName} textBoxDesc={workflowState.dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={workflowState.createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.props.dispatchCloseDialog()} handleSave={this.handleStageAdd}/>
-              <DialogItem textBoxName={workflowState.dialogTextName} textBoxDesc={workflowState.dialogTextDesc} title={"Edit Stage"} desc={"Enter stage information"} show={workflowState.editDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.props.dispatchCloseDialog()} handleSave={this.handleStageEdit}/>
+              <DialogItem textBoxName={this.props.dialogTextName} textBoxDesc={this.props.dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={this.props.createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.props.fetchCloseDialog()} handleSave={this.handleStageAdd}/>
+              <DialogItem textBoxName={this.props.dialogTextName} textBoxDesc={this.props.dialogTextDesc} title={"Edit Stage"} desc={"Enter stage information"} show={this.props.editDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.props.fetchCloseDialog()} handleSave={this.handleStageEdit}/>
             </div>
            </div>
           </main>
@@ -224,23 +209,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
   }
 }
 
-// Map to store
-const mapStateToProps = (state: AppState, ownProps: Workflow.Props) => ({
-  workflowState: state.workflow,
-});
-
-const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, WorkflowActionTypes>, ownProps: Workflow.Props) => ({
-  dispatchSetStages: bindActionCreators(dispatchSetStages, dispatch),
-  dispatchAddStage: bindActionCreators(dispatchAddStage, dispatch),
-  dispatchStageAddClick: bindActionCreators(dispatchStageAddClick, dispatch),
-  dispatchTextBoxChange: bindActionCreators(dispatchTextBoxChange, dispatch),
-  dispatchStageEditClick: bindActionCreators(dispatchStageEditClick, dispatch),
-  dispatchCloseDialog: bindActionCreators(dispatchCloseDialog, dispatch),
-  dispatchEditStage: bindActionCreators(dispatchEditStage, dispatch),
-  dispatchEditFlash: bindActionCreators(dispatchEditFlash, dispatch),
-});
-
-export default connect(
+export default connect<Workflow.Props>(
   mapStateToProps,
   mapDispatchToProps
 )(withStyles(styles, { withTheme: true })(Workflow));

@@ -1,4 +1,16 @@
-import { ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK, CLOSE_DIALOG, WorkflowState, WorkflowActionTypes, EDIT_FLASH } from "./types";
+import { AppState } from "app/store";
+import { 
+  ADD_STAGE,
+  EDIT_STAGE, 
+  SET_STAGES, 
+  ADD_STAGE_CLICK, 
+  TEXT_CHANGE, 
+  EDIT_STAGE_CLICK, 
+  CLOSE_DIALOG, 
+  WorkflowState, 
+  WorkflowActionTypes, 
+  EDIT_FLASH 
+} from "./types";
 
 const initialState: WorkflowState = {
   stages: [],
@@ -79,3 +91,7 @@ export function workflowReducer(
       return state;
   }
 }
+
+export function mapStateToProps<T>(state: AppState, ownProps: T) { 
+  return {...ownProps, ...state.workflow };
+};
