@@ -1,6 +1,14 @@
-import { FETCH_DOCUMENTS_PENDING, FETCH_DOCUMENTS_SUCCESS, FETCH_DOCUMENTS_ERROR, DashboardActionTypes, DashboardState } from "./types";
+import { AppState } from 'app/store'; 
 
-const initialState: DashboardState = {
+import { 
+    FETCH_DOCUMENTS_PENDING, 
+    FETCH_DOCUMENTS_SUCCESS, 
+    FETCH_DOCUMENTS_ERROR, 
+    DashboardActionTypes, 
+    DashboardReducerState 
+} from "./types";
+
+const initialState: DashboardReducerState = {
   documents: [],
   pending: false
 };
@@ -8,7 +16,7 @@ const initialState: DashboardState = {
 export function dashboardReducer(
     state = initialState,
     action: DashboardActionTypes
-): DashboardState {
+): DashboardReducerState {
   switch (action.type) {
     case FETCH_DOCUMENTS_PENDING: 
         return {
@@ -31,3 +39,7 @@ export function dashboardReducer(
       return state;
   }
 }
+
+export function mapStateToProps<T>(state: AppState, ownProps: T) { 
+    return {...ownProps, ...state.dashboard };
+};

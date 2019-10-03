@@ -1,12 +1,12 @@
 import { Document } from "app/models";
 
 // Workflow state 
-export interface DashboardState {
+export interface DashboardReducerState {
     documents: Document[]
     pending: boolean
     error?: string
 }
-  
+
 // Describing the different ACTION NAMES available
 export const FETCH_DOCUMENTS_PENDING = "FETCH_DOCUMENTS_PENDING";
 export const FETCH_DOCUMENTS_SUCCESS = "FETCH_DOCUMENTS_SUCCESS";
@@ -24,6 +24,12 @@ interface FetchDocumentSuccessAction {
 interface FetchDocumentErrorAction {
     type: typeof FETCH_DOCUMENTS_ERROR;
     payload: string
+}
+
+export interface DashboardDispatchers {
+    fetchDocumentsPending: () => DashboardActionTypes
+    fetchDocumentsSuccess: (document: Document[]) => DashboardActionTypes
+    fetchDocumentsError: (error: string) => DashboardActionTypes
 }
 
 export type DashboardActionTypes = 

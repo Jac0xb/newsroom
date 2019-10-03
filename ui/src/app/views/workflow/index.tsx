@@ -26,14 +26,14 @@ export namespace Workflow {
       }
     }
     workflowState: WorkflowState
-    dispatchSetStages: (stages: Array<Stage>) => void
-    dispatchAddStage: (stage: Stage, index: number) => void
-    dispatchStageAddClick: (seqID: number) => void
-    dispatchTextBoxChange: (fieldName: string, newValue: string) => void
-    dispatchStageEditClick: (stageID: number, seqID: number, newName: string, newDesc: string) => void
-    dispatchEditStage: () => void
-    dispatchCloseDialog: () => void
-    dispatchEditFlash: (flash: string) => void
+    dispatchSetStages: (stages: Array<Stage>) => Promise<void>
+    dispatchAddStage: (stage: Stage, index: number) => Promise<void>
+    dispatchStageAddClick: (seqID: number) => Promise<void>
+    dispatchTextBoxChange: (fieldName: string, newValue: string) => Promise<void>
+    dispatchStageEditClick: (stageID: number, seqID: number, newName: string, newDesc: string) => Promise<void>
+    dispatchEditStage: () => Promise<void>
+    dispatchCloseDialog: () => Promise<void>
+    dispatchEditFlash: (flash: string) => Promise<void>
   }
   export interface State {
   }
@@ -58,7 +58,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
     axios.get("/api/workflows/" + id + "/stages").then((response) => {
 
       const stages = response.data;
-      this.props.dispatchSetStages(stages)
+      this.props.dispatchSetStages(stages);
     })
   }
 

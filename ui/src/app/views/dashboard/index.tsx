@@ -8,15 +8,14 @@ import { Divider } from '@material-ui/core';
 import { connect } from "react-redux";
 import axios from 'axios';
 import _ from 'lodash-es';
-import { AppState } from 'app/store';
-import { bindActionCreators } from "redux";
-import { ThunkDispatch } from "redux-thunk";
-import { DashboardActionTypes } from 'app/store/dashboard/types';
-import { dispatchFetchDocumentsPending, dispatchFetchDocumentsSuccess, dispatchFetchDocumentsError } from "app/store/dashboard/actions";
+import { mapStateToProps  } from 'app/store/dashboard/reducers';
+import { mapDispatchToProps } from "app/store/dashboard/actions";
+import { DashboardDispatchers, DashboardReducerState } from "app/store/dashboard/types";
 
+var image = require("./download.svg")
 export namespace Dashboard {
 
-    export interface Props {
+    export interface Props extends DashboardDispatchers, DashboardReducerState {
         classes?: any
         history: any
         match?: { params: any }
@@ -27,28 +26,33 @@ export namespace Dashboard {
     }
 }
 
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
 class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 
     constructor(props: Dashboard.Props, context?: any) {
         super(props, context);
-        this.state = { documents: [] }
+        this.state = { documents: [] };
     }
 
-    componentDidMount() {
-        axios.get("/api/documents").then((response) => {
-            this.setState({ documents: response.data })
-        });
+    async componentDidMount() {
+        this.props.fetchDocumentsPending();
+        await sleep(2000)
+        var response = await axios.get<Document[]>("/api/documents");
+        this.props.fetchDocumentsSuccess(response.data);
     }
 
     renderDocuments() {
-        return _.map(this.state.documents, (document) =>
+        return _.map(this.props.documents, (document) =>
             <DocumentTile key={document.id} document={document} onDelete={() => {
                 axios.delete(`/api/documents/${document.id}`).then((response) => {
 
-                    console.log(response)
+                    console.log(response);
 
                     axios.get("/api/documents").then((response) => {
-                        this.setState({ documents: response.data })
+                        //this.setState({ documents: response.data });
                     });     
                 });
             }} />
@@ -58,7 +62,7 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 
     render() {
 
-        const { classes } = this.props;
+        const { classes, pending } = this.props;
 
         return (
             <main className={classes.main}>
@@ -66,25 +70,19 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
                     <LinkedButton />
                 </div>
                 <Divider style={{ margin: "0px 24px" }} />
+                {(pending) ?
+                    <img src={String(image)} style={{position: "absolute", left: "50%", top: "50%", transform: "translate(-50px, -50px)", height: "100px", width: "100px"}} />
+                :
                 <div className={classes.documentGrid}>
                     {this.renderDocuments()}
                 </div>
+                }
             </main>
         );
     }
 }
 
-const mapStateToProps = (state: AppState, ownProps: Dashboard.Props) => ({
-    dashboardState: state.dashboard
-});
-
-const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, DashboardActionTypes>, ownProps: Dashboard.Props) => ({
-    dispatchFetchDocumentsPending: bindActionCreators(dispatchFetchDocumentsPending, dispatch),
-    dispatchFetchDocumentsSuccess: bindActionCreators(dispatchFetchDocumentsSuccess, dispatch),
-    dispatchFetchDocumentsError: bindActionCreators(dispatchFetchDocumentsError, dispatch)
-});
-
-export default connect(
+export default connect<Dashboard.Props>(
     mapStateToProps,
     mapDispatchToProps
 )(withStyles(styles, { withTheme: true })(Dashboard));
