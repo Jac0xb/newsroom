@@ -24,6 +24,7 @@
   "author": "Newsroom",
   "license": "UNLICENSED",
   "dependencies": {
+    "@slack/web-api": "^5.2.0",
     "@types/supertest": "^2.0.8",
     "Blob": "^0.10.0",
     "blob": "0.0.5",
