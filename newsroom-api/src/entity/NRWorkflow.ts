@@ -7,13 +7,16 @@ import { NRDocument } from "./NRDocument";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
 import { NRWFPermission } from "./NRWFPermission";
+import { NRWFUSPermission } from "./NRWFUSPermission";
 
+/**
+ * NRWorkflow objects are made up by stages used to track documents.
+ */
 @Entity(DBConstants.WRKF_TABLE)
 export class NRWorkflow {
     @PrimaryGeneratedColumn()
     public id: number;
 
-    // Name of the workflow.
     @Column({
             length: 256,
             nullable: false,
@@ -22,7 +25,6 @@ export class NRWorkflow {
     })
     public name: string;
 
-    // A brief description of the workflow.
     @Column({
         length: 1000,
         nullable: true,
@@ -30,11 +32,9 @@ export class NRWorkflow {
     })
     public description: string;
 
-    // The date of when this workflow was created.
     @CreateDateColumn()
     public created: Date;
 
-    // The date of when this workflow was last edited.
     @UpdateDateColumn()
     public lastUpdated: Date;
 
@@ -71,7 +71,6 @@ export class NRWorkflow {
     @OneToMany(
         (type) => NRStage,
         (stage) => stage.workflow,
-        { eager: true }
     )
     public stages: NRStage[];
 
@@ -86,4 +85,17 @@ export class NRWorkflow {
     )
     @JoinTable()
     public permissions: NRWFPermission[];
+
+    /**
+     * Relationship: NRWFUSPermission
+     *      - One: Each user permission is only associated with one workflow.
+     *      - Many: Each workflow can have many user permissions.
+     */
+    @OneToMany(
+        (type) => NRWFUSPermission,
+        (permission) => permission.workflow,
+    )
+    @JoinTable()
+    public usrpermissions: NRWFUSPermission[];
+
 }

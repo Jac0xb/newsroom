@@ -1,9 +1,10 @@
 import { Inject } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { Context, DELETE, Errors, GET, Path, PathParam, POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
+import { Context, DELETE, Errors, GET, Path, PathParam,
+         POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-import { DBConstants, NRStage, NRSTPermission, NRWFPermission, NRWorkflow, NRDocument } from "../entity";
+import { DBConstants, NRDocument, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
 import { RoleResource } from "../resources/RoleResource";
 import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";
@@ -47,10 +48,19 @@ export class WorkflowResource {
 
     /**
      * Create a new workflow based on the passed information.
-     * 
-     * workflow: A workflow object.
-     * returns:
-     *      - NRWorkflow that has been created.
+     *
+     * workflow:
+     *      - Name and description are unique strings.
+     *      - Permission is 1 for WRITE and 0 for READ, defaults to READ.
+     *
+     * request:
+     *      {
+     *          "name": <string>
+     *          "description": <string>
+     *          "permission": <string>
+     *      }
+     *
+     * response:
      *      - BadRequestError (400)
      *          - If workflow properties are missing.
      *          - If workflow properties are wrong type.
@@ -59,16 +69,30 @@ export class WorkflowResource {
      */
     @POST
     @PreProcessor(createWorkflowValidator)
-    public async createWorkflow(workflow: NRWorkflow): Promise<NRWorkflow> {
-        const user = this.serviceContext.user();
-
-        // The creator is whoever is logged in.
-        workflow.creator = await this.userService.getUser(user.id);
+    public async createWorkflow(wf: NRWorkflow): Promise<NRWorkflow> {
+        console.log("ANYTING????");
 
         try {
-            // Append the permissions to the response.
-            return await this.workflowService.getPermissionsForWF(await this.workflowRepository.save(workflow),
-                                                                  user);
+            console.log("GETTING USER");
+            // Apparently we have to wait on this call?
+            const user = await this.serviceContext.user();
+
+            wf.creator = await this.userService.getUser(user.id);
+
+            console.log("TRYING DB");
+            const wfdb = await this.workflowRepository.save(wf);
+
+            if (wf.permission !== undefined) {
+                console.log("CREATING WFUSP");
+                const wfup = await this.workflowService.createWFUSPermission(wfdb.id,
+                                                                             user,
+                                                                             wf.permission);
+
+                // 'permission' is just for the response, so load it here.
+                wfdb.permission = wfup.access;
+            }
+
+            return wfdb;
         } catch (err) {
             console.log(err);
 
@@ -85,10 +109,12 @@ export class WorkflowResource {
      */
     @GET
     public async getWorkflows(): Promise<NRWorkflow[]> {
+        // Apparently we have to wait on this call?
+        const user = await this.serviceContext.user();
+
         try {
-            // Append permissions to response.
-            return await this.workflowService.getPermissionsForWFS(await this.workflowRepository.find(),
-                                                                   this.serviceContext.user());
+            const wfs = await this.workflowRepository.find();
+            return await this.workflowService.appendPermToWFS(wfs, user);
         } catch (err) {
             console.log(err);
 
@@ -106,13 +132,13 @@ export class WorkflowResource {
      *      - NotFoundError (404)
      *          - If workflow not found.
      */
-    @GET
-    @Path("/:wid")
-    public async getWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRWorkflow> {
-        const wf = await this.workflowService.getWorkflow(wid);
+    // @GET
+    // @Path("/:wid")
+    // public async getWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRWorkflow> {
+    //     const wf = await this.workflowService.getWorkflow(wid);
 
-        return await this.workflowService.getPermissionsForWF(wf, this.serviceContext.user());
-    }
+    //     return await this.workflowService.getPermissionsForWF(wf, this.serviceContext.user());
+    // }
 
     /**
      * Update information about a workflow.
@@ -129,38 +155,38 @@ export class WorkflowResource {
      *      - NotFoundError (404)
      *          - If workflow not found.
      */
-    @PUT
-    @Path("/:wid")
-    @PreProcessor(updateWorkflowValidator)
-    public async updateWorkflow(@IsInt @PathParam("wid") wid: number,
-                                workflow: NRWorkflow): Promise<NRWorkflow> {
-        const user = this.serviceContext.user();
-        const wf = await this.workflowService.getWorkflow(wid);
-        await this.permissionService.checkWFWritePermissions(user, wf.id);
+    // @PUT
+    // @Path("/:wid")
+    // @PreProcessor(updateWorkflowValidator)
+    // public async updateWorkflow(@IsInt @PathParam("wid") wid: number,
+    //                             workflow: NRWorkflow): Promise<NRWorkflow> {
+    //     const user = this.serviceContext.user();
+    //     const wf = await this.workflowService.getWorkflow(wid);
+    //     await this.permissionService.checkWFWritePermissions(user, wf.id);
 
-        // Update current stored information if passed..
-        if (workflow.name) {
-            wf.name = workflow.name;
-        }
+    //     // Update current stored information if passed..
+    //     if (workflow.name) {
+    //         wf.name = workflow.name;
+    //     }
 
-        if (workflow.description) {
-            wf.description = workflow.description;
-        }
+    //     if (workflow.description) {
+    //         wf.description = workflow.description;
+    //     }
 
-        try {
-            return await this.workflowService.getPermissionsForWF(await this.workflowRepository.save(wf),
-                                                                  user);
-        } catch (err) {
-            console.log(err);
+    //     try {
+    //         return await this.workflowService.getPermissionsForWF(await this.workflowRepository.save(wf),
+    //                                                               user);
+    //     } catch (err) {
+    //         console.log(err);
 
-            const errStr = `Error updating workflow.`;
-            throw new Errors.InternalServerError(errStr);
-        }
-    }
+    //         const errStr = `Error updating workflow.`;
+    //         throw new Errors.InternalServerError(errStr);
+    //     }
+    // }
 
     /**
      * Delete a workflow and all associated stages.
-     * 
+     *
      * wid: The primary key of the workflow in question.
      * returns:
      *      - ForbiddenError (403)
@@ -209,9 +235,12 @@ export class WorkflowResource {
     @PreProcessor(addStageValidator)
     public async appendStage(@IsInt @PathParam("wid") wid: number,
                              stage: NRStage): Promise<NRStage> {
-        const sessionUser = this.serviceContext.user();
+        // Apparently we have to wait on this call?
+        const user = await this.serviceContext.user();
+
         const wf = await this.workflowService.getWorkflow(wid);
-        await this.permissionService.checkWFWritePermissions(sessionUser, wid);
+        await this.permissionService.checkWFWritePermissions(user, wid);
+        console.log("GOT PERM");
 
         // Grab the next sequence ID for this set of workflow stages.
         const maxSeqId = await this.getMaxStageSequenceId(wf.id);
@@ -225,9 +254,20 @@ export class WorkflowResource {
         try {
             // Establish the relationship and save it.
             stage.workflow = wf;
-            stage.creator = sessionUser;
+            stage.creator = user;
             await this.workflowRepository.save(wf);
-            return await this.workflowService.getPermissionsForST(await this.stageRepository.save(stage), sessionUser);
+            const st = await this.stageRepository.save(stage);
+
+            if (stage.permission !== undefined) {
+                const stup = await this.workflowService.createSTUSPermission(st.id,
+                                                                             user,
+                                                                             stage.permission);
+
+                // 'permission' is just for the response, so load it here.
+                st.permission = stup.access;
+            }
+
+            return st;
         } catch (err) {
             console.log(err);
 

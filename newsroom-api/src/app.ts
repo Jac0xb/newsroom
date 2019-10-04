@@ -25,7 +25,7 @@ class App {
 
     /**
      * Configure this app to run.
-     * 
+     *
      * auth: Whether or not to do real user authentication.
      * docCreate: Whether or not to create actual Google Documents.
      */
@@ -46,7 +46,7 @@ class App {
             }
 
             if (!(docCreate)) {
-                process.env.DOC_SKIP = 'Y';
+                process.env.DOC_SKIP = "Y";
             }
 
             // Make sure ServiceContext gets extended.

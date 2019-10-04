@@ -4,7 +4,7 @@ import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Errors } from "typescript-rest";
 import { InternalServerError } from "typescript-rest/dist/server/model/errors";
-import { NRDCPermission, NRSTPermission, NRUser, NRWFPermission } from "../entity";
+import { NRDCPermission, NRSTPermission, NRUser, NRWFPermission, NRWFUSPermission, NRWorkflow } from "../entity";
 import { DBConstants } from "../entity";
 import { UserService } from "./UserService";
 import { WorkflowService } from "./WorkflowService";
@@ -19,6 +19,12 @@ export class PermissionService {
 
     @InjectRepository(NRDCPermission)
     private permDCRepository: Repository<NRDCPermission>;
+
+    @InjectRepository(NRUser)
+    private userRepository: Repository<NRUser>;
+
+    @InjectRepository(NRWFUSPermission)
+    private wfUSRepository: Repository<NRWFUSPermission>;
 
     @Inject()
     private userService: UserService;
@@ -123,33 +129,52 @@ export class PermissionService {
         }
     }
 
-    // Return if user had READ/WRITE on a workflow.
-    public async getWFWritePermission(user: NRUser, wid: number): Promise<number> {
+    /**
+     * Determine what permissions a user has for a given workflow.
+     *
+     * This is based on all of the roles that a user is part of, as well
+     * as their individual permissions. The highest result is returned.
+     *
+     * wf: The workflow in question.
+     * user: The user in question.
+     * returns: One of WRITE or READ based on the users permission level.
+     */
+    public async getWFPermForUser(wf: NRWorkflow, user: NRUser): Promise<number> {
         let allowed = false;
 
-        user = await this.userService.getUser(user.id);
+        // Check user permissions first.
+        const usdb = await this.userRepository.findOne(user.id, { relations: ["wfpermissions"] });
 
-        try {
-            if (!((user.roles === undefined) || (user.roles.length === 0))) {
-                for (const role of user.roles) {
-                    const roleRight = await this.permWFRepository
-                        .createQueryBuilder(DBConstants.WFPERM_TABLE)
-                        .select(`MAX(${DBConstants.WFPERM_TABLE}.access)`, "max")
-                        .where(`${DBConstants.WFPERM_TABLE}.roleId = :id`, {id: role.id})
-                        .andWhere(`${DBConstants.WFPERM_TABLE}.workflowId = :wfid`, {wfid: wid})
-                        .getRawOne();
+        if (usdb !== undefined) {
+            for (const wfup of usdb.wfpermissions) {
+                const wfupdb = await this.wfUSRepository.findOne(wfup.id, { relations: ["workflow"] });
 
-                    if (roleRight.max === DBConstants.WRITE) {
-                        allowed = true;
-                        break;
-                    }
+                if ((wfupdb.workflow.id === wf.id) && (wfupdb.access === DBConstants.WRITE)) {
+                    allowed = true;
+                    break;
                 }
             }
-        } catch (err) {
-            console.log(err);
+        }
 
-            const errStr = `Error checking WF permissions.`;
-            throw new Errors.InternalServerError(errStr);
+        const allRoles = await this.userService.getUserRoles(user.id);
+
+        // Now check all roles.
+        if ((!allowed) && (allRoles !== undefined)) {
+            // Get the 'highest' permissions over all roles the user is a part of.
+            for (const role of allRoles) {
+                const roleRight = await this.permWFRepository
+                    .createQueryBuilder(DBConstants.WFPERM_TABLE)
+                    .select(`MAX(${DBConstants.WFPERM_TABLE}.access)`, "max")
+                    .where(`${DBConstants.WFPERM_TABLE}.roleId = :id`, {id: role.id})
+                    .andWhere(`${DBConstants.WFPERM_TABLE}.workflowId = :wfid`, {wfid: wf.id})
+                    .getRawOne();
+
+                // Found one with WRITE, so just return now.
+                if (roleRight.max === DBConstants.WRITE) {
+                    allowed = true;
+                    break;
+                }
+            }
         }
 
         if (allowed) {
@@ -161,7 +186,8 @@ export class PermissionService {
 
     // Check if a user has write permissions on a workflow.
     public async checkWFWritePermissions(user: NRUser, wid: number) {
-        const allowed = await this.getWFWritePermission(user, wid);
+        const wf = await this.workflowService.getWorkflow(wid);
+        const allowed = await this.getWFPermForUser(wf, user);
 
         if (!(allowed)) {
             const errStr = `User with ID ${user.id} does not have WF write permissions.`;
@@ -173,7 +199,8 @@ export class PermissionService {
     public async getSTWritePermission(user: NRUser, sid: number): Promise<number> {
         let allowed = false;
         const stge = await this.workflowService.getStage(sid);
-        const rw = await this.getWFWritePermission(user, stge.workflow.id);
+        // const rw = await this.getWFPermForUser(user, stge.workflow.id);
+        const rw = 1;
 
         // Can edit stages if they have permission on the workflow.
         // TODO: What about moving documents?

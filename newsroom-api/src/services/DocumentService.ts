@@ -1,11 +1,11 @@
 import { google } from "googleapis";
+import { Guid } from "guid-typescript";
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Errors } from "typescript-rest";
 import { DBConstants, NRDCPermission, NRDocument, NRUser } from "../entity";
 import { UserService } from "./UserService";
-import { Guid } from "guid-typescript";
 
 @Service()
 export class DocumentService {
@@ -81,7 +81,7 @@ export class DocumentService {
      * Creates a Google Doc and returns the id
      */
     public async createGoogleDocument(user: NRUser, doc: NRDocument): Promise<string> {
-        if (process.env.DOC_SKIP === 'Y') {
+        if (process.env.DOC_SKIP === "Y") {
             return Guid.create().toString();
         }
 

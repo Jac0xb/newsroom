@@ -4,7 +4,8 @@ import request, { Response } from "supertest";
 import { Connection, getRepository, Repository } from "typeorm";
 
 import App from "../app";
-import { DBConstants, NRRole, NRStage, NRUser, NRWorkflow, NRDocument } from "../entity";
+import { DBConstants, NRDocument, NRRole,
+         NRStage, NRUser, NRWorkflow } from "../entity";
 
 // TODO:
 //   - Test validators.
@@ -58,95 +59,121 @@ beforeEach(async (done) => {
 // TODO:
 //   Test CREATE permissions.
 describe("POST /workflows", () => {
-    it("Test creating a workflow.", async () => {
+    it("Test creating a single workflow.", async () => {
         const wfNum = 1;
-        const wfs = createWorkflowObject(wfNum);
+        const wfs = createWorkflowObject(wfNum, "READ");
         await requestWFGetResponse(wfs, 200);
     });
 
-    it("Test creating 5 workflows.", async () => {
-        const wfNum = 5;
-        const wfs = createWorkflowObject(wfNum);
-        await requestWFGetResponse(wfs, 200);
-    });
+    // it("Test creating 5 workflows with different permissions.", async () => {
+    //     const wfNum = 5;
+    //     const wfs = createWorkflowObject(wfNum, "RAND");
+    //     await requestWFGetResponse(wfs, 200);
+    // });
+
+    // it("Test creating workflows when specifying no permissions.", async () => {
+    //     const wfNum = 2;
+    //     const wfs = createWorkflowObject(wfNum, null);
+    //     await requestWFGetResponse(wfs, 200);
+    // });
 });
 
-describe("GET /workflows", () => {
-    it("Test getting all workflows with no stages.", async () => {
-        const wfNum = 5;
-        const wfs = createWorkflowObject(wfNum);
-        const wfrs = await requestWFGetResponse(wfs, 200);
+// describe("GET /workflows", () => {
+//     it("Test getting all workflows with no stages.", async () => {
+//         const wfNum = 5;
 
-        const resp = await request(app)
-                           .get("/api/workflows")
-                           .set("User-Id", `${user.id}`);
-        expect(resp.status).toEqual(200);
-        expect(resp.body.length).toEqual(wfNum);
+//         const wfs = createWorkflowObject(wfNum, "RAND");
+//         const wfrs = await requestWFGetResponse(wfs, 200);
 
-        for (let i = 0; i < resp.body.length; i++) {
-            expect(wfrs[i].name).toEqual(resp.body[i].name);
-            expect(wfrs[i].description).toEqual(resp.body[i].description);
-        }
-    });
+//         const resp = await request(app)
+//                            .get("/api/workflows")
+//                            .set("User-Id", `${user.id}`);
+//         expect(resp.status).toEqual(200);
+//         expect(resp.body).toHaveLength(wfNum);
 
-    it("Test getting all workflows with stages.", async () => {
-        expect(true).toEqual(false);
-        const wfNum = 5;
-        const wfs = createWorkflowObject(wfNum);
-        const wfrs = await requestWFGetResponse(wfs, 200);
+//         for (let i = 0; i < resp.body.length; i++) {
+//             expect(wfrs[i].name).toEqual(resp.body[i].name);
+//             expect(wfrs[i].description).toEqual(resp.body[i].description);
+//             expect(wfrs[i].permission).toEqual(resp.body[i].permission);
+//         }
+//     });
 
-        const resp = await request(app)
-                           .get("/api/workflows")
-                           .set("User-Id", `${user.id}`);
-        expect(resp.status).toEqual(200);
-        expect(resp.body.length).toEqual(wfNum);
+//     it("Test getting all workflows with stages.", async () => {
+//         const wfNum = 3;
+//         const stNum = 3;
 
-        for (let i = 0; i < resp.body.length; i++) {
-            expect(wfrs[i].name).toEqual(resp.body[i].name);
-            expect(wfrs[i].description).toEqual(resp.body[i].description);
-        }
-    });
-});
+//         const wfs = createWorkflowObject(wfNum, "WRITE");
+//         const wfrs = await requestWFGetResponse(wfs, 200);
 
-describe("GET /workflows/:wid", () => {
-    it("Test getting a single workflow with no stages.", async () => {
-        const wfNum = 5;
-        const wfs = createWorkflowObject(wfNum);
-        const wfrs = await requestWFGetResponse(wfs, 200);
+//         // Add stages.
+//         for (let i = 0; i < wfNum; i++) {
+//             wfs[i] = await addStagesToWF(wfrs[i], stNum, 200, "RAND");
+//         }
 
-        for (let i = 0; i < wfs.length; i++) {
-            const resp = await request(app)
-                               .get(`/api/workflows/${wfrs[i].id}`)
-                               .set("User-Id", `${user.id}`);
-            
-            expect(resp.status).toEqual(200);
+//         const resp = await request(app)
+//                            .get("/api/workflows")
+//                            .set("User-Id", `${user.id}`);
+//         expect(resp.status).toEqual(200);
+//         expect(resp.body.length).toEqual(wfNum);
 
-            const wf = resp.body;
-            expect(wf.name).toEqual(wfrs[i].name);
-            expect(wf.description).toEqual(wfrs[i].description);
-        }
-    });
+//         for (let i = 0; i < wfNum; i++) {
+//             expect(wfrs[i].name).not.toBeUndefined();
+//             expect(wfrs[i].name).toEqual(resp.body[i].name);
+//             expect(wfrs[i].description).not.toBeUndefined();
+//             expect(wfrs[i].description).toEqual(resp.body[i].description);
+//             expect(wfrs[i].permission).not.toBeUndefined();
+//             expect(wfrs[i].permission).toEqual(resp.body[i].permission);
 
-    it("Test getting a single workflow with stages.", async () => {
-        expect(true).toEqual(false);
-        const wfNum = 5;
-        const wfs = createWorkflowObject(wfNum);
-        const wfrs = await requestWFGetResponse(wfs, 200);
+//             // Ensure we get all of the right stages back with the right permissions.
+//             for (let j = 0; j < wfNum; j++) {
+//                 expect(resp.body[i].stages[j].id).not.toBeUndefined();
+//                 expect(resp.body[i].stages[j].id).toEqual(wfs[i].stages[i].id);
+//                 expect(resp.body[i].stages[j].permission).not.toBeUndefined();
+//                 expect(resp.body[i].stages[j].permission).toEqual(wfs[i].stages[i].permission);
+//             }
+//         }
+//     });
+// });
 
-        for (let i = 0; i < wfs.length; i++) {
-            const resp = await request(app)
-                               .get(`/api/workflows/${wfrs[i].id}`)
-                               .set("User-Id", `${user.id}`);
-            
-            expect(resp.status).toEqual(200);
+// describe("GET /workflows/:wid", () => {
+//     it("Test getting a single workflow with no stages.", async () => {
+//         const wfNum = 5;
+//         const wfs = createWorkflowObject(wfNum);
+//         const wfrs = await requestWFGetResponse(wfs, 200);
 
-            const wf = resp.body;
-            expect(wf.name).toEqual(wfrs[i].name);
-            expect(wf.description).toEqual(wfrs[i].description);
-        }
-    });
+//         for (let i = 0; i < wfs.length; i++) {
+//             const resp = await request(app)
+//                                .get(`/api/workflows/${wfrs[i].id}`)
+//                                .set("User-Id", `${user.id}`);
 
-});
+//             expect(resp.status).toEqual(200);
+
+//             const wf = resp.body;
+//             expect(wf.name).toEqual(wfrs[i].name);
+//             expect(wf.description).toEqual(wfrs[i].description);
+//         }
+//     });
+
+//     it("Test getting a single workflow with stages.", async () => {
+//         expect(true).toEqual(false);
+//         const wfNum = 5;
+//         const wfs = createWorkflowObject(wfNum);
+//         const wfrs = await requestWFGetResponse(wfs, 200);
+
+//         for (let i = 0; i < wfs.length; i++) {
+//             const resp = await request(app)
+//                                .get(`/api/workflows/${wfrs[i].id}`)
+//                                .set("User-Id", `${user.id}`);
+
+//             expect(resp.status).toEqual(200);
+
+//             const wf = resp.body;
+//             expect(wf.name).toEqual(wfrs[i].name);
+//             expect(wf.description).toEqual(wfrs[i].description);
+//         }
+//     });
+
+// });
 
 // // TODO:
 // //   Test permissions returned properly with workflow object.
@@ -458,7 +485,7 @@ describe("GET /workflows/:wid", () => {
 //             const resp = await request(app)
 //                                 .get(`/api/workflows/${wfResps[i].id}/stages`)
 //                                 .set("User-Id", `${user.id}`);
-            
+
 //             expect(resp.status).toEqual(200);
 //             const stages = resp.body;
 
@@ -496,7 +523,7 @@ describe("GET /workflows/:wid", () => {
 //                                 .set("User-Id", `${user.id}`);
 //                 expect(resp.status).toEqual(200);
 //                 const stage = resp.body;
-                
+
 //                 expect(stage.id).toEqual(stages[j].id)
 //             }
 //         }
@@ -892,48 +919,26 @@ describe("GET /workflows/:wid", () => {
 //     });
 // });
 
-/**
- * Create 'num' number of workflows with 'perm' permissions, verify that each
- * POST has 'status' response.
- *
- * num: The number of workflows to create.
- * perm: The permissions to give on each workflow.
- * status: The status to verify for each response.
- * user: The user to give the permissions to.
- * stages: The number of stages each workflow should have.
- * docs: The number of documents each stage should have.
- * return: A Map<string, object> with keys:
- *      'wfs': The NRWorkflow objects created to send.
- *      'wfResps': The NRWorkflow objects returned from the POST.
- *      'resps': The raw Response to each POST.
- */
-
-/**
- * Create a number of workflow objects, and return them as an array.
- * 
- * num: The number of objects to create.
- * return: An array of workflow objects of length 'num'.
- */
-function createWorkflowObject(num: number) {
+function createWorkflowObject(num: number, priv: string) {
     const wfs: NRWorkflow[] = [];
 
     for (let i = 0; i < num; i++) {
         const wf = new NRWorkflow();
         wf.name = Guid.create().toString();
-        wf.description = wf.name + '_DESC';
+        wf.description = wf.name + "_DESC";
+
+        if (priv === "RAND") {
+            wf.permission = i % 2;
+        } else if (priv !== null) {
+            wf.permission = (priv === "WRITE") ? 1 : 0;
+        }
+
         wfs.push(wf);
     }
 
     return wfs;
 }
 
-/**
- * Send a request for each workflow in the passed array and verify the response.
- * 
- * wfs: An array of workflow objects to create.
- * status: The expected status for the response.
- * return: An array of workflow objects from the responses.
- */
 async function requestWFGetResponse(wfs: NRWorkflow[], status: number) {
     const wfResps: NRWorkflow[] = [];
 
@@ -942,8 +947,9 @@ async function requestWFGetResponse(wfs: NRWorkflow[], status: number) {
                            .post("/api/workflows")
                            .send(wf)
                            .set("User-Id", `${user.id}`);
+        console.log(resp);
         expect(resp.status).toEqual(status);
-       
+
         if (status === 200) {
             await verifyWFResp(wf, resp);
         }
@@ -954,34 +960,40 @@ async function requestWFGetResponse(wfs: NRWorkflow[], status: number) {
     return wfResps;
 }
 
-/**
- *  
- */
 async function verifyWFResp(wf: NRWorkflow, resp: Response) {
     const wfr = resp.body;
-    const wfdb = await wfRep.findOne({ where: { id: wfr.id }});
+    const wfdb = await wfRep.findOneOrFail({ where: { id: wfr.id }});
 
-    // Name.
+    expect(wfr.name).not.toBeUndefined();
     expect(wf.name).toEqual(wfr.name);
     expect(wf.name).toEqual(wfdb.name);
-
-    // Description.
+    expect(wfr.description).not.toBeUndefined();
     expect(wf.description).toEqual(wfr.description);
     expect(wf.description).toEqual(wfdb.description);
+
+    if (wf.permission === undefined) {
+        expect(wfr.permission).toBeUndefined();
+    } else {
+        expect(wfr.permission).not.toBeUndefined();
+        expect(wf.permission).toEqual(wfr.permission);
+    }
 }
 
-/**
- * 
- */
-async function addStagesToWF(wf: NRWorkflow, numStages: number, status: number) {
+async function addStagesToWF(wf: NRWorkflow, numStages: number, status: number, perm: string) {
     if (wf.stages === undefined) {
         wf.stages = [];
     }
 
     for (let i = 0; i < numStages; i++) {
-        let st = new NRStage();
+        const st = new NRStage();
         st.name = Guid.create().toString();
-        st.description = st.name + '_DESC';
+        st.description = st.name + "_DESC";
+
+        if (perm === "RAND") {
+            st.permission = i % 2;
+        } else if (perm !== null) {
+            st.permission = (perm === "WRITE") ? 1 : 0;
+        }
 
         const resp = await request(app)
                            .post(`/api/workflows/${wf.id}/stages`)
@@ -1000,7 +1012,7 @@ async function addStagesToWF(wf: NRWorkflow, numStages: number, status: number) 
 
             await verifyStageInWF(str, wf);
         }
-        
+
         wf.stages.push(resp.body);
     }
 
@@ -1008,7 +1020,7 @@ async function addStagesToWF(wf: NRWorkflow, numStages: number, status: number) 
 }
 
 /**
- * 
+ *
  */
 async function verifyStageInWF(st: NRStage, wf: NRWorkflow) {
     const stwfid  = await stRep.createQueryBuilder(DBConstants.STGE_TABLE)
@@ -1021,8 +1033,8 @@ async function verifyStageInWF(st: NRStage, wf: NRWorkflow) {
     const wfdb = await wfRep.findOne({ where: { id: stwfid.val }});
     const wfstids = await stRep.createQueryBuilder(DBConstants.STGE_TABLE)
                                .where("stage.workflowId = :id", {id: wfdb.id})
-                               .getRawMany()
-    
+                               .getRawMany();
+
     let present = false;
     for (const stid of wfstids) {
         if (stid === st.id) {
@@ -1034,7 +1046,7 @@ async function verifyStageInWF(st: NRStage, wf: NRWorkflow) {
 }
 
 /**
- * 
+ *
  */
 async function addDocsToStage(st: NRStage, numDoc: number, status: number) {
     if (st.documents === undefined) {
@@ -1044,7 +1056,7 @@ async function addDocsToStage(st: NRStage, numDoc: number, status: number) {
     for (let i = 0; i < numDoc; i++) {
         const dc = new NRDocument();
         dc.name = Guid.create().toString();
-        dc.description = dc.name + '_DESC';
+        dc.description = dc.name + "_DESC";
 
         // Get stages workflow first.
         const stwfid  = await stRep.createQueryBuilder(DBConstants.STGE_TABLE)
@@ -1074,7 +1086,7 @@ async function addDocsToStage(st: NRStage, numDoc: number, status: number) {
 }
 
 /**
- * 
+ *
  */
 async function verifyDocInStage(dc: NRDocument, st: NRStage) {
     // Verify it is in the right stage.
@@ -1086,7 +1098,7 @@ async function verifyDocInStage(dc: NRDocument, st: NRStage) {
 }
 
 /**
- * 
+ *
  */
 async function createGroup(status: number) {
     const role = new NRRole();
@@ -1120,7 +1132,7 @@ async function addUserToGroup(groupName: string, currUser: NRUser, status: numbe
                         .set("User-Id", `${currUser.id}`);
     expect(resp.status).toEqual(status);
 
-    if (status === 200){
+    if (status === 200) {
         await verifyUserInGroup(resp.body, role);
     }
 
@@ -1128,12 +1140,12 @@ async function addUserToGroup(groupName: string, currUser: NRUser, status: numbe
 }
 
 /**
- * 
+ *
  */
-async function verifyUserInGroup(user: NRUser, group: NRRole) {
+async function verifyUserInGroup(usr: NRUser, group: NRRole) {
     const rldb = await rlRep.find({
-        relations: ['users'],
-        where: { id: group.id }
+        relations: ["users"],
+        where: { id: group.id },
     });
 
     // TODO: Test this query?

@@ -9,4 +9,7 @@ export class DBConstants {
     public static readonly WFPERM_TABLE = "wfpermission";
     public static readonly STPERM_TABLE = "stpermission";
     public static readonly DCPERM_TABLE = "dcpermission";
+    public static readonly WFUSPERM_TABLE = "wfuspermission";
+    public static readonly STUSPERM_TABLE = "stuspermission";
+    public static readonly DCUSPERM_TABLE = "dcuspermission";
 }

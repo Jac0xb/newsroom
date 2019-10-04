@@ -4,10 +4,13 @@ import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne,
 import { DBConstants } from "./DBConstants";
 import { NRDocument } from "./NRDocument";
 import { NRSTPermission } from "./NRSTPermission";
+import { NRSTUSPermission } from "./NRSTUSPermission";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
 
-// NRStage objects are pieced together to make a workflow.
+/**
+ * NRStage objects are pieced together to make a workflow.
+ */
 @Entity(DBConstants.STGE_TABLE)
 export class NRStage {
     @PrimaryGeneratedColumn()
@@ -17,7 +20,6 @@ export class NRStage {
     @Column()
     public sequenceId: number;
 
-    // Name of the stage.
     @Column({
         length: 256,
         nullable: false,
@@ -25,7 +27,6 @@ export class NRStage {
     })
     public name: string;
 
-    // A brief description of the stage.
     @Column({
         length: 500,
         nullable: true,
@@ -33,11 +34,9 @@ export class NRStage {
     })
     public description: string;
 
-    // The date of when this stage was created.
     @CreateDateColumn()
     public created: Date;
 
-    // The date of when this stage was last edited.
     @UpdateDateColumn()
     public lastUpdated: Date;
 
@@ -90,4 +89,16 @@ export class NRStage {
     )
     @JoinTable()
     public permissions: NRSTPermission[];
+
+    /**
+     * Relationship: NRSTUSPermission
+     *      - One: Each user permission is only associated with one stage.
+     *      - Many: Each stage can have many user permissions.
+     */
+    @OneToMany(
+        (type) => NRSTUSPermission,
+        (permission) => permission.stage,
+    )
+    @JoinTable()
+    public usrpermissions: NRSTUSPermission[];
 }
