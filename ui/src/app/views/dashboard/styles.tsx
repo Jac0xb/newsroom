@@ -2,7 +2,10 @@ import { StyleRules, Theme } from '@material-ui/core/styles';
 
 export function styles(theme: Theme)  {
     return (
-    {
+    {   
+        topDivider: { 
+            margin: "0px 24px" 
+        },
         main: {
             paddingTop: "32px",
         },

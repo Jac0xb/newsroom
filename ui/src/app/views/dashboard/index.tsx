@@ -1,18 +1,20 @@
-import * as React from 'react';
-import { withStyles } from '@material-ui/core/styles';
-import DocumentTile from 'app/views/dashboard/components/DocumentTile';
+import { DocumentsAPI } from 'app/api/document';
+import { LoadingComponent } from 'app/components/common/loading';
 import { Document } from 'app/models';
-import { styles } from './styles';
-import LinkedButton from './components/LinkedButton'
-import { Divider } from '@material-ui/core';
-import { connect } from "react-redux";
-import axios from 'axios';
+import { mapDispatchToProps } from 'app/store/dashboard/actions';
+import { mapStateToProps } from 'app/store/dashboard/reducers';
+import { DashboardDispatchers, DashboardReducerState } from 'app/store/dashboard/types';
+import { DocumentTileComponent } from 'app/views/dashboard/components/DocumentTile';
 import _ from 'lodash-es';
-import { mapStateToProps  } from 'app/store/dashboard/reducers';
-import { mapDispatchToProps } from "app/store/dashboard/actions";
-import { DashboardDispatchers, DashboardReducerState } from "app/store/dashboard/types";
+import * as React from 'react';
+import { connect } from 'react-redux';
 
-var image = require("./download.svg")
+import { Divider } from '@material-ui/core';
+import { withStyles } from '@material-ui/core/styles';
+
+import { LinkedButton } from './components/LinkedButton';
+import { styles } from './styles';
+
 export namespace Dashboard {
 
     export interface Props extends DashboardDispatchers, DashboardReducerState {
@@ -26,10 +28,6 @@ export namespace Dashboard {
     }
 }
 
-function sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
 class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 
     constructor(props: Dashboard.Props, context?: any) {
@@ -39,23 +37,37 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 
     async componentDidMount() {
         this.props.fetchDocumentsPending();
-        await sleep(2000)
-        var response = await axios.get<Document[]>("/api/documents");
+        var response = await DocumentsAPI.getAllDocuments();
         this.props.fetchDocumentsSuccess(response.data);
+    }
+
+    async handleDelete(id: number) {
+
+        try {
+            this.props.deleteDocumentPending();
+            await DocumentsAPI.deleteDocument(id);
+            this.props.deleteDocumentSuccess();
+        }
+        catch (err) {
+            console.log(err)
+            // TODO: Catch error and report to user.
+        }
+
+        try {
+            this.props.fetchDocumentsPending();
+            var response = await DocumentsAPI.getAllDocuments();
+            this.props.fetchDocumentsSuccess(response.data);
+        }
+        catch (err) {
+            console.log(err)
+            // TODO: Catch error and report to user.
+        }
+
     }
 
     renderDocuments() {
         return _.map(this.props.documents, (document) =>
-            <DocumentTile key={document.id} document={document} onDelete={() => {
-                axios.delete(`/api/documents/${document.id}`).then((response) => {
-
-                    console.log(response);
-
-                    axios.get("/api/documents").then((response) => {
-                        //this.setState({ documents: response.data });
-                    });     
-                });
-            }} />
+            <DocumentTileComponent key={document.id} document={document} onDelete={() => this.handleDelete(document.id) } />
         )
         
     }
@@ -69,9 +81,9 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
                 <div className={classes.buttonGroup}>
                     <LinkedButton />
                 </div>
-                <Divider style={{ margin: "0px 24px" }} />
+                <Divider className={classes.topDivider} />
                 {(pending) ?
-                    <img src={String(image)} style={{position: "absolute", left: "50%", top: "50%", transform: "translate(-50px, -50px)", height: "100px", width: "100px"}} />
+                    <LoadingComponent />
                 :
                 <div className={classes.documentGrid}>
                     {this.renderDocuments()}

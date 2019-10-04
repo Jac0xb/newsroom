@@ -7,7 +7,7 @@ import { styles } from './styles';
 import { Document } from 'app/models';
 import classNames from 'classnames';
 
-export namespace DocumentTile {
+namespace DocumentTile {
     export interface Props {
         classes?: any,
         match?: { params: any },
@@ -62,4 +62,4 @@ class DocumentTile extends React.Component<DocumentTile.Props> {
     }
 }
 
-export default withStyles(styles, {withTheme: true})(DocumentTile);
+export const DocumentTileComponent = withStyles(styles, {withTheme: true})(DocumentTile);

@@ -1,14 +1,15 @@
+import { Document } from 'app/models';
+import WorkflowMiniView from 'app/views/document_edit/components/WorkflowMiniview';
+import axios from 'axios';
+import * as React from 'react';
+
 import { TextField } from '@material-ui/core';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import WorkflowMiniView from 'app/views/document_edit/components/WorkflowMiniview';
-import { Document } from 'app/models';
-import axios from 'axios';
-import * as React from 'react';
-import { styles } from './styles';
 
+import { styles } from './styles';
 
 export namespace EditorContainer {
 	export interface Props {
@@ -23,18 +24,17 @@ export namespace EditorContainer {
 }
 
 class EditorContainer extends React.Component<EditorContainer.Props, EditorContainer.State> {
-    
-    documentId: number
 
 	constructor(props: EditorContainer.Props) {
 		super(props)
-		this.documentId = props.match.params.id;
+        this.state = { };
 	}
 
 	componentDidMount() {
-		const documentId = this.props.match.params.id;
+        
+		const id = this.props.match.params.id;
 
-		axios.get("/api/documents/" + documentId).then((response) => {
+		axios.get("/api/documents/" + id).then((response) => {
 			console.log(response);
 
             const document = response.data;
@@ -46,7 +46,6 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
 
 	render() {
 		const { classes } = this.props;
-
 		const { document } = this.state;
 
 		if (!document || !document.workflow || !document.stage) {
@@ -92,7 +91,7 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
 	}
 
 	handleMove(direction: string) {
-		axios.put("/api/documents/" + this.documentId + "/" + direction).then((response) => {
+		axios.put("/api/documents/" +  + "/" + direction).then((response) => {
 			console.log(response);
 			this.setState({ document: response.data })
 		});
@@ -100,6 +99,8 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
 
 	handleDocumentNameChange(event: React.ChangeEvent<any>) {
 		const name = event.target.value;
+
+        const id = this.props.match.params.id;
 
 		if (name.trim().length === 0) {
 			this.setState({ errorText: "Name must not be empty" })
@@ -110,7 +111,7 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
 				this.state.document.name = name
 			}
 
-			axios.put("/api/documents/" + this.documentId, {
+			axios.put(`/api/documents/${id}`, {
 				name: name
 			}).then((response) => {
 				console.log(response);

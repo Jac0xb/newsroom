@@ -1,9 +1,13 @@
 import { AppState } from 'app/store'; 
+import _ from "lodash";
 
 import { 
     FETCH_DOCUMENTS_PENDING, 
     FETCH_DOCUMENTS_SUCCESS, 
     FETCH_DOCUMENTS_ERROR, 
+    DELETE_DOCUMENT_PENDING,
+    DELETE_DOCUMENT_SUCCESS,
+    DELETE_DOCUMENT_ERROR,
     DashboardActionTypes, 
     DashboardReducerState 
 } from "./types";
@@ -30,6 +34,23 @@ export function dashboardReducer(
             documents: action.payload
         }
     case FETCH_DOCUMENTS_ERROR:
+        return {
+            ...state,
+            pending: false,
+            error: action.payload
+        }
+
+    case DELETE_DOCUMENT_PENDING:
+        return {
+            ...state,
+            pending: false
+        }
+    case DELETE_DOCUMENT_SUCCESS:
+        return {
+            ...state,
+            pending: false
+        }
+    case DELETE_DOCUMENT_ERROR:
         return {
             ...state,
             pending: false,
