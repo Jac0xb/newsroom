@@ -15,13 +15,14 @@ import Workflow from 'app/views/workflow';
 import Workflows from 'app/views/workflows';
 import DocumentCreator from 'app/views/document_create';
 import Users from "app/views/users";
+import EditUser from 'app/views/user';
 import Groups from "app/views/groups";
 import Group from "app/views/group";
 import GroupCreate from 'app/views/group_create';
 import AppHeader from 'app/components/common/header';
 import LoginPage from 'app/views/login';
 import axios from 'axios';
-import { User } from './models';
+import { User } from 'app/models/user'
 
 export namespace App {
     export interface Props {
@@ -76,13 +77,14 @@ class App extends React.Component<App.Props, App.State, any> {
                         <Route exact path="/" component={Dashboard}/>
                         <Route exact path="/document" component={Dashboard}/>
                         <Route exact path="/document/create" component={DocumentCreator}/>
-                        <Route exact path="/groups" component={Groups}/>
-                        <Route exact path="/groups/create" component={GroupCreate}/>
                         <Route exact path="/workflow" component={Workflows}/>
                         <Route path="/document/:id/edit" component={DocumentEditor}/>
                         <Route path="/workflow/:id/edit" component={Workflow}/>
-                        <Route path="/users" component={Users}/>
+                        <Route exact path="/groups" component={Groups}/>
+                        <Route exact path="/groups/create" component={GroupCreate}/>
                         <Route path="/groups/:id" component={Group}/>
+                        <Route exact path="/users" component={Users}/>
+                        <Route path="/users/:id" component={EditUser}/>
                     </Switch>
                 </div>
             </React.Fragment>

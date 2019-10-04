@@ -4,11 +4,13 @@ import { composeWithDevTools } from "redux-devtools-extension";
 
 import { workflowReducer } from "./workflow/reducers";
 import { dashboardReducer } from "./dashboard/reducers";
+import { userReducer } from "./user/reducers";
 
 // Combine all reducers
 const rootReducer = combineReducers({
   workflow: workflowReducer,
-  dashboard: dashboardReducer
+  dashboard: dashboardReducer,
+  user: userReducer,
 });
 
 // Create AppState

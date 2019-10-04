@@ -6,7 +6,6 @@ import { Divider, Paper, Typography } from '@material-ui/core';
 import WorkflowTile from 'app/views/workflows/components/WorkflowObject';
 import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
-// import { RouteComponentProps } from 'react-router';
 
 export namespace Workflows{
     export interface Props {
@@ -22,11 +21,6 @@ export namespace Workflows{
         flash: string
     }
 }
-// export namespace Workflows {
-//     export interface Props extends RouteComponentProps<void> {
-//         classes?: any
-//     }
-// }
 
 class Workflows extends React.Component<Workflows.Props, Workflows.State> {
 

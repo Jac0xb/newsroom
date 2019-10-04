@@ -1,10 +1,11 @@
 import * as React from 'react';
-import { Avatar } from '@material-ui/core';
+import { Avatar, Button } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { User } from 'app/models';
 import { styles } from './styles';
 import axios from 'axios';
 import MaterialTable from "material-table";
+import { Link } from 'react-router-dom';
 
 export namespace Users {
     export interface Props {
@@ -43,10 +44,11 @@ class Users extends React.Component<Users.Props, Users.State> {
                 <MaterialTable
                     columns={[
                         {title: "Avatar", render: Users.getUserAvatar},
-                        {title: "User Name", field: "userName"},
+                        {title: "User Name", render: Users.getUserName},
                         {title: "First Name", field: "firstName"},
                         {title: "Last Name", field: "lastName"},
-                        {title: "Email", field: "email"}
+                        {title: "Email", field: "email"},
+                        {title: "", render: (user: User) => this.deleteUser.bind(this)(user)}
                     ]}
                     data={users}
                     title="Users"/>
@@ -54,8 +56,29 @@ class Users extends React.Component<Users.Props, Users.State> {
         );
     }
 
-    static getUserAvatar(user: any) {
+    static getUserAvatar(user: User) {
         return <Avatar>{user.firstName.substring(0, 1) + user.lastName.substring(0, 1)}</Avatar>
+    }
+
+    static getUserName(user: User) {
+        return <Link style={{ textDecoration: "none" }} to={`/users/${user.id}`}>
+            {user.userName}
+        </Link>
+    }
+
+    deleteUser(user: User) {
+        var onClick = async () => {
+            
+            await axios.delete(`/api/users/${user.id}`);
+
+            var response = await axios.get("/api/roles")
+                
+            this.setState({users: response.data})
+        } 
+
+        return (<Button variant="contained" onClick={onClick}>
+            Delete
+        </Button>)
     }
 }
 

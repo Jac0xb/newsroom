@@ -15,7 +15,7 @@ import { WorkflowDispatchers, WorkflowState } from "app/store/workflow/types";
 
   
 export namespace Workflow {
-  export interface Props extends WorkflowDispatchers, WorkflowState{
+  export interface Props extends WorkflowDispatchers, WorkflowState {
     classes?: any
     match: {
       params: {
@@ -23,8 +23,7 @@ export namespace Workflow {
       }
     }
   }
-  export interface State {
-  }
+  export interface State { }
 }
 
 class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
