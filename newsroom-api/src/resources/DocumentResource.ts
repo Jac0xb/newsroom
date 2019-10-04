@@ -354,7 +354,7 @@ export class DocumentResource {
         const workflowId = currDocument.workflow.id;
 
         // Must have WRITE on current stage to move forward.
-        await this.permissionService.checkSTWritePermissions(sessionUser, currStage.id);
+        await this.permissionService.checkSTWritePermissions(sessionUser, currStage);
 
         console.log(`DocumentResource.moveNext, action=getting maxSeq,
         currStage=${currStage.id}, currSeq=${currStage.sequenceId}`);
@@ -451,7 +451,7 @@ export class DocumentResource {
         const currStage = currDocument.stage;
         const workflowId = currDocument.workflow.id;
 
-        await this.permissionService.checkSTWritePermissions(sessionUser, currStage.id);
+        await this.permissionService.checkSTWritePermissions(sessionUser, currStage);
 
         // The first stage in any workflow is always sequence 1.
         const minSeq = 0;

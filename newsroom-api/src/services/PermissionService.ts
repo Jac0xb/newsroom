@@ -4,7 +4,7 @@ import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Errors } from "typescript-rest";
 import { InternalServerError } from "typescript-rest/dist/server/model/errors";
-import { NRDCPermission, NRSTPermission, NRUser, NRWFPermission, NRWFUSPermission, NRWorkflow } from "../entity";
+import { NRDCPermission, NRSTPermission, NRUser, NRWFPermission, NRWFUSPermission, NRWorkflow, NRStage, NRSTUSPermission } from "../entity";
 import { DBConstants } from "../entity";
 import { UserService } from "./UserService";
 import { WorkflowService } from "./WorkflowService";
@@ -26,13 +26,13 @@ export class PermissionService {
     @InjectRepository(NRWFUSPermission)
     private wfUSRepository: Repository<NRWFUSPermission>;
 
+    @InjectRepository(NRSTUSPermission)
+    private stUSRepository: Repository<NRSTUSPermission>;
+
+
     @Inject()
     private userService: UserService;
 
-    @Inject()
-    private workflowService: WorkflowService;
-
-    // Get a workflow permission based on ID.
     public async getWFPermission(pid: number): Promise<NRWFPermission> {
         try {
             return await this.permWFRepository.findOneOrFail(pid);
@@ -44,7 +44,6 @@ export class PermissionService {
         }
     }
 
-    // Get a workflow permission based on WF and Role IDs.
     public async getWFPermissionFromWFRL(wid: number, rid: number): Promise<NRWFPermission> {
         try {
             return await this.permWFRepository
@@ -74,7 +73,6 @@ export class PermissionService {
         }
     }
 
-    // Get a stage permission based on ID.
     public async getSTPermission(pid: number): Promise<NRSTPermission> {
         try {
             return await this.permSTRepository.findOneOrFail(pid);
@@ -86,7 +84,6 @@ export class PermissionService {
         }
     }
 
-    // Get a stage permission based on ST and Role IDs.
     public async getSTPermissionFromSTRL(sid: number, rid: number): Promise<NRSTPermission> {
         try {
             return await this.permSTRepository
@@ -102,7 +99,6 @@ export class PermissionService {
         }
     }
 
-    // Get a stage permission based on ST and Role IDs.
     public async getAllSTPermissionsForRole(rid: number): Promise<NRSTPermission[]> {
         try {
             return await this.permSTRepository
@@ -117,7 +113,6 @@ export class PermissionService {
         }
     }
 
-    // Get a document permission based on ID.
     public async getDCPermission(pid: number): Promise<NRDCPermission> {
         try {
             return await this.permDCRepository.findOneOrFail(pid);
@@ -129,16 +124,7 @@ export class PermissionService {
         }
     }
 
-    /**
-     * Determine what permissions a user has for a given workflow.
-     *
-     * This is based on all of the roles that a user is part of, as well
-     * as their individual permissions. The highest result is returned.
-     *
-     * wf: The workflow in question.
-     * user: The user in question.
-     * returns: One of WRITE or READ based on the users permission level.
-     */
+    // DONE.
     public async getWFPermForUser(wf: NRWorkflow, user: NRUser): Promise<number> {
         let allowed = false;
 
@@ -184,9 +170,53 @@ export class PermissionService {
         }
     }
 
-    // Check if a user has write permissions on a workflow.
-    public async checkWFWritePermissions(user: NRUser, wid: number) {
-        const wf = await this.workflowService.getWorkflow(wid);
+    // DONE.
+    public async getSTPermForUser(st: NRStage, user: NRUser): Promise<number> {
+        let allowed = false;
+
+        // Check user permissions first.
+        const usdb = await this.userRepository.findOne(user.id, { relations: ["stpermissions"] });
+
+        if (usdb !== undefined) {
+            for (const stup of usdb.stpermissions) {
+                const stupdb = await this.stUSRepository.findOne(stup.id, { relations: ["stage"] });
+
+                if ((stupdb.stage.id === st.id) && (stupdb.access === DBConstants.WRITE)) {
+                    allowed = true;
+                    break;
+                }
+            }
+        }
+
+        const allRoles = await this.userService.getUserRoles(user.id);
+
+        // Now check all roles.
+        if ((!allowed) && (allRoles !== undefined)) {
+            // Get the 'highest' permissions over all roles the user is a part of.
+            for (const role of allRoles) {
+                const roleRight = await this.permSTRepository.createQueryBuilder(DBConstants.STPERM_TABLE)
+                                                             .select(`MAX(${DBConstants.STPERM_TABLE}.access)`, "max")
+                                                             .where(`${DBConstants.STPERM_TABLE}.roleId = :id`, {id: role.id})
+                                                             .andWhere(`${DBConstants.STPERM_TABLE}.stageId = :stid`, {stid: st.id})
+                                                             .getRawOne();
+
+                // Found one with WRITE, so just return now.
+                if (roleRight.max === DBConstants.WRITE) {
+                    allowed = true;
+                    break;
+                }
+            }
+        }
+
+        if (allowed) {
+            return DBConstants.WRITE;
+        } else {
+            return DBConstants.READ;
+        }
+    }
+
+    // DONE.
+    public async checkWFWritePermissions(user: NRUser, wf: NRWorkflow) {
         const allowed = await this.getWFPermForUser(wf, user);
 
         if (!(allowed)) {
@@ -195,12 +225,11 @@ export class PermissionService {
         }
     }
 
-    // Return if user had READ/WRITE on a stage.
-    public async getSTWritePermission(user: NRUser, sid: number): Promise<number> {
+    public async getSTWritePermission(user: NRUser, stge: NRStage): Promise<number> {
         let allowed = false;
-        const stge = await this.workflowService.getStage(sid);
         // const rw = await this.getWFPermForUser(user, stge.workflow.id);
         const rw = 1;
+        const sid = stge.id;
 
         // Can edit stages if they have permission on the workflow.
         // TODO: What about moving documents?
@@ -252,9 +281,8 @@ export class PermissionService {
         }
     }
 
-    // Check if a user has write permissions on a stage.
-    public async checkSTWritePermissions(user: NRUser, sid: number) {
-        const allowed = await this.getSTWritePermission(user, sid);
+    public async checkSTWritePermissions(user: NRUser, st: NRStage) {
+        const allowed = await this.getSTWritePermission(user, st);
 
         if (!(allowed)) {
             console.log(`PermissionService.checkSTWritePermissions, ERRORING`);
@@ -265,7 +293,6 @@ export class PermissionService {
         console.log(`PermissionService.checkSTWritePermissions, ALLOWING`);
     }
 
-    // Check if a user has write permissions on a document.
     public async checkDCWritePermission(user: NRUser, did: number): Promise<number> {
         return DBConstants.WRITE;
         // let allowed = false;
@@ -287,7 +314,6 @@ export class PermissionService {
         // }
     }
 
-    // Check if a user has write permissions on a document.
     public async checkDCWritePermissions(user: NRUser, did: number) {
         const allowed = await this.checkDCWritePermission(user, did);
 
