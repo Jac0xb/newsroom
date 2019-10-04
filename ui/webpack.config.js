@@ -3,7 +3,7 @@ var path = require('path');
 var package = require('./package.json');
 
 // Whether or not the package is in production or not.
-var isProduction = process.argv.indexOf('-p') >= 0 || process.env.NODE_ENV === 'production'; 
+var isProduction = process.argv.indexOf('-p') >= 0 || process.env.NODE_ENV === 'production';
 
 // Package source folder.
 var sourcePath = path.join(__dirname, './src');
@@ -120,7 +120,7 @@ module.exports = {
 			},
 			// static assets
 			{ test: /\.html$/, use: 'html-loader' },
-			{ test: /\.(a?png|svg)$/, use: 'url-loader?limit=10000' },
+			{ test: /\.(png|svg)$/, use: 'url-loader?limit=10000' },
 			{
 				test: /\.(jpe?g|gif|bmp|mp3|mp4|ogg|wav|eot|ttf|woff|woff2)$/,
 				use: 'file-loader'

@@ -1,21 +1,25 @@
 import * as React from 'react';
+
 // Nagivational React components that are composed declaratively.
 import { Route, Switch } from 'react-router-dom';
+
 // Style-Normalization (https://material-ui.com/style/css-baseline/)
 import CssBaseline from '@material-ui/core/CssBaseline';
+
 // Allows for React components to be live reloaded without the loss of state.
 import { hot } from 'react-hot-loader';
-import Dashboard from './views/dashboard_overview';
-import DocumentEditor from './views/document_editor';
-import WorkflowEditor from './views/workflow_editor'
-import Workflow from './views/workflow_overview';
-import DocumentCreator from './views/document_create';
+
+import Dashboard from 'app/views/dashboard';
+import DocumentEditor from 'app/views/document_edit';
+import Workflow from 'app/views/workflow';
+import Workflows from 'app/views/workflows';
+import DocumentCreator from 'app/views/document_create';
 import Users from "app/views/users";
 import Groups from "app/views/groups";
 import Group from "app/views/group";
-import GroupCreate from './views/group_create';
+import GroupCreate from 'app/views/group_create';
 import AppHeader from 'app/components/common/header';
-import LoginPage from './views/login_page';
+import LoginPage from 'app/views/login';
 import axios from 'axios';
 import { User } from './models';
 
@@ -29,6 +33,7 @@ export namespace App {
         users: User[]
     }
 }
+
 
 class App extends React.Component<App.Props, App.State, any> {
 
@@ -49,12 +54,13 @@ class App extends React.Component<App.Props, App.State, any> {
     render() {
 
         const {isAuthenticated} = this.state;
+        const headerMargin = { marginTop: "64px" };
 
         if (!isAuthenticated) {
             return (
                 <React.Fragment>
                     <AppHeader loggedOut={true}/>
-                    <div style={{marginTop: "64px"}}>
+                    <div style={headerMargin}>
                         <LoginPage/>
                     </div>
                 </React.Fragment>
@@ -65,16 +71,16 @@ class App extends React.Component<App.Props, App.State, any> {
             <React.Fragment>
                 <CssBaseline/>
                 <AppHeader />
-                <div style={{marginTop: "64px"}}>
+                <div style={headerMargin}>
                     <Switch>
+                        <Route exact path="/" component={Dashboard}/>
                         <Route exact path="/document" component={Dashboard}/>
                         <Route exact path="/document/create" component={DocumentCreator}/>
-                        <Route exact path="/groups_create" component={GroupCreate}/>
                         <Route exact path="/groups" component={Groups}/>
-                        <Route exact path="/workflow" component={Workflow}/>
-                        <Route exact path="/" component={Dashboard}/>
+                        <Route exact path="/groups/create" component={GroupCreate}/>
+                        <Route exact path="/workflow" component={Workflows}/>
                         <Route path="/document/:id/edit" component={DocumentEditor}/>
-                        <Route path="/workflow/:id/edit" component={WorkflowEditor}/>
+                        <Route path="/workflow/:id/edit" component={Workflow}/>
                         <Route path="/users" component={Users}/>
                         <Route path="/groups/:id" component={Group}/>
                     </Switch>
