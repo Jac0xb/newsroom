@@ -1,9 +1,17 @@
 {
-    "swagger": {
-        "outputDirectory": "./dist",
-        "entryFile": "./src/index.ts",
-        "host": "localhost:8000",
-        "consumes": "application/json",
-        "produces": "application/json"
+  "swagger": {
+    "outputDirectory": "./dist",
+    "entryFile": "./src/index.ts",
+    "host": "localhost:8000",
+    "consumes": "application/json",
+    "produces": "application/json",
+    "securityDefinitions": {
+      "googleOAuth": {
+        "type": "oauth2",
+        "name": "Google OAuth Login",
+        "flow": "authorizationCode",
+        "authorizationUrl": "/auth/google?redirect=docs"
+      }
     }
+  }
 }
