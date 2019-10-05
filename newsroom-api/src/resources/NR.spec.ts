@@ -6,14 +6,12 @@ import { Connection, getRepository, Repository } from "typeorm";
 import App from "../app";
 import { DBConstants, NRDocument, NRRole,
          NRStage, NRUser, NRWorkflow, NRWFUSPermission } from "../entity";
-import e from "express";
 
 // TODO:
 //   - Test validators.
 //   - Verify creator.
 //   - Fix 413 for 1 workflow, 5 stages, 2 documents in each stage?
 
-// Globals used by all tests.
 let app: express.Express;
 let conn: Connection;
 let user: NRUser;
@@ -24,14 +22,12 @@ let usrRep: Repository<NRUser>;
 let rlRep: Repository<NRRole>;
 
 beforeAll(async (done) => {
-    // Configure without oauth, and no Google Document creation.
+    // Configure without oauth, and no actual Google Document creation.
     app = await App.configure(false, false);
 
     // Can't have two active connections to the DB, so just use
     // the one made by the app.
     conn = App.getDBConnection();
-
-    // DB connections for different objects.
     wfRep = getRepository(NRWorkflow);
     stRep = getRepository(NRStage);
     dcRep = getRepository(NRDocument);
@@ -56,8 +52,13 @@ beforeEach(async (done) => {
     done();
 });
 
+// ----------------------------------------------------------------------------------
+// |                                 WORKFLOW TESTS                                 |
+// ----------------------------------------------------------------------------------
+
+
 // TODO:
-//   Test CREATE permissions.
+//      - Test/implement CREATE permissions.
 describe("POST /workflows", () => {
     it("Test creating a single workflow.", async () => {
         const wfNum = 1;
@@ -103,7 +104,6 @@ describe("GET /workflows", () => {
         const wfs = createWorkflowObject(wfNum, "WRITE");
         const wfrs = await requestWFGetResponse(wfs, 200);
 
-        // Add stages.
         for (let i = 0; i < wfNum; i++) {
             wfs[i] = await addStagesToWF(wfrs[i], stNum, 200, "RAND");
         }
@@ -146,7 +146,6 @@ describe("GET /workflows/:wid", () => {
         const wfs = createWorkflowObject(wfNum, "WRITE");
         const wfrs = await requestWFGetResponse(wfs, 200);
 
-        // Add stages.
         for (let i = 0; i < wfNum; i++) {
             wfs[i] = await addStagesToWF(wfrs[i], stNum, 200, "RAND");
         }
@@ -217,8 +216,6 @@ describe("PUT /workflows/:wid", () => {
     });
 });
 
-// TODO:
-//   Test workflow deletion when it's stages contain documents.
 describe("DELETE /workflows/:wid", () => {
     it("Test deleting workflows WITH permissions, no stages or documents.", async () => {
         const wfNum = 3;
@@ -263,7 +260,6 @@ describe("DELETE /workflows/:wid", () => {
         const wfs = createWorkflowObject(wfNum, "WRITE");
         const wfrs = await requestWFGetResponse(wfs, 200);
 
-        // Add stages.
         for (let i = 0; i < wfNum; i++) {
             wfs[i] = await addStagesToWF(wfrs[i], stNum, 200, "RAND");
         }
@@ -329,11 +325,9 @@ describe("DELETE /workflows/:wid", () => {
         const wfs = createWorkflowObject(wfNum, "WRITE");
         const wfrs = await requestWFGetResponse(wfs, 200);
 
-        // Add stages.
         for (let i = 0; i < wfNum; i++) {
             wfs[i] = await addStagesToWF(wfrs[i], stNum, 200, "WRITE");
 
-            // Add documents to stages.
             for (let j = 0; j < stNum; j++) {
                 await addDocsToStage(wfs[i].stages[j], dcNum, 200);
             }
@@ -412,8 +406,8 @@ describe("POST /workflows/:wid/stages", () => {
     });
 
     it("Test appending stages to workflows with stages.", async () => {
-        const wfNum = 2;
-        const stNum = 2;
+        const wfNum = 4;
+        const stNum = 3;
 
         const wfs = createWorkflowObject(wfNum, "WRITE");
         const wfrs = await requestWFGetResponse(wfs, 200);
@@ -455,8 +449,13 @@ describe("POST /workflows/:wid/stages", () => {
                 const stdb = await stRep.findOne({ where: { id: str.id }});
                 expect(stdb).not.toBeUndefined();
                 expect(stdb.sequenceId).toEqual(i + 1);
-
-                wf.stages.push(await addDocsToStage(str, 1, 200));
+                
+                if ((priv === DBConstants.READ) || (priv === undefined)) {
+                    // Stages with READ permissions we don't be able to add to.
+                    await addDocsToStage(str, 1, 403)
+                } else {
+                    wf.stages.push(await addDocsToStage(str, 1, 200));
+                }
             }
         }
 
@@ -499,7 +498,6 @@ describe("POST /workflows/:wid/stages", () => {
     });
 });
 
-// TODO:
 describe("GET :wid/stages", () => {
     it("Test getting all stages for a specific workflow.", async () => {
         const wfNum = 5;
@@ -530,7 +528,7 @@ describe("GET :wid/stages", () => {
 });
 
 // TODO:
-//     Verify that everything still works even when moving stages.
+//     - Verify that everything still works even when moving stages.
 describe("GET :wid/stages/:sid", () => {
     it("Test getting a specific stage from a workflow.", async () => {
         const wfNum = 5;
@@ -576,7 +574,7 @@ describe("POST :wid/stages/:pos", () => {
         st.description = st.name + "_DESC";
         st.workflow = wf;
 
-        // The position to add at.
+        // The position to add at, sequence will not be zero-indexed.
         const pos = 0;
         const resp = await request(app)
                               .post(`/api/workflows/${wf.id}/stages/${pos}`)
@@ -613,7 +611,7 @@ describe("POST :wid/stages/:pos", () => {
             st.description = st.name + "_NEW";
             st.workflow = wfs[i];
 
-            // The position to add at.
+            // The position to add at, sequence will not be zero-indexed.
             const pos = 2;
             const resp = await request(app)
                             .post(`/api/workflows/${wfs[i].id}/stages/${pos}`)
@@ -668,7 +666,7 @@ describe("POST :wid/stages/:pos", () => {
             st.description = st.name + "_NEW";
             st.workflow = wfs[i];
 
-            // The position to add at.
+            // The position to add at, sequence will not be zero-indexed.
             const pos = 0;
             const resp = await request(app)
                             .post(`/api/workflows/${wfs[i].id}/stages/${pos}`)
@@ -723,7 +721,7 @@ describe("POST :wid/stages/:pos", () => {
             st.description = st.name + "_NEW";
             st.workflow = wfs[i];
 
-            // The position to add at.
+            // The position to add at, sequence will not be zero-indexed.
             const pos = stNum + 1;
             const resp = await request(app)
                             .post(`/api/workflows/${wfs[i].id}/stages/${pos}`)
@@ -934,7 +932,6 @@ describe("DELETE :wid/stages/:sid", () => {
     });
 });
 
-// TODO:
 describe("PUT /:wid/stages/:sid", () => {
     it("Test updating stages in different workflows.", async () => {
         const wfNum = 3;
@@ -1006,6 +1003,93 @@ describe("PUT /:wid/stages/:sid", () => {
        }
     });
 });
+
+// ----------------------------------------------------------------------------------
+// |                                 DOCUMENT TESTS                                 |
+// ----------------------------------------------------------------------------------
+
+describe("POST /api/docuiments", () => {
+    it("Test creating a single document.", async () => {
+        const wfNum = 2;
+        const stNum = 3;
+        const dcNum = 1;
+
+        const wfs = createWorkflowObject(wfNum, "WRITE");
+        const wfrs = await requestWFGetResponse(wfs, 200);
+
+        // Add a document to each stage, and verify it is in the right stage.
+        for (let i = 0; i < wfNum; i++) {
+            wfs[i] = await addStagesToWF(wfrs[i], stNum, 200, "WRITE");
+
+            for (let j = 0; j < stNum; j++) {
+                await addDocsToStage(wfs[i].stages[j], dcNum, 200);
+            }
+        }
+    });
+
+    it("Test creating documents in stages with different permissions.", async () => {
+        const wfNum = 2;
+
+        const wfs = createWorkflowObject(wfNum, "WRITE");
+        const wfrs = await requestWFGetResponse(wfs, 200);
+
+        for (let i = 0; i < wfNum; i++) {
+            wfs[i] = await addStagesToWF(wfrs[i], 1, 200, "READ");
+            wfs[i] = await addStagesToWF(wfrs[i], 1, 200, "WRITE");
+
+            await addDocsToStage(wfs[i].stages[0], 1, 403);
+            await addDocsToStage(wfs[i].stages[1], 1, 200);
+        }
+    });
+
+    it("Test creating a document in a workflow with no stages.", async () => {
+        const wfNum = 1;
+
+        const wfs = createWorkflowObject(wfNum, "WRITE");
+        const wfrs = await requestWFGetResponse(wfs, 200);
+
+        const dc = new NRDocument();
+        dc.name = Guid.create().toString();
+        dc.description = dc.name + "_DESC";
+        dc.workflow = wfrs[0];
+
+        const resp = await request(app)
+                           .post(`/api/documents/`)
+                           .send(dc)
+                           .set("User-Id", `${user.id}`);
+        expect(resp.status).toEqual(400);
+    });
+
+    it("Test passing no stage defaults to putting document in first stage.", async () => {
+        const wfNum = 2;
+        const stNum = 3;
+        const dcNum = 1;
+
+        const wfs = createWorkflowObject(wfNum, "WRITE");
+        const wfrs = await requestWFGetResponse(wfs, 200);
+
+        // Add a document to each stage, and verify it is in the right stage.
+        for (let i = 0; i < wfNum; i++) {
+            wfs[i] = await addStagesToWF(wfrs[i], stNum, 200, "WRITE");
+        }
+
+        const dc = new NRDocument();
+        dc.name = Guid.create().toString();
+        dc.description = dc.name + "_DESC";
+        dc.workflow = wfrs[1];
+
+        const resp = await request(app)
+                           .post(`/api/documents/`)
+                           .send(dc)
+                           .set("User-Id", `${user.id}`);
+        expect(resp.status).toEqual(200)
+        expect(resp.body.stage.id).toEqual(wfrs[1].stages[0].id)
+    });
+});
+
+// ----------------------------------------------------------------------------------
+// |                                  HELPER FUNCTIONS                              |
+// ----------------------------------------------------------------------------------
 
 // DONE.
 function createWorkflowObject(num: number, priv: string) {
@@ -1105,7 +1189,12 @@ async function addStagesToWF(wf: NRWorkflow, numStages: number, status: number, 
             expect(str.name).toEqual(stdb.name);
             expect(str.description).toEqual(st.description);
             expect(str.description).toEqual(stdb.description);
-            expect(str.sequenceId).toEqual(i + 1);
+
+            if (wf.stages.length !== 0) {
+                expect(str.sequenceId).toEqual(wf.stages.length + 1);
+            } else {
+                expect(str.sequenceId).toEqual(i + 1);
+            }
 
             await verifyStageInWF(str, wf);
         }
@@ -1164,7 +1253,7 @@ async function changeSTPerm(st: NRStage, perm: string) {
     expect(resp.body.access).toEqual(priv);
 }
 
-
+// DONE.
 async function addDocsToStage(st: NRStage, numDoc: number, status: number) {
     if (st.documents === undefined) {
         st.documents = [];
@@ -1199,6 +1288,7 @@ async function addDocsToStage(st: NRStage, numDoc: number, status: number) {
     return st;
 }
 
+// DONE.
 async function verifyDocInStage(dc: NRDocument, st: NRStage) {
     // Verify it is in the right stage.
     const dcstid  = await dcRep.createQueryBuilder(DBConstants.DOCU_TABLE)

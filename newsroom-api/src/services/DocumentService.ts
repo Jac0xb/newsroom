@@ -23,7 +23,7 @@ export class DocumentService {
     @Inject()
     private userService: UserService;
 
-    // Get a document based on ID.
+    // DONE.
     public async getDocument(did: number): Promise<NRDocument> {
         try {
             return await this.documentRepository.findOneOrFail(did);

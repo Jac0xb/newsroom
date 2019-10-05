@@ -225,72 +225,14 @@ export class PermissionService {
         }
     }
 
-    public async getSTWritePermission(user: NRUser, stge: NRStage): Promise<number> {
-        let allowed = false;
-        // const rw = await this.getWFPermForUser(user, stge.workflow.id);
-        const rw = 1;
-        const sid = stge.id;
-
-        // Can edit stages if they have permission on the workflow.
-        // TODO: What about moving documents?
-        if (rw === DBConstants.WRITE) {
-            return rw;
-        }
-
-        user = await this.userService.getUser(user.id);
-        console.log(`PermissionService.getSTWritePermission, action=got user, user_id=${user.id}`);
-
-        try {
-            if (!((user.roles === undefined) || (user.roles.length === 0))) {
-                for (const role of user.roles) {
-                    console.log(`PermissionService.getSTWritePermission, action=looking at role,
-                    role_name=${role.name}`);
-                    const roleRight = await this.permSTRepository
-                        .createQueryBuilder(DBConstants.STPERM_TABLE)
-                        .select(`MAX(${DBConstants.STPERM_TABLE}.access)`, "max")
-                        .where(`${DBConstants.STPERM_TABLE}.roleId = :id`, {id: role.id})
-                        .andWhere(`${DBConstants.STPERM_TABLE}.stageId = :stid`, {stid: sid})
-                        .getRawOne();
-
-                    console.log(`PermissionService.getSTWritePermission, action=look at max, role=${role.id}, stage=${sid}`);
-
-                    if (roleRight.max === DBConstants.WRITE) {
-                        console.log(`PermissionService.getSTWritePermission, action=break,
-                        reason=has write permissions`);
-                        allowed = true;
-                        break;
-                    }
-
-                    console.log(`PermissionService.getSTWritePermission, action=continue, reason=has read permissions`);
-                }
-            }
-        } catch (err) {
-            const errStr = `Error while getting ST write permissions for stage ${sid}.`;
-
-            console.log(errStr);
-            console.log(err);
-            throw new InternalServerError(errStr);
-        }
-
-        if (allowed) {
-            console.log(`PermissionService.getSTWritePermission, returning=WRITE`);
-            return DBConstants.WRITE;
-        } else {
-            console.log(`PermissionService.getSTWritePermission, returning=READ`);
-            return DBConstants.READ;
-        }
-    }
-
+    // DONE.
     public async checkSTWritePermissions(user: NRUser, st: NRStage) {
-        const allowed = await this.getSTWritePermission(user, st);
+        const allowed = await this.getSTPermForUser(st, user);
 
         if (!(allowed)) {
-            console.log(`PermissionService.checkSTWritePermissions, ERRORING`);
             const errStr = `User with ID ${user.id} does not have ST write permissions.`;
             throw new Errors.ForbiddenError(errStr);
         }
-
-        console.log(`PermissionService.checkSTWritePermissions, ALLOWING`);
     }
 
     public async checkDCWritePermission(user: NRUser, did: number): Promise<number> {

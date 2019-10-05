@@ -48,7 +48,7 @@ export class DocumentResource {
     /**
      * Create a new document based on passed information.
      *
-     * Returns:
+     * response:
      *      - NRDocument
      *      - BadRequestError(400)
      *          - If document properties missing.
@@ -59,49 +59,31 @@ export class DocumentResource {
     @POST
     @PreProcessor(createDocumentValidator)
     public async createDocument(document: NRDocument): Promise<NRDocument> {
-        const sessionUser = this.serviceContext.user();
-
-        const currWorkflow = await this.workflowService.getWorkflow(document.workflow.id);
-
+        const user = this.serviceContext.user();
+        const wf = await this.workflowService.getWorkflow(document.workflow.id);
+        
         // Assign the document to the first stage in a workflow if no stage was passed.
         if (!(document.stage)) {
-            const minSeq = await this.getMinStageSequenceId(currWorkflow.id);
-
-            console.log(`DocumentResource.createDocument, action=get stage for new document, minseq=${minSeq}`);
+            const minSeq = await this.getMinStageSequenceId(wf.id);
 
             if (minSeq === -1) {
-                const errStr = `Can't create a document in a workflow ${currWorkflow.id} with no stages.`;
+                const errStr = `Can't create a document in workflow ${wf.id} with no stages.`;
 
                 console.log(errStr);
                 throw new BadRequestError(errStr);
             }
 
-            console.log(`DocumentResource.createDocument, action=continue, message=stage(s) exists`);
-
-            let currStage: NRStage;
-
-            currStage = await this.stageRepository
-                .createQueryBuilder(DBConstants.STGE_TABLE)
-                .where(`${DBConstants.STGE_TABLE}.sequenceId = :sid`, {sid: minSeq})
-                .andWhere(`${DBConstants.STGE_TABLE}.workflowId = :wid`, {wid: currWorkflow.id})
-                .getOne();
-
-            document.stage = currStage;
+            document.stage = await this.stageRepository.findOne({ where: { workflow: wf, 'sequenceId': minSeq } });
         } else {
             // Verify that the specified stage actually exists.
-            try {
-                await this.stageRepository.findOneOrFail(document.stage.id);
-            } catch (err) {
-                const errStr = `Passed stage ${document.stage.id} doesn't exist.`;
-
-                console.log(errStr);
-                throw new BadRequestError(errStr);
-            }
+            await this.workflowService.getStage(document.stage.id);
         }
 
-        document.creator = sessionUser;
+        // Check permissions to stage.
+        await this.permissionService.checkSTWritePermissions(user, document.stage);
 
-        document.googleDocId = await this.documentService.createGoogleDocument(sessionUser, document);
+        document.creator = user;
+        document.googleDocId = await this.documentService.createGoogleDocument(user, document);
 
         return await this.documentRepository.save(document);
     }
@@ -490,9 +472,7 @@ export class DocumentResource {
         return maxSeq.max;
     }
 
-    // Get the minimum sequenceId for the given workflows stages.
     private async getMinStageSequenceId(wid: number): Promise<number> {
-        console.log(`DocumentResource.getMinStageSequenceId, action=start, wid=${wid}`);
         const currWorkflow = await this.workflowService.getWorkflow(wid);
 
         // Hacky way to fix documents being created for workflows with no stages.
@@ -501,10 +481,7 @@ export class DocumentResource {
             .where(`${DBConstants.STGE_TABLE}.workflowId = :id`, {id: currWorkflow.id})
             .getMany();
 
-        console.log(`DocumentResource.getMinStageSequenceId, action=checking existence, result=${exists.length}`);
-
         if (exists.length === 0) {
-            console.log(`DocumentResource.getMinStageSequenceId, action=returning -1`);
             return -1;
         }
 
