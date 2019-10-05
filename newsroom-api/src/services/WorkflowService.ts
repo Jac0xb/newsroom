@@ -169,4 +169,13 @@ export class WorkflowService {
         return docs;
     }
 
+    public async getMaxStageSequenceId(wf: NRWorkflow): Promise<number> {
+        const maxSeq = await this.stageRepository
+            .createQueryBuilder(DBConstants.STGE_TABLE)
+            .select("MAX(stage.sequenceId)", "max")
+            .where("stage.workflowId = :id", {id: wf.id})
+            .getRawOne();
+
+        return maxSeq.max;
+    }
 }
