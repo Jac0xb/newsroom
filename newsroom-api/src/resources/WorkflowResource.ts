@@ -252,9 +252,16 @@ export class WorkflowResource {
     /**
      * Add a stage at the end of the workflow.
      *
-     * wid: The primary key of the workflow in question.
-     * stage: The stage object to create.
-     * returns:
+     * path: 
+     *      - wid: The primary key of the workflow in question.
+     * 
+     * request:
+     *      {
+     *          "name": <string>,
+     *          "description": <string>
+     *      }
+     * 
+     * response:
      *      - NRStage that was created.
      *      - BadRequestError (400)
      *          - If workflow properties are missing.
@@ -263,19 +270,19 @@ export class WorkflowResource {
      *          - If request user is not allowed to update workflows.
      *      - NotFoundError (404)
      *          - If workflow not found.
+     *      - InternalServerError (500)
+     *          - If something went horribly wrong.
      */
     @POST
     @Path("/:wid/stages")
     @PreProcessor(addStageValidator)
     public async appendStage(@IsInt @PathParam("wid") wid: number,
                              stage: NRStage): Promise<NRStage> {
-        // Apparently we have to wait on this call?
         const user = await this.serviceContext.user();
-
         const wf = await this.workflowService.getWorkflow(wid);
+
         await this.permissionService.checkWFWritePermissions(user, wf);
 
-        // Grab the next sequence ID for this set of workflow stages.
         const maxSeqId = await this.getMaxStageSequenceId(wf.id);
 
         if (maxSeqId == null) {
@@ -285,7 +292,6 @@ export class WorkflowResource {
         }
 
         try {
-            // Establish the relationship and save it.
             stage.workflow = wf;
             stage.creator = user;
             await this.workflowRepository.save(wf);
@@ -312,23 +318,29 @@ export class WorkflowResource {
     /**
      * Get all stages for a specific workflow.
      *
-     * Returns:
+     * path:
+     *      - wid: The primary key of the workflow in question.
+     * 
+     * request: None.
+     * 
+     * response:
      *      - NRStage[]
      *      - NotFoundError (404)
      *          - If workflow not found.
+     *      - InternalServerError (500)
+     *          - If something went horribly wrong.
      */
     @GET
     @Path("/:wid/stages")
     public async getStages(@IsInt @PathParam("wid") wid: number): Promise<NRStage[]> {
-        const sessionUser = this.serviceContext.user();
-        const currWorkflow = await this.workflowService.getWorkflow(wid);
+        const wf = await this.workflowService.getWorkflow(wid);
 
         try {
-            // Grab all the stages for this workflow.
-            const stages = await this.stageRepository
-                .createQueryBuilder(DBConstants.STGE_TABLE)
-                .where("stage.workflowId = :id", {id: currWorkflow.id})
-                .getMany();
+            const stages = await this.stageRepository.find({ where: { workflow: wf }});
+            // const stages = await this.stageRepository
+            //     .createQueryBuilder(DBConstants.STGE_TABLE)
+            //     .where("stage.workflowId = :id", {id: currWorkflow.id})
+            //     .getMany();
 
             // Return them in ascending sequence order.
             stages.sort((a: NRStage, b: NRStage) => a.sequenceId - b.sequenceId);

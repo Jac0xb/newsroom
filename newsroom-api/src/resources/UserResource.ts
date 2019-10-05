@@ -3,10 +3,11 @@ import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { DELETE, Errors, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-import { NRRole, NRUser } from "../entity";
+import { NRRole, NRUser, NRWFUSPermission, NRSTUSPermission } from "../entity";
 import { RoleService } from "../services/RoleService";
 import { UserService } from "../services/UserService";
 import { createUserValidator, updateUserValidator } from "../validators/UserValidators";
+import { WorkflowService } from "../services/WorkflowService";
 
 // Provides API services for users.
 @Service()
@@ -19,11 +20,21 @@ export class UserResource {
     @InjectRepository(NRUser)
     private userRepository: Repository<NRUser>;
 
+    @InjectRepository(NRWFUSPermission)
+    private wfUSRepository: Repository<NRWFUSPermission>;
+
+    @InjectRepository(NRSTUSPermission)
+    private stUSRepository: Repository<NRSTUSPermission>;
+
     @Inject()
     private userService: UserService;
 
     @Inject()
     private roleService: RoleService;
+
+    @Inject()
+    private workflowService: WorkflowService;
+
 
     /**
      * Create a new user.
@@ -220,6 +231,44 @@ export class UserResource {
 
             const errStr = `Error removing role from user.`;
             throw new Errors.InternalServerError(errStr);
+        }
+    }
+
+    @PUT
+    @Path("/:uid/perm/:wid/:perm")
+    public async addWFPerm(@IsInt @PathParam("uid") uid: number,
+                           @IsInt @PathParam("wid") wid: number,
+                           @IsInt @PathParam("perm") permission: number): Promise<NRWFUSPermission> {
+        const user = await this.userService.getUser(uid);
+        const wf = await this.workflowService.getWorkflow(wid);
+
+        const wfup = await this.wfUSRepository.findOne({ where: { 'workflow': wf,
+                                                                  'user': user}})
+        
+        if (wfup === undefined) {
+            return await this.workflowService.createWFUSPermission(wid, user, permission);
+        } else {
+            wfup.access = permission;
+            return await this.wfUSRepository.save(wfup);
+        }
+    }
+
+    @PUT
+    @Path("/:uid/perm/:sid")
+    public async addSTPerm(@IsInt @PathParam("uid") uid: number,
+                           @IsInt @PathParam("sid") sid: number,
+                           @IsInt @PathParam("perm") permission: number): Promise<NRSTUSPermission> {
+        const user = await this.userService.getUser(uid);
+        const st = await this.workflowService.getStage(sid);
+
+        const stup = await this.stUSRepository.findOne({ where: {'stage': st,
+                                                                 'user': user}})
+
+        if (stup === undefined) {
+            return await this.workflowService.createSTUSPermission(sid, user, permission);
+        } else {
+            stup.access = permission;
+            return await this.stUSRepository.save(stup);
         }
     }
 }

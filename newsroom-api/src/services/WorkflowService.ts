@@ -32,9 +32,6 @@ export class WorkflowService {
     private userRepository: Repository<NRUser>;
 
     @Inject()
-    private userService: UserService;
-
-    @Inject()
     private permissionService: PermissionService;
 
     // DONE.
