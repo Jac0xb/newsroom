@@ -29,7 +29,6 @@ export class PermissionService {
     @InjectRepository(NRSTUSPermission)
     private stUSRepository: Repository<NRSTUSPermission>;
 
-
     @Inject()
     private userService: UserService;
 

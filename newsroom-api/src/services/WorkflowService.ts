@@ -178,4 +178,21 @@ export class WorkflowService {
 
         return maxSeq.max;
     }
+
+    /**
+     * For some views, the users permissions on each stage is dependent on
+     * the associated workflow. This function will change the permission on
+     * each of the workflows stages to match the workflow itself.
+     * 
+     * wf: The workflow in question.
+     */
+    public matchSTPermToWF(wf: NRWorkflow): void {
+        if ((wf.stages === undefined) || (wf.stages.length === 0)) {
+            return;
+        }
+
+        for (const st of wf.stages) {
+            st.permission = wf.permission;
+        }
+    }
 }

@@ -121,11 +121,8 @@ export class WorkflowResource {
      * response: 
      *      - The requested workflow with the following relations:
      *          - stages: All stages that exist in this workflow.
+     *              - permission: This will match the users permissions over the workflow.
      *          - permission: The READ/WRITE permissions of the user for this workflow
-     *              - NOTE: If the user has permissions to edit the workflow,
-     *                      they can edit any stage within the workflow as well.
-     *                      Check permissions on the workflow to determine what
-     *                      to display for each stage.
      */
     @GET
     @Path("/:wid")
@@ -135,6 +132,7 @@ export class WorkflowResource {
         wf = await this.wfServ.addStageRelationsToWF(wf);
 
         // User can edit any stage based on permissions to the workflow itself.
+        this.wfServ.matchSTPermToWF(wf);
         return await this.wfServ.appendPermToWF(wf, user);
     }
 

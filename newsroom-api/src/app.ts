@@ -15,6 +15,7 @@ import { UserResource } from "./resources/UserResource";
 import { WorkflowResource } from "./resources/WorkflowResource";
 import { extendServiceContext } from "./ServiceContextExtension";
 import { TypeDIServiceFactory } from "./TypeDIServiceFactory";
+import { PermissionService } from "./services/PermissionService";
 
 class App {
     private express: express.Express;
@@ -24,7 +25,7 @@ class App {
     }
 
     /**
-     * Configure this app to run.
+     * Configure how this app should be run, mostly just for testing purposes.
      *
      * auth: Whether or not to do real user authentication.
      * docCreate: Whether or not to create actual Google Documents.
@@ -66,8 +67,28 @@ class App {
         return this.express;
     }
 
+    /**
+     * Databases only allow a single connection in some instances, so allow a way
+     * for external services to access this connection.
+     * 
+     * Primarily used for testing.
+     * 
+     * return: The database connection used by this app.
+     */
     public getDBConnection(): Connection {
         return getConnection();
+    }
+
+    /**
+     * Services contain their own injected dependencies that outside sources
+     * might need access to.
+     * 
+     * Primarily used for testing.
+     * 
+     * return: The injected PermissionService used by this app.
+     */
+    public getPermService(): PermissionService {
+        return Container.get(PermissionService);
     }
 }
 
