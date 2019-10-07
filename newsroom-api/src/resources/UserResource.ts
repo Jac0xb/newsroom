@@ -168,13 +168,14 @@ export class UserResource {
     @Path("/:uid/role/:rid")
     public async addRole(@IsInt @PathParam("uid") uid: number,
                          @IsInt @PathParam("rid") rid: number): Promise<NRUser> {
-        const currUser = await this.userService.getUser(uid);
-        const newRole = await this.roleService.getRole(rid);
+        const user = await this.userService.getUser(uid);
+        const role = await this.roleService.getRole(rid);
 
-        currUser.roles.push(newRole);
+        const usdb = await this.userRepository.findOne(user.id, { relations: ['roles']});
+        usdb.roles.push(role);
 
         try {
-            return await this.userRepository.save(currUser);
+            return await this.userRepository.save(usdb);
         } catch (err) {
             console.log(err);
 
@@ -235,7 +236,7 @@ export class UserResource {
     }
 
     @PUT
-    @Path("/:uid/perm/:wid/:perm")
+    @Path("/:uid/wfperm/:wid/:perm")
     public async addWFPerm(@IsInt @PathParam("uid") uid: number,
                            @IsInt @PathParam("wid") wid: number,
                            @IsInt @PathParam("perm") permission: number): Promise<NRWFUSPermission> {
@@ -254,7 +255,7 @@ export class UserResource {
     }
 
     @PUT
-    @Path("/:uid/perm/:sid")
+    @Path("/:uid/stperm/:sid/:perm")
     public async addSTPerm(@IsInt @PathParam("uid") uid: number,
                            @IsInt @PathParam("sid") sid: number,
                            @IsInt @PathParam("perm") permission: number): Promise<NRSTUSPermission> {
