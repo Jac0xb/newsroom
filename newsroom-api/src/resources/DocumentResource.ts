@@ -9,6 +9,7 @@ import { DBConstants, NRDCPermission, NRDocument, NRStage, NRSTPermission,
          NRSTUSPermission, NRWFUSPermission, NRWorkflow } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
+import { NotificationService } from "../services/triggers/NotificationService";
 import { UserService } from "../services/UserService";
 import { WorkflowService } from "../services/WorkflowService";
 import { createDocumentValidator, updateDocumentValidator } from "../validators/DocumentValidators";
@@ -53,6 +54,9 @@ export class DocumentResource {
     @Inject()
     private userService: UserService;
 
+    @Inject()
+    private notificationService: NotificationService;
+
     /**
      * Create a new document based on passed information.
      *
@@ -93,7 +97,11 @@ export class DocumentResource {
         document.creator = user;
         document.googleDocId = await this.documentService.createGoogleDocument(user, document);
 
-        return await this.documentRepository.save(document);
+        const newDocument = await this.documentRepository.save(document);
+
+        this.notificationService.sendDocumentCreatedOnWorkflowNotifications(newDocument, currWorkflow);
+
+        return newDocument;
     }
 
     /**

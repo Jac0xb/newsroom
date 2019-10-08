@@ -48,6 +48,10 @@ export class GoogleOAuth2Provider {
         use(strategy);
 
         app.get("/auth/google",
+            (req, res, done) => {
+                req.session.returnTo = req.query.redirect ? req.query.redirect : "";
+                done();
+            },
             authenticate("google", {
                 scope: [
                     "https://www.googleapis.com/auth/userinfo.profile",
@@ -58,7 +62,7 @@ export class GoogleOAuth2Provider {
 
         app.get(GoogleOAuth2Provider.CALLBACK_URL,
             authenticate("google", {failureRedirect: "/login"}), function(req, res) {
-                res.redirect("/");
+                res.redirect("/" + req.session.returnTo);
             });
     }
 }
