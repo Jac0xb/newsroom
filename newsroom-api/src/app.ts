@@ -14,8 +14,8 @@ import { RoleResource } from "./resources/RoleResource";
 import { UserResource } from "./resources/UserResource";
 import { WorkflowResource } from "./resources/WorkflowResource";
 import { extendServiceContext } from "./ServiceContextExtension";
-import { TypeDIServiceFactory } from "./TypeDIServiceFactory";
 import { PermissionService } from "./services/PermissionService";
+import { TypeDIServiceFactory } from "./TypeDIServiceFactory";
 
 class App {
     private express: express.Express;
@@ -70,9 +70,9 @@ class App {
     /**
      * Databases only allow a single connection in some instances, so allow a way
      * for external services to access this connection.
-     * 
+     *
      * Primarily used for testing.
-     * 
+     *
      * return: The database connection used by this app.
      */
     public getDBConnection(): Connection {
@@ -82,9 +82,9 @@ class App {
     /**
      * Services contain their own injected dependencies that outside sources
      * might need access to.
-     * 
+     *
      * Primarily used for testing.
-     * 
+     *
      * return: The injected PermissionService used by this app.
      */
     public getPermService(): PermissionService {

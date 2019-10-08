@@ -1,10 +1,12 @@
 import { Inject } from "typedi";
-import { In, Repository, IsNull } from "typeorm";
+import { In, IsNull, Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { Context, DELETE, GET, Path, PathParam, POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
+import { Context, DELETE, GET, Path, PathParam, POST,
+         PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 import { BadRequestError, ForbiddenError } from "typescript-rest/dist/server/model/errors";
-import { DBConstants, NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow, NRWFUSPermission, NRSTUSPermission } from "../entity";
+import { DBConstants, NRDCPermission, NRDocument, NRStage, NRSTPermission,
+         NRSTUSPermission, NRWFUSPermission, NRWorkflow } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";
@@ -37,7 +39,7 @@ export class DocumentResource {
     private wfUSRepository: Repository<NRWFUSPermission>;
 
     @InjectRepository(NRSTUSPermission)
-    private stUSRepository: Repository<NRSTUSPermission>
+    private stUSRepository: Repository<NRSTUSPermission>;
 
     @Inject()
     private workflowService: WorkflowService;
@@ -67,7 +69,7 @@ export class DocumentResource {
     public async createDocument(document: NRDocument): Promise<NRDocument> {
         const user = this.serviceContext.user();
         const wf = await this.workflowService.getWorkflow(document.workflow.id);
-        
+
         // Assign the document to the first stage in a workflow if no stage was passed.
         if (!(document.stage)) {
             const minSeq = await this.getMinStageSequenceId(wf.id);
@@ -79,7 +81,7 @@ export class DocumentResource {
                 throw new BadRequestError(errStr);
             }
 
-            document.stage = await this.stageRepository.findOne({ where: { workflow: wf, 'sequenceId': minSeq } });
+            document.stage = await this.stageRepository.findOne({ where: { workflow: wf, sequenceId: minSeq } });
         } else {
             // Verify that the specified stage actually exists.
             await this.workflowService.getStage(document.stage.id);
@@ -118,12 +120,12 @@ export class DocumentResource {
         const docs = new Set<NRDocument>();
 
         // Individual permissions.
-        const allPerms = await this.stUSRepository.find({ where: { 'userId': usr.id, 
-                                                                    access: DBConstants.WRITE },
-                                                          relations: ['stage'] } );
+        const allPerms = await this.stUSRepository.find({ relations: ["stage"],
+                                                          where: { access: DBConstants.WRITE,
+                                                                   userId: usr.id } } );
 
         for (const perm of allPerms) {
-            const st = await this.stageRepository.findOne(perm.stage.id, { relations: ['documents'] });
+            const st = await this.stageRepository.findOne(perm.stage.id, { relations: ["documents"] });
 
             for (const doc of st.documents) {
                 docs.add(doc);
@@ -133,9 +135,9 @@ export class DocumentResource {
         // Group permissions..
         const allRoles = await this.userService.getUserRoles(usr.id);
         for (const role of allRoles) {
-            const stp = await this.permSTRepository.find({ relations: ['stage'],
-                                                           where: { role: role,
-                                                                    access: DBConstants.WRITE } })
+            const stp = await this.permSTRepository.find({ relations: ["stage"],
+                                                           where: { access: DBConstants.WRITE,
+                                                                    role } });
 
             for (const st of stp) {
                 docs.add(await this.documentRepository.findOne({ where: { stage: st.stage }}));
@@ -226,8 +228,8 @@ export class DocumentResource {
     @GET
     @Path("/orphan")
     public async getAllOrphanDocuments(): Promise<NRDocument[]> {
-        return await this.documentRepository.find( { where: [ { workflow: IsNull() }, 
-                                                              { stage: IsNull() } ] })
+        return await this.documentRepository.find( { where: [ { workflow: IsNull() },
+                                                              { stage: IsNull() } ] });
     }
 
     /**

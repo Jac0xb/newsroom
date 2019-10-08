@@ -49,7 +49,7 @@ export class WorkflowService {
     // DONE.
     public async addStageRelationsToWF(wf: NRWorkflow): Promise<NRWorkflow> {
         try {
-            return await this.workflowRepository.findOne(wf.id, { relations: ['stages'] });
+            return await this.workflowRepository.findOne(wf.id, { relations: ["stages"] });
         } catch (err) {
             console.error(`addStageRelationsToWF error: ${err}`);
 
@@ -73,7 +73,7 @@ export class WorkflowService {
             throw new Errors.InternalServerError(errStr);
         }
     }
- 
+
     // DONE.
     public async appendPermToWF(wf: NRWorkflow, user: NRUser): Promise<NRWorkflow> {
         wf.permission = await this.permissionService.getWFPermForUser(wf, user);
@@ -183,7 +183,7 @@ export class WorkflowService {
      * For some views, the users permissions on each stage is dependent on
      * the associated workflow. This function will change the permission on
      * each of the workflows stages to match the workflow itself.
-     * 
+     *
      * wf: The workflow in question.
      */
     public matchSTPermToWF(wf: NRWorkflow): void {

@@ -4,7 +4,8 @@ import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Errors } from "typescript-rest";
 import { InternalServerError } from "typescript-rest/dist/server/model/errors";
-import { NRDCPermission, NRSTPermission, NRUser, NRWFPermission, NRWFUSPermission, NRWorkflow, NRStage, NRSTUSPermission } from "../entity";
+import { NRDCPermission, NRStage, NRSTPermission, NRSTUSPermission,
+         NRUser, NRWFPermission, NRWFUSPermission, NRWorkflow } from "../entity";
 import { DBConstants } from "../entity";
 import { UserService } from "./UserService";
 import { WorkflowService } from "./WorkflowService";
@@ -193,11 +194,12 @@ export class PermissionService {
         if ((!allowed) && (allRoles !== undefined)) {
             // Get the 'highest' permissions over all roles the user is a part of.
             for (const role of allRoles) {
-                const roleRight = await this.permSTRepository.createQueryBuilder(DBConstants.STPERM_TABLE)
-                                                             .select(`MAX(${DBConstants.STPERM_TABLE}.access)`, "max")
-                                                             .where(`${DBConstants.STPERM_TABLE}.roleId = :id`, {id: role.id})
-                                                             .andWhere(`${DBConstants.STPERM_TABLE}.stageId = :stid`, {stid: st.id})
-                                                             .getRawOne();
+                const roleRight = await this.permSTRepository
+                   .createQueryBuilder(DBConstants.STPERM_TABLE)
+                   .select(`MAX(${DBConstants.STPERM_TABLE}.access)`, "max")
+                   .where(`${DBConstants.STPERM_TABLE}.roleId = :id`, {id: role.id})
+                   .andWhere(`${DBConstants.STPERM_TABLE}.stageId = :stid`, {stid: st.id})
+                   .getRawOne();
 
                 // Found one with WRITE, so just return now.
                 if (roleRight.max === DBConstants.WRITE) {

@@ -9,7 +9,7 @@ import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";
 import { WorkflowService } from "../services/WorkflowService";
 import { addStageValidator, updateStageValidator } from "../validators/StageValidators";
-import { createWorkflowValidator, 
+import { createWorkflowValidator,
          updateWorkflowValidator } from "../validators/WorkflowValidators";
 
 @Path("/api/workflows")
@@ -38,7 +38,7 @@ export class WorkflowResource {
      *
      * path:
      *      - None.
-     * 
+     *
      * request: A workflow object to create.
      *      {
      *          "name": <string>,
@@ -82,13 +82,13 @@ export class WorkflowResource {
 
     /**
      * Get all existing workflows.
-     * 
+     *
      * path:
      *      - None.
-     * 
-     * request: 
+     *
+     * request:
      *      - None.
-     * 
+     *
      * response:
      *      - All existing objects with the following relations:
      *          - permission: The READ/WRITE permissions of the user for this workflow
@@ -111,14 +111,14 @@ export class WorkflowResource {
 
     /**
      * Get a specific workflow.
-     * 
+     *
      * path:
      *      - wid: The primary key of the workflow in question.
-     * 
-     * request: 
+     *
+     * request:
      *      - None.
-     * 
-     * response: 
+     *
+     * response:
      *      - The requested workflow with the following relations:
      *          - stages: All stages that exist in this workflow.
      *              - permission: This will match the users permissions over the workflow.
@@ -132,17 +132,18 @@ export class WorkflowResource {
         wf = await this.wfServ.addStageRelationsToWF(wf);
 
         // User can edit any stage based on permissions to the workflow itself.
-        this.wfServ.matchSTPermToWF(wf);
-        return await this.wfServ.appendPermToWF(wf, user);
+        const wfr = await this.wfServ.appendPermToWF(wf, user);
+        this.wfServ.matchSTPermToWF(wfr);
+        return wfr;
     }
 
     /**
      * Update information about a workflow.
-     * 
+     *
      * path:
      *      - wid: The primary key of the workflow to update.
-     * 
-     * request: 
+     *
+     * request:
      *      {
      *          "name": <string>,
      *          "description": <string>
@@ -185,11 +186,11 @@ export class WorkflowResource {
 
     /**
      * Delete a workflow and all associated stages.
-     * 
+     *
      * path:
      *      - wid: The primary key of the workflow to delete.
-     * 
-     * request: 
+     *
+     * request:
      *      - None.
      *
      * returns:
@@ -220,9 +221,9 @@ export class WorkflowResource {
     /**
      * Add a stage at the end of the workflow.
      *
-     * path: 
+     * path:
      *      - wid: The primary key of the workflow in question.
-     * 
+     *
      * request:
      *      {
      *          "name": <string>,
@@ -230,7 +231,7 @@ export class WorkflowResource {
      *          "permission": <number>
      *      }
      *          - permission: 1 to create with WRITE, 0 to create with READ, or not passed at all.
-     * 
+     *
      * response:
      *      - NRStage that was created.
      *      - BadRequestError (400)
@@ -293,9 +294,9 @@ export class WorkflowResource {
      *
      * path:
      *      - wid: The primary key of the workflow in question.
-     * 
+     *
      * request: None.
-     * 
+     *
      * response:
      *      - NRStage[]
      *      - NotFoundError (404)
@@ -325,13 +326,13 @@ export class WorkflowResource {
 
     /**
      * Get a specific stage by ID.
-     * 
+     *
      * path:
      *      - wid: The primary key of the workflow in question.
      *      - sid: The primary key of the stage in question.
-     * 
+     *
      * request: None.
-     * 
+     *
      * response:
      *      - NRStage
      *      - NotFoundError (404)
@@ -348,7 +349,7 @@ export class WorkflowResource {
 
         try {
             // Grab the specified stage for the right workflow.
-            const stage = await this.stRep.findOne({ where: { "workflowId": wid, "id": sid}});
+            const stage = await this.stRep.findOne({ where: { workflowId: wid, id: sid}});
 
             return await this.wfServ.appendPermToST(stage, user);
         } catch (err) {
@@ -361,11 +362,11 @@ export class WorkflowResource {
 
     /**
      * Add a stage at the given position in the workflow.
-     * 
-     * path: 
+     *
+     * path:
      *      - wid: The primary key of the workflow in question.
      *      - position: The position to add the stage at, NOT zero-indexed.
-     * 
+     *
      * request:
      *      {
      *          "name": <string>,
@@ -409,7 +410,7 @@ export class WorkflowResource {
                 stage.sequenceId = 1;
             } else if (position > maxSeqId + 1) {
                 position = maxSeqId + 1;
-            } else { 
+            } else {
                 // Insert normally.
                 let currSeq = maxSeqId;
 
@@ -460,11 +461,11 @@ export class WorkflowResource {
 
     /**
      * Delete the given stage.
-     * 
+     *
      * path:
      *      - wid: The primary key of the workflow in question.
      *      - sid: The primary key of the stage in question.
-     * 
+     *
      * request: None.
      *
      * response:
@@ -531,11 +532,11 @@ export class WorkflowResource {
 
     /**
      * Update the given stage.
-     * 
-     * path: 
+     *
+     * path:
      *      - wid: The primary key of the workflow in question.
      *      - sid: The primary key of the stage in question.
-     * 
+     *
      * request:
      *      {
      *          "name": <string>,
