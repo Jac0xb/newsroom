@@ -1,10 +1,12 @@
 import { Inject } from "typedi";
-import { Repository } from "typeorm";
+import { In, IsNull, Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { Context, DELETE, GET, Path, PathParam, POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
+import { Context, DELETE, GET, Path, PathParam, POST,
+         PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-import { BadRequestError } from "typescript-rest/dist/server/model/errors";
-import { DBConstants, NRDCPermission, NRDocument, NRStage, NRSTPermission, NRWorkflow } from "../entity";
+import { BadRequestError, ForbiddenError } from "typescript-rest/dist/server/model/errors";
+import { DBConstants, NRDCPermission, NRDocument, NRStage, NRSTPermission,
+         NRSTUSPermission, NRWFUSPermission, NRWorkflow } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { NotificationService } from "../services/triggers/NotificationService";
@@ -34,6 +36,12 @@ export class DocumentResource {
     @InjectRepository(NRDCPermission)
     private permDCRepository: Repository<NRDCPermission>;
 
+    @InjectRepository(NRWFUSPermission)
+    private wfUSRepository: Repository<NRWFUSPermission>;
+
+    @InjectRepository(NRSTUSPermission)
+    private stUSRepository: Repository<NRSTUSPermission>;
+
     @Inject()
     private workflowService: WorkflowService;
 
@@ -52,7 +60,7 @@ export class DocumentResource {
     /**
      * Create a new document based on passed information.
      *
-     * Returns:
+     * response:
      *      - NRDocument
      *      - BadRequestError(400)
      *          - If document properties missing.
@@ -63,42 +71,31 @@ export class DocumentResource {
     @POST
     @PreProcessor(createDocumentValidator)
     public async createDocument(document: NRDocument): Promise<NRDocument> {
-        const sessionUser = this.serviceContext.user();
-
-        const currWorkflow = await this.workflowService.getWorkflow(document.workflow.id);
+        const user = this.serviceContext.user();
+        const wf = await this.workflowService.getWorkflow(document.workflow.id);
 
         // Assign the document to the first stage in a workflow if no stage was passed.
         if (!(document.stage)) {
-            const minSeq = await this.getMinStageSequenceId(currWorkflow.id);
-
-            console.log(`DocumentResource.createDocument, action=get stage for new document, minseq=${minSeq}`);
+            const minSeq = await this.getMinStageSequenceId(wf.id);
 
             if (minSeq === -1) {
-                const errStr = `Can't create a document in a workflow ${currWorkflow.id} with no stages.`;
+                const errStr = `Can't create a document in workflow ${wf.id} with no stages.`;
 
                 console.log(errStr);
                 throw new BadRequestError(errStr);
             }
 
-            console.log(`DocumentResource.createDocument, action=continue, message=stage(s) exists`);
-
-            let currStage: NRStage;
-
-            currStage = await this.stageRepository
-                .createQueryBuilder(DBConstants.STGE_TABLE)
-                .where(`${DBConstants.STGE_TABLE}.sequenceId = :sid`, {sid: minSeq})
-                .andWhere(`${DBConstants.STGE_TABLE}.workflowId = :wid`, {wid: currWorkflow.id})
-                .getOne();
-
-            document.stage = currStage;
+            document.stage = await this.stageRepository.findOne({ where: { workflow: wf, sequenceId: minSeq } });
         } else {
             // Verify that the specified stage actually exists.
-            await this.stageRepository.findOneOrFail(document.stage.id);
+            await this.workflowService.getStage(document.stage.id);
         }
 
-        document.creator = sessionUser;
+        // Check permissions to stage.
+        await this.permissionService.checkSTWritePermissions(user, document.stage);
 
-        document.googleDocId = await this.documentService.createGoogleDocument(sessionUser, document);
+        document.creator = user;
+        document.googleDocId = await this.documentService.createGoogleDocument(user, document);
 
         const newDocument = await this.documentRepository.save(document);
 
@@ -110,7 +107,7 @@ export class DocumentResource {
     /**
      * Get all existing documents.
      *
-     * Returns:
+     * response:
      *      - NRDocument[]
      */
     @GET
@@ -121,39 +118,41 @@ export class DocumentResource {
     /**
      * Get all documents a user has write permissions on.
      *
-     * Returns:
+     * response:
      *      - NRDocument[]
      */
-    @Path("/user")
     @GET
-    public async getUserDocuments(): Promise<Set<NRDocument>> {
-        const sessionUser = this.serviceContext.user();
-        const allRoles = await this.userService.getUserRoles(sessionUser.id);
-
+    @Path("/user")
+    public async getUserDocuments(): Promise<NRDocument[]> {
+        const usr = this.serviceContext.user();
         const docs = new Set<NRDocument>();
 
-        for (const role of allRoles) {
-            // Get all stages this role has WRITE access to.
-            const stgs = await this.permSTRepository
-                .createQueryBuilder(DBConstants.STPERM_TABLE)
-                .where(`${DBConstants.STPERM_TABLE}.roleId = :r`, {r: role.id})
-                .andWhere(`${DBConstants.STPERM_TABLE}.access = ${DBConstants.WRITE}`)
-                .getMany();
+        // Individual permissions.
+        const allPerms = await this.stUSRepository.find({ relations: ["stage"],
+                                                          where: { access: DBConstants.WRITE,
+                                                                   userId: usr.id } } );
 
-            // Accumulate all the documents in this stage.
-            const dcs = await this.documentRepository
-                .createQueryBuilder(DBConstants.DOCU_TABLE)
-                .where(`${DBConstants.DOCU_TABLE}.stageId IN (:stagsId)`, {stageIds: stgs})
-                .getMany();
+        for (const perm of allPerms) {
+            const st = await this.stageRepository.findOne(perm.stage.id, { relations: ["documents"] });
 
-            for (const d of dcs) {
-                // We already know they have WRITE permissions.
-                d.permission = DBConstants.WRITE;
-                docs.add(d);
+            for (const doc of st.documents) {
+                docs.add(doc);
             }
         }
 
-        return docs;
+        // Group permissions..
+        const allRoles = await this.userService.getUserRoles(usr.id);
+        for (const role of allRoles) {
+            const stp = await this.permSTRepository.find({ relations: ["stage"],
+                                                           where: { access: DBConstants.WRITE,
+                                                                    role } });
+
+            for (const st of stp) {
+                docs.add(await this.documentRepository.findOne({ where: { stage: st.stage }}));
+            }
+        }
+
+        return Array.from(docs.values());
     }
 
     /**
@@ -164,8 +163,8 @@ export class DocumentResource {
      *      - NotFoundError (404)
      *          - If document not found.
      */
-    @Path("/:did")
     @GET
+    @Path("/:did")
     public async getDocument(@PathParam("did") did: number): Promise<NRDocument> {
         return await this.documentService.getDocument(did);
     }
@@ -176,8 +175,8 @@ export class DocumentResource {
      * Returns:
      *      - NRDocument[]
      */
-    @Path("/author/:aid")
     @GET
+    @Path("/author/:aid")
     public async getDocumentsForAuthor(@PathParam("aid") aid: number): Promise<NRDocument[]> {
         return await this.documentRepository
             .createQueryBuilder(DBConstants.DOCU_TABLE)
@@ -193,14 +192,14 @@ export class DocumentResource {
      *      - NotFoundError (404)
      *          - If stage not found.
      */
-    @Path("/stage/:sid")
     @GET
+    @Path("/stage/:sid")
     public async getAllDocumentsForStage(@IsInt @PathParam("sid") sid: number): Promise<NRDocument[]> {
-        const assocStage = await this.workflowService.getStage(sid);
+        await this.workflowService.getStage(sid);
 
         return await this.documentRepository
             .createQueryBuilder(DBConstants.DOCU_TABLE)
-            .where("stageId = :sId", {sId: assocStage.id})
+            .where("stageId = :sId", {sId: sid})
             .getMany();
     }
 
@@ -213,8 +212,8 @@ export class DocumentResource {
      *          - If workflow not found.
      *
      */
-    @Path("/workflow/:wid")
     @GET
+    @Path("/workflow/:wid")
     public async getAllDocumentsForWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRDocument[]> {
         // Check for existence.
         await this.workflowService.getWorkflow(wid);
@@ -223,6 +222,22 @@ export class DocumentResource {
             .createQueryBuilder(DBConstants.DOCU_TABLE)
             .where("workflowId = :id", {id: wid})
             .getMany();
+    }
+
+    /**
+     * Get all documents that aren't in a workflow or stage.
+     *
+     * Returns:
+     *      - NRDocument[]
+     *      - NotFoundError (404)
+     *          - If workflow not found.
+     *
+     */
+    @GET
+    @Path("/orphan")
+    public async getAllOrphanDocuments(): Promise<NRDocument[]> {
+        return await this.documentRepository.find( { where: [ { workflow: IsNull() },
+                                                              { stage: IsNull() } ] });
     }
 
     /**
@@ -355,7 +370,7 @@ export class DocumentResource {
         const workflowId = currDocument.workflow.id;
 
         // Must have WRITE on current stage to move forward.
-        await this.permissionService.checkSTWritePermissions(sessionUser, currStage.id);
+        await this.permissionService.checkSTWritePermissions(sessionUser, currStage);
 
         console.log(`DocumentResource.moveNext, action=getting maxSeq,
         currStage=${currStage.id}, currSeq=${currStage.sequenceId}`);
@@ -452,7 +467,7 @@ export class DocumentResource {
         const currStage = currDocument.stage;
         const workflowId = currDocument.workflow.id;
 
-        await this.permissionService.checkSTWritePermissions(sessionUser, currStage.id);
+        await this.permissionService.checkSTWritePermissions(sessionUser, currStage);
 
         // The first stage in any workflow is always sequence 1.
         const minSeq = 0;
@@ -479,33 +494,29 @@ export class DocumentResource {
 
     // Get the maximum sequenceId for the given workflows stages.
     private async getMaxStageSequenceId(wid: number): Promise<number> {
-        const currWorkflow = await this.workflowService.getWorkflow(wid);
+        const wf = await this.workflowService.getWorkflow(wid);
 
+        // Check that the workflow has stages.
+        const exists = await this.stageRepository.find({ where: { workflow: wf } });
+        if (exists.length === 0) {
+            return -1;
+        }
         // Grab the next sequenceId for this set of workflow stages.
         const maxSeq = await this.stageRepository
             .createQueryBuilder(DBConstants.STGE_TABLE)
             .select(`MAX(${DBConstants.STGE_TABLE}.sequenceId)`, "max")
-            .where(`${DBConstants.STGE_TABLE}.workflowId = :id`, {id: currWorkflow.id})
+            .where(`${DBConstants.STGE_TABLE}.workflowId = :id`, {id: wf.id})
             .getRawOne();
 
         return maxSeq.max;
     }
 
-    // Get the minimum sequenceId for the given workflows stages.
     private async getMinStageSequenceId(wid: number): Promise<number> {
-        console.log(`DocumentResource.getMinStageSequenceId, action=start, wid=${wid}`);
-        const currWorkflow = await this.workflowService.getWorkflow(wid);
+        const wf = await this.workflowService.getWorkflow(wid);
 
-        // Hacky way to fix documents being created for workflows with no stages.
-        const exists = await this.stageRepository
-            .createQueryBuilder(DBConstants.STGE_TABLE)
-            .where(`${DBConstants.STGE_TABLE}.workflowId = :id`, {id: currWorkflow.id})
-            .getMany();
-
-        console.log(`DocumentResource.getMinStageSequenceId, action=checking existence, result=${exists.length}`);
-
+        // Check that the workflow has stages.
+        const exists = await this.stageRepository.find({ where: { workflow: wf } });
         if (exists.length === 0) {
-            console.log(`DocumentResource.getMinStageSequenceId, action=returning -1`);
             return -1;
         }
 
@@ -513,7 +524,7 @@ export class DocumentResource {
         const minSeq = await this.stageRepository
             .createQueryBuilder(DBConstants.STGE_TABLE)
             .select(`MIN(${DBConstants.STGE_TABLE}.sequenceId)`, "min")
-            .where(`${DBConstants.STGE_TABLE}.workflowId = :id`, {id: currWorkflow.id})
+            .where(`${DBConstants.STGE_TABLE}.workflowId = :id`, {id: wf.id})
             .getRawOne();
 
         return minSeq.min;

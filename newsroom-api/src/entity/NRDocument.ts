@@ -14,6 +14,7 @@ import {
 
 import { DBConstants } from "./DBConstants";
 import { NRDCPermission } from "./NRDCPermission";
+import { NRDCUSPermission } from "./NRDCUSPermission";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
@@ -28,7 +29,6 @@ export class NRDocument {
     @Column()
     public googleDocId: string;
 
-    // Name of the document.
     @Column({
         length: 256,
         nullable: false,
@@ -36,7 +36,6 @@ export class NRDocument {
     })
     public name: string;
 
-    // A brief description of the document.
     @Column({
         length: 1000,
         nullable: true,
@@ -44,11 +43,9 @@ export class NRDocument {
     })
     public description: string;
 
-    // The date of when this document was created.
     @CreateDateColumn()
     public created: Date;
 
-    // The date of when this document was last edited.
     @UpdateDateColumn()
     public lastUpdated: Date;
 
@@ -62,7 +59,6 @@ export class NRDocument {
      */
     @ManyToOne(
         (type) => NRUser,
-        {eager: true},
     )
     @JoinColumn({name: "creator"})
     public creator: NRUser;
@@ -75,7 +71,7 @@ export class NRDocument {
     @ManyToOne(
         (type) => NRWorkflow,
         (workflow) => workflow.documents,
-        { eager: true, onDelete: "CASCADE" },
+        { onDelete: "SET NULL" },
     )
     public workflow: NRWorkflow;
 
@@ -87,7 +83,7 @@ export class NRDocument {
     @ManyToOne(
         (type) => NRStage,
         (stage) => stage.documents,
-        { eager: true },
+        { onDelete: "SET NULL" },
     )
     public stage: NRStage;
 
@@ -103,4 +99,15 @@ export class NRDocument {
     @JoinTable()
     public permissions: NRDCPermission[];
 
+    /**
+     * Relationship: NRDCUSPermission
+     *      - One: Each user permission is only associated with one document.
+     *      - Many: Each document can have many user permissions.
+     */
+    @OneToMany(
+        (type) => NRDCUSPermission,
+        (permission) => permission.document,
+    )
+    @JoinTable()
+    public usrpermissions: NRDCUSPermission[];
 }

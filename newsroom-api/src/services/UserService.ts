@@ -10,10 +10,6 @@ export class UserService {
     @InjectRepository(NRUser)
     private repository: Repository<NRUser>;
 
-    @InjectRepository(NRRole)
-    private roleRepository: Repository<NRRole>;
-
-    // Get a user based on ID.
     public async getUser(uid: number): Promise<NRUser> {
         try {
             return await this.repository.findOneOrFail(uid);
@@ -25,9 +21,8 @@ export class UserService {
         }
     }
 
-    // Get all roles for a user.
     public async getUserRoles(uid: number): Promise<NRRole[]> {
-        const user = await this.getUser(uid);
+        const user = await this.repository.findOneOrFail(uid, { relations: ["roles"] });
         return user.roles;
     }
 }

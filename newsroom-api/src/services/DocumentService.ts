@@ -1,4 +1,5 @@
 import { google } from "googleapis";
+import { Guid } from "guid-typescript";
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
@@ -22,7 +23,7 @@ export class DocumentService {
     @Inject()
     private userService: UserService;
 
-    // Get a document based on ID.
+    // DONE.
     public async getDocument(did: number): Promise<NRDocument> {
         try {
             return await this.documentRepository.findOneOrFail(did);
@@ -80,6 +81,10 @@ export class DocumentService {
      * Creates a Google Doc and returns the id
      */
     public async createGoogleDocument(user: NRUser, doc: NRDocument): Promise<string> {
+        if (process.env.DOC_SKIP === "Y") {
+            return Guid.create().toString();
+        }
+
         const oAuth2Client = this.createOAuth2Client(user);
 
         const docs = google.docs({

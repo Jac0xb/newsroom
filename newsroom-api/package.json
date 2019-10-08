@@ -8,7 +8,7 @@
     "prestart": "yarn build",
     "start": "ts-node .",
     "start:watch": "nodemon -e ts --watch src --exec 'yarn start'",
-    "test": "jest",
+    "test": "jest --runInBand",
     "typeorm": "tsc && ts-node node_modules/typeorm/cli.js",
     "buildDB": "yarn typeorm schema:sync && yarn typeorm migration:run"
   },
@@ -34,6 +34,7 @@
     "express": "^4.16.4",
     "express-session": "^1.16.2",
     "googleapis": "^43.0.0",
+    "guid-typescript": "^1.0.9",
     "nyc": "^14.1.1",
     "passport": "^0.4.0",
     "passport-google-oauth": "^2.0.0",

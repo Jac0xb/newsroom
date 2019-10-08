@@ -3,9 +3,10 @@ import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { DELETE, Errors, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-import { NRRole, NRUser } from "../entity";
+import { NRRole, NRSTUSPermission, NRUser, NRWFUSPermission } from "../entity";
 import { RoleService } from "../services/RoleService";
 import { UserService } from "../services/UserService";
+import { WorkflowService } from "../services/WorkflowService";
 import { createUserValidator, updateUserValidator } from "../validators/UserValidators";
 
 // Provides API services for users.
@@ -19,11 +20,20 @@ export class UserResource {
     @InjectRepository(NRUser)
     private userRepository: Repository<NRUser>;
 
+    @InjectRepository(NRWFUSPermission)
+    private wfUSRepository: Repository<NRWFUSPermission>;
+
+    @InjectRepository(NRSTUSPermission)
+    private stUSRepository: Repository<NRSTUSPermission>;
+
     @Inject()
     private userService: UserService;
 
     @Inject()
     private roleService: RoleService;
+
+    @Inject()
+    private workflowService: WorkflowService;
 
     /**
      * Create a new user.
@@ -157,13 +167,14 @@ export class UserResource {
     @Path("/:uid/role/:rid")
     public async addRole(@IsInt @PathParam("uid") uid: number,
                          @IsInt @PathParam("rid") rid: number): Promise<NRUser> {
-        const currUser = await this.userService.getUser(uid);
-        const newRole = await this.roleService.getRole(rid);
+        const user = await this.userService.getUser(uid);
+        const role = await this.roleService.getRole(rid);
 
-        currUser.roles.push(newRole);
+        const usdb = await this.userRepository.findOne(user.id, { relations: ["roles"]});
+        usdb.roles.push(role);
 
         try {
-            return await this.userRepository.save(currUser);
+            return await this.userRepository.save(usdb);
         } catch (err) {
             console.log(err);
 
@@ -220,6 +231,44 @@ export class UserResource {
 
             const errStr = `Error removing role from user.`;
             throw new Errors.InternalServerError(errStr);
+        }
+    }
+
+    @PUT
+    @Path("/:uid/wfperm/:wid/:perm")
+    public async addWFPerm(@IsInt @PathParam("uid") uid: number,
+                           @IsInt @PathParam("wid") wid: number,
+                           @IsInt @PathParam("perm") permission: number): Promise<NRWFUSPermission> {
+        const usr = await this.userService.getUser(uid);
+        const wf = await this.workflowService.getWorkflow(wid);
+
+        const wfup = await this.wfUSRepository.findOne({ where: { user: usr,
+                                                                  workflow: wf } });
+
+        if (wfup === undefined) {
+            return await this.workflowService.createWFUSPermission(wid, usr, permission);
+        } else {
+            wfup.access = permission;
+            return await this.wfUSRepository.save(wfup);
+        }
+    }
+
+    @PUT
+    @Path("/:uid/stperm/:sid/:perm")
+    public async addSTPerm(@IsInt @PathParam("uid") uid: number,
+                           @IsInt @PathParam("sid") sid: number,
+                           @IsInt @PathParam("perm") permission: number): Promise<NRSTUSPermission> {
+        const usr = await this.userService.getUser(uid);
+        const st = await this.workflowService.getStage(sid);
+
+        const stup = await this.stUSRepository.findOne({ where: {stage: st,
+                                                                 user: usr}});
+
+        if (stup === undefined) {
+            return await this.workflowService.createSTUSPermission(sid, usr, permission);
+        } else {
+            stup.access = permission;
+            return await this.stUSRepository.save(stup);
         }
     }
 }

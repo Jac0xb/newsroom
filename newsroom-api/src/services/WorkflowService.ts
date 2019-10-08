@@ -2,7 +2,10 @@ import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Errors } from "typescript-rest";
-import { DBConstants, NRStage, NRSTPermission, NRUser, NRWFPermission, NRWorkflow} from "../entity";
+
+import { DBConstants, NRDocument, NRStage, NRSTPermission, NRSTUSPermission,
+         NRUser, NRWFPermission, NRWFUSPermission, NRWorkflow } from "../entity";
+import { PermissionService } from "./PermissionService";
 import { UserService } from "./UserService";
 
 @Service()
@@ -16,37 +19,129 @@ export class WorkflowService {
     @InjectRepository(NRWFPermission)
     private permWFRepository: Repository<NRWFPermission>;
 
+    @InjectRepository(NRWFUSPermission)
+    private wfUSRepository: Repository<NRWFUSPermission>;
+
+    @InjectRepository(NRSTUSPermission)
+    private stUSRepository: Repository<NRSTUSPermission>;
+
     @InjectRepository(NRSTPermission)
     private permSTRepository: Repository<NRSTPermission>;
 
-    @Inject()
-    private userService: UserService;
+    @InjectRepository(NRUser)
+    private userRepository: Repository<NRUser>;
 
-    // Get a workflow based on ID.
+    @Inject()
+    private permissionService: PermissionService;
+
+    // DONE.
     public async getWorkflow(wid: number): Promise<NRWorkflow> {
         try {
             return await this.workflowRepository.findOneOrFail(wid);
         } catch (err) {
-            console.error("Error getting workflow:", err);
+            console.error(`getWorkflow error: ${err}`);
 
-            const errStr = `Workflow with ID ${wid} was not found.`;
+            const errStr = `Error getting workflow with ID=${wid}.`;
             throw new Errors.NotFoundError(errStr);
         }
     }
 
-    // Get a stage based on ID.
-    public async getStage(sid: number): Promise<NRStage> {
+    // DONE.
+    public async addStageRelationsToWF(wf: NRWorkflow): Promise<NRWorkflow> {
         try {
-            const st = await this.stageRepository
-                .createQueryBuilder(DBConstants.STGE_TABLE)
-                .select("workflowId", "val")
-                .where(`${DBConstants.STGE_TABLE}.id = :s`, { s: sid })
-                .getRawOne();
+            return await this.workflowRepository.findOne(wf.id, { relations: ["stages"] });
+        } catch (err) {
+            console.error(`addStageRelationsToWF error: ${err}`);
 
-            const wf = await this.workflowRepository.findOne({ where: { workflow: st.val }});
+            const errStr = `Error loading relations for workflow with ID=${wf.id}.`;
+            throw new Errors.InternalServerError(errStr);
+        }
+    }
 
+    // DONE.
+    public async addStageRelationsToWFS(wfs: NRWorkflow[]): Promise<NRWorkflow[]> {
+        try {
+            for (let i = 0; i < wfs.length; i++) {
+                wfs[i] = await this.addStageRelationsToWF(wfs[i]);
+            }
+
+            return wfs;
+        } catch (err) {
+            console.error(`addStageRelationsToWFS error: ${err}`);
+
+            const errStr = `Error loading relations for workflows.`;
+            throw new Errors.InternalServerError(errStr);
+        }
+    }
+
+    // DONE.
+    public async appendPermToWF(wf: NRWorkflow, user: NRUser): Promise<NRWorkflow> {
+        wf.permission = await this.permissionService.getWFPermForUser(wf, user);
+
+        return wf;
+    }
+
+    // DONE.
+    public async appendPermToWFS(wfs: NRWorkflow[], user: NRUser): Promise<NRWorkflow[]> {
+        for (let wf of wfs) {
+            wf = await this.appendPermToWF(wf, user);
+        }
+
+        return wfs;
+    }
+
+    // DONE.
+    public async appendPermToST(st: NRStage, user: NRUser): Promise<NRStage> {
+        st.permission = await this.permissionService.getSTPermForUser(st, user);
+
+        return st;
+    }
+
+    // DONE.
+    public async appendPermToSTS(stgs: NRStage[], user: NRUser): Promise<NRStage[]> {
+        for (let st of stgs) {
+            st = await this.appendPermToST(st, user);
+        }
+
+        return stgs;
+    }
+
+    // DONE.
+    public async createWFUSPermission(wid: number,
+                                      user: NRUser,
+                                      perm: number): Promise<NRWFUSPermission> {
+        const wf = await this.getWorkflow(wid);
+
+        const wfup = new NRWFUSPermission();
+        wfup.workflow = wf;
+        wfup.user = user;
+        wfup.access = perm;
+
+        await this.userRepository.save(user);
+        await this.workflowRepository.save(wf);
+        return await this.wfUSRepository.save(wfup);
+    }
+
+    // DONE.
+    public async createSTUSPermission(sid: number,
+                                      user: NRUser,
+                                      perm: number): Promise<NRSTUSPermission> {
+        const st = await this.getStage(sid);
+
+        const stup = new NRSTUSPermission();
+        stup.stage = st;
+        stup.user = user;
+        stup.access = perm;
+
+        await this.userRepository.save(user);
+        await this.stageRepository.save(st);
+        return await this.stUSRepository.save(stup);
+    }
+
+   public async getStage(sid: number): Promise<NRStage> {
+        try {
             const stage = await this.stageRepository.findOneOrFail(sid);
-            stage.workflow = wf;
+
             return stage;
         } catch (err) {
             console.error("Error getting stage:", err);
@@ -56,88 +151,48 @@ export class WorkflowService {
         }
     }
 
-    // Determine if a user has READ/WRITE on a workflow.
-    public async getWorkflowPermissionForUser(wf: NRWorkflow, user: NRUser): Promise<number> {
-        const allRoles = await this.userService.getUserRoles(user.id);
+    public async getAllDocumentsInWorkflow(wid: number) {
+        const wf = await this.getWorkflow(wid);
+        const docs: NRDocument[] = [];
 
-        let allowed = false;
+        // Accumulate all documents from all stages of the workflow.
+        for (const st of wf.stages) {
+            if (st.documents === undefined) {
+                continue;
+            }
 
-        for (const role of allRoles) {
-            const roleRight = await this.permWFRepository
-                .createQueryBuilder(DBConstants.WFPERM_TABLE)
-                .select(`MAX(${DBConstants.WFPERM_TABLE}.access)`, "max")
-                .where(`${DBConstants.WFPERM_TABLE}.roleId = :id`, {id: role.id})
-                .andWhere(`${DBConstants.WFPERM_TABLE}.workflowId = :wfid`, {wfid: wf.id})
-                .getRawOne();
-
-            if (roleRight.max === DBConstants.WRITE) {
-                allowed = true;
-                break;
+            if (st.documents.length > 0) {
+                docs.concat(st.documents);
             }
         }
 
-        if (allowed) {
-            return DBConstants.WRITE;
-        } else {
-            return DBConstants.READ;
-        }
+        return docs;
     }
 
-    // Add permission field to a single workflow.
-    public async getPermissionsForWF(wf: NRWorkflow, user: NRUser): Promise<NRWorkflow> {
-        wf.permission = await this.getWorkflowPermissionForUser(wf, user);
-        return wf;
+    public async getMaxStageSequenceId(wf: NRWorkflow): Promise<number> {
+        const maxSeq = await this.stageRepository
+            .createQueryBuilder(DBConstants.STGE_TABLE)
+            .select("MAX(stage.sequenceId)", "max")
+            .where("stage.workflowId = :id", {id: wf.id})
+            .getRawOne();
+
+        return maxSeq.max;
     }
 
-    // Add permission field to many workflows.
-    public async getPermissionsForWFS(wfs: NRWorkflow[], user: NRUser): Promise<NRWorkflow[]> {
-        for (let wf of wfs) {
-            wf = await this.getPermissionsForWF(wf, user);
-        }
-
-        return wfs;
-    }
-
-    // Determine if a user has READ/WRITE on a stage.
-    public async getStagePermissionForUser(st: NRStage, user: NRUser): Promise<number> {
-        const allRoles = await this.userService.getUserRoles(user.id);
-
-        let allowed = false;
-
-        for (const role of allRoles) {
-            const roleRight = await this.permSTRepository
-                .createQueryBuilder(DBConstants.STPERM_TABLE)
-                .select(`MAX(${DBConstants.STPERM_TABLE}.access)`, "max")
-                .where(`${DBConstants.STPERM_TABLE}.roleId = :id`, {id: role.id})
-                .andWhere(`${DBConstants.STPERM_TABLE}.stageId = :stid`, {stid: st.id})
-                .getRawOne();
-
-            if (roleRight.max === DBConstants.WRITE) {
-                allowed = true;
-                break;
-            }
+    /**
+     * For some views, the users permissions on each stage is dependent on
+     * the associated workflow. This function will change the permission on
+     * each of the workflows stages to match the workflow itself.
+     *
+     * wf: The workflow in question.
+     */
+    public matchSTPermToWF(wf: NRWorkflow): void {
+        if ((wf.stages === undefined) || (wf.stages.length === 0)) {
+            return;
         }
 
-        if (allowed) {
-            return DBConstants.WRITE;
-        } else {
-            return DBConstants.READ;
+        for (const st of wf.stages) {
+            st.permission = wf.permission;
         }
     }
-
-    // Add permission field to a single stage.
-    public async getPermissionsForST(st: NRStage, user: NRUser): Promise<NRStage> {
-        st.permission = await this.getStagePermissionForUser(st, user);
-        return st;
-    }
-
-    // Add permission field to many stage.
-    public async getPermissionsForSTGS(stgs: NRStage[], user: NRUser): Promise<NRStage[]> {
-        for (let st of stgs) {
-            st = await this.getPermissionsForST(st, user);
-        }
-
-        return stgs;
-    }
-
 }
