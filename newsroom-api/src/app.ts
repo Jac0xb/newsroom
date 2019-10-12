@@ -30,7 +30,7 @@ class App {
      * auth: Whether or not to do real user authentication.
      * docCreate: Whether or not to create actual Google Documents.
      */
-    public async configure(auth: boolean, docCreate: boolean): Promise<express.Express> {
+    public async configure(auth: boolean, doGoogleAPICalls: boolean): Promise<express.Express> {
         Swagger.serve(this.express);
 
         // Register TypeDI Container with TypeORM, must be called before createConnection().
@@ -46,8 +46,8 @@ class App {
                 Container.get(FakeAuthConfig).configure(this.express);
             }
 
-            if (!(docCreate)) {
-                process.env.DOC_SKIP = "Y";
+            if (!(doGoogleAPICalls)) {
+                process.env.DO_GOOGLE = "N";
             }
 
             // Make sure ServiceContext gets extended.

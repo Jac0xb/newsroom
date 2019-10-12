@@ -4,8 +4,8 @@ import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Errors } from "typescript-rest";
-import { DBConstants, NRDCPermission, NRDocument, NRUser } from "../entity";
-import { UserService } from "./UserService";
+import { NRDocument, NRStage, NRUser } from "../entity";
+import { PermissionService } from "./PermissionService";
 
 @Service()
 export class DocumentService {
@@ -15,18 +15,14 @@ export class DocumentService {
     };
 
     @InjectRepository(NRDocument)
-    private documentRepository: Repository<NRDocument>;
-
-    @InjectRepository(NRDCPermission)
-    private permDCRepository: Repository<NRDCPermission>;
+    private dcRep: Repository<NRDocument>;
 
     @Inject()
-    private userService: UserService;
+    private permServ: PermissionService;
 
-    // DONE.
     public async getDocument(did: number): Promise<NRDocument> {
         try {
-            return await this.documentRepository.findOneOrFail(did);
+            return await this.dcRep.findOneOrFail(did);
         } catch (err) {
             console.error("Error getting document:", err);
 
@@ -35,53 +31,19 @@ export class DocumentService {
         }
     }
 
-    // Determine if a user has READ/WRITE on a document.
-    public async getDocumentPermissionForUser(doc: NRDocument, user: NRUser): Promise<number> {
-        const allRoles = await this.userService.getUserRoles(user.id);
+    public async appendPermToDC(dc: NRDocument, st: NRStage, usr: NRUser) {
+        dc.permission = await this.permServ.getDCPermForUser(dc, st, usr);
+    }
 
-        let allowed = false;
-
-        for (const role of allRoles) {
-            const roleRight = await this.permDCRepository
-                .createQueryBuilder(DBConstants.DCPERM_TABLE)
-                .select(`MAX(${DBConstants.DCPERM_TABLE}.access)`, "max")
-                .where(`${DBConstants.DCPERM_TABLE}.roleId = :id`, {id: role.id})
-                .andWhere(`${DBConstants.DCPERM_TABLE}.documentId = :dcid`, {dcid: doc.id})
-                .getRawOne();
-
-            if (roleRight.max === DBConstants.WRITE) {
-                allowed = true;
-                break;
-            }
-        }
-
-        if (allowed) {
-            return DBConstants.WRITE;
-        } else {
-            return DBConstants.READ;
+    public async appendPermsToDCS(dcs: NRDocument[], usr: NRUser) {
+        for (const dc of dcs) {
+            const dcwst = await this.dcRep.findOne(dc.id, { relations: ["stage"] });
+            await this.appendPermToDC(dc, dcwst.stage, usr);
         }
     }
 
-    // Add permission field to a single doc.
-    public async addPermissionsToDoc(doc: NRDocument, user: NRUser): Promise<NRDocument> {
-        doc.permission = await this.getDocumentPermissionForUser(doc, user);
-        return doc;
-    }
-
-    // Add permission field to many docs.
-    public async addPermissionsToDocs(docs: NRDocument[], user: NRUser): Promise<NRDocument[]> {
-        for (let doc of docs) {
-            doc = await this.addPermissionsToDoc(doc, user);
-        }
-
-        return docs;
-    }
-
-    /**
-     * Creates a Google Doc and returns the id
-     */
     public async createGoogleDocument(user: NRUser, doc: NRDocument): Promise<string> {
-        if (process.env.DOC_SKIP === "Y") {
+        if (process.env.DO_GOOGLE === "N") {
             return Guid.create().toString();
         }
 
@@ -101,10 +63,11 @@ export class DocumentService {
         return result.data.documentId;
     }
 
-    /**
-     * Updates the title of a Google Doc
-     */
     public async updateGoogleDocumentTitle(user: NRUser, doc: NRDocument) {
+        if (process.env.DO_GOOGLE === "N") {
+            return;
+        }
+
         const oAuth2Client = this.createOAuth2Client(user);
 
         const drive = google.drive({
@@ -120,9 +83,6 @@ export class DocumentService {
         });
     }
 
-    /**
-     * Deletes a Google Doc by id
-     */
     public async deleteGoogleDocument(user: NRUser, id: string) {
         const oAuth2Client = this.createOAuth2Client(user);
 

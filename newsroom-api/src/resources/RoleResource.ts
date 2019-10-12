@@ -1,16 +1,6 @@
 import { Repository } from "typeorm";
-import {
-    Context,
-    DELETE,
-    Errors,
-    GET,
-    Path,
-    PathParam,
-    POST,
-    PreProcessor,
-    PUT,
-    ServiceContext,
-} from "typescript-rest";
+import { Context, DELETE, Errors, GET, Path, PathParam, POST, PreProcessor,
+    PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 
 import { Inject } from "typedi";
@@ -22,7 +12,6 @@ import { RoleService } from "../services/RoleService";
 import { WorkflowService } from "../services/WorkflowService";
 import { createRoleValidator, updateRoleValidator } from "../validators/RoleValidators";
 
-// Provides API services for roles.
 @Path("/api/roles")
 @Tags("Roles")
 export class RoleResource {
@@ -30,37 +19,34 @@ export class RoleResource {
     private serviceContext: ServiceContext;
 
     @InjectRepository(NRRole)
-    private roleRepository: Repository<NRRole>;
+    private rlRep: Repository<NRRole>;
 
     @InjectRepository(NRStage)
-    private stageRepository: Repository<NRStage>;
+    private stRep: Repository<NRStage>;
 
     @InjectRepository(NRWorkflow)
-    private workflowRepository: Repository<NRWorkflow>;
+    private wfRep: Repository<NRWorkflow>;
 
     @InjectRepository(NRDocument)
-    private documentRepository: Repository<NRDocument>;
+    private dcRep: Repository<NRDocument>;
 
     @InjectRepository(NRWFPermission)
-    private permWFRepository: Repository<NRWFPermission>;
+    private wfPRep: Repository<NRWFPermission>;
 
     @InjectRepository(NRSTPermission)
-    private permSTRepository: Repository<NRSTPermission>;
-
-    @InjectRepository(NRDCPermission)
-    private permDCRepository: Repository<NRDCPermission>;
+    private stPRep: Repository<NRSTPermission>;
 
     @Inject()
-    private workflowService: WorkflowService;
+    private wfServ: WorkflowService;
 
     @Inject()
-    private documentService: DocumentService;
+    private dcServ: DocumentService;
 
     @Inject()
-    private roleService: RoleService;
+    private rlServ: RoleService;
 
     @Inject()
-    private permissionService: PermissionService;
+    private permServ: PermissionService;
 
     /**
      * Create a new role.
@@ -75,7 +61,7 @@ export class RoleResource {
     public async createRole(role: NRRole): Promise<NRRole> {
         try {
             // Form data already validated.
-            const newRole = await this.roleRepository.save(role);
+            const newRole = await this.rlRep.save(role);
 
             // for (const wfPerm of newRole.wfpermissions) {
             //     await this.permWFRepository.save(wfPerm);
@@ -103,7 +89,7 @@ export class RoleResource {
     @GET
     public async getAllRoles(): Promise<NRRole[]> {
         try {
-            return await this.roleRepository.find();
+            return await this.rlRep.find();
         } catch (err) {
             console.log(err);
 
@@ -123,12 +109,8 @@ export class RoleResource {
     @GET
     @Path("/:rid")
     public async getRole(@IsInt @PathParam("rid") rid: number): Promise<NRRole> {
-        const role = await this.roleService.getRole(rid);
-
-        role.stpermissions = await this.permissionService.getAllSTPermissionsForRole(rid);
-        role.wfpermissions = await this.permissionService.getAllWFPermissionsForRole(rid);
-
-        return role;
+        const role = await this.rlServ.getRole(rid);
+        return await this.rlRep.findOne(role.id, { relations: ["stpermissions", "wfpermissions"] });
     }
 
     /**
@@ -146,7 +128,7 @@ export class RoleResource {
     @PreProcessor(updateRoleValidator)
     public async updateRole(@IsInt @PathParam("rid") rid: number,
                             role: NRRole): Promise<NRRole> {
-        const currRole = await this.roleService.getRole(rid);
+        const currRole = await this.rlServ.getRole(rid);
 
         if (role.name) {
             currRole.name = role.name;
@@ -157,7 +139,7 @@ export class RoleResource {
         }
 
         try {
-            return await this.roleRepository.save(currRole);
+            return await this.rlRep.save(currRole);
         } catch (err) {
             console.log(err);
 
@@ -176,10 +158,10 @@ export class RoleResource {
     @DELETE
     @Path("/:rid")
     public async deleteRole(@IsInt @PathParam("rid") rid: number) {
-        const currRole = await this.roleService.getRole(rid);
+        const currRole = await this.rlServ.getRole(rid);
 
         try {
-            await this.roleRepository.remove(currRole);
+            await this.rlRep.remove(currRole);
         } catch (err) {
             console.log(err);
 
@@ -201,28 +183,23 @@ export class RoleResource {
     @Path("/:rid/workflow/:wid")
     public async addWFPermission(@IsInt @PathParam("rid") rid: number,
                                  @IsInt @PathParam("wid") wid: number,
-                                 access: any): Promise<NRRole> {
+                                 access: any): Promise<NRWFPermission> {
         let perm: NRWFPermission;
-        let wf: NRWorkflow;
-        let rl: NRRole;
+
+        const wf = await this.wfServ.getWorkflow(wid);
+        const rl = await this.rlServ.getRole(rid);
 
         try {
-            perm = await this.permissionService.getWFPermissionFromWFRL(wid, rid);
-            wf = perm.workflow;
-            rl = perm.role;
+            perm = await this.permServ.getWFPermissionFromWFRL(wf, rl);
         } catch (NotFoundError) {
             perm = new NRWFPermission();
-            rl = await this.roleService.getRole(rid);
-            wf = await this.workflowService.getWorkflow(wid);
         }
 
         perm.workflow = wf;
         perm.role = rl;
         perm.access = access.access;
 
-        await this.permWFRepository.save(perm);
-        await this.workflowRepository.save(wf);
-        return await this.roleRepository.save(rl);
+        return await this.wfPRep.save(perm);
     }
 
     /**
@@ -238,73 +215,25 @@ export class RoleResource {
     @Path("/:rid/stage/:sid")
     public async addSTPermission(@IsInt @PathParam("rid") rid: number,
                                  @IsInt @PathParam("sid") sid: number,
-                                 access: any): Promise<NRRole> {
+                                 access: any): Promise<NRSTPermission> {
         let perm: NRSTPermission;
         let st: NRStage;
         let rl: NRRole;
 
         try {
-            perm = await this.permissionService.getSTPermissionFromSTRL(sid, rid);
+            perm = await this.permServ.getSTPermissionFromSTRL(sid, rid);
             st = perm.stage;
             rl = perm.role;
         } catch (NotFoundError) {
             perm = new NRSTPermission();
-            rl = await this.roleService.getRole(rid);
-            st = await this.workflowService.getStage(sid);
+            rl = await this.rlServ.getRole(rid);
+            st = await this.wfServ.getStage(sid);
         }
 
-        perm.stage = st;
-        perm.role = rl;
         perm.access = access.access;
 
-        await this.permSTRepository.save(perm);
-        await this.stageRepository.save(st);
-        return await this.roleRepository.save(rl);
-    }
-
-    /**
-     * Add or switch permissions on a document for a role.
-     *
-     * Returns:
-     *      - NRRole
-     *      - NotFoundError (404)
-     *          - If role not found.
-     *          - If workflow not found.
-     */
-    @PUT
-    @Path("/:rid/document")
-    public async addDCPermission(@IsInt @PathParam("rid") rid: number,
-                                 permission: NRDCPermission): Promise<NRRole> {
-        let newPerm: NRDCPermission;
-
-        try {
-            newPerm = await this.permissionService.getDCPermission(permission.id);
-            newPerm.id = permission.id;
-            newPerm.access = permission.access;
-            newPerm.role = permission.role;
-            newPerm.document = permission.document;
-        } catch (NotFoundError) {
-            newPerm = new NRDCPermission();
-            newPerm.access = permission.access;
-            newPerm.role = permission.role;
-            newPerm.document = permission.document;
-        }
-
-        const doc = await this.documentService.getDocument(newPerm.document.id);
-        const role = await this.roleService.getRole(rid);
-
-        try {
-            newPerm.document = doc;
-            newPerm.role = role;
-
-            await this.permWFRepository.save(newPerm);
-            await this.documentRepository.save(doc);
-            return await this.roleRepository.save(role);
-        } catch (err) {
-            console.log(err);
-
-            const errStr = `Error adding DC permission.`;
-            throw new Errors.InternalServerError(errStr);
-        }
+        await this.stRep.save(st);
+        await this.rlRep.save(rl);
+        return await this.stPRep.save(perm);
     }
 }
