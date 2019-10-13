@@ -1,10 +1,28 @@
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { DELETE, Errors, GET, Path, PathParam, POST, PreProcessor, PUT } from "typescript-rest";
+import {
+    Context,
+    DELETE,
+    Errors,
+    GET,
+    Path,
+    PathParam,
+    POST,
+    PreProcessor,
+    PUT,
+    ServiceContext,
+} from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-import { DBConstants, NRRole, NRSTPermission, NRSTUSPermission, NRUser,
-         NRUserSummary, NRWFPermission, NRWFUSPermission } from "../entity";
+import {
+    NRRole,
+    NRSTPermission,
+    NRSTUSPermission,
+    NRUser,
+    NRUserSummary,
+    NRWFPermission,
+    NRWFUSPermission,
+} from "../entity";
 import { RoleService } from "../services/RoleService";
 import { UserService } from "../services/UserService";
 import { WorkflowService } from "../services/WorkflowService";
@@ -41,6 +59,9 @@ export class UserResource {
 
     @Inject()
     private wfServ: WorkflowService;
+
+    @Context
+    private serviceContext: ServiceContext;
 
     /**
      * Create a new user.
@@ -104,6 +125,12 @@ export class UserResource {
             const errStr = `Error getting users.`;
             throw new Errors.InternalServerError(errStr);
         }
+    }
+
+    @GET
+    @Path("/current")
+    public async getCurrentUser(): Promise<NRUser> {
+        return this.serviceContext.user();
     }
 
     /**
@@ -245,7 +272,7 @@ export class UserResource {
         const user = await this.usServ.getUser(uid);
         const role = await this.rlServ.getRole(rid);
 
-        const usdb = await this.usRep.findOne(user.id, { relations: ["roles"]});
+        const usdb = await this.usRep.findOne(user.id, {relations: ["roles"]});
         usdb.roles.push(role);
 
         try {
@@ -276,7 +303,7 @@ export class UserResource {
     @Path("/:uid/roles")
     public async getRoles(@IsInt @PathParam("uid") uid: number): Promise<NRRole[]> {
         const user = await this.usServ.getUser(uid);
-        const ur = await this.usRep.findOne(user.id, { relations: ["roles"] });
+        const ur = await this.usRep.findOne(user.id, {relations: ["roles"]});
 
         try {
             return ur.roles;
@@ -348,8 +375,12 @@ export class UserResource {
         const usr = await this.usServ.getUser(uid);
         const wf = await this.wfServ.getWorkflow(wid);
 
-        const wfup = await this.wfUSRep.findOne({ where: { user: usr,
-                                                           workflow: wf } });
+        const wfup = await this.wfUSRep.findOne({
+            where: {
+                user: usr,
+                workflow: wf,
+            },
+        });
 
         if (wfup === undefined) {
             return await this.wfServ.createWFUSPermission(wid, usr, permission);
@@ -383,8 +414,12 @@ export class UserResource {
         const usr = await this.usServ.getUser(uid);
         const st = await this.wfServ.getStage(sid);
 
-        const stup = await this.stUSRep.findOne({ where: {stage: st,
-                                                                 user: usr}});
+        const stup = await this.stUSRep.findOne({
+            where: {
+                stage: st,
+                user: usr,
+            },
+        });
 
         if (stup === undefined) {
             return await this.wfServ.createSTUSPermission(sid, usr, permission);
@@ -414,11 +449,13 @@ export class UserResource {
         const usum = new NRUserSummary();
 
         // Individual permissions.
-        const usrwp = await this.usRep.findOne(usr.id, { relations: ["stpermissions",
-                                                                     "stpermissions.stage",
-                                                                     "wfpermissions",
-                                                                     "wfpermissions.workflow",
-                                                                     "roles"]});
+        const usrwp = await this.usRep.findOne(usr.id, {
+            relations: ["stpermissions",
+                "stpermissions.stage",
+                "wfpermissions",
+                "wfpermissions.workflow",
+                "roles"],
+        });
 
         return usrwp;
 
