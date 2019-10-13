@@ -53,17 +53,11 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
     componentDidMount() {
 
         axios.get("/api/workflows").then((response) => {
+            
+            
 
             var fetchedWorkflows = response.data;
-            var fetchedStages = []
-
-            for (var i = 0; i < fetchedWorkflows.length; i++) {
-                for (var j = 0; j < fetchedWorkflows[i].stages.length; j++) {
-                    fetchedStages.push(fetchedWorkflows[i].stages[j]);
-                }
-            }
-
-            this.setState({fetchedWorkflows, fetchedStages})
+            this.setState({fetchedWorkflows})
 
         }).catch((error) => {
             console.log(error)
@@ -134,15 +128,14 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
 
         axios.post("/api/roles", newRole).then(async (response: any) => {
             
+            console.log(response)
             var roleId = response.data.id
 
             for (var i = 0; i < wfpermissions.length; i++) {
-                console.log(`/api/roles/${roleId}/workflow/${wfpermissions[i].id}`)
-                console.log({access: wfpermissions[i].access})
                 await axios.put(`/api/roles/${roleId}/workflow/${wfpermissions[i].id}`, {access: wfpermissions[i].access})
             }
             for (var i = 0; i < stpermissions.length; i++) {
-                await axios.put(`/api/roles/${roleId}/stage/${stpermissions[i].id}`, {access: stpermissions[i].access})
+                await axios.put(`/api/roles/${roleId}/stages/${stpermissions[i].id}`, {access: stpermissions[i].access})
             }
 
             if (response) {

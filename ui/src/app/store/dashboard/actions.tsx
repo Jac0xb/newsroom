@@ -6,13 +6,34 @@ import { DocumentsAPI } from 'app/api/document'
 
 export function fetchDocuments() : any {
 
-    var requestHeaders: HeadersInit = new Headers();
-    requestHeaders.set('Content-Type', 'application/json');
+    var requestHeaders: HeadersInit = new Headers(
+        {'Content-Type': 'application/json'}
+    );
 
     return {
         [RSAA]: {
-            endpoint: () => DocumentsAPI.GETALLDOCUMENTS,
+            endpoint: () => DocumentsAPI.getAllDocuments(),
             method: 'GET',
+            headers: () => requestHeaders,
+            types: [
+                ActionTypes.DOCUMENTS_REQUEST,
+                ActionTypes.DOCUMENTS_SUCCESS,
+                ActionTypes.DOCUMENTS_FAILURE
+            ]
+        }
+    };
+}
+
+export function deleteDocument(id: number) : any {
+
+    var requestHeaders: HeadersInit = new Headers(
+        {'Content-Type': 'application/json'}
+    );
+
+    return {
+        [RSAA]: {
+            endpoint: () => DocumentsAPI.deleteDocument(id),
+            method: 'DELETE',
             headers: () => requestHeaders,
             types: [
                 ActionTypes.DOCUMENTS_REQUEST,
@@ -26,6 +47,7 @@ export function fetchDocuments() : any {
 export function mapDispatchToProps<T>(dispatch: ThunkDispatch<DashboardReducerState, any, any>, ownProps: T) : any {
     return {
         ...ownProps,
-        fetchDocuments: bindActionCreators(fetchDocuments, dispatch)
+        fetchDocuments: bindActionCreators(fetchDocuments, dispatch),
+        deleteDocument: bindActionCreators(deleteDocument, dispatch)
     }
 };

@@ -41,18 +41,8 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
     async handleDelete(id: number) {
 
         try {
-            //this.props.deleteDocumentPending();
-            //await DocumentsAPI.deleteDocument(id);
-            //this.props.deleteDocumentSuccess();
-        }
-        catch (err) {
-            console.log(err);
-        }
-
-        try {
-            //this.props.fetchDocumentsPending();
-            //var response = await DocumentsAPI.getAllDocuments();
-            //this.props.fetchDocumentsSuccess(response.data);
+            await this.props.deleteDocument(id);
+            this.props.fetchDocuments();
         }
         catch (err) {
             console.log(err);
