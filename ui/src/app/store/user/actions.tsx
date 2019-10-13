@@ -1,10 +1,9 @@
 import { UserActionTypes, UserDispatchers, SET_PERMISSIONS, EDIT_FLASH, SET_GROUPS } from "./types";
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
-import { Permissions } from "app/models/permissions";
-import { Group } from "app/models";
+import { NRRole as NRGroup, NRDCPermission } from "app/utils/models";
 
-export function dispatchSetPermissions(permissions: Array<Permissions>): UserActionTypes {
+export function dispatchSetPermissions(permissions: Array<NRDCPermission>): UserActionTypes {
   return {
     type: SET_PERMISSIONS,
     permissions: permissions,
@@ -16,7 +15,7 @@ export function dispatchEditFlash(flash: string): UserActionTypes {
     flash: flash
   };
 }
-export function dispatchSetGroups(groups: Array<Group>): UserActionTypes {
+export function dispatchSetGroups(groups: Array<NRGroup>): UserActionTypes {
   return {
     type: SET_GROUPS,
     groups: groups

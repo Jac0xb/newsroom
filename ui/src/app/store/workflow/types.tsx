@@ -1,8 +1,8 @@
-import { Stage } from "app/models";
+import { NRStage } from "app/utils/models";
 
 // Workflow state 
 export interface WorkflowState {
-  stages: Array<Stage>
+  stages: Array<NRStage>
   flash: string,
   createDialogOpen: boolean,
   editDialogOpen: boolean,
@@ -31,7 +31,7 @@ interface SetPermissionsAction {
 
 interface AddStageAction {
   type: typeof ADD_STAGE;
-  payload: Stage;
+  payload: NRStage;
   index: number;
 }
 
@@ -45,7 +45,7 @@ interface CloseDialogAction {
 
 interface SetStagesAction {
   type: typeof SET_STAGES;
-  payload: Array<Stage>;
+  payload: Array<NRStage>;
 }
 
 interface StageAddClickAction {
@@ -75,8 +75,8 @@ interface EditFlashAction {
 // Define Dispatchers
 export interface WorkflowDispatchers {
   fetchSetPermissions: (canEdit: boolean) => WorkflowActionTypes
-  fetchSetStages: (stages: Array<Stage>) => WorkflowActionTypes
-  fetchAddStage: (stage: Stage, index: number) => WorkflowActionTypes
+  fetchSetStages: (stages: Array<NRStage>) => WorkflowActionTypes
+  fetchAddStage: (stage: NRStage, index: number) => WorkflowActionTypes
   fetchStageAddClick: (seqID: number) => WorkflowActionTypes
   fetchTextBoxChange: (fieldName: string, newValue: string) => WorkflowActionTypes
   fetchStageEditClick: (stageID: number, seqID: number, newName: string, newDesc: string) => WorkflowActionTypes

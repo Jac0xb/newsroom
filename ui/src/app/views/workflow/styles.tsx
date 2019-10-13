@@ -13,7 +13,7 @@ export function styles(theme: Theme) {
         },
         workflowContent: {
             // marginTop: theme.spacing.unit * 3,
-            padding: theme.spacing.unit * 2,
+            padding: theme.spacing(2),
             display: "flex",
             overflowX: "auto",
         },
@@ -25,7 +25,7 @@ export function styles(theme: Theme) {
             margin: 8,
         },
         stageGrid: {
-            margin: theme.spacing.unit,
+            margin: theme.spacing(),
             minWidth: "200px",
             maxWidth: "400px"
         },

@@ -1,4 +1,4 @@
-import { Document } from 'app/models';
+import { NRDocument } from 'app/utils/models';
 import WorkflowMiniView from 'app/views/document_edit/components/WorkflowMiniview';
 import axios from 'axios';
 import * as React from 'react';
@@ -17,7 +17,7 @@ export namespace EditorContainer {
 		match: { params: { id: number } }
 	}
 	export interface State {
-		document?: Document
+		document?: NRDocument
 		styleBarUpdateFormats?: (formats: string[]) => void
 		errorText?: string
 	}
@@ -54,7 +54,7 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
 
         return (
             <main className={classes.main}>
-                <Grid container spacing={24}>
+                <Grid container spacing={4}>
                     <Grid item xs={9}>
                         <Paper className={classes.documentTitlePaper}>
                             <Typography variant="h5">

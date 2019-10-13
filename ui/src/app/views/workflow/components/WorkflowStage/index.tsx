@@ -82,7 +82,7 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
       <main className={classes.layout}>
         <Paper className={classes.stage} key={this.props.id}>
           <div className={classes.headingDiv}>
-              <Typography className={classes.heading} variant="title">
+              <Typography className={classes.heading}>
                 {this.props.name}
               </Typography>
               { this.props.canEdit ? 
@@ -122,7 +122,7 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
           <Typography component="p">
             {(this.props.desc) === "" ? "(No Description)" : this.props.desc}
           </Typography>
-          <Grid className={classes.documentGrid} container spacing={16}>
+          <Grid className={classes.documentGrid} container spacing={4}>
             {docList}
           </Grid>
         </Paper>

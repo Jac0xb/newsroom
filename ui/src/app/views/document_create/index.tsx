@@ -78,12 +78,12 @@ class DocumentCreate extends React.Component<DocumentCreate.Props, DocumentCreat
 						</Button>
 					</Link>
 				</div>
-				<Grid className={classes.outerGrid} alignContent={"center"} container spacing={24} direction="row" justify="center" alignItems="center">
+				<Grid className={classes.outerGrid} alignContent={"center"} container spacing={4} direction="row" justify="center" alignItems="center">
 					<Grid item xs={8} md={6}>
 						<Paper className={classes.formPaper}>
 							{(this.state.flash != "") ?
 								<Paper className={classes.flashMessage}>
-									<Typography variant="caption">
+									<Typography>
 										{this.state.flash}
 									</Typography>
 								</Paper> :

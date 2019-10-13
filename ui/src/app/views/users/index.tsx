@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Avatar, Button } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import { User } from 'app/models';
+import { NRUser } from 'app/utils/models';
 import { styles } from './styles';
 import axios from 'axios';
 import MaterialTable from "material-table";
@@ -16,7 +16,7 @@ export namespace Users {
     }
 
     export interface State {
-        users: User[],
+        users: NRUser[],
         filterInput: string
     }
 }
@@ -48,7 +48,7 @@ class Users extends React.Component<Users.Props, Users.State> {
                         {title: "First Name", field: "firstName"},
                         {title: "Last Name", field: "lastName"},
                         {title: "Email", field: "email"},
-                        {title: "", render: (user: User) => this.deleteUser.bind(this)(user)}
+                        {title: "", render: (user: NRUser) => this.deleteUser.bind(this)(user)}
                     ]}
                     data={users}
                     title="Users"/>
@@ -56,17 +56,17 @@ class Users extends React.Component<Users.Props, Users.State> {
         );
     }
 
-    static getUserAvatar(user: User) {
+    static getUserAvatar(user: NRUser) {
         return <Avatar>{user.firstName.substring(0, 1) + user.lastName.substring(0, 1)}</Avatar>
     }
 
-    static getUserName(user: User) {
+    static getUserName(user: NRUser) {
         return <Link style={{ textDecoration: "none" }} to={`/users/${user.id}`}>
             {user.userName}
         </Link>
     }
 
-    deleteUser(user: User) {
+    deleteUser(user: NRUser) {
         var onClick = async () => {
             
             await axios.delete(`/api/users/${user.id}`);

@@ -1,6 +1,6 @@
 import { DocumentsAPI } from 'app/api/document';
 import { LoadingComponent } from 'app/components/common/loading';
-import { Document } from 'app/models';
+import { NRDocument } from 'app/utils/models';
 import { mapDispatchToProps } from 'app/store/dashboard/actions';
 import { mapStateToProps } from 'app/store/dashboard/reducers';
 import { DashboardDispatchers, DashboardReducerState } from 'app/store/dashboard/types';
@@ -24,7 +24,7 @@ export namespace Dashboard {
         location: any,
     }
     export interface State {
-        documents: Document[]
+        documents: NRDocument[]
     }
 }
 

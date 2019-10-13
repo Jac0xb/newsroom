@@ -1,8 +1,8 @@
-import { Document } from "app/models";
+import { NRDocument } from "app/utils/models";
 
 // Dashboard state 
 export interface DashboardReducerState {
-    documents: Document[]
+    documents: NRDocument[]
     pending: boolean
     error?: string
 }
@@ -21,7 +21,7 @@ interface FetchDocumentPendingAction {
 
 interface FetchDocumentSuccessAction {
     type: typeof FETCH_DOCUMENTS_SUCCESS;
-    payload: Array<Document>;
+    payload: Array<NRDocument>;
 }
 
 interface FetchDocumentErrorAction {
@@ -46,7 +46,7 @@ interface DeleteDocumentErrorAction {
 
 export interface DashboardDispatchers {
     fetchDocumentsPending: () => DashboardActionTypes
-    fetchDocumentsSuccess: (document: Document[]) => DashboardActionTypes
+    fetchDocumentsSuccess: (document: NRDocument[]) => DashboardActionTypes
     fetchDocumentsError: (error: string) => DashboardActionTypes
     deleteDocumentPending: () => DashboardActionTypes
     deleteDocumentSuccess: () => DashboardActionTypes

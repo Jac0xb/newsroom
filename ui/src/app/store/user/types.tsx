@@ -1,11 +1,10 @@
-import { Permissions } from "app/models/permissions";
-import { Group } from "app/models";
+import { NRRole as NRGroup, NRDCPermission } from "app/utils/models";
 
 // State 
 export interface UserState {
-  permissions: Array<Permissions>
+  permissions: Array<NRDCPermission>
   flash: string,
-  groups: Array<Group>
+  groups: Array<NRGroup>
 }
   
 // Describing the different ACTION NAMES available
@@ -15,7 +14,7 @@ export const SET_GROUPS = "SET_GROUPS";
   
 interface SetPermissionsAction {
   type: typeof SET_PERMISSIONS;
-  permissions: Array<Permissions>;
+  permissions: Array<NRDCPermission>;
 }
 interface EditFlashAction {
   type: typeof EDIT_FLASH;
@@ -23,14 +22,14 @@ interface EditFlashAction {
 }
 interface SetGroupsAction {
   type: typeof SET_GROUPS;
-  groups: Array<Group>;
+  groups: Array<NRGroup>;
 }
 
 // Define Dispatchers
 export interface UserDispatchers {
-  fetchSetPermissions: (permissions: Array<Permissions>) => UserActionTypes
+  fetchSetPermissions: (permissions: Array<NRDCPermission>) => UserActionTypes
   fetchEditFlash: (flash: string) => UserActionTypes
-  fetchSetGroups: (groups: Array<Group>) => UserActionTypes
+  fetchSetGroups: (groups: Array<NRGroup>) => UserActionTypes
 }
 
 export type UserActionTypes = 

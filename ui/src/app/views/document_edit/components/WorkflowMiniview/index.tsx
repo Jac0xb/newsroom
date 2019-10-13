@@ -1,7 +1,7 @@
 import { Button, ExpansionPanel, ExpansionPanelActions, ExpansionPanelDetails, ExpansionPanelSummary, Link, Step, StepLabel, Stepper, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { ExpandMore } from '@material-ui/icons';
-import { Workflow } from 'app/models/workflow';
+import { NRWorkflow, NRStage } from 'app/utils/models';
 import * as React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { styles } from './styles';
@@ -9,7 +9,7 @@ import { styles } from './styles';
 export namespace WorkflowMiniView {
   export interface Props {
     classes?: any
-    workflow: Workflow
+    workflow: NRWorkflow
     currentStage: number
     onMove: (direction: string) => void
   }
@@ -43,7 +43,7 @@ class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, WorkflowM
           </ExpansionPanelSummary>
           <ExpansionPanelDetails className={classes.details}>
             <Stepper orientation="vertical" className={classes.stepper} activeStep={currentStage}>
-              {stages.map((stage) => {
+              {stages.map((stage: NRStage) => {
                 return (
                   <Step key={stage.id}>
                     <StepLabel>

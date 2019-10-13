@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Avatar, Button } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import { Group } from 'app/models';
+import { NRRole as NRGroup } from 'app/utils/models';
 import { styles } from './styles';
 import axios from 'axios';
 import MaterialTable from "material-table";
@@ -16,7 +16,7 @@ export namespace Groups {
     }
 
     export interface State {
-        groups: Group[],
+        groups: NRGroup[],
         filterInput: string
     }
 }

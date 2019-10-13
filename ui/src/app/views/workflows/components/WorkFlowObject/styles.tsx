@@ -4,8 +4,8 @@ export function styles(theme: Theme)  {
         return (
         {
           button: {
-            margin: theme.spacing.unit,
-            marginTop: theme.spacing.unit,
+            margin: theme.spacing(1),
+            marginTop: theme.spacing(1),
           },
           documentItem: {
           maxWidth: "300px",
@@ -30,7 +30,7 @@ export function styles(theme: Theme)  {
             whiteSpace: "nowrap"
         },
             buttonGroup: {
-          paddingTop: theme.spacing.unit * 2,
+          paddingTop: theme.spacing(2),
           display: "flex",
           flexDirection: "row-reverse"
             }

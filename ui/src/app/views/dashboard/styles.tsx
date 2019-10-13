@@ -28,7 +28,7 @@ export function styles(theme: Theme)  {
 			flexWrap: 'wrap'
 		},
 		textField: {
-			marginRight: theme.spacing.unit,
+			marginRight: theme.spacing(),
 			marginTop: 0,
 			marginBottom: 0
 			

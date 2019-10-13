@@ -329,7 +329,7 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
                         </Button>
                     </Link>
                 </div>
-                <Grid className={classes.outerGrid} alignContent={"center"} container spacing={24} direction="row"
+                <Grid className={classes.outerGrid} alignContent={"center"} container spacing={4} direction="row"
                       justify="center" alignItems="center">
                     <Grid item xs={8} md={6}>
                         <Paper className={classes.formGroup}>

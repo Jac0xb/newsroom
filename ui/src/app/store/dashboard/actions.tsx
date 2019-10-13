@@ -2,7 +2,7 @@ import * as Types from "./types";
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 
-import { Document } from "app/models";
+import { NRDocument } from "app/utils/models";
 
 export function dispatchFetchDocumentsPending(): Types.DashboardActionTypes {
     return {
@@ -10,7 +10,7 @@ export function dispatchFetchDocumentsPending(): Types.DashboardActionTypes {
     };
 }
 
-export function dispatchFetchDocumentsSuccess(documents: Document[]): Types.DashboardActionTypes {
+export function dispatchFetchDocumentsSuccess(documents: NRDocument[]): Types.DashboardActionTypes {
     return {
         type: Types.FETCH_DOCUMENTS_SUCCESS,
         payload: documents

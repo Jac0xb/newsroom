@@ -5,51 +5,51 @@ export function styles(theme: Theme) {
     {
       main: {
         width: 'auto',
-        marginLeft: theme.spacing.unit * 1,
-        marginRight: theme.spacing.unit * 1,
-        [theme.breakpoints.up(800 + theme.spacing.unit * 2 * 2)]: {
+        marginLeft: theme.spacing(),
+        marginRight: theme.spacing(),
+        [theme.breakpoints.up(800 + theme.spacing(4))]: {
           marginLeft: '10px',
           marginRight: '10px'
         },
         paddingTop: "16px",
       },
       documentTitlePaper: {
-        marginTop: theme.spacing.unit,
-        marginBottom: theme.spacing.unit,
-        padding: theme.spacing.unit,
-        [theme.breakpoints.up(800 + theme.spacing.unit * 3 * 2)]: {
-          marginTop: theme.spacing.unit * 2,
-          marginBottom: theme.spacing.unit * 2,
-          padding: theme.spacing.unit * 2,
+        marginTop: theme.spacing(),
+        marginBottom: theme.spacing(),
+        padding: theme.spacing(),
+        [theme.breakpoints.up(800 + theme.spacing(5))]: {
+          marginTop: theme.spacing(2),
+          marginBottom: theme.spacing(2),
+          padding: theme.spacing(2),
         }
       },
       documentTitleTextField: {
         margin: 0
       },
       paper: {
-        marginTop: theme.spacing.unit,
-        marginBottom: theme.spacing.unit,
-        padding: theme.spacing.unit,
-        [theme.breakpoints.up(800 + theme.spacing.unit * 3 * 2)]: {
-          marginTop: theme.spacing.unit * 2,
-          marginBottom: theme.spacing.unit * 2,
-          padding: theme.spacing.unit * 2,
+        marginTop: theme.spacing(),
+        marginBottom: theme.spacing(),
+        padding: theme.spacing(),
+        [theme.breakpoints.up(800 + theme.spacing(5))]: {
+          marginTop: theme.spacing(2),
+          marginBottom: theme.spacing(2),
+          padding: theme.spacing(2),
         },
       },
       heading: {
-        marginBottom: theme.spacing.unit,
+        marginBottom: theme.spacing(),
       },
       sectionItem: {
-        marginBottom: theme.spacing.unit * 2,
-        marginTop: theme.spacing.unit * 2
+        marginBottom: theme.spacing(2),
+        marginTop: theme.spacing(2)
       },
       button: {
-        marginTop: theme.spacing.unit * 2,
+        marginTop: theme.spacing(2),
         '&:not(:last-child)': {
         }
       },
       editor: {
-        padding: theme.spacing.unit * 4
+        padding: theme.spacing(4)
       }
 
 

@@ -22,7 +22,7 @@ import GroupCreate from 'app/views/group_create';
 import AppHeader from 'app/components/common/header';
 import LoginPage from 'app/views/login';
 import axios from 'axios';
-import { User } from 'app/models/user'
+import { NRUser } from 'app/utils/models';
 
 export namespace App {
     export interface Props {
@@ -31,7 +31,7 @@ export namespace App {
 
     export interface State {
         isAuthenticated: Boolean,
-        users: User[]
+        users: NRUser[]
     }
 }
 

@@ -1,7 +1,7 @@
 import { WorkflowActionTypes, SET_PERMISSIONS, ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK, CLOSE_DIALOG, EDIT_FLASH, WorkflowDispatchers } from "./types";
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
-import { Stage } from "app/models";
+import { NRStage } from "app/utils/models";
 
 export function dispatchSetPermissions(canEdit: boolean): WorkflowActionTypes {
   return {
@@ -10,7 +10,7 @@ export function dispatchSetPermissions(canEdit: boolean): WorkflowActionTypes {
   };
 }
 
-export function dispatchAddStage(newStage: Stage, index: number): WorkflowActionTypes {
+export function dispatchAddStage(newStage: NRStage, index: number): WorkflowActionTypes {
   return {
     type: ADD_STAGE,
     payload: newStage,
@@ -30,7 +30,7 @@ export function dispatchCloseDialog(): WorkflowActionTypes {
   };
 }
 
-export function dispatchSetStages(stages: Array<Stage>): WorkflowActionTypes {
+export function dispatchSetStages(stages: Array<NRStage>): WorkflowActionTypes {
   return {
     type: SET_STAGES,
     payload: stages

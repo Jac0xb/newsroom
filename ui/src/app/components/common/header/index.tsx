@@ -13,8 +13,8 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import { Link } from 'react-router-dom';
 import { styles } from "./styles";
-import { compose } from 'recompose';
 import { Button, Grid } from "@material-ui/core";
+import useMediaQuery from '@material-ui/core/useMediaQuery';
 
 export namespace HeaderComponent {
     export interface Category {
@@ -89,6 +89,8 @@ class HeaderComponent extends React.Component<HeaderComponent.Props, HeaderCompo
     render() {
         const {sideMenuOpen} = this.state;
         const {classes, loggedOut} = this.props;
+        //const matches = useMediaQuery(theme.breakpoints.up('sm'));
+        //console.log(matches)
 
         return (
             <AppBar className={classes.header} style={{backgroundColor: "#222f3e", boxShadow: 'none'}}>
@@ -107,7 +109,7 @@ class HeaderComponent extends React.Component<HeaderComponent.Props, HeaderCompo
                             <Link style={{textDecoration: "none"}} to="/">
                                 <Typography style={{textDecoration: "none", color: "white"}}
                                             className={classes.title}
-                                            variant="title" color="inherit" noWrap>
+                                            color="inherit" noWrap>
                                     Newsroom
                                 </Typography>
                             </Link>
@@ -124,7 +126,7 @@ class HeaderComponent extends React.Component<HeaderComponent.Props, HeaderCompo
                             onClick={() => this.toggleDrawer(false)}
                             onKeyDown={() => this.toggleDrawer(false)}
                         >
-                            <Typography variant="overline" className={classes.categoriesTitle}>Views</Typography>
+                            <Typography className={classes.categoriesTitle}>Views</Typography>
                             {this.createCategories()}
                         </div>
                     </Drawer>

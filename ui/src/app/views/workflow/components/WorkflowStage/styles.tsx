@@ -7,7 +7,7 @@ export function styles(theme: Theme)  {
             display: "flex",
         },
         stage: {
-            padding: theme.spacing.unit * 2,
+            padding: theme.spacing(2),
             minWidth: "380px",
             background: "#f8efd6",
             boxShadow: 'none',
