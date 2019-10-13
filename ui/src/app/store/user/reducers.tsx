@@ -4,13 +4,16 @@ import {
   UserState, 
   UserActionTypes, 
   EDIT_FLASH, 
-  SET_GROUPS
+  SET_GROUPS,
+  SET_SELECT
 } from "./types";
 
 const initialState: UserState = {
   permissions: [],
   flash: "",
   groups: [],
+  selectedGroups: [],
+  selectedPermissions: [],
 };
 
 export function userReducer(
@@ -34,6 +37,12 @@ export function userReducer(
       return {
         ...state,
         groups: action.groups,
+      };
+    }
+    case SET_SELECT: {
+      return {
+        ...state,
+        [action.name]: action.payload,
       };
     }
     default:

@@ -203,10 +203,11 @@ export class DocumentResource {
     public async getDocument(@PathParam("did") did: number): Promise<NRDocument> {
         const user = await this.serviceContext.user();
         const dc = await this.dcServ.getDocument(did);
-        const dcwst = await this.dcRep.findOne(dc.id, { relations: ["stage"] });
+        const dcwst = await this.dcRep.findOne(dc.id, { relations: ["stage", "workflow", "workflow.stages"] });
 
-        await this.dcServ.appendPermToDC(dc, dcwst.stage, user);
-        return dc;
+        await this.dcServ.appendPermToDC(dcwst, dcwst.stage, user);
+
+        return dcwst;
     }
 
     /**
@@ -226,7 +227,9 @@ export class DocumentResource {
     @Path("/author/:aid")
     public async getDocumentsForAuthor(@PathParam("aid") aid: number): Promise<NRDocument[]> {
         const user = await this.usServ.getUser(aid);
-        return await this.dcRep.find({ where: { creator: user } });
+        const udcs = await this.dcRep.find({ where: { creator: user } });
+
+        return udcs;
     }
 
     /**

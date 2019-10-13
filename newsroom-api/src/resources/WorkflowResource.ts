@@ -101,9 +101,8 @@ export class WorkflowResource {
     public async getWorkflows(): Promise<NRWorkflow[]> {
         try {
             const user = await this.servCont.user();
-            const wfs = await this.wfRep.find();
+            const wfs = await this.wfRep.find({ relations: ["stages"]});
 
-            // Append the 'permission' to each workflow.
             return await this.wfServ.appendPermToWFS(wfs, user);
         } catch (err) {
             console.log(err);

@@ -1,7 +1,6 @@
 import * as React from 'react';
-import { Avatar, FormControl } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import { Grid, FormLabel, Select, MenuItem, OutlinedInput } from '@material-ui/core';
+import { Grid, FormLabel, Select, MenuItem, OutlinedInput, FormControl, Paper, Typography, Chip} from '@material-ui/core';
 import { styles } from './styles';
 import axios from 'axios';
 import { mapStateToProps  } from 'app/store/user/reducers';
@@ -29,67 +28,96 @@ class EditUser extends React.Component<EditUser.Props, EditUser.State> {
 
     componentDidMount() {
         // TODO: permissions: have backend add GET api/roles/{uid} 
-        this.getPermissions()
+        this.getUserSummary()
         this.getGroups()
         
     }
 
+    // getGroups = () => {
+    //     var userId = this.props.match.params.id
+    //     axios.get("/api/users/" + userId + "/roles").then((response) => {
+    //         this.props.fetchSetGroups(response.data)
+    //         this.props.fetchSelectChange("selectedGroups", response.data)
+    //     });
+    // }
+
     getGroups = () => {
         var userId = this.props.match.params.id
-        axios.get("/api/users/" + userId + "/roles").then((response) => {
+        axios.get("/api/roles/").then((response) => {
             this.props.fetchSetGroups(response.data)
         });
     }
 
-    getPermissions = () => {
+    getUserSummary = () => {
         // TODO
-        //this.props.fetchSetPermissions()
+        var userId = this.props.match.params.id
+        axios.get("/api/users/" + userId + "/summary").then((response) => {
+            console.log(response.data)
+            this.props.fetchSelectChange("selectedGroups", response.data.roles)
+            this.props.fetchSetPermissions(response.data.wfpermissions)
+        });
     }
 
     render() {
-        const { classes, permissions, groups } = this.props;
-        console.log(groups)
+        const { classes, flash, permissions, groups, selectedGroups } = this.props;
 
         return (
             <React.Fragment>
-                <Grid className={classes.outerGrid} alignContent={"center"} container spacing={4} direction="row" justify="center" alignItems="center">
-                    {/* <FormLabel style={{ marginTop: "16px" }}>Edit Permissions</FormLabel>
-                    {permissions.map((permission, index: number) => {
-                        <TextField
-                        select
-                        // key={index}
-                        label="Type"
-                        margin="normal"
-                        variant="filled"
-                        value={permission.type}
-                        // onChange={changeType}
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                    >
-                        <MenuItem key="Workflows" value="Workflows">Workflows</MenuItem>
-                        <MenuItem key="Stages" value="Stages">Stages</MenuItem>
-                    </TextField>
-                    })} */}
-                    <FormControl>
-                        <FormLabel style={{ marginTop: "16px" }}>Edit Groups</FormLabel>
-                        {groups.map((group, index: number) => {
+                <Grid className={classes.grid} container spacing={4} justify="center">
+                    <Paper className={classes.formGroup}>
+                        {(flash != "") ?
+                            <Paper className={classes.flashMessage}>
+                                <Typography variant="caption">
+                                    {flash}
+                                </Typography>
+                            </Paper> :
+                            <div></div>
+                        }
+                        <FormControl>
+                            <FormLabel className={classes.formLabel}>Edit Groups</FormLabel>
                             <Select
-                                value={group.name}
-                                // onChange={this.handleChange}
+                                multiple
+                                value={selectedGroups} 
+                                className={classes.formSelect}
+                                onChange={(event) => this.props.fetchSelectChange("selectedGroups", event.target.value)}
                                 input={<OutlinedInput 
                                     labelWidth={1}
-                                    name="age"
-                                    id="outlined-age-simple" 
+                                    name="groups"
+                                    id="outlined-groups-dropdown" 
                                 />}
-                            >
-                                <MenuItem value=""><em>None</em></MenuItem>
-                                <MenuItem key={group.name} value={group.id}>
-                                    {group.name}
-                                </MenuItem>
+                                renderValue={(selected: any) => (
+                                    <div className={classes.chips}>
+                                      {selected.map((group: any) => (
+                                        <Chip key={group.id} label={group.name} className={classes.chip} />
+                                      ))}
+                                    </div>
+                                  )}
+                                >
+                                <MenuItem value={""}><em>None</em></MenuItem>
+                                {groups.map((group: any, index: number) =>
+                                    <MenuItem key={index} value={group}>{group.name}</MenuItem>
+                                )}
                             </Select>
-                        })}
-                    </FormControl>
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel className={classes.formLabel}>Edit Permissions</FormLabel>
+                            <Select 
+                                value={""}
+                                className={classes.formSelect}
+                                onChange={(event) => this.props.fetchSelectChange("selectedGroups", event.target.value)}
+                                input={<OutlinedInput 
+                                    labelWidth={1}
+                                    name="permissions"
+                                    id="outlined-groups-dropdown" 
+                                />}
+                                >
+                                <MenuItem value={""}><em>None</em></MenuItem>
+                                {permissions.map((permission: any, index: number) =>
+                                    <MenuItem key={index} value={index}>{permission.name}</MenuItem>
+                                )}
+                            </Select>
+                        </FormControl>
+                    </Paper>
                 </Grid>
                 
             </React.Fragment>

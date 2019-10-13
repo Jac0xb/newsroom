@@ -394,9 +394,21 @@ export class UserResource {
         }
     }
 
+    /**
+     * Provide a summary of a user and their associated permissions.
+     *
+     * path:
+     *      - The unique id of the user in question.
+     *
+     * request:
+     *      - None.
+     *
+     * response:
+     *      -
+     */
     @GET
     @Path("/:uid/summary")
-    public async getUserSummary(@IsInt @PathParam("uid") uid: number): Promise<NRUserSummary> {
+    public async getUserSummary(@IsInt @PathParam("uid") uid: number): Promise<NRUser> {
         const usr = await this.usServ.getUser(uid);
 
         const usum = new NRUserSummary();
@@ -405,51 +417,54 @@ export class UserResource {
         const usrwp = await this.usRep.findOne(usr.id, { relations: ["stpermissions",
                                                                      "stpermissions.stage",
                                                                      "wfpermissions",
-                                                                     "wfpermissions.workflow"]});
+                                                                     "wfpermissions.workflow",
+                                                                     "roles"]});
 
-        for (const stus of usrwp.stpermissions) {
-            if (stus.access === DBConstants.WRITE) {
-                usum.userWriteStages.add(stus.stage);
-            } else {
-                usum.userReadStages.add(stus.stage);
-            }
-        }
+        return usrwp;
 
-        for (const wfus of usrwp.wfpermissions) {
-            if (wfus.access === DBConstants.WRITE) {
-                usum.userWriteWorkflows.add(wfus.workflow);
-            } else {
-                usum.userReadWorkflows.add(wfus.workflow);
-            }
-        }
+        // for (const stus of usrwp.stpermissions) {
+        //     if (stus.access === DBConstants.WRITE) {
+        //         usum.userWriteStages.add(stus.stage);
+        //     } else {
+        //         usum.userReadStages.add(stus.stage);
+        //     }
+        // }
 
-        // Group permissions.
-        const uwrs = await this.usRep.findOne(usr.id, { relations: ["roles"] });
+        // for (const wfus of usrwp.wfpermissions) {
+        //     if (wfus.access === DBConstants.WRITE) {
+        //         usum.userWriteWorkflows.add(wfus.workflow);
+        //     } else {
+        //         usum.userReadWorkflows.add(wfus.workflow);
+        //     }
+        // }
 
-        for (const rl of uwrs.roles) {
-            const rlwp = await this.rlRep.findOne(rl.id, { relations: ["wfpermissions",
-                                                                       "wfpermissions.workflow",
-                                                                       "stpermissions",
-                                                                       "stpermissions.stage"]});
-            for (const wfp of rlwp.wfpermissions) {
-                if (wfp.access === DBConstants.WRITE) {
-                    usum.groupWriteWorkflows.add(wfp.workflow);
-                } else {
-                    usum.groupReadWorkflows.add(wfp.workflow);
-                }
-            }
+        // // Group permissions.
+        // const uwrs = await this.usRep.findOne(usr.id, { relations: ["roles"] });
 
-            for (const stp of rlwp.stpermissions) {
-                if (stp.access === DBConstants.WRITE) {
-                    usum.groupWriteStages.add(stp.stage);
-                } else {
-                    usum.groupReadStages.add(stp.stage);
-                }
-            }
-        }
+        // for (const rl of uwrs.roles) {
+        //     const rlwp = await this.rlRep.findOne(rl.id, { relations: ["wfpermissions",
+        //                                                                "wfpermissions.workflow",
+        //                                                                "stpermissions",
+        //                                                                "stpermissions.stage"]});
+        //     for (const wfp of rlwp.wfpermissions) {
+        //         if (wfp.access === DBConstants.WRITE) {
+        //             usum.groupWriteWorkflows.add(wfp.workflow);
+        //         } else {
+        //             usum.groupReadWorkflows.add(wfp.workflow);
+        //         }
+        //     }
 
-        usum.groups = uwrs.roles;
+        //     for (const stp of rlwp.stpermissions) {
+        //         if (stp.access === DBConstants.WRITE) {
+        //             usum.groupWriteStages.add(stp.stage);
+        //         } else {
+        //             usum.groupReadStages.add(stp.stage);
+        //         }
+        //     }
+        // }
 
-        return usum;
+        // usum.groups = uwrs.roles;
+
+        // return usum;
     }
 }
