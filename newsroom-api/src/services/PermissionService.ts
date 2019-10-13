@@ -4,8 +4,8 @@ import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Errors } from "typescript-rest";
 import { InternalServerError } from "typescript-rest/dist/server/model/errors";
-import { NRDCPermission, NRStage, NRSTPermission, NRSTUSPermission,
-         NRUser, NRWFPermission, NRWFUSPermission, NRWorkflow } from "../entity";
+import { NRDCPermission, NRDocument, NRRole, NRStage,
+         NRSTPermission, NRSTUSPermission, NRUser, NRWFPermission, NRWFUSPermission, NRWorkflow } from "../entity";
 import { DBConstants } from "../entity";
 import { UserService } from "./UserService";
 import { WorkflowService } from "./WorkflowService";
@@ -13,29 +13,29 @@ import { WorkflowService } from "./WorkflowService";
 @Service()
 export class PermissionService {
     @InjectRepository(NRWFPermission)
-    private permWFRepository: Repository<NRWFPermission>;
+    private wfPRep: Repository<NRWFPermission>;
 
     @InjectRepository(NRSTPermission)
-    private permSTRepository: Repository<NRSTPermission>;
+    private stPRep: Repository<NRSTPermission>;
 
     @InjectRepository(NRDCPermission)
-    private permDCRepository: Repository<NRDCPermission>;
+    private dcPRep: Repository<NRDCPermission>;
 
     @InjectRepository(NRUser)
-    private userRepository: Repository<NRUser>;
+    private usRep: Repository<NRUser>;
 
     @InjectRepository(NRWFUSPermission)
-    private wfUSRepository: Repository<NRWFUSPermission>;
+    private wfUSRep: Repository<NRWFUSPermission>;
 
     @InjectRepository(NRSTUSPermission)
-    private stUSRepository: Repository<NRSTUSPermission>;
+    private stUSRep: Repository<NRSTUSPermission>;
 
     @Inject()
-    private userService: UserService;
+    private usServ: UserService;
 
     public async getWFPermission(pid: number): Promise<NRWFPermission> {
         try {
-            return await this.permWFRepository.findOneOrFail(pid);
+            return await this.wfPRep.findOneOrFail(pid);
         } catch (err) {
             console.error("Error getting WF permission:", err);
 
@@ -44,24 +44,19 @@ export class PermissionService {
         }
     }
 
-    public async getWFPermissionFromWFRL(wid: number, rid: number): Promise<NRWFPermission> {
+    public async getWFPermissionFromWFRL(wf: NRWorkflow, rl: NRRole): Promise<NRWFPermission> {
         try {
-            return await this.permWFRepository
-                .createQueryBuilder(DBConstants.WFPERM_TABLE)
-                .where(`${DBConstants.WFPERM_TABLE}.roleId = :rd`, { rd: rid })
-                .andWhere(`${DBConstants.WFPERM_TABLE}.workflowId = :wd`, { wd: wid })
-                .getOne();
-        } catch (err) {
-            console.error("Error getting WF permission:", err);
-
-            const errStr = `WF permission with role ${rid} and WF ${wid} was not found.`;
+            return await this.wfPRep.findOneOrFail({ where: { role: rl,
+                                                              workflow: wf } });
+        } catch (NotFoundError) {
+            const errStr = `WF permission with role ${rl.id} and WF ${wf.id} was not found.`;
             throw new Errors.NotFoundError(errStr);
         }
     }
 
     public async getAllWFPermissionsForRole(rid: number): Promise<NRWFPermission[]> {
         try {
-            return await this.permWFRepository
+            return await this.wfPRep
                 .createQueryBuilder(DBConstants.WFPERM_TABLE)
                 .where(`${DBConstants.WFPERM_TABLE}.roleId = :rd`, { rd: rid })
                 .getMany();
@@ -75,7 +70,7 @@ export class PermissionService {
 
     public async getSTPermission(pid: number): Promise<NRSTPermission> {
         try {
-            return await this.permSTRepository.findOneOrFail(pid);
+            return await this.stPRep.findOneOrFail(pid);
         } catch (err) {
             console.error("Error getting ST permission:", err);
 
@@ -86,7 +81,7 @@ export class PermissionService {
 
     public async getSTPermissionFromSTRL(sid: number, rid: number): Promise<NRSTPermission> {
         try {
-            return await this.permSTRepository
+            return await this.stPRep
                 .createQueryBuilder(DBConstants.STPERM_TABLE)
                 .where(`${DBConstants.STPERM_TABLE}.roleId = :rd`, { rd: rid })
                 .andWhere(`${DBConstants.STPERM_TABLE}.stageId = :sd`, { sd: sid })
@@ -101,7 +96,7 @@ export class PermissionService {
 
     public async getAllSTPermissionsForRole(rid: number): Promise<NRSTPermission[]> {
         try {
-            return await this.permSTRepository
+            return await this.stPRep
                 .createQueryBuilder(DBConstants.STPERM_TABLE)
                 .where(`${DBConstants.STPERM_TABLE}.roleId = :rd`, { rd: rid })
                 .getMany();
@@ -115,7 +110,7 @@ export class PermissionService {
 
     public async getDCPermission(pid: number): Promise<NRDCPermission> {
         try {
-            return await this.permDCRepository.findOneOrFail(pid);
+            return await this.dcPRep.findOneOrFail(pid);
         } catch (err) {
             console.error("Error getting DC permission:", err);
 
@@ -129,11 +124,11 @@ export class PermissionService {
         let allowed = false;
 
         // Check user permissions first.
-        const usdb = await this.userRepository.findOne(user.id, { relations: ["wfpermissions"] });
+        const usdb = await this.usRep.findOne(user.id, { relations: ["wfpermissions"] });
 
         if (usdb !== undefined) {
             for (const wfup of usdb.wfpermissions) {
-                const wfupdb = await this.wfUSRepository.findOne(wfup.id, { relations: ["workflow"] });
+                const wfupdb = await this.wfUSRep.findOne(wfup.id, { relations: ["workflow"] });
 
                 if ((wfupdb.workflow.id === wf.id) && (wfupdb.access === DBConstants.WRITE)) {
                     allowed = true;
@@ -142,13 +137,13 @@ export class PermissionService {
             }
         }
 
-        const allRoles = await this.userService.getUserRoles(user.id);
+        const allRoles = await this.usServ.getUserRoles(user.id);
 
         // Now check all roles.
         if ((!allowed) && (allRoles !== undefined)) {
             // Get the 'highest' permissions over all roles the user is a part of.
             for (const role of allRoles) {
-                const roleRight = await this.permWFRepository
+                const roleRight = await this.wfPRep
                     .createQueryBuilder(DBConstants.WFPERM_TABLE)
                     .select(`MAX(${DBConstants.WFPERM_TABLE}.access)`, "max")
                     .where(`${DBConstants.WFPERM_TABLE}.roleId = :id`, {id: role.id})
@@ -175,11 +170,11 @@ export class PermissionService {
         let allowed = false;
 
         // Check user permissions first.
-        const usdb = await this.userRepository.findOne(user.id, { relations: ["stpermissions"] });
+        const usdb = await this.usRep.findOne(user.id, { relations: ["stpermissions"] });
 
         if (usdb !== undefined) {
             for (const stup of usdb.stpermissions) {
-                const stupdb = await this.stUSRepository.findOne(stup.id, { relations: ["stage"] });
+                const stupdb = await this.stUSRep.findOne(stup.id, { relations: ["stage"] });
 
                 if ((stupdb.stage.id === st.id) && (stupdb.access === DBConstants.WRITE)) {
                     allowed = true;
@@ -188,13 +183,13 @@ export class PermissionService {
             }
         }
 
-        const allRoles = await this.userService.getUserRoles(user.id);
+        const allRoles = await this.usServ.getUserRoles(user.id);
 
         // Now check all roles.
         if ((!allowed) && (allRoles !== undefined)) {
             // Get the 'highest' permissions over all roles the user is a part of.
             for (const role of allRoles) {
-                const roleRight = await this.permSTRepository
+                const roleRight = await this.stPRep
                    .createQueryBuilder(DBConstants.STPERM_TABLE)
                    .select(`MAX(${DBConstants.STPERM_TABLE}.access)`, "max")
                    .where(`${DBConstants.STPERM_TABLE}.roleId = :id`, {id: role.id})
@@ -217,6 +212,11 @@ export class PermissionService {
     }
 
     // DONE.
+    public async getDCPermForUser(dc: NRDocument, st: NRStage, usr: NRUser) {
+        return await this.getSTPermForUser(st, usr);
+    }
+
+    // DONE.
     public async checkWFWritePermissions(user: NRUser, wf: NRWorkflow) {
         const allowed = await this.getWFPermForUser(wf, user);
 
@@ -232,36 +232,6 @@ export class PermissionService {
 
         if (!(allowed)) {
             const errStr = `User with ID ${user.id} does not have ST write permissions.`;
-            throw new Errors.ForbiddenError(errStr);
-        }
-    }
-
-    public async checkDCWritePermission(user: NRUser, did: number): Promise<number> {
-        return DBConstants.WRITE;
-        // let allowed = false;
-
-        // user = await this.userService.getUser(user.id);
-
-        // for (const role of user.roles) {
-        //     const roleRight = await this.permDCRepository
-        //         .createQueryBuilder(DBConstants.DCPERM_TABLE)
-        //         .select(`MAX(${DBConstants.DCPERM_TABLE}.access)`, "max")
-        //         .where(`${DBConstants.DCPERM_TABLE}.roleId = :id`, {id: role.id})
-        //         .andWhere(`${DBConstants.DCPERM_TABLE}.documentId = :dcid`, {dcid: did})
-        //         .getRawOne();
-
-        //     if (roleRight.max === DBConstants.WRITE) {
-        //         allowed = true;
-        //         break;
-        //     }
-        // }
-    }
-
-    public async checkDCWritePermissions(user: NRUser, did: number) {
-        const allowed = await this.checkDCWritePermission(user, did);
-
-        if (!(allowed)) {
-            const errStr = `User with ID ${user.id} does not have DC write permissions.`;
             throw new Errors.ForbiddenError(errStr);
         }
     }

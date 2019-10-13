@@ -6,7 +6,8 @@
     "rules": {
         "no-console": false,
         "only-arrow-functions": false,
-        "interface-name": false
+        "interface-name": false,
+        "prefer-for-of": false
     },
     "linterOptions": {
         "exclude": [

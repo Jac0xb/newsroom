@@ -14,3 +14,4 @@ export { NRWFUSPermission } from "./NRWFUSPermission";
 export { NRDCUSPermission } from "./NRDCUSPermission";
 export { NRSTUSPermission } from "./NRSTUSPermission";
 export { NRTrigger } from "./NRTrigger";
+export { NRUserSummary } from "./NRUserSummary";

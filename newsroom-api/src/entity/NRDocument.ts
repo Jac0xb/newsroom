@@ -15,6 +15,7 @@ import {
 import { DBConstants } from "./DBConstants";
 import { NRDCPermission } from "./NRDCPermission";
 import { NRDCUSPermission } from "./NRDCUSPermission";
+import { NRDocComment } from "./NRDocComment";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
@@ -110,4 +111,15 @@ export class NRDocument {
     )
     @JoinTable()
     public usrpermissions: NRDCUSPermission[];
+
+    /**
+     * Relationship: NRDocComment
+     *      - One: Each comment is only associated with a single document.
+     *      - Many: Each document can have many comments.
+     */
+    @OneToMany(
+        (type) => NRDocComment,
+        (comments) => comments.document,
+    )
+    public comments: NRDocComment[];
 }
