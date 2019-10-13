@@ -28,7 +28,7 @@ class DetailLine extends React.Component<DetailLine.Props> {
 				<Typography className={classes.detailLine}> 
 					{(link) &&
 					<a className={classes.detailLine} href={link}>
-						<div className={classNames(classes.noWrap, classes.flexGrow)}>&nbsp;{data}</div>
+						<span className={classNames(classes.noWrap, classes.flexGrow)}>&nbsp;{data}</span>
 						<Link className={classes.linkIcon}/>
 					</a>
 					}

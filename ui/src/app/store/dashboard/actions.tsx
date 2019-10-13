@@ -1,55 +1,31 @@
-import * as Types from "./types";
+import { ActionTypes, DashboardReducerState } from './types'
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
+import { RSAA } from 'redux-api-middleware';
+import { DocumentsAPI } from 'app/api/document'
 
-import { NRDocument } from "app/utils/models";
+export function fetchDocuments() : any {
 
-export function dispatchFetchDocumentsPending(): Types.DashboardActionTypes {
+    var requestHeaders: HeadersInit = new Headers();
+    requestHeaders.set('Content-Type', 'application/json');
+
     return {
-        type: Types.FETCH_DOCUMENTS_PENDING
+        [RSAA]: {
+            endpoint: () => DocumentsAPI.GETALLDOCUMENTS,
+            method: 'GET',
+            headers: () => requestHeaders,
+            types: [
+                ActionTypes.DOCUMENTS_REQUEST,
+                ActionTypes.DOCUMENTS_SUCCESS,
+                ActionTypes.DOCUMENTS_FAILURE
+            ]
+        }
     };
 }
 
-export function dispatchFetchDocumentsSuccess(documents: NRDocument[]): Types.DashboardActionTypes {
-    return {
-        type: Types.FETCH_DOCUMENTS_SUCCESS,
-        payload: documents
-    }
-}
-
-export function dispatchFetchDocumentsError(error: string): Types.DashboardActionTypes {
-    return {
-        type: Types.FETCH_DOCUMENTS_ERROR,
-        payload: error
-    };
-}
-
-export function dispatchDeleteDocumentPending(): Types.DashboardActionTypes {
-    return {
-        type: Types.DELETE_DOCUMENT_PENDING
-    };
-}
-
-export function dispatchDeleteDocumentSuccess(): Types.DashboardActionTypes {
-    return {
-        type: Types.DELETE_DOCUMENT_SUCCESS
-    }
-}
-export function dispatchDeleteDocumentError(error: string): Types.DashboardActionTypes {
-    return {
-        type: Types.DELETE_DOCUMENT_ERROR,
-        payload: error
-    }
-}
-
-export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, Types.DashboardActionTypes>, ownProps: T) : Types.DashboardDispatchers {
+export function mapDispatchToProps<T>(dispatch: ThunkDispatch<DashboardReducerState, any, any>, ownProps: T) : any {
     return {
         ...ownProps,
-        fetchDocumentsPending: bindActionCreators(dispatchFetchDocumentsPending, dispatch),
-        fetchDocumentsSuccess: bindActionCreators(dispatchFetchDocumentsSuccess, dispatch),
-        fetchDocumentsError: bindActionCreators(dispatchFetchDocumentsError, dispatch),
-        deleteDocumentPending: bindActionCreators(dispatchDeleteDocumentPending, dispatch),
-        deleteDocumentSuccess: bindActionCreators(dispatchDeleteDocumentSuccess, dispatch),
-        deleteDocumentError: bindActionCreators(dispatchDeleteDocumentError, dispatch)
+        fetchDocuments: bindActionCreators(fetchDocuments, dispatch)
     }
 };

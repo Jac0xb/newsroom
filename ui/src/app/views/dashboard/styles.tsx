@@ -1,14 +1,7 @@
 import { StyleRules, Theme } from '@material-ui/core/styles';
 
 export function styles(theme: Theme)  {
-    return (
-    {   
-        topDivider: { 
-            margin: "0px 24px" 
-        },
-        main: {
-            paddingTop: "32px",
-        },
+    return ({
 		documentGrid: {
 			display: "flex",
 			flexWrap: "wrap",
@@ -19,7 +12,7 @@ export function styles(theme: Theme)  {
 		},
 		buttonGroup: {
 			display: "flex",
-			margin: "0px 24px 24px 24px",
+			padding: "24px",
 			"& button": {
 				heightMax: "36px",
 				height: "36px",

@@ -1,4 +1,3 @@
-import { DocumentsAPI } from 'app/api/document';
 import { LoadingComponent } from 'app/components/common/loading';
 import { NRDocument } from 'app/utils/models';
 import { mapDispatchToProps } from 'app/store/dashboard/actions';
@@ -36,31 +35,27 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
     }
 
     async componentDidMount() {
-        this.props.fetchDocumentsPending();
-        var response = await DocumentsAPI.getAllDocuments();
-        this.props.fetchDocumentsSuccess(response.data);
+        this.props.fetchDocuments();
     }
 
     async handleDelete(id: number) {
 
         try {
-            this.props.deleteDocumentPending();
-            await DocumentsAPI.deleteDocument(id);
-            this.props.deleteDocumentSuccess();
+            //this.props.deleteDocumentPending();
+            //await DocumentsAPI.deleteDocument(id);
+            //this.props.deleteDocumentSuccess();
         }
         catch (err) {
-            console.log(err)
-            // TODO: Catch error and report to user.
+            console.log(err);
         }
 
         try {
-            this.props.fetchDocumentsPending();
-            var response = await DocumentsAPI.getAllDocuments();
-            this.props.fetchDocumentsSuccess(response.data);
+            //this.props.fetchDocumentsPending();
+            //var response = await DocumentsAPI.getAllDocuments();
+            //this.props.fetchDocumentsSuccess(response.data);
         }
         catch (err) {
-            console.log(err)
-            // TODO: Catch error and report to user.
+            console.log(err);
         }
 
     }

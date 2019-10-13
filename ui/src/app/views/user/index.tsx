@@ -52,7 +52,7 @@ class EditUser extends React.Component<EditUser.Props, EditUser.State> {
 
         return (
             <React.Fragment>
-                <Grid className={classes.outerGrid} alignContent={"center"} container spacing={10} direction="row" justify="center" alignItems="center">
+                <Grid className={classes.outerGrid} alignContent={"center"} container spacing={4} direction="row" justify="center" alignItems="center">
                     {/* <FormLabel style={{ marginTop: "16px" }}>Edit Permissions</FormLabel>
                     {permissions.map((permission, index: number) => {
                         <TextField

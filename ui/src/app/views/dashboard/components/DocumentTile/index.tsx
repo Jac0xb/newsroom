@@ -50,7 +50,7 @@ class DocumentTile extends React.Component<DocumentTile.Props> {
             return (
                 <Paper className={classNames(classes.documentItem, classes.flexAutosize)}>
                     <Link to={"/document/" + document.id + "/edit"}>
-                        <Typography variant={"body1"} className={classes.noWrap}>
+                        <Typography className={classes.noWrap}>
                             {document.name}
                         </Typography>
                     </Link>

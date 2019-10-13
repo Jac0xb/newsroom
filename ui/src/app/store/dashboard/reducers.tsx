@@ -1,66 +1,29 @@
-import { AppState } from 'app/store'; 
-import _ from "lodash";
-
-import { 
-    FETCH_DOCUMENTS_PENDING, 
-    FETCH_DOCUMENTS_SUCCESS, 
-    FETCH_DOCUMENTS_ERROR, 
-    DELETE_DOCUMENT_PENDING,
-    DELETE_DOCUMENT_SUCCESS,
-    DELETE_DOCUMENT_ERROR,
-    DashboardActionTypes, 
-    DashboardReducerState 
+import { AppState } from 'app/store';
+import {
+    ActionTypes,
+    DashboardReducerState
 } from "./types";
 
 const initialState: DashboardReducerState = {
-  documents: [],
-  pending: false
+    documents: [],
+    pending: false
 };
 
-export function dashboardReducer(
-    state = initialState,
-    action: DashboardActionTypes
-): DashboardReducerState {
-  switch (action.type) {
-    case FETCH_DOCUMENTS_PENDING: 
-        return {
-            ...state,
-            pending: true
-        }
-    case FETCH_DOCUMENTS_SUCCESS:
-        return {
-            ...state,
-            pending: false,
-            documents: action.payload
-        }
-    case FETCH_DOCUMENTS_ERROR:
-        return {
-            ...state,
-            pending: false,
-            error: action.payload
-        }
+export function dashboardReducer(state = initialState, action: any): DashboardReducerState {
 
-    case DELETE_DOCUMENT_PENDING:
-        return {
-            ...state,
-            pending: false
-        }
-    case DELETE_DOCUMENT_SUCCESS:
-        return {
-            ...state,
-            pending: false
-        }
-    case DELETE_DOCUMENT_ERROR:
-        return {
-            ...state,
-            pending: false,
-            error: action.payload
-        }
-    default:
-      return state;
-  }
+    switch (action.type) {
+        case ActionTypes.DOCUMENTS_REQUEST:
+            return { ...state, pending: true };
+        case ActionTypes.DOCUMENTS_SUCCESS:
+            return { documents: action.payload || [] };
+        case ActionTypes.DOCUMENTS_FAILURE:
+            return { ...state, error: action.payload.response.message };
+        default:
+            return state;
+    }
+
 }
 
-export function mapStateToProps<T>(state: AppState, ownProps: T) { 
-    return {...ownProps, ...state.dashboard };
+export function mapStateToProps<T>(state: AppState, ownProps: T) {
+    return { ...ownProps, ...state.dashboard };
 };
