@@ -69,7 +69,7 @@ class Workflows extends React.Component<Workflows.Props, Workflows.State> {
     handleCreateNew = (textBoxName: string, textBoxDesc: string) => {
         axios.post("/api/workflows", {
             name: textBoxName,
-            creator: Number(localStorage.getItem("userID")),
+            creator: Number(localStorage.getItem("user-id")),
             description: textBoxDesc,
 
         }).then((response: any) => {

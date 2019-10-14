@@ -108,6 +108,7 @@ export class DocumentResource {
         // They have permissions, so we know they have WRITE access already.
         document.permission = DBConstants.WRITE;
 
+        console.log(user);
         document.creator = await this.usServ.getUser(user.id);
         document.googleDocId = await this.dcServ.createGoogleDocument(user, document);
 

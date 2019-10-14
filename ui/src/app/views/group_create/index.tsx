@@ -6,6 +6,9 @@ import { styles } from './styles'
 import { Link, Redirect } from 'react-router-dom';
 import { Cookies, withCookies } from 'react-cookie';
 import { compose } from 'recompose';
+import { NRWorkflow, NRStage } from 'app/utils/models';
+import { TreeSelect } from 'antd';
+const { TreeNode } = TreeSelect;
 
 export namespace GroupCreate {
     export interface Props {
@@ -16,8 +19,8 @@ export namespace GroupCreate {
 
     export interface State {
         submitted: boolean
-        fetchedWorkflows: { name: string, id: number }[]
-        fetchedStages: { name: string, id: number }[]
+        fetchedWorkflows: NRWorkflow[]
+        fetchedStages: NRStage[]
         fetchedUsers: { name: string, id: number }[]
         flash?: string
 
@@ -50,19 +53,15 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
         }
     }
 
-    componentDidMount() {
+    async componentDidMount() {
 
-        axios.get("/api/workflows").then((response) => {
-            
-            
-
-            var fetchedWorkflows = response.data;
-            this.setState({fetchedWorkflows})
-
-        }).catch((error) => {
-            console.log(error)
-        });
-
+        var workflowsResponse = await axios.get<NRWorkflow[]>("/api/workflows");
+        this.setState({fetchedWorkflows: workflowsResponse.data});
+        
+        for (var i = 0; i < workflowsResponse.data.length; i++) {
+            var stagesResponse = await axios.get<NRStage[]>(`/api/workflows/${workflowsResponse.data[i].id}/stages`);
+            this.setState({fetchedStages: [...this.state.fetchedStages, ...stagesResponse.data]});
+        }
 
         axios.get("/api/users").then((response) => {
 
@@ -190,9 +189,23 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
             this.modifyPermission(index, newPermission)
         }
 
-
-        var renderItems = (permission.type === "Stages") ? this.state.fetchedStages : this.state.fetchedWorkflows;
         var itemsElement = undefined;
+        var renderItems = [];
+
+        if (permission.type == "Stages") {
+            renderItems = this.state.fetchedStages.map((item:any) => (
+                <MenuItem key={item.id} value={item.id}>
+                    {item.name}
+                </MenuItem>
+            ))
+        }
+        else {
+            renderItems = this.state.fetchedWorkflows.map((item:any) => (
+                <MenuItem key={item.id} value={item.id}>
+                    {item.name}
+                </MenuItem>
+            ))
+        }
 
         if (permission.type !== "") {
             itemsElement = (<React.Fragment>
@@ -208,11 +221,7 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
                     }}
                 >
                     <MenuItem key={-1} disabled value="-1"><em>None</em></MenuItem>
-                    {renderItems.map(item => (
-                        <MenuItem key={item.id} value={item.id}>
-                            {item.name}
-                        </MenuItem>
-                    ))}
+                    {renderItems}
                 </TextField>
                 <TextField
                     select
@@ -365,9 +374,25 @@ class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> 
                                 <FormLabel style={{marginTop: "16px"}}>
                                     Permissions
                                 </FormLabel>
-                                {this.state.permissions.map((permission, index: number) => {
-                                    return this.renderPermission(index, permission)
-                                })}
+                                <TreeSelect
+                                    showSearch
+                                    value={undefined}
+                                    placeholder="Please select"
+                                    allowClear
+                                    multiple
+                                    treeDefaultExpandAll
+                                    onChange={(e) => console.log(e)}
+                                >
+                                    <TreeNode value="parent 1" title="parent 1" key="0-1">
+                                    <TreeNode value="parent 1-0" title="parent 1-0" key="0-1-1">
+                                        <TreeNode value="leaf1" title="my leaf" key="random" />
+                                        <TreeNode value="leaf2" title="your leaf" key="random1" />
+                                    </TreeNode>
+                                    <TreeNode value="parent 1-1" title="parent 1-1" key="random2">
+                                        <TreeNode value="sss" title={<b style={{ color: '#08c' }}>sss</b>} key="random3" />
+                                    </TreeNode>
+                                    </TreeNode>
+                                </TreeSelect>
                                 <div style={{display: "flex", justifyContent: "space-evenly"}}>
                                     <Button style={{marginTop: "16px", width: "calc(4*52px)"}} variant={"contained"}
                                             onClick={this.addNewPermission.bind(this)}>

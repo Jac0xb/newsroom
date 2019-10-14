@@ -46,10 +46,20 @@ class App extends React.Component<App.Props, App.State, any> {
         }
     }
 
-    componentDidMount() {
-        axios.get("/api/users/1").then((response) => {
+    async componentDidMount() {
+
+        var id = localStorage.getItem("user-id");
+        
+        try {
+            var response = await axios.get<NRUser>(`/api/users/current`);
             this.setState({isAuthenticated: response.status != 401});
-        }).catch((error) => console.log(error))
+            
+            localStorage.setItem("user-id", response.data.id.toString());
+        }
+        catch (err) {
+            localStorage.removeItem("user-id");
+            console.log(err);
+        }
     };
 
     render() {
@@ -60,7 +70,7 @@ class App extends React.Component<App.Props, App.State, any> {
         if (!isAuthenticated) {
             return (
                 <React.Fragment>
-                    <AppHeader loggedOut={true}/>
+                    <AppHeader loggedOut={false}/>
                     <div style={headerMargin}>
                         <LoginPage/>
                     </div>

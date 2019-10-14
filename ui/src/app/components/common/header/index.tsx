@@ -14,7 +14,7 @@ import ListItem from '@material-ui/core/ListItem';
 import { Link } from 'react-router-dom';
 import { styles } from "./styles";
 import { Button, Grid } from "@material-ui/core";
-import useMediaQuery from '@material-ui/core/useMediaQuery';
+import { AuthAPI } from 'app/api/auth';
 
 export namespace HeaderComponent {
     export interface Category {
@@ -78,11 +78,6 @@ class HeaderComponent extends React.Component<HeaderComponent.Props, HeaderCompo
     toggleDrawer(open: boolean) {
         this.setState({sideMenuOpen: open});
     }
-
-    handleSignOut() {
-        window.location.href = "/auth/logout"
-    }
-
     /**
      * TODO: Document
      */
@@ -115,7 +110,12 @@ class HeaderComponent extends React.Component<HeaderComponent.Props, HeaderCompo
                             </Link>
                         </Grid>
                         <Grid item>
-                            { (!loggedOut) ?  (<Button style={{color: "white"}} onClick={() => this.handleSignOut()}>Sign Out</Button>) : [] }
+                            { (!loggedOut) ?  (
+                            <Link to={AuthAPI.logout()}>
+                            <Button style={{color: "white"}}>
+                                Sign Out
+                            </Button>
+                            </Link>) : [] }
                         </Grid>
                     </Grid>
 

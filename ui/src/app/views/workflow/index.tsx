@@ -53,7 +53,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
   getRole() {
     // TODO: Set User edit permissions
     const wfId = this.props.match.params.id;
-    var user = Number(localStorage.getItem("userID"))
+    var user = Number(localStorage.getItem("user-id"))
 
     //get users roles
     axios.get("/api/users/" + user + "/roles").then((response) => {
@@ -141,7 +141,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
       sequenceId: seqID,
       name: textBoxName,
       description: textBoxDesc,
-      creator: Number(localStorage.getItem("userID")),
+      creator: Number(localStorage.getItem("user-id")),
     }).then((response) => {
       // Render new stages edit
       this.getStages()

@@ -1,7 +1,3 @@
-import axios from 'axios';
-
-
-
 export namespace DocumentsAPI {
 
     export function getAllDocuments() {

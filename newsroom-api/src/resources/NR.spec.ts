@@ -1875,8 +1875,17 @@ describe("Generate data, this should always be run last.", () => {
 
         // Create users.
         const createdUsers: NRUser[] = [];
-        const usrFirst = ['Greg', 'Samantha', 'Peter', 'Joe', 'Andrew', 'Justin', 'Katherine', 'Jake', 'Conner', 'Youssef', 'Kyle', 'Clark'];
-        const usrLast = ['Smith', 'Johnson', 'French', 'King', 'Graves', 'Bradley', 'Wright', 'Parker', 'Hunt', 'Nelson'];
+        const usrFirst = [
+            "Greg", "Samantha", "Peter",
+            "Joe", "Andrew", "Justin",
+            "Katherine", "Jake", "Conner",
+            "Youssef", "Kyle", "Clark",
+        ];
+        const usrLast = [
+            "Smith", "Johnson", "French",
+             "King", "Graves", "Bradley",
+             "Wright", "Parker", "Hunt", "Nelson",
+        ];
         for (let i = 0; i < usrNum; i++) {
             // Make sure that usernames are unique.
             const usrNew = new NRUser();
@@ -1884,59 +1893,75 @@ describe("Generate data, this should always be run last.", () => {
                 usrNew.firstName = usrFirst[Math.round(Math.random() * usrFirst.length)];
                 usrNew.lastName = usrLast[Math.round(Math.random() * usrLast.length)];
                 usrNew.userName = usrNew.firstName.charAt(0).toLowerCase() + usrNew.lastName.toLowerCase();
-            } while (createdUsers.findIndex(x => x.userName === usrNew.userName) !== -1);
+            } while (createdUsers.findIndex((x) => x.userName === usrNew.userName) !== -1);
 
-            usrNew.email = usrNew.userName + '@newsroom.com';
+            usrNew.email = usrNew.userName + "@newsroom.com";
 
             const resp = await request(app)
                               .post("/api/users")
                               .send(usrNew)
                               .set("User-Id", `${usr.id}`);
-            
+
             expect(resp.status).toEqual(200);
             createdUsers.push(resp.body);
         }
 
         // Create workflows.
         const createdWorkflows: NRWorkflow[] = [];
-        const wfFirst = [ 'World', 'Sports', 'Fashion', 'Opinion', 'Health', 'Food', 'Travel', 'Tech', 'Arts', 'Business'];
-        const wfLast = ['Articles', 'Blogs', 'Papers', 'Tidbits', 'Pieces'];
+        const wfFirst = [ "World", "Sports", "Fashion", "Opinion", "Health", "Food", "Travel", "Tech", "Arts", "Business"];
+        const wfLast = ["Articles", "Blogs", "Papers", "Tidbits", "Pieces"];
         for (let i = 0; i < wfNum; i++) {
             // Make sure workflow names are unique.
             const wfNew = new NRWorkflow();
             do {
-                wfNew.name = wfFirst[Math.round(Math.random() * wfFirst.length)] + wfLast[Math.round(Math.random() * wfLast.length)] 
-            } while (createdWorkflows.findIndex(x => x.name === wfNew.name) !== -1);
+                wfNew.name = wfFirst[Math.round(Math.random() * wfFirst.length)] + wfLast[Math.round(Math.random() * wfLast.length)];
+            } while (createdWorkflows.findIndex((x) => x.name === wfNew.name) !== -1);
 
-            wfNew.description = 'A workflow for ' + wfNew.name + '.';
+            wfNew.description = "A workflow for " + wfNew.name + ".";
             wfNew.permission = 1;
 
             const resp = await request(app)
                                .post("/api/workflows")
                                .send(wfNew)
                                .set("User-Id", `${usr.id}`);
-            
+
             expect(resp.status).toEqual(200);
             createdWorkflows.push(resp.body);
         }
 
         // Create stages.
-        const stFirstDraft = ['First Draft', 'The first draft of an article, intended to flesh out ideas and get them on paper.'];
-        const stSecondDraft = ['Second Draft', 'A more formalized draft with cohesive writing and progress towards a more finished product.'];
-        const stFactCheck = ['Fact Check', 'Pertaining to articles that involve real-world facts or statistics, this stage serves to the author of the article and forces them to double check their own facts.'];
-        const stPeerReview = ['Peer Review', 'Before moving onto the edit phase, get feedback from others about the general topic of your piece without them actually looking at it.'];
-        const stFirstEdit = ['First Edit', 'The first edit phase, focused more on ideas and overall article flow rather than formatting and grammatical errors.'];
-        const stSecondEdit = ['Second Edit', 'The second edit phase, focused more on formatting and grammatical errors as well as final checks.'];
-        const stFinalReview = ['Final Review', 'The final review meant to hopefully catch any mistakes that were missed earlier.'];
-        const stReadyToPublish = ['Ready to Publish', 'The document has been fully finalized and is ready to publish.'];
-        const stDefault = [stFirstDraft, stSecondDraft, stFactCheck, stPeerReview, stFirstEdit, stSecondEdit, stFinalReview, stReadyToPublish];
+        const stFirstDraft = ["First Draft", "The first draft of an article, intended to flesh out ideas and get them on paper."];
+        const stSecondDraft = ["Second Draft", "A more formalized draft with cohesive writing and progress towards a more finished product."];
+        const stFactCheck = ["Fact Check", "Pertaining to articles that involve real-world facts or statistics, this stage serves to the author of the article and forces them to double check their own facts."];
+        const stPeerReview = ["Peer Review", "Before moving onto the edit phase, get feedback from others about the general topic of your piece without them actually looking at it."];
+        const stFirstEdit = ["First Edit", "The first edit phase, focused more on ideas and overall article flow rather than formatting and grammatical errors."];
+        const stSecondEdit = ["Second Edit", "The second edit phase, focused more on formatting and grammatical errors as well as final checks."];
+        const stFinalReview = ["Final Review", "The final review meant to hopefully catch any mistakes that were missed earlier."];
+        const stReadyToPublish = ["Ready to Publish", "The document has been fully finalized and is ready to publish."];
+        const stDefault = [
+            stFirstDraft,
+            stSecondDraft,
+            stFactCheck,
+            stPeerReview,
+            stFirstEdit,
+            stSecondEdit,
+            stFinalReview,
+            stReadyToPublish,
+        ];
         const stUrgent = [stFirstDraft, stFactCheck, stFirstEdit, stFinalReview, stReadyToPublish];
         const stOpinion = [stFirstDraft, stSecondDraft, stPeerReview, stFirstEdit, stFinalReview, stReadyToPublish];
         for (const wf of createdWorkflows) {
             let choice;
-            if ((wf.name.toLowerCase().search('opinion') === 0 ) || (wf.name.toLowerCase().search('blog') === 0 ) || (wf.name.toLowerCase().search('fashion') === 0 )) {
+            if (
+                (wf.name.toLowerCase().search("opinion") === 0 ) ||
+                (wf.name.toLowerCase().search("blog") === 0 )  ||
+                (wf.name.toLowerCase().search("fashion") === 0 )
+            ) {
                 choice = stOpinion;
-            } else if ((wf.name.toLowerCase().search('world') === 0 ) || (wf.name.toLowerCase().search('business') === 0 )) {
+            } else if (
+                (wf.name.toLowerCase().search("world") === 0 ) ||
+                (wf.name.toLowerCase().search("business") === 0 )
+            ) {
                 choice = stUrgent;
             } else {
                 choice = stDefault;
@@ -1959,7 +1984,6 @@ describe("Generate data, this should always be run last.", () => {
         }
     });
 });
-
 
 // ----------------------------------------------------------------------------------
 // |--------------------------------------------------------------------------------|

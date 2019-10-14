@@ -73,16 +73,33 @@ module.exports = {
 			{
 				test: /\.tsx?$/,
 				use: [
-					!isProduction && {
+					//!isProduction && {
+					//	loader: 'babel-loader',
+					//	options: { plugins: ['react-hot-loader/babel'] }
+                    //},
+                    {
 						loader: 'babel-loader',
-						options: { plugins: ['react-hot-loader/babel'] }
+						options: { 
+                            plugins: [
+                                ...((!isProduction) ? ['react-hot-loader/babel'] : []), 
+                                ['import', { libraryName: 'antd', style: "css" }]
+                            ] 
+                        }
 					},
 					'ts-loader'
 				].filter(Boolean)
 			},
 			{
 				test: /\.less$/,
-				use: ['css-loader', 'less-loader']
+                use: [
+                    'css-loader',
+                    {
+                        loader: 'less-loader',
+                        options: {
+                            javascriptEnabled: true
+                        }
+                    }
+                ]
 			},
 			// css
 			{
