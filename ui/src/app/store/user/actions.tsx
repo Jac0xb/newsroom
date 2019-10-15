@@ -1,41 +1,62 @@
-import { UserActionTypes, UserDispatchers, SET_PERMISSIONS, EDIT_FLASH, SET_GROUPS, SET_SELECT } from "./types";
+import { ActionTypes, UserDispatchers } from "./types";
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
-import { NRRole as NRGroup, NRWorkflow } from "app/utils/models";
+import { NRRole as NRGroup, NRWorkflow, NRRole } from "app/utils/models";
+import { RSAA } from 'redux-api-middleware';
+import { UserAPI } from 'app/api/user'
 
-export function dispatchSetPermissions(permissions: Array<NRWorkflow>): UserActionTypes {
+export function dispatchSetPermissions(permissions: Array<NRWorkflow>): any {
   return {
-    type: SET_PERMISSIONS,
+    type: ActionTypes.SET_PERMISSIONS,
     permissions: permissions,
   };
 }
-export function dispatchEditFlash(flash: string): UserActionTypes {
+export function dispatchEditFlash(flash: string): any {
   return {
-    type: EDIT_FLASH,
+    type: ActionTypes.EDIT_FLASH,
     flash: flash
   };
 }
-export function dispatchSetGroups(groups: Array<NRGroup>): UserActionTypes {
+export function dispatchSetGroups(groups: Array<NRRole>): any {
   return {
-    type: SET_GROUPS,
+    type: ActionTypes.SET_GROUPS,
     groups: groups
   };
 }
-export function dispatchSelectChange(name: string, payload: any): UserActionTypes {
+export function dispatchSelectChange(name: string, payload: Array<NRRole>): any {
   return {
-    type: SET_SELECT,
+    type: ActionTypes.SET_SELECT,
     name: name,
     payload: payload
   };
 }
+export function dispatchUpdateUser(id: number, payload: NRRole) : any {
+
+  var requestHeaders: HeadersInit = new Headers(
+      {'Content-Type': 'application/json'}
+  );
+
+  return {
+      [RSAA]: {
+          endpoint: () => UserAPI.updateUserRoles(id),
+          method: 'PUT',
+          headers: () => requestHeaders,
+          body: payload,
+          types: [
+            ActionTypes.UPDATE_USER,
+          ]
+      }
+  };
+}
 
 // Map Dispatch
-export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, UserActionTypes>, ownProps: T) : UserDispatchers {
+export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, any>, ownProps: T) : UserDispatchers {
   return {
     ...ownProps,
     fetchSetPermissions: bindActionCreators(dispatchSetPermissions, dispatch),
     fetchEditFlash: bindActionCreators(dispatchEditFlash, dispatch),
     fetchSetGroups: bindActionCreators(dispatchSetGroups, dispatch),
     fetchSelectChange: bindActionCreators(dispatchSelectChange, dispatch),
+    fetchUpdateUser: bindActionCreators(dispatchUpdateUser, dispatch),
   }
 };

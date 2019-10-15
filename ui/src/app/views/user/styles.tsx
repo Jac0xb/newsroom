@@ -1,21 +1,22 @@
 import { StyleRules, Theme } from '@material-ui/core/styles';
-import { display } from '@material-ui/system';
 
 export function styles(theme: Theme) {
     return ({
         grid: {
             marginTop: "16px"
         },
-        formLabel: {
-            marginTop: "16px"
-        },
-        formSelect: {
-            marginTop: "8px"
-        },
         formGroup: {
             padding: "16px",
-            display: "grid"
+            display: "grid",
+            marginTop: "16px",
+            minWidth: "400px",
 		},
+        formLabel: {
+            marginBottom: "8px"
+        },
+        formSelect: {
+            marginBottom: "16px"
+        },
 		flashMessage: {
 			margin: "8px 0 16px 0",
 			textAlign: "center",
@@ -26,6 +27,12 @@ export function styles(theme: Theme) {
 				fontSize: "16px",
 				lineHeight: "16px",
 			}
-		},
+        },
+        buttonGroup:{
+            alignItems: "flex-end",
+        },
+        button: {
+            width: "30%",
+        },
     } as StyleRules);
 }

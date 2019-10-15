@@ -228,6 +228,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
         >
           <Tab label="Stage One" {...this.a11yProps(0)} />
           <Tab label="Stage Two" {...this.a11yProps(1)} />
+          <Tab label="Stage Three" {...this.a11yProps(2)} />
         </Tabs>
       </AppBar>
       {/* <div hidden={value !== index}>

@@ -1,11 +1,5 @@
 import { AppState } from "app/store";
-import { 
-  SET_PERMISSIONS,
-  UserState, 
-  UserActionTypes, 
-  EDIT_FLASH, 
-  SET_GROUPS,
-  SET_SELECT
+import { UserState, ActionTypes, 
 } from "./types";
 
 const initialState: UserState = {
@@ -16,34 +10,22 @@ const initialState: UserState = {
   selectedPermissions: [],
 };
 
-export function userReducer(
-  state = initialState,
-  action: UserActionTypes
-): UserState {
+export function userReducer(state = initialState, action: any): UserState {
   switch (action.type) {
-    case SET_PERMISSIONS: {
-      return {
-        ...state,
-        permissions: action.permissions,
-      };
+    case ActionTypes.SET_PERMISSIONS: {
+      return {...state, permissions: action.permissions};
     }
-    case EDIT_FLASH: {
-      return {
-        ...state,
-        flash: action.flash,
-      };
+    case ActionTypes.EDIT_FLASH: {
+      return {...state, flash: action.flash};
     }
-    case SET_GROUPS: {
-      return {
-        ...state,
-        groups: action.groups,
-      };
+    case ActionTypes.SET_GROUPS: {
+      return {...state, groups: action.groups};
     }
-    case SET_SELECT: {
-      return {
-        ...state,
-        [action.name]: action.payload,
-      };
+    case ActionTypes.SET_SELECT: {
+      return {...state, [action.name]: action.payload};
+    }
+    case ActionTypes.UPDATE_USER: {
+      return {...state};
     }
     default:
       return state;
