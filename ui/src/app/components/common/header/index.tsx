@@ -88,7 +88,7 @@ class HeaderComponent extends React.Component<HeaderComponent.Props, HeaderCompo
         //console.log(matches)
 
         return (
-            <AppBar className={classes.header} style={{backgroundColor: "#222f3e", boxShadow: 'none'}}>
+            <AppBar className={classes.header} style={{backgroundColor: "#1890ff", boxShadow: 'none'}}>
                 <Toolbar>
                     <Grid container justify="space-between" alignItems="center">
                         <Grid item>

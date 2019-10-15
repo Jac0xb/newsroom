@@ -10,7 +10,7 @@ export function styles(theme: Theme)  {
 			padding: "24px"
 		},
 		formGroup: {
-			padding: "16px"
+			padding: "32px"
 		},
 		flashMessage: {
 			textAlign: "center",

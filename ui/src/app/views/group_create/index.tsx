@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, FormGroup, FormLabel, Grid, MenuItem, Paper, TextField, Typography } from '@material-ui/core';
+import { Button, FormGroup, Grid, Paper, Typography } from '@material-ui/core';
 import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
@@ -7,14 +7,23 @@ import { Link, Redirect } from 'react-router-dom';
 import { Cookies, withCookies } from 'react-cookie';
 import { compose } from 'recompose';
 import { NRWorkflow, NRStage } from 'app/utils/models';
-import { TreeSelect } from 'antd';
-const { TreeNode } = TreeSelect;
+import { TreeSelect, Select } from 'antd';
+import { Typography as AntTypography } from 'antd';
+import { Input } from 'antd';
+const { Option } = Select;
+const { TextArea } = Input;
+import _ from 'lodash';
 
 export namespace GroupCreate {
     export interface Props {
         classes: Record<string, string>
         match?: { params: any }
         cookies: Cookies
+    }
+    
+    export enum ItemType {
+        Workflow,
+        Stage
     }
 
     export interface State {
@@ -23,402 +32,228 @@ export namespace GroupCreate {
         fetchedStages: NRStage[]
         fetchedUsers: { name: string, id: number }[]
         flash?: string
-
+        selectedItems : string[]
         name?: string
         description?: string
-        permissions: SimplePermission[]
         users: { name: string, id: number }[]
     }
 
     export interface SimplePermission {
         id: number
         access: number
-        type?: string
-    }
-}
-
-// Add refresh button to workflows.
-class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> {
-
-    constructor(props: GroupCreate.Props, context?: any) {
-        super(props, context);
-        this.state = {
-            permissions: [],
-            users: [],
-            name: "",
-            description: "",
-            flash: "",
-            submitted: false,
-            fetchedUsers: [], fetchedStages: [], fetchedWorkflows: []
-        }
     }
 
-    async componentDidMount() {
+    // Add refresh button to workflows.
+    export class Component extends React.Component<Props, State> {
 
-        var workflowsResponse = await axios.get<NRWorkflow[]>("/api/workflows");
-        this.setState({fetchedWorkflows: workflowsResponse.data});
-        
-        for (var i = 0; i < workflowsResponse.data.length; i++) {
-            var stagesResponse = await axios.get<NRStage[]>(`/api/workflows/${workflowsResponse.data[i].id}/stages`);
-            this.setState({fetchedStages: [...this.state.fetchedStages, ...stagesResponse.data]});
+        constructor(props: Props, context?: any) {
+            super(props, context);
+            this.state = {
+                selectedItems: [],
+                users: [],
+                name: "",
+                description: "",
+                flash: "",
+                submitted: false,
+                fetchedUsers: [], fetchedStages: [], fetchedWorkflows: []
+            }
         }
 
-        axios.get("/api/users").then((response) => {
+        async componentDidMount() {
 
-            var fetchedUsers = response.data.map((user: any) => {
-                return {id: user.id, name: user.userName}
+            var {data : workflows } = await axios.get<NRWorkflow[]>("/api/workflows");
+            
+            for (var i = 0; i < workflows.length; i++) {
+                let { data : stages } = await axios.get<NRStage[]>(`/api/workflows/${workflows[i].id}/stages`);
+                workflows[i].stages = stages;
+            }
+            
+            this.setState({fetchedWorkflows: workflows});
+
+            axios.get("/api/users").then((response) => {
+
+                var fetchedUsers = response.data.map((user: any) => {
+                    return {id: user.id, name: user.userName};
+                });
+
+                this.setState({fetchedUsers})
+
+            }).catch((error) => {
+                console.log(error)
             });
+        }
 
-            this.setState({fetchedUsers})
+        /**
+         * On submit.
+         */
+        onSubmit() {
 
-        }).catch((error) => {
-            console.log(error)
-        });
-    }
+            this.setState({flash: ""}); 
 
-    /**
-     * On submit.
-     */
-    onSubmit() {
+            var users: { id: number }[] = [];
+            var wfpermissions: GroupCreate.SimplePermission[] = [];
+            var stpermissions: GroupCreate.SimplePermission[] = [];
 
-        this.setState({flash: ""})
-
-        var users: { id: number }[] = [];
-        var wfpermissions: GroupCreate.SimplePermission[] = [];
-        var stpermissions: GroupCreate.SimplePermission[] = [];
-
-        for (var i = 0; i < this.state.permissions.length; i++) {
-            if (this.state.permissions[i].id === -1) {
-                this.setState({flash: "No type/item was designated for one of your permissions."});
+            if (this.state.selectedItems.length == 0) {
+                this.setState({flash: "You have not given this group any permissions."});
                 return;
             }
-        }
 
-        if (this.state.permissions.length === 0) {
-            this.setState({flash: "You have not given this group any permissions."});
-            return;
-        }
-
-        if (this.state.name === "") {
-            this.setState({flash: "No group name was given."});
-            return;
-        }
-
-        this.state.permissions.map((permission) => {
-
-            if (permission.type === "Stages") {
-                stpermissions.push({id: permission.id, access: permission.access})
-            } else {
-                wfpermissions.push({id: permission.id, access: permission.access})
-            }
-        })
-
-        users = this.state.users.map((users) => {
-            return {id: users.id}
-        })
-
-        console.log({name: this.state.name, wfpermissions, stpermissions, users})
-
-        const newRole = {
-            name: this.state.name,
-            description: this.state.description,
-            users
-        };
-
-        axios.post("/api/roles", newRole).then(async (response: any) => {
-            
-            console.log(response)
-            var roleId = response.data.id
-
-            for (var i = 0; i < wfpermissions.length; i++) {
-                await axios.put(`/api/roles/${roleId}/workflow/${wfpermissions[i].id}`, {access: wfpermissions[i].access})
-            }
-            for (var i = 0; i < stpermissions.length; i++) {
-                await axios.put(`/api/roles/${roleId}/stages/${stpermissions[i].id}`, {access: stpermissions[i].access})
+            if (this.state.name == "") {
+                this.setState({flash: "No group name was given."});
+                return;
             }
 
-            if (response) {
-                this.setState({submitted: true})
+            this.state.selectedItems.map((item) => {
+                
+                var regex = /^([0-9]{1,})-{0,1}([0-9]{1,}){0,1}$/
+                var match = regex.exec(item)
+                
+                if (match && match[1] != undefined && match[2] == undefined) {
+                    wfpermissions.push({ id: parseInt(match[0]), access: 1 })
+                }
+                if (match && match[2] != undefined) {
+                    stpermissions.push({ id: parseInt(match[1]), access: 1 })
+                }
+            })
+
+            users = this.state.users.map((users) => {
+                return {id: users.id}
+            })
+
+            const newRole = {
+                name: this.state.name,
+                description: this.state.description,
+                users
+            };
+
+            axios.post("/api/roles", newRole).then(async (response: any) => {
+                
+                var roleId = response.data.id
+
+                for (var i = 0; i < wfpermissions.length; i++) {
+                    await axios.put(`/api/roles/${roleId}/workflow/${wfpermissions[i].id}`, {access: wfpermissions[i].access})
+                }
+                for (var i = 0; i < stpermissions.length; i++) {
+                    await axios.put(`/api/roles/${roleId}/stage/${stpermissions[i].id}`, {access: stpermissions[i].access})
+                }
+
+                if (response) {
+                    this.setState({submitted: true})
+                }
+
+            }).catch((error) => {
+                this.setState({flash: error.response.data.message || "Something has gone terribly wrong. We don't even know."});
+            });
+        }
+
+        renderUsers() {
+
+            const children = [];
+            for (let i = 0; i < this.state.fetchedUsers.length; i++) {
+              children.push(<Option key={this.state.fetchedUsers[i].id}>{this.state.fetchedUsers[i].name}</Option>);
             }
 
-        }).catch((error) => {
-            this.setState({flash: error.response.data.message || "Something has gone terribly wrong. We don't even know."});
-        });
-    }
-
-    addNewPermission() {
-        var newPermissions = [...this.state.permissions]
-        newPermissions.push({id: -1, type: "", access: 0})
-        this.setState({permissions: newPermissions})
-    }
-
-    removePermission() {
-
-        if (this.state.permissions.length <= 0)
-            return;
-
-        var newPermissions = [...this.state.permissions]
-        newPermissions.pop();
-        this.setState({permissions: newPermissions})
-    }
-
-    modifyPermission(index: number, permission: GroupCreate.SimplePermission) {
-        var newPermissions = [...this.state.permissions]
-        newPermissions[index] = permission;
-        this.setState({permissions: newPermissions})
-    }
-
-    renderPermission(index: number, permission: GroupCreate.SimplePermission) {
-
-        var changeType = (c: any) => {
-            var newPermission = Object.assign({}, permission);
-            newPermission.type = c.target.value;
-            newPermission.id = -1;
-            this.modifyPermission(index, newPermission)
-        }
-
-        var changeID = (c: any) => {
-            var newPermission = Object.assign({}, permission);
-            newPermission.id = parseInt(c.target.value);
-            this.modifyPermission(index, newPermission)
-        }
-
-        var changeAccess = (c: any) => {
-            var newPermission = Object.assign({}, permission);
-            newPermission.access = parseInt(c.target.value);
-            this.modifyPermission(index, newPermission)
-        }
-
-        var itemsElement = undefined;
-        var renderItems = [];
-
-        if (permission.type == "Stages") {
-            renderItems = this.state.fetchedStages.map((item:any) => (
-                <MenuItem key={item.id} value={item.id}>
-                    {item.name}
-                </MenuItem>
-            ))
-        }
-        else {
-            renderItems = this.state.fetchedWorkflows.map((item:any) => (
-                <MenuItem key={item.id} value={item.id}>
-                    {item.name}
-                </MenuItem>
-            ))
-        }
-
-        if (permission.type !== "") {
-            itemsElement = (<React.Fragment>
-                <TextField
-                    select
-                    label={permission.type}
-                    margin="normal"
-                    variant="filled"
-                    value={permission.id}
-                    onChange={changeID}
-                    InputLabelProps={{
-                        shrink: true,
+            return (<React.Fragment>
+                <Select
+                    mode="multiple"
+                    style={{ width: '100%', marginBottom: '16px' }}
+                    placeholder="Please select"
+                    defaultValue={_.map(this.state.users, (user) => user.id.toString())}
+                    onChange={(users: string[]) => {
+                        var selectedUsers = _.filter(this.state.fetchedUsers, (user) => _.includes(users, user.id.toString()));
+                        this.setState({users: selectedUsers});
                     }}
                 >
-                    <MenuItem key={-1} disabled value="-1"><em>None</em></MenuItem>
-                    {renderItems}
-                </TextField>
-                <TextField
-                    select
-                    style={{marginTop: "16px"}}
-                    label="Access Type"
-                    margin="none"
-                    variant="filled"
-                    value={permission.access}
-                    onChange={changeAccess}
-                    InputLabelProps={{
-                        shrink: true,
-                    }}
-                >
-                    <MenuItem key={0} value="0">Read</MenuItem>
-                    <MenuItem key={1} value="1">Write</MenuItem>
-                </TextField>
+                    {children}
+                </Select>
+                
             </React.Fragment>)
         }
 
-        return <React.Fragment key={index}>
-            <div style={{paddingTop: "16px", borderBottom: "rgba(0, 0, 0, 0.26) solid 1px", marginRight: "64px"}}></div>
-            <TextField
-                select
-                style={{marginTop: "16px"}}
-                label="Type"
-                margin="none"
-                variant="filled"
-                value={permission.type}
-                onChange={changeType}
-                InputLabelProps={{
-                    shrink: true,
-                }}
-            >
-                <MenuItem key="Workflows" value="Workflows">Workflows</MenuItem>
-                <MenuItem key="Stages" value="Stages">Stages</MenuItem>
-            </TextField>
-            {itemsElement}
-        </React.Fragment>
-    }
+        render() {
+            
+            var treeData = _.map(this.state.fetchedWorkflows, (workflow) => {
+                var newWorkflow = { title: workflow.name, value: `${workflow.id}`, children: new Array<{title: string, value: string}>() }
 
-    addUser(e: any) {
+                for (var i = 0; i < workflow.stages.length; i++) {
+                    let stage = workflow.stages[i] 
+                    newWorkflow.children.push({ title : stage.name, value: `${workflow.id}-${stage.id}` })
+                }
 
-        var newUsers = [...this.state.users]
-        var newUser: any = undefined;
+                return newWorkflow;
+            })
 
-        for (var i = 0; i < this.state.users.length; i++) {
-            if (this.state.users[i].id === e.target.value) {
-                return;
+            if (this.state.submitted) {
+                return <Redirect push to="/groups"/>;
             }
-        }
-        for (var i = 0; i < this.state.fetchedUsers.length; i++) {
-            if (this.state.fetchedUsers[i].id === e.target.value) {
-                newUser = this.state.fetchedUsers[i]
-            }
-        }
+            const {classes} = this.props;
 
-        newUsers.push(newUser)
-        this.setState({users: newUsers})
-    }
-
-    renderUsers() {
-
-        return (<React.Fragment>
-            <TextField
-                select
-                label="User"
-                margin="normal"
-                variant="filled"
-                value={-1}
-                onChange={this.addUser.bind(this)}
-                InputLabelProps={{
-                    shrink: true,
-                }}
-            >
-                <MenuItem key={-1} disabled value="-1"><em>None</em></MenuItem>
-                {this.state.fetchedUsers.map((item) => (
-                    <MenuItem key={item.id} value={item.id}>
-                        {item.name}
-                    </MenuItem>
-                ))}
-            </TextField>
-            {
-                this.state.users.map((users) => {
-                    return (
-                        <div key={users.id}>
-                            {users.name}
-                        </div>
-                    )
-                })
-            }
-        </React.Fragment>)
-    }
-
-    render() {
-
-        if (this.state.submitted) {
-            return <Redirect push to="/groups"/>;
-        }
-        const {classes} = this.props;
-
-        return (
-            <main className={classes.main}>
-                <div className={classes.buttonGroup}>
-                    <Link style={{textDecoration: "none"}} to="/groups">
-                        <Button style={{width: "calc(100px)"}} variant={"contained"}>
-                            Back
-                        </Button>
-                    </Link>
-                </div>
-                <Grid className={classes.outerGrid} alignContent={"center"} container spacing={4} direction="row"
-                      justify="center" alignItems="center">
-                    <Grid item xs={8} md={6}>
-                        <Paper className={classes.formGroup}>
-                            {(this.state.flash != "") ?
-                                <Paper className={classes.flashMessage}>
-                                    <Typography variant="caption">
-                                        {this.state.flash}
-                                    </Typography>
-                                </Paper> :
-                                <div></div>
-                            }
-                            <FormGroup>
-                                <FormLabel style={{marginTop: "16px"}}>
-                                    Create Group
-                                </FormLabel>
-                                <TextField
-                                    label="Group Name"
-                                    placeholder="Sports Editor Group"
-                                    style={{marginTop: "16px"}}
-                                    margin="none"
-                                    variant="filled"
-                                    value={this.state.name}
-                                    onChange={(c) => this.setState({name: c.target.value})}
-                                    InputLabelProps={{
-                                        shrink: true,
-                                    }}
-                                />
-                                <TextField
-                                    label="Group Description"
-                                    placeholder="A group for sports editors."
-                                    style={{marginTop: "16px"}}
-                                    margin="none"
-                                    variant="filled"
-                                    value={this.state.description}
-                                    onChange={(c) => this.setState({description: c.target.value})}
-                                    InputLabelProps={{
-                                        shrink: true,
-                                    }}
-                                />
-                                <FormLabel style={{marginTop: "16px"}}>
-                                    Permissions
-                                </FormLabel>
-                                <TreeSelect
-                                    showSearch
-                                    value={undefined}
-                                    placeholder="Please select"
-                                    allowClear
-                                    multiple
-                                    treeDefaultExpandAll
-                                    onChange={(e) => console.log(e)}
-                                >
-                                    <TreeNode value="parent 1" title="parent 1" key="0-1">
-                                    <TreeNode value="parent 1-0" title="parent 1-0" key="0-1-1">
-                                        <TreeNode value="leaf1" title="my leaf" key="random" />
-                                        <TreeNode value="leaf2" title="your leaf" key="random1" />
-                                    </TreeNode>
-                                    <TreeNode value="parent 1-1" title="parent 1-1" key="random2">
-                                        <TreeNode value="sss" title={<b style={{ color: '#08c' }}>sss</b>} key="random3" />
-                                    </TreeNode>
-                                    </TreeNode>
-                                </TreeSelect>
-                                <div style={{display: "flex", justifyContent: "space-evenly"}}>
-                                    <Button style={{marginTop: "16px", width: "calc(4*52px)"}} variant={"contained"}
-                                            onClick={this.addNewPermission.bind(this)}>
-                                        New Permission
-                                    </Button>
-                                    <Button style={{marginTop: "16px", width: "calc(4*52px)"}} variant={"contained"}
-                                            onClick={this.removePermission.bind(this)}>
-                                        Remove Permission
-                                    </Button>
-                                </div>
-                                <FormLabel style={{marginTop: "16px"}}>
-                                    Users
-                                </FormLabel>
-                                {this.renderUsers()}
-                            </FormGroup>
-                            <Button variant="contained" onClick={this.onSubmit.bind(this)} style={{marginTop: "16px"}}
-                                    className={classes.button}>Create</Button>
-                        </Paper>
+            return (
+                <main className={classes.main}>
+                    <div className={classes.buttonGroup}>
+                        <Link style={{textDecoration: "none"}} to="/groups">
+                            <Button style={{width: "calc(100px)"}} variant={"contained"}>
+                                Back
+                            </Button>
+                        </Link>
+                    </div>
+                    <Grid className={classes.outerGrid} alignContent={"center"} container spacing={4} direction="row"
+                        justify="center" alignItems="center">
+                        <Grid item xs={8} md={6}>
+                            <Paper className={classes.formGroup}>
+                                {(this.state.flash != "") ?
+                                    <Paper className={classes.flashMessage}>
+                                        <Typography variant="caption">
+                                            {this.state.flash}
+                                        </Typography>
+                                    </Paper> :
+                                    <div></div>
+                                }
+                                <FormGroup>
+                                    <AntTypography.Title level={3}>Create Group</AntTypography.Title>
+                                    <AntTypography.Text strong={true}>Group Name</AntTypography.Text>
+                                    <Input
+                                        placeholder="Ex. Sports Editor Group"
+                                        style={{marginBottom: "16px"}}
+                                        value={this.state.name}
+                                        onChange={(c) => this.setState({name: c.target.value})}
+                                    />
+                                    <AntTypography.Text strong={true}>Group Description</AntTypography.Text>
+                                    <TextArea
+                                        placeholder="Ex. A group for sports editors."
+                                        style={{marginBottom: "16px"}}
+                                        autosize={{ minRows: 2, maxRows: 6 }}
+                                        value={this.state.description}
+                                        onChange={({ target: { value } }) => this.setState({description: value})}
+                                    />
+                                    <AntTypography.Text strong={true}>Group Permissions</AntTypography.Text>
+                                    <TreeSelect
+                                        showSearch
+                                        treeData={treeData}
+                                        value={this.state.selectedItems}
+                                        style={{marginBottom: "16px"}}
+                                        placeholder="Type to filter.."
+                                        allowClear
+                                        multiple
+                                        treeDefaultExpandAll
+                                        onChange={(value) => this.setState({selectedItems: value})}
+                                    />
+                                    <AntTypography.Text strong={true}>Group Users</AntTypography.Text>
+                                    {this.renderUsers()}
+                                </FormGroup>
+                                <Button variant="contained" onClick={this.onSubmit.bind(this)}
+                                        className={classes.button}>Create</Button>
+                            </Paper>
+                        </Grid>
                     </Grid>
-                </Grid>
-            </main>
-        );
+                </main>
+            );
+        }
     }
 }
 
 export default compose<GroupCreate.Props, {}>(
     withStyles(styles, {withTheme: true}),
     withCookies
-)(GroupCreate);
+)(GroupCreate.Component);

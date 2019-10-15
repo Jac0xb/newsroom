@@ -23,6 +23,7 @@ import AppHeader from 'app/components/common/header';
 import LoginPage from 'app/views/login';
 import axios from 'axios';
 import { NRUser } from 'app/utils/models';
+import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';  
 
 export namespace App {
     export interface Props {
@@ -35,6 +36,19 @@ export namespace App {
     }
 }
 
+const theme = createMuiTheme({
+    palette: {
+       primary: {
+          light: '#1890ff',
+          main: '#1890ff',
+          dark: '#1890ff'
+       },
+       secondary: {
+         main: '#1890ff',
+       },
+    }
+ });
+ 
 
 class App extends React.Component<App.Props, App.State, any> {
 
@@ -82,20 +96,23 @@ class App extends React.Component<App.Props, App.State, any> {
             <React.Fragment>
                 <CssBaseline/>
                 <AppHeader />
+
                 <div style={headerMargin}>
-                    <Switch>
-                        <Route exact path="/" component={Dashboard}/>
-                        <Route exact path="/document" component={Dashboard}/>
-                        <Route exact path="/document/create" component={DocumentCreator}/>
-                        <Route exact path="/workflow" component={Workflows}/>
-                        <Route path="/document/:id/edit" component={DocumentEditor}/>
-                        <Route path="/workflow/:id/edit" component={Workflow}/>
-                        <Route exact path="/groups" component={Groups}/>
-                        <Route exact path="/groups/create" component={GroupCreate}/>
-                        <Route path="/groups/:id" component={Group}/>
-                        <Route exact path="/users" component={Users}/>
-                        <Route path="/users/:id" component={EditUser}/>
-                    </Switch>
+                    <MuiThemeProvider theme = { theme }>
+                        <Switch>
+                            <Route exact path="/" component={Dashboard}/>
+                            <Route exact path="/document" component={Dashboard}/>
+                            <Route exact path="/document/create" component={DocumentCreator}/>
+                            <Route exact path="/workflow" component={Workflows}/>
+                            <Route path="/document/:id/edit" component={DocumentEditor}/>
+                            <Route path="/workflow/:id/edit" component={Workflow}/>
+                            <Route exact path="/groups" component={Groups}/>
+                            <Route exact path="/groups/create" component={GroupCreate}/>
+                            <Route path="/groups/:id" component={Group}/>
+                            <Route exact path="/users" component={Users}/>
+                            <Route path="/users/:id" component={EditUser}/>
+                        </Switch>
+                    </MuiThemeProvider>
                 </div>
             </React.Fragment>
         );
