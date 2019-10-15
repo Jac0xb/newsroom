@@ -1,4 +1,4 @@
-import { Fab } from '@material-ui/core';
+import { Fab, Tabs, Tab, AppBar, Box } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import WorkflowStage from 'app/views/workflow/components/WorkflowStage';
@@ -7,13 +7,34 @@ import axios from 'axios';
 import * as React from 'react';
 import { styles } from './styles';
 import { Paper, Typography } from '@material-ui/core';
-// Redux
 import { mapStateToProps  } from 'app/store/workflow/reducers';
 import { mapDispatchToProps } from "app/store/workflow/actions";
 import { connect } from "react-redux";
 import { WorkflowDispatchers, WorkflowState } from "app/store/workflow/types";
 
-  
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: any;
+  value: any;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <Typography
+      component="div"
+      role="tabpanel"
+      hidden={value !== index}
+      id={`scrollable-auto-tabpanel-${index}`}
+      aria-labelledby={`scrollable-auto-tab-${index}`}
+      {...other}
+    >
+      <Box p={3}>{children}</Box>
+    </Typography>
+  );
+}
+
 export namespace Workflow {
   export interface Props extends WorkflowDispatchers, WorkflowState {
     classes?: any
@@ -23,14 +44,14 @@ export namespace Workflow {
       }
     }
   }
-  export interface State { }
+  export interface State { value: number }
 }
 
 class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
   constructor(props: Workflow.Props) {
         super(props)
-        this.state = { }
+        this.state = { value: 0 }
   }
 
   componentDidMount() {
@@ -175,14 +196,50 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
   };
 
+  a11yProps(index: any) {
+    return {
+      id: `scrollable-auto-tab-${index}`,
+      'aria-controls': `scrollable-auto-tabpanel-${index}`,
+    };
+  }
+
+  handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
+    this.setState({ value: newValue })
+  };
+
   render() {
 
     const { classes } = this.props;
-    const {} = this.state;
+    const { value } = this.state;
 
     return (
       <React.Fragment>
         <main className={classes.main}>
+          
+        <AppBar position="static" color="default">
+        <Tabs
+          value={value}
+          onChange={this.handleChange}
+          indicatorColor="primary"
+          textColor="primary"
+          variant="scrollable"
+          scrollButtons="auto"
+          aria-label="scrollable auto tabs example"
+        >
+          <Tab label="Stage One" {...this.a11yProps(0)} />
+          <Tab label="Stage Two" {...this.a11yProps(1)} />
+        </Tabs>
+      </AppBar>
+      {/* <div hidden={value !== index}>
+        Item One
+      </div> */}
+      {/* <TabPanel value={value} index={0}>
+        Item One
+      </TabPanel>
+      <TabPanel value={value} index={1}>
+        Item Two
+      </TabPanel> */}
+
         {(this.props.flash != "") ?
             <Paper className={classes.flashMessage}>
                 <Typography variant="caption">
@@ -190,20 +247,20 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                 </Typography>
             </Paper> :
             <div></div>
-            }
+        }
           <div className={classes.content}>
             <div className={classes.workflowContent}>
               <div className={classes.stage}>
-                { this.props.canEdit ? 
+                {/* { !this.props.canEdit ? 
                   <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.addButton}>
                     <AddIcon />
                   </Fab> 
                   : null 
-                }
+                } */}
               </div>
               {this.props.stages.map((stage, index) => (
                 <div className={classes.stage}>
-                  <WorkflowStage canEdit={this.props.canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(stageID: number) => this.handleStageEditClick(stageID)} onDeleteClick={(stageID: number) => this.handleStageDeleteClick(stageID)}/>
+                  <WorkflowStage show={this.state.value} index={index} canEdit={this.props.canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(stageID: number) => this.handleStageEditClick(stageID)} onDeleteClick={(stageID: number) => this.handleStageDeleteClick(stageID)}/>
                   { this.props.canEdit ? 
                     <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index+1)} className={classes.addButton}>
                       <AddIcon />
