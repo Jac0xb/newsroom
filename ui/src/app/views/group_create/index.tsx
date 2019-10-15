@@ -200,10 +200,10 @@ export namespace GroupCreate {
                     </div>
                     <Grid className={classes.outerGrid} alignContent={"center"} container spacing={4} direction="row"
                         justify="center" alignItems="center">
-                        <Grid item xs={8} md={6}>
-                            <Paper className={classes.formGroup}>
+                        <Grid item xs={7} md={6} lg={5} xl={4}>
+                            <Paper className={classes.formGroup} elevation={6}>
                                 {(this.state.flash != "") ?
-                                    <Paper className={classes.flashMessage}>
+                                    <Paper className={classes.flashMessage} elevation={2}>
                                         <Typography variant="caption">
                                             {this.state.flash}
                                         </Typography>
@@ -242,8 +242,10 @@ export namespace GroupCreate {
                                     <AntTypography.Text strong={true}>Group Users</AntTypography.Text>
                                     {this.renderUsers()}
                                 </FormGroup>
-                                <Button variant="contained" onClick={this.onSubmit.bind(this)}
-                                        className={classes.button}>Create</Button>
+                                <div style={{display: "flex", flexDirection: "row-reverse"}}>
+                                    <Button variant="contained" onClick={this.onSubmit.bind(this)}
+                                            className={classes.button}>Create</Button>
+                                </div>
                             </Paper>
                         </Grid>
                     </Grid>
