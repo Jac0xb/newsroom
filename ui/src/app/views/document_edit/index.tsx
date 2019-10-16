@@ -31,7 +31,7 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
 	}
 
 	componentDidMount() {
-        
+
 		const id = this.props.match.params.id;
 
 		axios.get("/api/documents/" + id).then((response) => {
@@ -91,7 +91,7 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
 	}
 
 	handleMove(direction: string) {
-		axios.put("/api/documents/" +  + "/" + direction).then((response) => {
+		axios.put("/api/documents/" + this.state.document.id + "/" + direction).then((response) => {
 			console.log(response);
 			this.setState({ document: response.data })
 		});
