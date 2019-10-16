@@ -30,6 +30,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
         return (
         <main className={classes.layout}>
              <Drawer
+                anchor="right"
                 className={classes.drawer}
                 variant="permanent"
                 classes={{

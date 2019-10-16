@@ -11,6 +11,7 @@ import { mapStateToProps  } from 'app/store/workflow/reducers';
 import { mapDispatchToProps } from "app/store/workflow/actions";
 import { connect } from "react-redux";
 import { WorkflowDispatchers, WorkflowState } from "app/store/workflow/types";
+import WorkflowSidebar from './components/WorkflowSidebar';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -215,7 +216,6 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
     return (
       <React.Fragment>
         <main className={classes.main}>
-          
         <AppBar position="static" color="default">
         <Tabs
           value={value}
@@ -231,6 +231,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
           <Tab label="Stage Three" {...this.a11yProps(2)} />
         </Tabs>
       </AppBar>
+      <WorkflowSidebar />
       {/* <div hidden={value !== index}>
         Item One
       </div> */}
