@@ -6,7 +6,6 @@ import { styles } from './styles'
 import { Link, Redirect } from 'react-router-dom';
 import { Cookies, withCookies } from 'react-cookie';
 import { compose } from 'recompose';
-import { NRWorkflow, NRStage } from 'app/utils/models';
 import { TreeSelect, Select } from 'antd';
 import { Typography as AntTypography } from 'antd';
 import { Input } from 'antd';
@@ -14,28 +13,17 @@ const { Option } = Select;
 const { TextArea } = Input;
 import _ from 'lodash';
 
+import { connect } from 'react-redux';
+import { mapDispatchToProps } from 'app/store/group_create/actions';
+import { mapStateToProps } from 'app/store/group_create/reducers';
+import { GroupCreateReducerState, GroupCreateDispatchers } from 'app/store/group_create/types';
+
 export namespace GroupCreate {
-    export interface Props {
+
+    export interface Props extends GroupCreateDispatchers, GroupCreateReducerState {
         classes: Record<string, string>
         match?: { params: any }
         cookies: Cookies
-    }
-    
-    export enum ItemType {
-        Workflow,
-        Stage
-    }
-
-    export interface State {
-        submitted: boolean
-        fetchedWorkflows: NRWorkflow[]
-        fetchedStages: NRStage[]
-        fetchedUsers: { name: string, id: number }[]
-        flash?: string
-        selectedItems : string[]
-        name?: string
-        description?: string
-        users: { name: string, id: number }[]
     }
 
     export interface SimplePermission {
@@ -44,43 +32,17 @@ export namespace GroupCreate {
     }
 
     // Add refresh button to workflows.
-    export class Component extends React.Component<Props, State> {
+    export class Component extends React.Component<Props> {
 
         constructor(props: Props, context?: any) {
             super(props, context);
-            this.state = {
-                selectedItems: [],
-                users: [],
-                name: "",
-                description: "",
-                flash: "",
-                submitted: false,
-                fetchedUsers: [], fetchedStages: [], fetchedWorkflows: []
-            }
         }
 
-        async componentDidMount() {
-
-            var {data : workflows } = await axios.get<NRWorkflow[]>("/api/workflows");
+        componentDidMount() {
+                       
+           this.props.fetchWorkflows();
+           this.props.fetchUsers();
             
-            for (var i = 0; i < workflows.length; i++) {
-                let { data : stages } = await axios.get<NRStage[]>(`/api/workflows/${workflows[i].id}/stages`);
-                workflows[i].stages = stages;
-            }
-            
-            this.setState({fetchedWorkflows: workflows});
-
-            axios.get("/api/users").then((response) => {
-
-                var fetchedUsers = response.data.map((user: any) => {
-                    return {id: user.id, name: user.userName};
-                });
-
-                this.setState({fetchedUsers})
-
-            }).catch((error) => {
-                console.log(error)
-            });
         }
 
         /**
@@ -88,23 +50,23 @@ export namespace GroupCreate {
          */
         onSubmit() {
 
-            this.setState({flash: ""}); 
+            this.props.induceFlash("");
 
             var users: { id: number }[] = [];
             var wfpermissions: GroupCreate.SimplePermission[] = [];
             var stpermissions: GroupCreate.SimplePermission[] = [];
 
-            if (this.state.selectedItems.length == 0) {
-                this.setState({flash: "You have not given this group any permissions."});
+            if (this.props.selectedItems.length == 0) {
+                this.props.induceFlash("You have not given this group any permissions.");
                 return;
             }
 
-            if (this.state.name == "") {
-                this.setState({flash: "No group name was given."});
+            if (this.props.name == "") {
+                this.props.induceFlash("No group name was given.");
                 return;
             }
 
-            this.state.selectedItems.map((item) => {
+            this.props.selectedItems.map((item) => {
                 
                 var regex = /^([0-9]{1,})-{0,1}([0-9]{1,}){0,1}$/
                 var match = regex.exec(item)
@@ -117,13 +79,13 @@ export namespace GroupCreate {
                 }
             })
 
-            users = this.state.users.map((users) => {
+            users = this.props.selectedUsers.map((users) => {
                 return {id: users.id}
             })
 
             const newRole = {
-                name: this.state.name,
-                description: this.state.description,
+                name: this.props.name,
+                description: this.props.description,
                 users
             };
 
@@ -139,19 +101,19 @@ export namespace GroupCreate {
                 }
 
                 if (response) {
-                    this.setState({submitted: true})
+                    this.props.induceSubmission();
                 }
 
             }).catch((error) => {
-                this.setState({flash: error.response.data.message || "Something has gone terribly wrong. We don't even know."});
+                this.props.induceFlash(error.response.data.message || "Something has gone terribly wrong. We don't even know.");
             });
         }
 
         renderUsers() {
 
             const children = [];
-            for (let i = 0; i < this.state.fetchedUsers.length; i++) {
-              children.push(<Option key={this.state.fetchedUsers[i].id}>{this.state.fetchedUsers[i].name}</Option>);
+            for (let i = 0; i < this.props.fetchedUsers.length; i++) {
+              children.push(<Option key={this.props.fetchedUsers[i].id}>{this.props.fetchedUsers[i].userName}</Option>);
             }
 
             return (<React.Fragment>
@@ -159,10 +121,10 @@ export namespace GroupCreate {
                     mode="multiple"
                     style={{ width: '100%', marginBottom: '16px' }}
                     placeholder="Please select"
-                    defaultValue={_.map(this.state.users, (user) => user.id.toString())}
+                    defaultValue={_.map(this.props.selectedUsers, (user) => user.id.toString())}
                     onChange={(users: string[]) => {
-                        var selectedUsers = _.filter(this.state.fetchedUsers, (user) => _.includes(users, user.id.toString()));
-                        this.setState({users: selectedUsers});
+                        var selectedUsers = _.filter(this.props.fetchedUsers, (user) => _.includes(users, user.id.toString()));
+                        this.props.updateUserSelection(_.map(selectedUsers, (user) => {return {id: user.id, name: user.userName}}));
                     }}
                 >
                     {children}
@@ -173,7 +135,7 @@ export namespace GroupCreate {
 
         render() {
             
-            var treeData = _.map(this.state.fetchedWorkflows, (workflow) => {
+            var treeData = _.map(this.props.fetchedWorkflows, (workflow) => {
                 var newWorkflow = { title: workflow.name, value: `${workflow.id}`, children: new Array<{title: string, value: string}>() }
 
                 for (var i = 0; i < workflow.stages.length; i++) {
@@ -184,7 +146,7 @@ export namespace GroupCreate {
                 return newWorkflow;
             })
 
-            if (this.state.submitted) {
+            if (this.props.submitted) {
                 return <Redirect push to="/groups"/>;
             }
             const {classes} = this.props;
@@ -202,10 +164,10 @@ export namespace GroupCreate {
                         justify="center" alignItems="center">
                         <Grid item xs={7} md={6} lg={5} xl={4}>
                             <Paper className={classes.formGroup} elevation={6}>
-                                {(this.state.flash != "") ?
+                                {(this.props.flash != "") ?
                                     <Paper className={classes.flashMessage} elevation={2}>
                                         <Typography variant="caption">
-                                            {this.state.flash}
+                                            {this.props.flash}
                                         </Typography>
                                     </Paper> :
                                     <div></div>
@@ -216,28 +178,28 @@ export namespace GroupCreate {
                                     <Input
                                         placeholder="Ex. Sports Editor Group"
                                         style={{marginBottom: "16px"}}
-                                        value={this.state.name}
-                                        onChange={(c) => this.setState({name: c.target.value})}
+                                        value={this.props.name}
+                                        onChange={(c) => this.props.updateName(c.target.value)}
                                     />
                                     <AntTypography.Text strong={true}>Group Description</AntTypography.Text>
                                     <TextArea
                                         placeholder="Ex. A group for sports editors."
                                         style={{marginBottom: "16px"}}
                                         autosize={{ minRows: 2, maxRows: 6 }}
-                                        value={this.state.description}
-                                        onChange={({ target: { value } }) => this.setState({description: value})}
+                                        value={this.props.description}
+                                        onChange={({ target: { value } }) => this.props.updateDescription(value)}
                                     />
                                     <AntTypography.Text strong={true}>Group Permissions</AntTypography.Text>
                                     <TreeSelect
                                         showSearch
                                         treeData={treeData}
-                                        value={this.state.selectedItems}
+                                        value={this.props.selectedItems}
                                         style={{marginBottom: "16px"}}
                                         placeholder="Type to filter.."
                                         allowClear
                                         multiple
                                         treeDefaultExpandAll
-                                        onChange={(value) => this.setState({selectedItems: value})}
+                                        onChange={(value: string[]) => this.props.updateItemSelection(value)}
                                     />
                                     <AntTypography.Text strong={true}>Group Users</AntTypography.Text>
                                     {this.renderUsers()}
@@ -258,4 +220,7 @@ export namespace GroupCreate {
 export default compose<GroupCreate.Props, {}>(
     withStyles(styles, {withTheme: true}),
     withCookies
-)(GroupCreate.Component);
+)(connect<GroupCreate.Props>(
+    mapStateToProps,
+    mapDispatchToProps
+)(GroupCreate.Component));

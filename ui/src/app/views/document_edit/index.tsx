@@ -91,6 +91,10 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
 	}
 
 	handleMove(direction: string) {
+        
+        if (!this.state.document)
+            return;
+
 		axios.put("/api/documents/" + this.state.document.id + "/" + direction).then((response) => {
 			console.log(response);
 			this.setState({ document: response.data })

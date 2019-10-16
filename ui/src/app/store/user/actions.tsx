@@ -3,7 +3,7 @@ import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 import { NRRole as NRGroup, NRWorkflow, NRRole } from "app/utils/models";
 import { RSAA } from 'redux-api-middleware';
-import { UserAPI } from 'app/api/user'
+import { UsersAPI } from 'app/api/user'
 
 export function dispatchSetPermissions(permissions: Array<NRWorkflow>): any {
   return {
@@ -38,7 +38,7 @@ export function dispatchUpdateUser(id: number, payload: NRRole) : any {
 
   return {
       [RSAA]: {
-          endpoint: () => UserAPI.updateUserRoles(id),
+          endpoint: () => UsersAPI.updateUserRoles(id),
           method: 'PUT',
           headers: () => requestHeaders,
           body: payload,
