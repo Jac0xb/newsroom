@@ -7,7 +7,6 @@ import { NRDocument } from "./NRDocument";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
 import { NRWFPermission } from "./NRWFPermission";
-import { NRWFUSPermission } from "./NRWFUSPermission";
 
 /**
  * NRWorkflow objects are made up by stages used to track documents.
@@ -85,17 +84,4 @@ export class NRWorkflow {
     )
     @JoinTable()
     public permissions: NRWFPermission[];
-
-    /**
-     * Relationship: NRWFUSPermission
-     *      - One: Each user permission is only associated with one workflow.
-     *      - Many: Each workflow can have many user permissions.
-     */
-    @OneToMany(
-        (type) => NRWFUSPermission,
-        (permission) => permission.workflow,
-    )
-    @JoinTable()
-    public usrpermissions: NRWFUSPermission[];
-
 }

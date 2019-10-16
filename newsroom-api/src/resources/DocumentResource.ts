@@ -5,8 +5,7 @@ import { Context, DELETE, GET, Path, PathParam, POST,
          PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 import { BadRequestError } from "typescript-rest/dist/server/model/errors";
-import { DBConstants, NRDocument, NRStage, NRSTPermission,
-         NRSTUSPermission } from "../entity";
+import { DBConstants, NRDocument, NRStage, NRSTPermission} from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { NotificationService } from "../services/triggers/NotificationService";
@@ -28,9 +27,6 @@ export class DocumentResource {
 
     @InjectRepository(NRSTPermission)
     private stPRep: Repository<NRSTPermission>;
-
-    @InjectRepository(NRSTUSPermission)
-    private stUSRep: Repository<NRSTUSPermission>;
 
     @Inject()
     private wfServ: WorkflowService;
@@ -155,19 +151,6 @@ export class DocumentResource {
     public async getUserDocuments(): Promise<NRDocument[]> {
         const usr = await this.serviceContext.user();
         const docs = new Set<NRDocument>();
-
-        // Individual permissions.
-        const ap = await this.stUSRep.find({ relations: ["stage"],
-                                             where: { access: DBConstants.WRITE,
-                                                      userId: usr.id } });
-
-        for (const perm of ap) {
-            const st = await this.stRep.findOne(perm.stage.id, { relations: ["documents"] });
-
-            for (const doc of st.documents) {
-                docs.add(doc);
-            }
-        }
 
         // Group permissions..
         const ar = await this.usServ.getUserRoles(usr.id);

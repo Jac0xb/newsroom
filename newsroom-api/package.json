@@ -9,6 +9,7 @@
     "start": "ts-node .",
     "start:watch": "nodemon -e ts --watch src --exec 'yarn start'",
     "test": "jest --runInBand",
+    "mytest": "jest --runInBand -t=\"1.\"",
     "typeorm": "tsc && ts-node node_modules/typeorm/cli.js",
     "buildDB": "yarn typeorm schema:sync && yarn typeorm migration:run"
   },

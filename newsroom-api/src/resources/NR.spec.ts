@@ -5,8 +5,8 @@ import { Connection, getRepository, Repository } from "typeorm";
 
 import App from "../app";
 import { DBConstants, NRDocument, NRRole,
-         NRStage, NRSTPermission, NRSTUSPermission, NRUser,
-         NRWFPermission, NRWFUSPermission, NRWorkflow } from "../entity";
+         NRStage, NRSTPermission, NRUser,
+         NRWFPermission, NRWorkflow } from "../entity";
 import { PermissionService } from "../services/PermissionService";
 
 // TODO:
@@ -18,6 +18,7 @@ import { PermissionService } from "../services/PermissionService";
 let app: express.Express;
 let conn: Connection;
 
+let adminUsr: NRUser;
 let usr: NRUser;
 let usrRep: Repository<NRUser>;
 let usrSeq: number;
@@ -26,15 +27,11 @@ let wfRep: Repository<NRWorkflow>;
 let wfSeq: number;
 let wfPRep: Repository<NRWFPermission>;
 let wfPSeq: number;
-let wfUSRep: Repository<NRWFUSPermission>;
-let wfUSSeq: number;
 
 let stRep: Repository<NRStage>;
 let stSeq: number;
 let stPRep: Repository<NRSTPermission>;
 let stPSeq: number;
-let stUSRep: Repository<NRSTUSPermission>;
-let stUSSeq: number;
 
 let dcRep: Repository<NRDocument>;
 let dcSeq: number;
@@ -69,11 +66,9 @@ beforeAll(async (done) => {
 
     wfRep = getRepository(NRWorkflow);
     wfPRep = getRepository(NRWFPermission);
-    wfUSRep = getRepository(NRWFUSPermission);
 
     stRep = getRepository(NRStage);
     stPRep = getRepository(NRSTPermission);
-    stUSRep = getRepository(NRSTUSPermission);
 
     dcRep = getRepository(NRDocument);
 
@@ -93,11 +88,9 @@ beforeEach(async (done) => {
 
     wfSeq = 1;
     wfPSeq = 1;
-    wfUSSeq = 1;
 
     stSeq = 1;
     stPSeq = 1;
-    stUSSeq = 1;
 
     dcSeq = 1;
 
@@ -107,11 +100,24 @@ beforeEach(async (done) => {
     usr = new NRUser();
     usr.id = usrSeq;
     usrSeq++;
+
     usr.firstName = "Tom";
     usr.lastName = "Cruise";
     usr.userName = "tcruise";
-    usr.email = "connor.kuhn@utah.edu";
+    usr.email = "tcruise@newsroom.com";
+    usr.admin = "N";
     await usrRep.save(usr);
+
+    adminUsr = new NRUser();
+    adminUsr.id = usrSeq;
+    usrSeq++;
+
+    adminUsr.firstName = "Admin";
+    adminUsr.lastName = "User";
+    adminUsr.userName = "admin";
+    adminUsr.email = "admin@newsroom.com";
+    adminUsr.admin = "Y";
+    await usrRep.save(adminUsr);
 
     jest.setTimeout(25000);
     done();
@@ -131,1859 +137,1855 @@ beforeEach(async (done) => {
 // |--------------------------------------------------------------------------------|
 // ----------------------------------------------------------------------------------
 
-describe("POST /api/workflows", () => {
+describe("1. POST /api/workflows", () => {
     it("Test creating a single workflow.", async () => {
-        await reqWFGetResp("RAND", 200);
+        await reqWFGetResp(adminUsr, 200, "WRITE", null);
     });
 
     it("Test creating 5 workflows with different permissions.", async () => {
         const wfNum = 5;
 
-        await reqWFSGetResps(wfNum, "RAND", 200);
+        await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
     });
 
-    it("Test creating workflows when specifying no permissions.", async () => {
-        const wfNum = 2;
-
-        await reqWFSGetResps(wfNum, null, 200);
-    });
+//    it("Test creating workflows when specifying no permissions.", async () => {
+//        const wfNum = 2;
+//
+//        await reqWFSGetResps(wfNum, null, 200);
+//    });
 });
 
-describe("GET /api/workflows", () => {
-    it("Test getting all workflows when none have stages.", async () => {
-        const wfNum = 5;
-
-        const wfs = await reqWFSGetResps(wfNum, "RAND", 200);
-        const resp = await request(app)
-                           .get("/api/workflows")
-                           .set("User-Id", `${usr.id}`);
-
-        expect(resp).not.toBeUndefined();
-        expect(resp.status).toEqual(200);
-
-        const wfrs = resp.body;
-        expect(wfrs).toHaveLength(wfNum);
-
-        // Shouldn't return stages, this is for dashboard view.
-        await verifyWFResps(wfs, wfrs, false);
-        await verifyWFSDB(wfs);
-        await verifyWFSDB(wfrs);
-    });
-
-    it("Test getting all workflows with stages.", async () => {
-        const wfNum = 3;
-        const stNum = 3;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-
-        // Don't verify stage documents, we haven't created any.
-        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
-
-        const resp = await request(app)
-                           .get("/api/workflows")
-                           .set("User-Id", `${usr.id}`);
-
-        expect(resp).not.toBeUndefined();
-        expect(resp.status).toEqual(200);
-
-        const wfrs = resp.body;
-        expect(wfrs).toHaveLength(wfNum);
-
-        // Shouldn't return stages, this is for dashboard view.
-        await verifyWFResps(wfs, wfrs, false);
-        await verifyWFSDB(wfs);
-        await verifyWFSDB(wfrs);
-
-        // No stages are returned, but we still expect them to be correct in the DB.
-        // Use the original WF.
-        await verifyWFSSTSDB(wfs);
-    });
-});
-
-describe("GET /api/workflows/:wid", () => {
-    it("Test getting workflows with no stages.", async () => {
-        const wfNum = 5;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-
-        for (const wf of wfs) {
-            const resp = await request(app)
-                               .get(`/api/workflows/${wf.id}`)
-                               .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-            expect(resp.status).toEqual(200);
-
-            const wfr: NRWorkflow = resp.body;
-
-            // Stages comes back and empty array.
-            expect(wfr.stages).toHaveLength(0);
-            await verifyWFResp(wf, wfr, true);
-            await verifyWFDB(wf);
-        }
-    });
-
-    it("Test getting workflows with stages and write permissions.", async () => {
-        const wfNum = 5;
-        const stNum = 3;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-
-        // Don't verify stage documents, we haven't created any.
-        // Returned stage permissions should match passed permissions on creation.
-        await addStagesToWFS(wfs, stNum, 200, "READ", "RAND", false, "ST");
-        const wfsn = changeSTPermMatchWFS(wfs);
-
-        for (let i = 0; i < wfNum; i++) {
-            const wf = wfs[i];
-            const resp = await request(app)
-                               .get(`/api/workflows/${wf.id}`)
-                               .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-            expect(resp.status).toEqual(200);
-
-            // We do get stages as a response here.
-            const wfr: NRWorkflow = resp.body;
-            await verifyWFResp(wf, wfr, true);
-
-            // Can't verify the response against the database because returned permissions
-            // are different.
-            await verifyWFDB(wfsn[i]);
-
-            // DB stages should match response stages.
-            expect(wfr.stages).toHaveLength(stNum);
-            await verifySTSDB(wfsn[i].stages, wfsn[i]);
-
-            // No documents yet, and we expect stage permissions to match the workflow permissions.
-            await verifySTResps(wf.stages, wfr.stages, wf, false, "WF");
-        }
-    });
-});
-
-describe("PUT /api/workflows/:wid", () => {
-    it("Test updating workflows with permissions.", async () => {
-        const wfNum = 3;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-
-        for (let i = 0; i < wfs.length; i++) {
-            wfs[i].name = `UPDATE_NAME_${i}`;
-            wfs[i].description = `UPDATE_DESC_${i}`;
-
-            const resp = await request(app)
-                                .put(`/api/workflows/${wfs[i].id}`)
-                                .send(wfs[i])
-                                .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-            expect(resp.status).toEqual(200);
-
-            const wfr: NRWorkflow = resp.body;
-
-            // Shouldn't return stages from this endpoint.
-            await verifyWFResp(wfs[i], wfr, false);
-            await verifyWFDB(wfs[i]);
-        }
-    });
-
-    it("Test updating workflows doesn't affect stages.", async () => {
-        const wfNum = 3;
-        const stNum = 5;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-
-        // Don't verify stage documents, we haven't created any.
-        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
-
-        for (let i = 0; i < wfs.length; i++) {
-            wfs[i].name = `UPDATE_NAME_${i}`;
-            wfs[i].description = `UPDATE_DESC_${i}`;
-
-            const resp = await request(app)
-                                .put(`/api/workflows/${wfs[i].id}`)
-                                .send(wfs[i])
-                                .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-            expect(resp.status).toEqual(200);
-
-            const wfr: NRWorkflow = resp.body;
-
-            // Shouldn't return stages from this endpoint.
-            await verifyWFResp(wfs[i], wfr, false);
-            await verifyWFDB(wfs[i]);
-
-            // No stage permissions returned for this endpoint.
-            await verifySTSDB(wfs[i].stages, wfs[i]);
-        }
-    });
-
-    it("Test updating workflows without permissions.", async () => {
-        const wfNum = 10;
-
-        const wfs = await reqWFSGetResps(wfNum, "READ", 200);
-
-        await changeWFPerm(wfs[wfNum / wfNum], "WRITE", "USER", true);
-        await changeWFPerm(wfs[Math.floor(wfNum / 2)], "WRITE", "USER", true);
-
-        for (let i = 0; i < wfs.length; i++) {
-            // Create a copy to ensure original doesn't change later.
-            const wfrcp = JSON.parse(JSON.stringify(wfs[i]));
-            wfrcp.name = `UPDATE_NAME_${i}`;
-            wfrcp.description = `UPDATE_DESC_${i}`;
-
-            const resp = await request(app)
-                               .put(`/api/workflows/${wfrcp.id}`)
-                               .send(wfrcp)
-                               .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-
-            if (wfs[i].permission === DBConstants.READ) {
-                expect(resp.status).toEqual(403);
-
-                // Verify the original WF didn't change.
-                // Pass the same argument twice as function checks DB.
-                await verifyWFResp(wfs[i], wfs[i], false);
-                await verifyWFDB(wfs[i]);
-            } else {
-                expect(resp.status).toEqual(200);
-
-                const wfr: NRWorkflow = resp.body;
-                await verifyWFResp(wfrcp, wfr, false);
-                await verifyWFDB(wfrcp);
-            }
-        }
-    });
-});
-
-// TODO: Test both at the same time?
-describe("DELETE /api/workflows/:wid", () => {
-    it("Test deleting workflows no relationships, user permissions.", async () => {
-        const wfNum = 10;
-
-        const wfs = await reqWFSGetResps(wfNum, "RAND", 200);
-
-        await changeWFPerm(wfs[wfNum / wfNum], "WRITE", "USER", true);
-        await changeWFPerm(wfs[Math.floor(wfNum / 2)], "READ", "USER", true);
-
-        for (let i = 0; i < wfs.length; i++) {
-            const resp = await request(app)
-                               .delete(`/api/workflows/${wfs[i].id}`)
-                               .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-
-            if (wfs[i].permission === DBConstants.READ) {
-                const wfdb = await wfRep.findOne({ where: { id: wfs[i].id }});
-
-                expect(resp.status).toEqual(403);
-                expect(wfdb).not.toBeUndefined();
-
-                await verifyWFDB(wfs[i]);
-            } else {
-                await verifyWFDeleted(wfs[i], false);
-            }
-        }
-    });
-
-    it("Test deleting workflows no relationships, group permissions.", async () => {
-        const wfNum = 10;
-
-        const wfs = await reqWFSGetResps(wfNum, "RAND", 200);
-
-        // Make sure these only have group permissions.
-        await changeWFSPermsToGroup(wfs);
-
-        for (let i = 0; i < wfs.length; i++) {
-            const resp = await request(app)
-                               .delete(`/api/workflows/${wfs[i].id}`)
-                               .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-
-            if (wfs[i].permission === DBConstants.READ) {
-                const wfdb = await wfRep.findOne({ where: { id: wfs[i].id }});
-
-                expect(resp.status).toEqual(403);
-                expect(wfdb).not.toBeUndefined();
-
-                await verifyWFDB(wfs[i]);
-            } else {
-                await verifyWFDeleted(wfs[i], false);
-            }
-        }
-    });
-
-    it("Test deleting workflows with stages, user permissions.", async () => {
-        const wfNum = 10;
-        const stNum = 5;
-
-        // Start with write to be able to add stages.
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
-
-        // Change back to random, 'true' to modify existing ones instead
-        // of creating new ones.
-        await changeWFSPerms(wfs, "RAND", "USER", true);
-
-        await changeWFPerm(wfs[wfNum / wfNum], "WRITE", "USER", true);
-        await changeWFPerm(wfs[Math.floor(wfNum / 2)], "READ", "USER", true);
-
-        for (let i = 0; i < wfs.length; i++) {
-            const resp = await request(app)
-                               .delete(`/api/workflows/${wfs[i].id}`)
-                               .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-
-            if (wfs[i].permission === DBConstants.READ) {
-                const wfdb = await wfRep.findOne(wfs[i].id);
-
-                expect(resp.status).toEqual(403);
-                expect(wfdb).not.toBeUndefined();
-
-                await verifyWFDB(wfs[i]);
-                await verifySTSDB(wfs[i].stages, wfs[i]);
-            } else {
-                await verifyWFDeleted(wfs[i], true);
-            }
-        }
-    });
-
-    it("Test deleting workflows with stages, group permissions.", async () => {
-        const wfNum = 10;
-        const stNum = 5;
-
-        // Start with write to be able to add stages.
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
-
-        // Make sure these only have group permissions.
-        await changeWFSPermsToGroup(wfs);
-
-        await changeWFPerm(wfs[wfNum / wfNum], "WRITE", "GROUP", true);
-        await changeWFPerm(wfs[Math.floor(wfNum / 2)], "READ", "GROUP", true);
-
-        for (let i = 0; i < wfs.length; i++) {
-            const resp = await request(app)
-                               .delete(`/api/workflows/${wfs[i].id}`)
-                               .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-
-            if (wfs[i].permission === DBConstants.READ) {
-                const wfdb = await wfRep.findOne(wfs[i].id);
-
-                expect(resp.status).toEqual(403);
-                expect(wfdb).not.toBeUndefined();
-
-                await verifyWFDB(wfs[i]);
-                await verifySTSDB(wfs[i].stages, wfs[i]);
-            } else {
-                await verifyWFDeleted(wfs[i], true);
-            }
-        }
-    });
-
-    it("Test deleting workflows with stages and documents, user permissions.", async () => {
-        const wfNum = 10;
-        const stNum = 5;
-        const dcNum = 1;
-
-        // Start with write to be able to add stages.
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-
-        // Need write so we can add documents to the stages.
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        // Change back to random, 'true' to modify existing ones instead
-        // of creating new ones.
-        await changeWFSPerms(wfs, "RAND", "USER", true);
-
-        await changeWFPerm(wfs[wfNum / wfNum], "WRITE", "USER", true);
-        await changeWFPerm(wfs[Math.floor(wfNum / 2)], "READ", "USER", true);
-
-        for (let i = 0; i < wfs.length; i++) {
-            const resp = await request(app)
-                               .delete(`/api/workflows/${wfs[i].id}`)
-                               .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-
-            if (wfs[i].permission === DBConstants.READ) {
-                const wfdb = await wfRep.findOne(wfs[i].id);
-
-                expect(resp.status).toEqual(403);
-                expect(wfdb).not.toBeUndefined();
-
-                await verifyWFDB(wfs[i]);
-                await verifySTSDB(wfs[i].stages, wfs[i]);
-            } else {
-                await verifyWFDeleted(wfs[i], true);
-            }
-        }
-    });
-
-    it("Test deleting workflows with stages and documents, group permissions.", async () => {
-        const wfNum = 10;
-        const stNum = 5;
-        const dcNum = 1;
-
-        // Start with write to be able to add stages.
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        // Make sure these only have group permissions.
-        await changeWFSPermsToGroup(wfs);
-
-        await changeWFPerm(wfs[wfNum / wfNum], "WRITE", "GROUP", true);
-        await changeWFPerm(wfs[Math.floor(wfNum / 2)], "READ", "GROUP", true);
-
-        for (let i = 0; i < wfs.length; i++) {
-            const resp = await request(app)
-                               .delete(`/api/workflows/${wfs[i].id}`)
-                               .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-
-            if (wfs[i].permission === DBConstants.READ) {
-                const wfdb = await wfRep.findOne(wfs[i].id);
-
-                expect(resp.status).toEqual(403);
-                expect(wfdb).not.toBeUndefined();
-
-                await verifyWFDB(wfs[i]);
-                await verifySTSDB(wfs[i].stages, wfs[i]);
-            } else {
-                await verifyWFDeleted(wfs[i], true);
-            }
-        }
-    });
-
-    it("Test deleting workflows when no permissions exist at all.", async () => {
-        const wfNum = 3;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-
-        for (const wf of wfs) {
-            await clearWFPermissions(wf);
-
-            const resp = await request(app)
-                               .delete(`/api/workflows/${wf.id}`)
-                               .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-
-            const wfdb = await wfRep.findOne(wf.id);
-
-            expect(resp.status).toEqual(403);
-            expect(wfdb).not.toBeUndefined();
-
-            await verifyWFDB(wf);
-        }
-    });
-});
-
-describe("POST /api/workflows/:wid/stages", () => {
-    it("Test appending a stage to an empty workflow.", async () => {
-        const wfNum = 10;
-        const stNum = 1;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "RAND", "APPEND", false, "ST");
-    });
-
-    it("Test appending many stages to an workflows.", async () => {
-        const wfNum = 10;
-        const stNum = 10;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "RAND", "APPEND", false, "ST");
-    });
-
-    it("Test appending many stages to an workflows.", async () => {
-        const wfNum = 10;
-        const stNum = 10;
-
-        const wfs = await reqWFSGetResps(wfNum, "READ", 200);
-        await addStagesToWFS(wfs, stNum, 403, "RAND", "APPEND", false, "ST");
-    });
-
-    it("Test appending stages doesn't affect documents.", async () => {
-        const wfNum = 5;
-        const stNum = 5;
-        const dcNum = 2;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "APPEND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        // Append more stages.
-        await addStagesToWFS(wfs, stNum, 200, "RAND", "APPEND", false, "ST");
-    });
-});
-
-describe("GET /api/workflows/:wid/stages", () => {
-    it("Test getting all stages for a specific workflow.", async () => {
-        const wfNum = 5;
-        const stNum = 5;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
-
-        for (const wf of wfs) {
-            const resp = await request(app)
-                               .get(`/api/workflows/${wf.id}/stages`)
-                               .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-            expect(resp.status).toEqual(200);
-
-            const strs = resp.body;
-
-            await verifySTResps(wf.stages, strs, wf, false, "ST");
-            await verifySTSDB(strs, wf);
-        }
-    });
-});
-
-// TODO:
-//     - Verify that everything still works even when moving stages.
-describe("GET :wid/stages/:sid", () => {
-    it("Test getting a specific stage from a workflow.", async () => {
-        const wfNum = 5;
-        const stNum = 5;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
-
-        for (const wf of wfs) {
-            for (let i = 0; i < stNum; i++) {
-                const resp = await request(app)
-                                .get(`/api/workflows/${wf.id}/stages/${wf.stages[i].id}`)
-                                .set("User-Id", `${usr.id}`);
-
-                expect(resp).not.toBeUndefined();
-                expect(resp.status).toEqual(200);
-
-                const str = resp.body;
-
-                await verifySTResp(wf.stages[i], str, wf, false, "ST");
-
-                // Sequences start with 1.
-                await verifySTDB(str, wf, i + 1);
-            }
-        }
-    });
-
-    it("Test getting a specific stage returns documents.", async () => {
-        const wfNum = 5;
-        const stNum = 5;
-        const dcNum = 1;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        for (const wf of wfs) {
-            for (let i = 0; i < stNum; i++) {
-                const resp = await request(app)
-                                .get(`/api/workflows/${wf.id}/stages/${wf.stages[i].id}`)
-                                .set("User-Id", `${usr.id}`);
-
-                expect(resp).not.toBeUndefined();
-                expect(resp.status).toEqual(200);
-
-                const str = resp.body;
-
-                await verifySTResp(wf.stages[i], str, wf, true, "ST");
-
-                // Sequences start with 1.
-                await verifySTDB(str, wf, i + 1);
-            }
-        }
-    });
-});
-
-// TODO:
-//     Verify that everything still works even when moving stages.
-describe("POST :wid/stages/:pos", () => {
-    it("Test adding a stage at a specific positions in a workflow.", async () => {
-        // 100 stages.
-        const wfNum = 10;
-        const stNum = 10;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
-
-        for (const wf of wfs) {
-            // Explicitly check beginning, middle, and end.
-            const len = wf.stages.length;
-            const pos = [len + 100, Math.round(len / 2), -1];
-
-            for (const loc of pos) {
-                // Add at the position and verify.
-                await addStageToWF(wf, 200, "RAND", "" + loc, false, "ST");
-            }
-        }
-    });
-});
-
-describe("DELETE /api/workflows/:wid/stages/:sid", () => {
-    it("Test deleting stages with no documents, user permissions.", async () => {
-        const wfNum = 10;
-        const stNum = 5;
-
-        // WRITE permissions initially to be able to add stages.
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
-
-        // Randomize them now for testing.
-        await changeWFSPerms(wfs, "RAND", "USER", true);
-
-        for (const wf of wfs) {
-            for (let i = 0; i < stNum; i++) {
-                const sts = wf.stages;
-
-                // Choose a random stage to delete.
-                const idtd = Math.floor(Math.random() * sts.length);
-                const sttd = sts[idtd];
-                const seq = sttd.sequenceId;
-
-                // Only change locally if we expect it to be deleted remotely too.
-                if (wf.permission === DBConstants.WRITE) {
-                    // Delete the stage from our 'local' copy.
-                    sts.splice(idtd, 1);
-
-                    // Fix sequence numbers.
-                    for (let j = 0; j < sts.length; j++) {
-                        sts[j].sequenceId = j + 1;
-                    }
-                }
-
-                const resp = await request(app)
-                                   .delete(`/api/workflows/${wf.id}/stages/${sttd.id}`)
-                                   .set("User-Id", `${usr.id}`);
-
-                expect(resp).not.toBeUndefined();
-
-                // Stage permissions depend on workflow.
-                if (wf.permission === DBConstants.READ) {
-                    const stdb = await stRep.findOne(sttd.id);
-
-                    expect(resp.status).toEqual(403);
-                    expect(stdb).not.toBeUndefined();
-
-                    // Should have the same sequence ID if it wasn't deleted.
-                    await verifySTDB(sttd, wf, seq);
-                } else {
-                    await verifySTDeleted(sttd, sts);
-                }
-            }
-        }
-    });
-
-    it("Test deleting stages with no documents, group permissions.", async () => {
-        const wfNum = 10;
-        const stNum = 5;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
-
-        // Test to try group permissions for stages, workflow permissions don't change.
-        await changeWFSSTPermToGroup(wfs);
-
-        for (const wf of wfs) {
-             for (let i = 0; i < stNum; i++) {
-                const sts = wf.stages;
-
-                // Choose a random stage to delete.
-                const idtd = Math.floor(Math.random() * sts.length);
-                const sttd = sts[idtd];
-                const seq = sttd.sequenceId;
-
-                // Only change locally if we expect it to be deleted remotely too.
-                if (wf.permission === DBConstants.WRITE) {
-                    // Delete the stage from our 'local' copy.
-                    sts.splice(idtd, 1);
-
-                    // Fix sequence numbers.
-                    for (let j = 0; j < sts.length; j++) {
-                        sts[j].sequenceId = j + 1;
-                    }
-                }
-
-                const resp = await request(app)
-                                   .delete(`/api/workflows/${wf.id}/stages/${sttd.id}`)
-                                   .set("User-Id", `${usr.id}`);
-
-                expect(resp).not.toBeUndefined();
-
-                // Stage permissions depend on workflow.
-                if (wf.permission === DBConstants.READ) {
-                    const stdb = await stRep.findOne(sttd.id);
-
-                    expect(resp.status).toEqual(403);
-                    expect(stdb).not.toBeUndefined();
-
-                    // Should have the same sequence ID if it wasn't deleted.
-                    await verifySTDB(sttd, wf, seq);
-                } else {
-                    await verifySTDeleted(sttd, sts);
-                }
-            }
-        }
-    });
-
-    it("Test deleting stages with documents, user permissions.", async () => {
-        const wfNum = 3;
-        const stNum = 5;
-        const dcNum = 3;
-
-        // WRITE permissions initially to be able to add stages.
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        // Randomize them now for testing.
-        await changeWFSPerms(wfs, "RAND", "USER", true);
-        await changeWFSSTSPerms(wfs, "RAND", "USER", true);
-
-        for (const wf of wfs) {
-            const sts = wf.stages;
-
-            for (let i = 0; i < stNum; i++) {
-                // Choose a random stage to delete.
-                const idtd = Math.floor(Math.random() * sts.length);
-                const sttd = sts[idtd];
-                const seq = sttd.sequenceId;
-                let docs = null;
-
-                // Only change locally if we expect it to be deleted remotely too.
-                if (wf.permission === DBConstants.WRITE) {
-                    docs = sttd.documents;
-
-                    // Documents move to first stage.
-                    if (idtd !== 0) {
-                        for (const dc of docs) {
-                            dc.stage = sts[0];
-                        }
-
-                        // Delete the stage from our 'local' copy.
-                        sts.splice(idtd, 1);
-
-                        // Move documents to first stage.
-                        sts[0].documents = sts[0].documents.concat(docs);
-                    } else {
-                        for (const dc of docs) {
-                            dc.stage = null;
-                            dc.workflow = null;
-                        }
-
-                        sts.splice(idtd, 1);
-                    }
-
-                    // If there is only one stage left, we will have just deleted it,
-                    // so nothing to fix.
-                    if (sts.length > 1) {
-                        // Fix sequence numbers.
-                        for (let j = 0; j < sts.length; j++) {
-                            sts[j].sequenceId = j + 1;
-                        }
-                    }
-                }
-
-                const resp = await request(app)
-                                   .delete(`/api/workflows/${wf.id}/stages/${sttd.id}`)
-                                   .set("User-Id", `${usr.id}`);
-
-                expect(resp).not.toBeUndefined();
-                const strs = resp.body;
-
-                // Stage permissions depend on workflow.
-                if (wf.permission === DBConstants.READ) {
-                    const stdb = await stRep.findOne(sttd.id);
-
-                    expect(resp.status).toEqual(403);
-                    expect(stdb).not.toBeUndefined();
-
-                    // Should have the same sequence ID if it wasn't deleted.
-                    await verifySTDB(sttd, wf, seq);
-                } else {
-                    await verifySTResps(sts, strs, wf, true, "ST");
-                    await verifySTDeleted(sttd, sts);
-
-                    if (idtd !== 0) {
-                        await verifyDCSInST(docs, sts[0]);
-                    } else {
-                        await verifyDCSInST(docs, null);
-                    }
-                }
-            }
-        }
-    });
-
-    it("Test deleting stages with documents, group permissions.", async () => {
-        const wfNum = 3;
-        const stNum = 5;
-        const dcNum = 3;
-
-        // WRITE permissions initially to be able to add stages.
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        // Randomize to group permissions for both workflows and stages.
-        await changeWFSPermsToGroup(wfs);
-        await changeWFSSTPermToGroup(wfs);
-
-        for (const wf of wfs) {
-            const sts = wf.stages;
-
-            for (let i = 0; i < stNum; i++) {
-                // Choose a random stage to delete.
-                const idtd = Math.floor(Math.random() * sts.length);
-                const sttd = sts[idtd];
-                const seq = sttd.sequenceId;
-                let docs = null;
-
-                // Only change locally if we expect it to be deleted remotely too.
-                if (wf.permission === DBConstants.WRITE) {
-                    docs = sttd.documents;
-
-                    // Documents move to first stage.
-                    if (idtd !== 0) {
-                        for (const dc of docs) {
-                            dc.stage = sts[0];
-                        }
-
-                        // Delete the stage from our 'local' copy.
-                        sts.splice(idtd, 1);
-
-                        // Move documents to first stage.
-                        sts[0].documents = sts[0].documents.concat(docs);
-                    } else {
-                        for (const dc of docs) {
-                            dc.stage = null;
-                            dc.workflow = null;
-                        }
-
-                        sts.splice(idtd, 1);
-                    }
-
-                    // If there is only one stage left, we will have just deleted it,
-                    // so nothing to fix.
-                    if (sts.length > 1) {
-                        // Fix sequence numbers.
-                        for (let j = 0; j < sts.length; j++) {
-                            sts[j].sequenceId = j + 1;
-                        }
-                    }
-                }
-
-                const resp = await request(app)
-                                   .delete(`/api/workflows/${wf.id}/stages/${sttd.id}`)
-                                   .set("User-Id", `${usr.id}`);
-
-                expect(resp).not.toBeUndefined();
-                const strs = resp.body;
-
-                // Stage permissions depend on workflow.
-                if (wf.permission === DBConstants.READ) {
-                    const stdb = await stRep.findOne(sttd.id);
-
-                    expect(resp.status).toEqual(403);
-                    expect(stdb).not.toBeUndefined();
-
-                    // Should have the same sequence ID if it wasn't deleted.
-                    await verifySTDB(sttd, wf, seq);
-                } else {
-                    await verifySTResps(sts, strs, wf, true, "ST");
-                    await verifySTDeleted(sttd, sts);
-
-                    if (idtd !== 0) {
-                        await verifyDCSInST(docs, sts[0]);
-                    } else {
-                        await verifyDCSInST(docs, null);
-                    }
-                }
-            }
-        }
-    });
-});
-
-describe("PUT /:wid/stages/:sid", () => {
-    it("Test updating stages in different workflows.", async () => {
-        const wfNum = 3;
-        const stNum = 5;
-        const dcNum = 3;
-
-        // WRITE permissions initially to be able to add stages.
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        for (let i = 0; i < wfNum; i++) {
-            for (let j = 0; j < stNum; j++) {
-                const st = wfs[i].stages[j];
-                st.name = st.name + "_NEW";
-                st.description = st.name + "_DESC";
-
-                const resp = await request(app)
-                                   .put(`/api/workflows/${wfs[i].id}/stages/${st.id}`)
-                                   .send(st)
-                                   .set("User-Id", `${usr.id}`);
-
-                expect(resp).not.toBeUndefined();
-                expect(resp.status).toEqual(200);
-
-                const str = resp.body;
-                await verifySTResp(st, str, wfs[i], false, "ST");
-                await verifySTDB(st, wfs[i], st.sequenceId);
-                await verifySTInWF(str, wfs[i]);
-                await verifyDCSInST(st.documents, str);
-            }
-       }
-    });
-
-    it("Test updating stages with mixed user permissions.", async () => {
-        const wfNum = 3;
-        const stNum = 5;
-        const dcNum = 3;
-
-        // WRITE permissions initially to be able to add stages.
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        await changeWFSPerms(wfs, "RAND", "USER", true);
-        await changeWFSSTSPerms(wfs, "RAND", "USER", true);
-
-        for (let i = 0; i < wfNum; i++) {
-            for (let j = 0; j < stNum; j++) {
-                const st = wfs[i].stages[j];
-                const stbk = JSON.parse(JSON.stringify(st));
-
-                st.name = st.name + "_NEW";
-                st.description = st.name + "_DESC";
-
-                const resp = await request(app)
-                                   .put(`/api/workflows/${wfs[i].id}/stages/${st.id}`)
-                                   .send(st)
-                                   .set("User-Id", `${usr.id}`);
-
-                expect(resp).not.toBeUndefined();
-                const str = resp.body;
-
-                if (wfs[i].permission === DBConstants.READ) {
-                    expect(resp.status).toEqual(403);
-
-                    await verifySTDB(stbk, wfs[i], stbk.sequenceId);
-                    await verifySTInWF(stbk, wfs[i]);
-                    await verifyDCSInST(stbk.documents, stbk);
-                } else {
-                    expect(resp.status).toEqual(200);
-
-                    await verifySTResp(st, str, wfs[i], false, "ST");
-                    await verifySTDB(st, wfs[i], st.sequenceId);
-                    await verifySTInWF(str, wfs[i]);
-                    await verifyDCSInST(st.documents, str);
-                }
-            }
-       }
-    });
-
-    it("Test updating stages with mixed group permissions.", async () => {
-        const wfNum = 3;
-        const stNum = 5;
-        const dcNum = 3;
-
-        // WRITE permissions initially to be able to add stages.
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        await changeWFSPermsToGroup(wfs);
-        await changeWFSSTPermToGroup(wfs);
-
-        for (let i = 0; i < wfNum; i++) {
-            for (let j = 0; j < stNum; j++) {
-                const st = wfs[i].stages[j];
-                const stbk = JSON.parse(JSON.stringify(st));
-
-                st.name = st.name + "_NEW";
-                st.description = st.name + "_DESC";
-
-                const resp = await request(app)
-                                   .put(`/api/workflows/${wfs[i].id}/stages/${st.id}`)
-                                   .send(st)
-                                   .set("User-Id", `${usr.id}`);
-
-                expect(resp).not.toBeUndefined();
-                const str = resp.body;
-
-                if (wfs[i].permission === DBConstants.READ) {
-                    expect(resp.status).toEqual(403);
-
-                    await verifySTDB(stbk, wfs[i], stbk.sequenceId);
-                    await verifySTInWF(stbk, wfs[i]);
-                    await verifyDCSInST(stbk.documents, stbk);
-                } else {
-                    expect(resp.status).toEqual(200);
-
-                    await verifySTResp(st, str, wfs[i], false, "ST");
-                    await verifySTDB(st, wfs[i], st.sequenceId);
-                    await verifySTInWF(str, wfs[i]);
-                    await verifyDCSInST(st.documents, str);
-                }
-            }
-       }
-    });
-});
-
-// ----------------------------------------------------------------------------------
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// |                                 DOCUMENT TESTS                                 |
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// ----------------------------------------------------------------------------------
-
-describe("POST /api/documents", () => {
-    it("Test creating documents with permissions.", async () => {
-        const wfNum = 3;
-        const stNum = 5;
-        const dcNum = 1;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-    });
-
-    it("Test creating documents in stages without permissions.", async () => {
-        const wfNum = 2;
-        const stNum = 3;
-        const dcNum = 5;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "READ", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 403);
-    });
-
-    it("Test creating a document in a workflow with no stages.", async () => {
-        const wfNum = 2;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-
-        for (const wf of wfs) {
-            const dc = new NRDocument();
-            dc.id = dcSeq;
-            dcSeq++;
-            dc.name = Guid.create().toString();
-            dc.description = dc.name + "_DESC";
-            dc.workflow = wf;
-
-            const resp = await request(app)
-                               .post(`/api/documents/`)
-                               .send(dc)
-                               .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-            expect(resp.status).toEqual(403);
-        }
-    });
-
-    it("Test passing no stage defaults to putting document in first stage.", async () => {
-        const wfNum = 2;
-        const stNum = 3;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-
-        for (const wf of wfs) {
-            const dc = new NRDocument();
-            dc.id = dcSeq;
-            dcSeq++;
-            dc.name = Guid.create().toString();
-            dc.description = dc.name + "_DESC";
-            dc.workflow = wf;
-
-            const resp = await request(app)
-                               .post(`/api/documents/`)
-                               .send(dc)
-                               .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-            expect(resp.status).toEqual(200);
-
-            const dcr = resp.body;
-
-            expect(dcr.stage.id).toEqual(wf.stages[0].id);
-        }
-    });
-});
-
-describe("GET /api/documents", () => {
-    it("Test getting all documents", async () => {
-        const wfNum = 2;
-        const stNum = 3;
-        const dcNum = 5;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        const expDocNum = wfNum * stNum * dcNum;
-
-        const resp = await request(app)
-                           .get("/api/documents")
-                           .set("User-Id", `${usr.id}`);
-
-        expect(resp).not.toBeUndefined();
-        expect(resp.status).toEqual(200);
-
-        const dcrs: NRDocument[] = resp.body;
-        expect(dcrs.length).toEqual(expDocNum);
-
-        for (const wf of wfs) {
-            for (const st of wf.stages) {
-                for (let i = 0; i < dcNum; i++) {
-                    const dc = st.documents[i];
-                    const dch = dcrs.find((x) => x.id === dc.id);
-
-                    await verifyDCDB(dc, st, wf);
-                    await verifyDCDB(dch, st, wf);
-                    await verifyDCResp(dc, dch, st, wf);
-                }
-            }
-        }
-    });
-});
-
-describe("GET /api/documents/user", () => {
-    it("Test getting all documents that the logged in user has permissions to edit.", async () => {
-        const wfNum = 7;
-        const stNum = 3;
-        const dcNum = 1;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        const grps = [];
-        for (let i = 0; i < 4; i++) {
-            grps.push(await addUserToGroup(Guid.create().toString(), usr, 200));
-        }
-
-        // Clear created permissions from baseline data creation.
-        await clearAllPermissions();
-
-        let expDocs: NRDocument[] = [];
-        let ind = 0;
-
-        // grps[0] has READ permissions on first workflow, no additions.
-        await setWFPermForGroup(grps[ind], wfs[ind], "READ", 200);
-        ind++;
-
-        // grps[1] has WRITE permissions on the first two stages of the second workflow.
-        // Addition for the documents in each stage.
-        await setSTPermForGroup(grps[ind], wfs[ind].stages[0], "WRITE", 200);
-        await setSTPermForGroup(grps[ind], wfs[ind].stages[1], "WRITE", 200);
-        expDocs = expDocs.concat(wfs[ind].stages[0].documents);
-        expDocs = expDocs.concat(wfs[ind].stages[1].documents);
-        ind++;
-
-        // grps[2] has WRITE permissions on third workflow, no additions.
-        await setWFPermForGroup(grps[ind], wfs[ind], "WRITE", 200);
-        ind++;
-
-        // user has WRITE permissions on fourth workflow, no additions.
-        await changeWFPerm(wfs[ind], "WRITE", "USER", false);
-        ind++;
-
-        // user has READ permissions on fifth workflow, no additions.
-        await changeWFPerm(wfs[ind], "READ", "USER", false);
-        ind++;
-
-        // user has WRITE permissions on the first two stages of the sixth workflow.
-        // Addition for the documents in each stage.
-        await changeSTPerm(wfs[ind].stages[0], "WRITE", "USER", false);
-        await changeSTPerm(wfs[ind].stages[1], "WRITE", "USER", false);
-        expDocs = expDocs.concat(wfs[ind].stages[0].documents);
-        expDocs = expDocs.concat(wfs[ind].stages[1].documents);
-        ind++;
-
-        // 'user' has mixed permissions for stages in seventh workflow.
-        // Workflow itself needs to be READ.
-        await changeWFPerm(wfs[ind], "READ", "USER", false);
-        for (let j = 0; j < stNum; j++) {
-            if (j % 2 === 0) {
-                await changeSTPerm(wfs[ind].stages[j], "READ", "USER", false);
-            } else {
-                // Addition for the documents in each stage with WRITE permissions.
-                await changeSTPerm(wfs[ind].stages[j], "WRITE", "USER", false);
-                expDocs = expDocs.concat(wfs[ind].stages[j].documents);
-            }
-        }
-
-        const resp = await request(app)
-                           .get("/api/documents/user")
-                           .set("User-Id", `${usr.id}`);
-
-        expect(resp).not.toBeUndefined();
-        expect(resp.status).toEqual(200);
-
-        const dcrs = resp.body;
-        expect(dcrs.length).toEqual(expDocs.length);
-
-        // Sort by ID for easy comparisons.
-        dcrs.sort((a: NRDocument, b: NRDocument) => a.id - b.id);
-        expDocs.sort((a: NRDocument, b: NRDocument) => a.id - b.id);
-
-        // Verify we got the right documents back.
-        for (let i = 0; i < expDocs.length; i++) {
-            expect(dcrs[i].id).toEqual(expDocs[i].id);
-        }
-    });
-});
-
-describe("GET /api/documents/:did", () => {
-    it("Test getting individual documents.", async () => {
-        const wfNum = 5;
-        const stNum = 3;
-        const dcNum = 2;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        // Now randomize the stage permissions.
-        await changeWFSSTSPerms(wfs, "RAND", "USER", true);
-        await changeWFSDCSPermToMatchSTS(wfs);
-
-        for (const wf of wfs) {
-            for (const st of wf.stages) {
-                for (const dc of st.documents) {
-                    const resp = await request(app)
-                                       .get(`/api/documents/${dc.id}`)
-                                       .set("User-Id", `${usr.id}`);
-
-                    expect(resp).not.toBeUndefined();
-                    expect(resp.status).toEqual(200);
-
-                    const dcr = resp.body;
-
-                    await verifyDCResp(dc, dcr, st, wf);
-                }
-            }
-        }
-    });
-});
-
-describe("GET /api/documents/author/:aid", () => {
-    it("Test getting all documents written by a particular author.", async () => {
-        const wfNum = 5;
-        const stNum = 3;
-        const dcNum = 2;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        // Change the user and create more documents.
-        usr = await createUser();
-
-        // Give new user WRITE permissions on the existing stages.
-        await changeWFSSTSPerms(wfs, "WRITE", "USER", false);
-
-        // Add documents created by this user.
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        const expDocNum = wfNum * stNum * dcNum;
-
-        const resp = await request(app)
-                           .get(`/api/documents/author/${usr.id}`)
-                           .set("User-Id", `${usr.id}`);
-
-        expect(resp).not.toBeUndefined();
-        expect(resp.status).toEqual(200);
-
-        const usdcs = resp.body;
-
-        expect(usdcs).toHaveLength(expDocNum);
-    });
-});
-
-describe("GET /api/documents/stage/:sid", () => {
-    it("Test getting all documents in a certain stage.", async () => {
-        const wfNum = 5;
-        const stNum = 3;
-        const dcNum = 2;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        for (const wf of wfs) {
-            for (const st of wf.stages) {
-                const resp = await request(app)
-                                  .get(`/api/documents/stage/${st.id}`)
-                                  .set("User-Id", `${usr.id}`);
-
-                expect(resp).not.toBeUndefined();
-                expect(resp.status).toEqual(200);
-
-                const dcs: NRDocument[] = resp.body;
-
-                expect(dcs).toHaveLength(dcNum);
-
-                for (const dc of dcs) {
-                    await verifyDCInST(dc, st);
-                }
-
-            }
-        }
-    });
-});
-
-describe("GET /api/documents/workflow/:wid", () => {
-    it("Test getting all documents in a certain workflow.", async () => {
-        const wfNum = 5;
-        const stNum = 3;
-        const dcNum = 2;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        const expDocNum = stNum * dcNum;
-
-        for (const wf of wfs) {
-            const resp = await request(app)
-                                .get(`/api/documents/workflow/${wf.id}`)
-                                .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-            expect(resp.status).toEqual(200);
-
-            const dcs: NRDocument[] = resp.body;
-
-            expect(dcs).toHaveLength(expDocNum);
-
-            for (const st of wf.stages) {
-                for (const dc of st.documents) {
-                    const dch = dcs.find((x) => x.id === dc.id);
-                    await verifyDCInST(dch, st);
-                }
-            }
-        }
-    });
-});
-
-describe("GET /api/documents/orphan", () => {
-    it("Test getting all orphan documents.", async () => {
-        const wfNum = 5;
-        const stNum = 3;
-        const dcNum = 2;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        let expDocNum = 0;
-
-        for (const wf of wfs) {
-            // Delete each workflow, causing documents to become orphans.
-            let resp = await request(app)
-                             .delete(`/api/workflows/${wf.id}`)
-                             .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-            expect(resp.status).toEqual(204);
-
-            expDocNum += stNum * dcNum;
-
-            resp = await request(app)
-                         .get(`/api/documents/all/orphan/docs`)
-                         .set("User-Id", `${usr.id}`);
-
-            expect(resp).not.toBeUndefined();
-            expect(resp.status).toEqual(200);
-
-            const odcs: NRDocument[] = resp.body;
-            expect(odcs).toHaveLength(expDocNum);
-        }
-    });
-});
-
-describe("PUT /api/documents/:did", () => {
-    it("Test updating documents with mixed permissions.", async () => {
-        const wfNum = 5;
-        const stNum = 3;
-        const dcNum = 2;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-        await changeWFSSTSPerms(wfs, "RAND", "USER", true);
-
-        for (const wf of wfs) {
-            for (const st of wf.stages) {
-                for (const dc of st.documents) {
-                    const ndc = JSON.parse(JSON.stringify(dc));
-                    ndc.name = "NEW_" + Guid.create().toString();
-                    ndc.description = ndc.name + "_DESC";
-
-                    const resp = await request(app)
-                                       .put(`/api/documents/${dc.id}`)
-                                       .send(ndc)
-                                       .set("User-Id", `${usr.id}`);
-
-                    expect(resp).not.toBeUndefined();
-
-                    const dcr = resp.body;
-
-                    if (st.permission === DBConstants.WRITE) {
-                        expect(resp.status).toEqual(200);
-
-                        await verifyDCResp(ndc, dcr, st, wf);
-                    } else {
-                        expect(resp.status).toEqual(403);
-                    }
-                }
-            }
-        }
-    });
-});
-
-describe("DELETE /api/documents/:did", () => {
-    it("Test deleting documents with mixed permissions.", async () => {
-        const wfNum = 5;
-        const stNum = 3;
-        const dcNum = 2;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-        await changeWFSSTSPerms(wfs, "RAND", "USER", true);
-
-        for (const wf of wfs) {
-            for (const st of wf.stages) {
-                for (const dc of st.documents) {
-                    const resp = await request(app)
-                                       .delete(`/api/documents/${dc.id}`)
-                                       .set("User-Id", `${usr.id}`);
-
-                    expect(resp).not.toBeUndefined();
-
-                    if (st.permission === DBConstants.WRITE) {
-                        expect(resp.status).toEqual(204);
-
-                        await verifyDCDeleted(dc, true);
-                    } else {
-                        expect(resp.status).toEqual(403);
-
-                        await verifyDCDB(dc, st, wf);
-                    }
-                }
-            }
-        }
-    });
-});
-
-describe("PUT /api/documents/:did/next", () => {
-    it("Test moving documents to the next stage with mixed user permissions.", async () => {
-        const wfNum = 5;
-        const stNum = 5;
-        const dcNum = 5;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        await changeWFSSTSPerms(wfs, "RAND", "USER", true);
-
-        for (const wf of wfs) {
-            for (const st of wf.stages) {
-                for (const dc of st.documents) {
-                    let nst;
-
-                    // Update local copies if we expect it to actually be moved.
-                    if ((st.permission === DBConstants.WRITE) && (st.sequenceId !== stNum)) {
-                        nst = await stRep.findOne({ where: { sequenceId: st.sequenceId + 1,
-                                                             workflow: wf } });
-                        const nstp = await stUSRep.findOne({ where: { stage: nst,
-                                                                      user: usr } });
-
-                        dc.stage = nst;
-                        dc.permission = nstp.access;
-                        nst.permission = nstp.access;
-                    }
-
-                    const resp = await request(app)
-                                       .put(`/api/documents/${dc.id}/next`)
-                                       .set("User-Id", `${usr.id}`);
-
-                    expect(resp).not.toBeUndefined();
-
-                    const dcr = resp.body;
-
-                    if (st.permission === DBConstants.WRITE) {
-                        expect(resp.status).toEqual(200);
-
-                        const dcdb = await dcRep.findOne(dcr.id, { relations: ["stage"] });
-
-                        // Can't move past last stage.
-                        if (st.sequenceId !== stNum) {
-                            expect(dcdb.stage.sequenceId).toEqual(nst.sequenceId);
-                            await verifyDCResp(dc, dcr, nst, wf);
-                        } else {
-                            expect(dcdb.stage.sequenceId).toEqual(st.sequenceId);
-                            await verifyDCResp(dc, dcr, st, wf);
-                        }
-
-                    } else {
-                        // Nothing returned if we don't have permissions.
-                        expect(resp.status).toEqual(403);
-                    }
-                }
-            }
-        }
-    });
-
-    it("Test moving documents to the next stage with mixed group permissions.", async () => {
-        const wfNum = 5;
-        const stNum = 5;
-        const dcNum = 5;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        // Randomize stage permissions for groups.
-        await changeWFSSTPermToGroup(wfs);
-
-        for (const wf of wfs) {
-            for (const st of wf.stages) {
-                for (const dc of st.documents) {
-                    let nst;
-
-                    // Update local copies if we expect it to actually be moved.
-                    if ((st.permission === DBConstants.WRITE) && (st.sequenceId !== stNum)) {
-                        nst = await stRep.findOne({ where: { sequenceId: st.sequenceId + 1,
-                                                             workflow: wf } });
-                        const nstp = await stPRep.findOne({ where: { stage: nst,
-                                                                     user: usr } });
-
-                        dc.stage = nst;
-                        dc.permission = nstp.access;
-                        nst.permission = nstp.access;
-                    }
-
-                    const resp = await request(app)
-                                       .put(`/api/documents/${dc.id}/next`)
-                                       .set("User-Id", `${usr.id}`);
-
-                    expect(resp).not.toBeUndefined();
-
-                    const dcr = resp.body;
-
-                    if (st.permission === DBConstants.WRITE) {
-                        expect(resp.status).toEqual(200);
-
-                        const dcdb = await dcRep.findOne(dcr.id, { relations: ["stage"] });
-
-                        // Can't move past last stage.
-                        if (st.sequenceId !== stNum) {
-                            expect(dcdb.stage.sequenceId).toEqual(nst.sequenceId);
-                            await verifyDCResp(dc, dcr, nst, wf);
-                        } else {
-                            expect(dcdb.stage.sequenceId).toEqual(st.sequenceId);
-                            await verifyDCResp(dc, dcr, st, wf);
-                        }
-
-                    } else {
-                        // Nothing returned if we don't have permissions.
-                        expect(resp.status).toEqual(403);
-                    }
-                }
-            }
-        }
-    });
-});
-
-describe("PUT /api/documents/:did/prev", () => {
-    it("Test moving documents to the previous stage with mixed user permissions.", async () => {
-        const wfNum = 5;
-        const stNum = 5;
-        const dcNum = 5;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        await changeWFSSTSPerms(wfs, "RAND", "USER", true);
-
-        for (const wf of wfs) {
-            for (const st of wf.stages) {
-                for (const dc of st.documents) {
-                    let nst;
-
-                    // Update local copies if we expect it to actually be moved.
-                    if ((st.permission === DBConstants.WRITE) && (st.sequenceId !== 1)) {
-                        nst = await stRep.findOne({ where: { sequenceId: st.sequenceId - 1,
-                                                             workflow: wf } });
-                        const nstp = await stUSRep.findOne({ where: { stage: nst,
-                                                                      user: usr } });
-
-                        dc.stage = nst;
-                        dc.permission = nstp.access;
-                        nst.permission = nstp.access;
-                    }
-
-                    const resp = await request(app)
-                                       .put(`/api/documents/${dc.id}/prev`)
-                                       .set("User-Id", `${usr.id}`);
-
-                    expect(resp).not.toBeUndefined();
-
-                    const dcr = resp.body;
-
-                    if (st.permission === DBConstants.WRITE) {
-                        expect(resp.status).toEqual(200);
-
-                        const dcdb = await dcRep.findOne(dcr.id, { relations: ["stage"] });
-
-                        // Can't move past last stage.
-                        if (st.sequenceId !== 1) {
-                            expect(dcdb.stage.sequenceId).toEqual(nst.sequenceId);
-                            await verifyDCResp(dc, dcr, nst, wf);
-                        } else {
-                            expect(dcdb.stage.sequenceId).toEqual(st.sequenceId);
-                            await verifyDCResp(dc, dcr, st, wf);
-                        }
-
-                    } else {
-                        // Nothing returned if we don't have permissions.
-                        expect(resp.status).toEqual(403);
-                    }
-                }
-            }
-        }
-    });
-
-    it("Test moving documents to the next stage with mixed group permissions.", async () => {
-        const wfNum = 5;
-        const stNum = 5;
-        const dcNum = 5;
-
-        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
-        await addDocsToWFSStages(wfs, dcNum, 200);
-
-        // Randomize stage permissions for groups.
-        await changeWFSSTPermToGroup(wfs);
-
-        for (const wf of wfs) {
-            for (const st of wf.stages) {
-                for (const dc of st.documents) {
-                    let nst;
-
-                    // Update local copies if we expect it to actually be moved.
-                    if ((st.permission === DBConstants.WRITE) && (st.sequenceId !== 1)) {
-                        nst = await stRep.findOne({ where: { sequenceId: st.sequenceId - 1,
-                                                             workflow: wf } });
-                        const nstp = await stPRep.findOne({ where: { stage: nst,
-                                                                     user: usr } });
-
-                        dc.stage = nst;
-                        dc.permission = nstp.access;
-                        nst.permission = nstp.access;
-                    }
-
-                    const resp = await request(app)
-                                       .put(`/api/documents/${dc.id}/prev`)
-                                       .set("User-Id", `${usr.id}`);
-
-                    expect(resp).not.toBeUndefined();
-
-                    const dcr = resp.body;
-
-                    if (st.permission === DBConstants.WRITE) {
-                        expect(resp.status).toEqual(200);
-
-                        const dcdb = await dcRep.findOne(dcr.id, { relations: ["stage"] });
-
-                        // Can't move past last stage.
-                        if (st.sequenceId !== 1) {
-                            expect(dcdb.stage.sequenceId).toEqual(nst.sequenceId);
-                            await verifyDCResp(dc, dcr, nst, wf);
-                        } else {
-                            expect(dcdb.stage.sequenceId).toEqual(st.sequenceId);
-                            await verifyDCResp(dc, dcr, st, wf);
-                        }
-
-                    } else {
-                        // Nothing returned if we don't have permissions.
-                        expect(resp.status).toEqual(403);
-                    }
-                }
-            }
-        }
-    });
-});
-
-// ----------------------------------------------------------------------------------
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// |                                 GENERATE DATA                                  |
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// |--------------------------------------------------------------------------------|
-// ----------------------------------------------------------------------------------
-
-describe("Generate data, this should always be run last.", () => {
-    it("Generate data for testing.", async () => {
-        const usrNum = 25;
-        const wfNum = 10;
-        const dcNum = 4;
-
-        // Create an admin user.
-        const adminUserNew = new NRUser();
-        adminUserNew.firstName = "Administrative";
-        adminUserNew.lastName = "User";
-        adminUserNew.userName = "admin";
-        adminUserNew.email = "admin@newsroom.com";
-
-        const adminUser = await usrRep.save(adminUserNew);
-        usr = adminUser;
-
-        // Create users.
-        const createdUsers: NRUser[] = [];
-        const usrFirst = [
-            "Greg", "Samantha", "Peter",
-            "Joe", "Andrew", "Justin",
-            "Katherine", "Jake", "Conner",
-            "Youssef", "Kyle", "Clark",
-        ];
-        const usrLast = [
-            "Smith", "Johnson", "French",
-             "King", "Graves", "Bradley",
-             "Wright", "Parker", "Hunt", "Nelson",
-        ];
-        for (let i = 0; i < usrNum; i++) {
-            // Make sure that usernames are unique.
-            const usrNew = new NRUser();
-            do {
-                usrNew.firstName = usrFirst[Math.round(Math.random() * usrFirst.length)];
-                usrNew.lastName = usrLast[Math.round(Math.random() * usrLast.length)];
-                usrNew.userName = usrNew.firstName.charAt(0).toLowerCase() + usrNew.lastName.toLowerCase();
-            } while (createdUsers.findIndex((x) => x.userName === usrNew.userName) !== -1);
-
-            usrNew.email = usrNew.userName + "@newsroom.com";
-
-            const resp = await request(app)
-                              .post("/api/users")
-                              .send(usrNew)
-                              .set("User-Id", `${usr.id}`);
-
-            expect(resp.status).toEqual(200);
-            createdUsers.push(resp.body);
-        }
-
-        // Create workflows.
-        const createdWorkflows: NRWorkflow[] = [];
-        const wfFirst = [ "World", "Sports", "Fashion", "Opinion", "Health", "Food", "Travel", "Tech", "Arts", "Business"];
-        const wfLast = ["Articles", "Blogs", "Papers", "Tidbits", "Pieces"];
-        for (let i = 0; i < wfNum; i++) {
-            // Make sure workflow names are unique.
-            const wfNew = new NRWorkflow();
-            do {
-                wfNew.name = wfFirst[Math.round(Math.random() * wfFirst.length)] + wfLast[Math.round(Math.random() * wfLast.length)];
-            } while (createdWorkflows.findIndex((x) => x.name === wfNew.name) !== -1);
-
-            wfNew.description = "A workflow for " + wfNew.name + ".";
-            wfNew.permission = 1;
-
-            const resp = await request(app)
-                               .post("/api/workflows")
-                               .send(wfNew)
-                               .set("User-Id", `${usr.id}`);
-
-            expect(resp.status).toEqual(200);
-            createdWorkflows.push(resp.body);
-        }
-
-        // Create stages.
-        const stFirstDraft = ["First Draft", "The first draft of an article, intended to flesh out ideas and get them on paper."];
-        const stSecondDraft = ["Second Draft", "A more formalized draft with cohesive writing and progress towards a more finished product."];
-        const stFactCheck = ["Fact Check", "Pertaining to articles that involve real-world facts or statistics, this stage serves to the author of the article and forces them to double check their own facts."];
-        const stPeerReview = ["Peer Review", "Before moving onto the edit phase, get feedback from others about the general topic of your piece without them actually looking at it."];
-        const stFirstEdit = ["First Edit", "The first edit phase, focused more on ideas and overall article flow rather than formatting and grammatical errors."];
-        const stSecondEdit = ["Second Edit", "The second edit phase, focused more on formatting and grammatical errors as well as final checks."];
-        const stFinalReview = ["Final Review", "The final review meant to hopefully catch any mistakes that were missed earlier."];
-        const stReadyToPublish = ["Ready to Publish", "The document has been fully finalized and is ready to publish."];
-        const stDefault = [
-            stFirstDraft,
-            stSecondDraft,
-            stFactCheck,
-            stPeerReview,
-            stFirstEdit,
-            stSecondEdit,
-            stFinalReview,
-            stReadyToPublish,
-        ];
-        const stUrgent = [stFirstDraft, stFactCheck, stFirstEdit, stFinalReview, stReadyToPublish];
-        const stOpinion = [stFirstDraft, stSecondDraft, stPeerReview, stFirstEdit, stFinalReview, stReadyToPublish];
-        for (const wf of createdWorkflows) {
-            let choice;
-            if (
-                (wf.name.toLowerCase().search("opinion") === 0 ) ||
-                (wf.name.toLowerCase().search("blog") === 0 )  ||
-                (wf.name.toLowerCase().search("fashion") === 0 )
-            ) {
-                choice = stOpinion;
-            } else if (
-                (wf.name.toLowerCase().search("world") === 0 ) ||
-                (wf.name.toLowerCase().search("business") === 0 )
-            ) {
-                choice = stUrgent;
-            } else {
-                choice = stDefault;
-            }
-
-            for (const st of choice) {
-                const stNew = new NRStage();
-                stNew.name = st[0];
-                stNew.description = st[1];
-                stNew.permission = 1;
-
-                const resp = await request(app)
-                                   .post(`/api/workflows/${wf.id}/stages`)
-                                   .send(stNew)
-                                   .set("User-Id", `${usr.id}`);
-
-                expect(resp.status).toEqual(200);
-                wf.stages.push(resp.body);
-            }
-        }
-    });
-});
+//describe("GET /api/workflows", () => {
+//    it("Test getting all workflows when none have stages.", async () => {
+//        const wfNum = 5;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "RAND", 200);
+//        const resp = await request(app)
+//                           .get("/api/workflows")
+//                           .set("User-Id", `${usr.id}`);
+//
+//        expect(resp).not.toBeUndefined();
+//        expect(resp.status).toEqual(200);
+//
+//        const wfrs = resp.body;
+//        expect(wfrs).toHaveLength(wfNum);
+//
+//        // Shouldn't return stages, this is for dashboard view.
+//        await verifyWFResps(wfs, wfrs, false);
+//        await verifyWFSDB(wfs);
+//        await verifyWFSDB(wfrs);
+//    });
+//
+//    it("Test getting all workflows with stages.", async () => {
+//        const wfNum = 3;
+//        const stNum = 3;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//
+//        // Don't verify stage documents, we haven't created any.
+//        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
+//
+//        const resp = await request(app)
+//                           .get("/api/workflows")
+//                           .set("User-Id", `${usr.id}`);
+//
+//        expect(resp).not.toBeUndefined();
+//        expect(resp.status).toEqual(200);
+//
+//        const wfrs = resp.body;
+//        expect(wfrs).toHaveLength(wfNum);
+//
+//        // Shouldn't return stages, this is for dashboard view.
+//        await verifyWFResps(wfs, wfrs, false);
+//        await verifyWFSDB(wfs);
+//        await verifyWFSDB(wfrs);
+//
+//        // No stages are returned, but we still expect them to be correct in the DB.
+//        // Use the original WF.
+//        await verifyWFSSTSDB(wfs);
+//    });
+//});
+//
+//describe("GET /api/workflows/:wid", () => {
+//    it("Test getting workflows with no stages.", async () => {
+//        const wfNum = 5;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//
+//        for (const wf of wfs) {
+//            const resp = await request(app)
+//                               .get(`/api/workflows/${wf.id}`)
+//                               .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//            expect(resp.status).toEqual(200);
+//
+//            const wfr: NRWorkflow = resp.body;
+//
+//            // Stages comes back and empty array.
+//            expect(wfr.stages).toHaveLength(0);
+//            await verifyWFResp(wf, wfr, true);
+//            await verifyWFDB(wf);
+//        }
+//    });
+//
+//    it("Test getting workflows with stages and write permissions.", async () => {
+//        const wfNum = 5;
+//        const stNum = 3;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//
+//        // Don't verify stage documents, we haven't created any.
+//        // Returned stage permissions should match passed permissions on creation.
+//        await addStagesToWFS(wfs, stNum, 200, "READ", "RAND", false, "ST");
+//        const wfsn = changeSTPermMatchWFS(wfs);
+//
+//        for (let i = 0; i < wfNum; i++) {
+//            const wf = wfs[i];
+//            const resp = await request(app)
+//                               .get(`/api/workflows/${wf.id}`)
+//                               .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//            expect(resp.status).toEqual(200);
+//
+//            // We do get stages as a response here.
+//            const wfr: NRWorkflow = resp.body;
+//            await verifyWFResp(wf, wfr, true);
+//
+//            // Can't verify the response against the database because returned permissions
+//            // are different.
+//            await verifyWFDB(wfsn[i]);
+//
+//            // DB stages should match response stages.
+//            expect(wfr.stages).toHaveLength(stNum);
+//            await verifySTSDB(wfsn[i].stages, wfsn[i]);
+//
+//            // No documents yet, and we expect stage permissions to match the workflow permissions.
+//            await verifySTResps(wf.stages, wfr.stages, wf, false, "WF");
+//        }
+//    });
+//});
+//
+//describe("PUT /api/workflows/:wid", () => {
+//    it("Test updating workflows with permissions.", async () => {
+//        const wfNum = 3;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//
+//        for (let i = 0; i < wfs.length; i++) {
+//            wfs[i].name = `UPDATE_NAME_${i}`;
+//            wfs[i].description = `UPDATE_DESC_${i}`;
+//
+//            const resp = await request(app)
+//                                .put(`/api/workflows/${wfs[i].id}`)
+//                                .send(wfs[i])
+//                                .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//            expect(resp.status).toEqual(200);
+//
+//            const wfr: NRWorkflow = resp.body;
+//
+//            // Shouldn't return stages from this endpoint.
+//            await verifyWFResp(wfs[i], wfr, false);
+//            await verifyWFDB(wfs[i]);
+//        }
+//    });
+//
+//    it("Test updating workflows doesn't affect stages.", async () => {
+//        const wfNum = 3;
+//        const stNum = 5;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//
+//        // Don't verify stage documents, we haven't created any.
+//        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
+//
+//        for (let i = 0; i < wfs.length; i++) {
+//            wfs[i].name = `UPDATE_NAME_${i}`;
+//            wfs[i].description = `UPDATE_DESC_${i}`;
+//
+//            const resp = await request(app)
+//                                .put(`/api/workflows/${wfs[i].id}`)
+//                                .send(wfs[i])
+//                                .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//            expect(resp.status).toEqual(200);
+//
+//            const wfr: NRWorkflow = resp.body;
+//
+//            // Shouldn't return stages from this endpoint.
+//            await verifyWFResp(wfs[i], wfr, false);
+//            await verifyWFDB(wfs[i]);
+//
+//            // No stage permissions returned for this endpoint.
+//            await verifySTSDB(wfs[i].stages, wfs[i]);
+//        }
+//    });
+//
+//    it("Test updating workflows without permissions.", async () => {
+//        const wfNum = 10;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "READ", 200);
+//
+//        await changeWFPerm(wfs[wfNum / wfNum], "WRITE", "USER", true);
+//        await changeWFPerm(wfs[Math.floor(wfNum / 2)], "WRITE", "USER", true);
+//
+//        for (let i = 0; i < wfs.length; i++) {
+//            // Create a copy to ensure original doesn't change later.
+//            const wfrcp = JSON.parse(JSON.stringify(wfs[i]));
+//            wfrcp.name = `UPDATE_NAME_${i}`;
+//            wfrcp.description = `UPDATE_DESC_${i}`;
+//
+//            const resp = await request(app)
+//                               .put(`/api/workflows/${wfrcp.id}`)
+//                               .send(wfrcp)
+//                               .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//
+//            if (wfs[i].permission === DBConstants.READ) {
+//                expect(resp.status).toEqual(403);
+//
+//                // Verify the original WF didn't change.
+//                // Pass the same argument twice as function checks DB.
+//                await verifyWFResp(wfs[i], wfs[i], false);
+//                await verifyWFDB(wfs[i]);
+//            } else {
+//                expect(resp.status).toEqual(200);
+//
+//                const wfr: NRWorkflow = resp.body;
+//                await verifyWFResp(wfrcp, wfr, false);
+//                await verifyWFDB(wfrcp);
+//            }
+//        }
+//    });
+//});
+//
+//// TODO: Test both at the same time?
+//describe("DELETE /api/workflows/:wid", () => {
+//    it("Test deleting workflows no relationships, user permissions.", async () => {
+//        const wfNum = 10;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "RAND", 200);
+//
+//        await changeWFPerm(wfs[wfNum / wfNum], "WRITE", "USER", true);
+//        await changeWFPerm(wfs[Math.floor(wfNum / 2)], "READ", "USER", true);
+//
+//        for (let i = 0; i < wfs.length; i++) {
+//            const resp = await request(app)
+//                               .delete(`/api/workflows/${wfs[i].id}`)
+//                               .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//
+//            if (wfs[i].permission === DBConstants.READ) {
+//                const wfdb = await wfRep.findOne({ where: { id: wfs[i].id }});
+//
+//                expect(resp.status).toEqual(403);
+//                expect(wfdb).not.toBeUndefined();
+//
+//                await verifyWFDB(wfs[i]);
+//            } else {
+//                await verifyWFDeleted(wfs[i], false);
+//            }
+//        }
+//    });
+//
+//    it("Test deleting workflows no relationships, group permissions.", async () => {
+//        const wfNum = 10;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "RAND", 200);
+//
+//        // Make sure these only have group permissions.
+//        await changeWFSPermsToGroup(wfs);
+//
+//        for (let i = 0; i < wfs.length; i++) {
+//            const resp = await request(app)
+//                               .delete(`/api/workflows/${wfs[i].id}`)
+//                               .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//
+//            if (wfs[i].permission === DBConstants.READ) {
+//                const wfdb = await wfRep.findOne({ where: { id: wfs[i].id }});
+//
+//                expect(resp.status).toEqual(403);
+//                expect(wfdb).not.toBeUndefined();
+//
+//                await verifyWFDB(wfs[i]);
+//            } else {
+//                await verifyWFDeleted(wfs[i], false);
+//            }
+//        }
+//    });
+//
+//    it("Test deleting workflows with stages, user permissions.", async () => {
+//        const wfNum = 10;
+//        const stNum = 5;
+//
+//        // Start with write to be able to add stages.
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
+//
+//        // Change back to random, 'true' to modify existing ones instead
+//        // of creating new ones.
+//        await changeWFSPerms(wfs, "RAND", "USER", true);
+//
+//        await changeWFPerm(wfs[wfNum / wfNum], "WRITE", "USER", true);
+//        await changeWFPerm(wfs[Math.floor(wfNum / 2)], "READ", "USER", true);
+//
+//        for (let i = 0; i < wfs.length; i++) {
+//            const resp = await request(app)
+//                               .delete(`/api/workflows/${wfs[i].id}`)
+//                               .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//
+//            if (wfs[i].permission === DBConstants.READ) {
+//                const wfdb = await wfRep.findOne(wfs[i].id);
+//
+//                expect(resp.status).toEqual(403);
+//                expect(wfdb).not.toBeUndefined();
+//
+//                await verifyWFDB(wfs[i]);
+//                await verifySTSDB(wfs[i].stages, wfs[i]);
+//            } else {
+//                await verifyWFDeleted(wfs[i], true);
+//            }
+//        }
+//    });
+//
+//    it("Test deleting workflows with stages, group permissions.", async () => {
+//        const wfNum = 10;
+//        const stNum = 5;
+//
+//        // Start with write to be able to add stages.
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
+//
+//        // Make sure these only have group permissions.
+//        await changeWFSPermsToGroup(wfs);
+//
+//        await changeWFPerm(wfs[wfNum / wfNum], "WRITE", "GROUP", true);
+//        await changeWFPerm(wfs[Math.floor(wfNum / 2)], "READ", "GROUP", true);
+//
+//        for (let i = 0; i < wfs.length; i++) {
+//            const resp = await request(app)
+//                               .delete(`/api/workflows/${wfs[i].id}`)
+//                               .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//
+//            if (wfs[i].permission === DBConstants.READ) {
+//                const wfdb = await wfRep.findOne(wfs[i].id);
+//
+//                expect(resp.status).toEqual(403);
+//                expect(wfdb).not.toBeUndefined();
+//
+//                await verifyWFDB(wfs[i]);
+//                await verifySTSDB(wfs[i].stages, wfs[i]);
+//            } else {
+//                await verifyWFDeleted(wfs[i], true);
+//            }
+//        }
+//    });
+//
+//    it("Test deleting workflows with stages and documents, user permissions.", async () => {
+//        const wfNum = 10;
+//        const stNum = 5;
+//        const dcNum = 1;
+//
+//        // Start with write to be able to add stages.
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//
+//        // Need write so we can add documents to the stages.
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        // Change back to random, 'true' to modify existing ones instead
+//        // of creating new ones.
+//        await changeWFSPerms(wfs, "RAND", "USER", true);
+//
+//        await changeWFPerm(wfs[wfNum / wfNum], "WRITE", "USER", true);
+//        await changeWFPerm(wfs[Math.floor(wfNum / 2)], "READ", "USER", true);
+//
+//        for (let i = 0; i < wfs.length; i++) {
+//            const resp = await request(app)
+//                               .delete(`/api/workflows/${wfs[i].id}`)
+//                               .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//
+//            if (wfs[i].permission === DBConstants.READ) {
+//                const wfdb = await wfRep.findOne(wfs[i].id);
+//
+//                expect(resp.status).toEqual(403);
+//                expect(wfdb).not.toBeUndefined();
+//
+//                await verifyWFDB(wfs[i]);
+//                await verifySTSDB(wfs[i].stages, wfs[i]);
+//            } else {
+//                await verifyWFDeleted(wfs[i], true);
+//            }
+//        }
+//    });
+//
+//    it("Test deleting workflows with stages and documents, group permissions.", async () => {
+//        const wfNum = 10;
+//        const stNum = 5;
+//        const dcNum = 1;
+//
+//        // Start with write to be able to add stages.
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        // Make sure these only have group permissions.
+//        await changeWFSPermsToGroup(wfs);
+//
+//        await changeWFPerm(wfs[wfNum / wfNum], "WRITE", "GROUP", true);
+//        await changeWFPerm(wfs[Math.floor(wfNum / 2)], "READ", "GROUP", true);
+//
+//        for (let i = 0; i < wfs.length; i++) {
+//            const resp = await request(app)
+//                               .delete(`/api/workflows/${wfs[i].id}`)
+//                               .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//
+//            if (wfs[i].permission === DBConstants.READ) {
+//                const wfdb = await wfRep.findOne(wfs[i].id);
+//
+//                expect(resp.status).toEqual(403);
+//                expect(wfdb).not.toBeUndefined();
+//
+//                await verifyWFDB(wfs[i]);
+//                await verifySTSDB(wfs[i].stages, wfs[i]);
+//            } else {
+//                await verifyWFDeleted(wfs[i], true);
+//            }
+//        }
+//    });
+//
+//    it("Test deleting workflows when no permissions exist at all.", async () => {
+//        const wfNum = 3;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//
+//        for (const wf of wfs) {
+//            await clearWFPermissions(wf);
+//
+//            const resp = await request(app)
+//                               .delete(`/api/workflows/${wf.id}`)
+//                               .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//
+//            const wfdb = await wfRep.findOne(wf.id);
+//
+//            expect(resp.status).toEqual(403);
+//            expect(wfdb).not.toBeUndefined();
+//
+//            await verifyWFDB(wf);
+//        }
+//    });
+//});
+//
+//describe("POST /api/workflows/:wid/stages", () => {
+//    it("Test appending a stage to an empty workflow.", async () => {
+//        const wfNum = 10;
+//        const stNum = 1;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "RAND", "APPEND", false, "ST");
+//    });
+//
+//    it("Test appending many stages to an workflows.", async () => {
+//        const wfNum = 10;
+//        const stNum = 10;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "RAND", "APPEND", false, "ST");
+//    });
+//
+//    it("Test appending many stages to an workflows.", async () => {
+//        const wfNum = 10;
+//        const stNum = 10;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "READ", 200);
+//        await addStagesToWFS(wfs, stNum, 403, "RAND", "APPEND", false, "ST");
+//    });
+//
+//    it("Test appending stages doesn't affect documents.", async () => {
+//        const wfNum = 5;
+//        const stNum = 5;
+//        const dcNum = 2;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "APPEND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        // Append more stages.
+//        await addStagesToWFS(wfs, stNum, 200, "RAND", "APPEND", false, "ST");
+//    });
+//});
+//
+//describe("GET /api/workflows/:wid/stages", () => {
+//    it("Test getting all stages for a specific workflow.", async () => {
+//        const wfNum = 5;
+//        const stNum = 5;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
+//
+//        for (const wf of wfs) {
+//            const resp = await request(app)
+//                               .get(`/api/workflows/${wf.id}/stages`)
+//                               .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//            expect(resp.status).toEqual(200);
+//
+//            const strs = resp.body;
+//
+//            await verifySTResps(wf.stages, strs, wf, false, "ST");
+//            await verifySTSDB(strs, wf);
+//        }
+//    });
+//});
+//
+//// TODO:
+////     - Verify that everything still works even when moving stages.
+//describe("GET :wid/stages/:sid", () => {
+//    it("Test getting a specific stage from a workflow.", async () => {
+//        const wfNum = 5;
+//        const stNum = 5;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
+//
+//        for (const wf of wfs) {
+//            for (let i = 0; i < stNum; i++) {
+//                const resp = await request(app)
+//                                .get(`/api/workflows/${wf.id}/stages/${wf.stages[i].id}`)
+//                                .set("User-Id", `${usr.id}`);
+//
+//                expect(resp).not.toBeUndefined();
+//                expect(resp.status).toEqual(200);
+//
+//                const str = resp.body;
+//
+//                await verifySTResp(wf.stages[i], str, wf, false, "ST");
+//
+//                // Sequences start with 1.
+//                await verifySTDB(str, wf, i + 1);
+//            }
+//        }
+//    });
+//
+//    it("Test getting a specific stage returns documents.", async () => {
+//        const wfNum = 5;
+//        const stNum = 5;
+//        const dcNum = 1;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        for (const wf of wfs) {
+//            for (let i = 0; i < stNum; i++) {
+//                const resp = await request(app)
+//                                .get(`/api/workflows/${wf.id}/stages/${wf.stages[i].id}`)
+//                                .set("User-Id", `${usr.id}`);
+//
+//                expect(resp).not.toBeUndefined();
+//                expect(resp.status).toEqual(200);
+//
+//                const str = resp.body;
+//
+//                await verifySTResp(wf.stages[i], str, wf, true, "ST");
+//
+//                // Sequences start with 1.
+//                await verifySTDB(str, wf, i + 1);
+//            }
+//        }
+//    });
+//});
+//
+//// TODO:
+////     Verify that everything still works even when moving stages.
+//describe("POST :wid/stages/:pos", () => {
+//    it("Test adding a stage at a specific positions in a workflow.", async () => {
+//        // 100 stages.
+//        const wfNum = 10;
+//        const stNum = 10;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
+//
+//        for (const wf of wfs) {
+//            // Explicitly check beginning, middle, and end.
+//            const len = wf.stages.length;
+//            const pos = [len + 100, Math.round(len / 2), -1];
+//
+//            for (const loc of pos) {
+//                // Add at the position and verify.
+//                await addStageToWF(wf, 200, "RAND", "" + loc, false, "ST");
+//            }
+//        }
+//    });
+//});
+//
+//describe("DELETE /api/workflows/:wid/stages/:sid", () => {
+//    it("Test deleting stages with no documents, user permissions.", async () => {
+//        const wfNum = 10;
+//        const stNum = 5;
+//
+//        // WRITE permissions initially to be able to add stages.
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
+//
+//        // Randomize them now for testing.
+//        await changeWFSPerms(wfs, "RAND", "USER", true);
+//
+//        for (const wf of wfs) {
+//            for (let i = 0; i < stNum; i++) {
+//                const sts = wf.stages;
+//
+//                // Choose a random stage to delete.
+//                const idtd = Math.floor(Math.random() * sts.length);
+//                const sttd = sts[idtd];
+//                const seq = sttd.sequenceId;
+//
+//                // Only change locally if we expect it to be deleted remotely too.
+//                if (wf.permission === DBConstants.WRITE) {
+//                    // Delete the stage from our 'local' copy.
+//                    sts.splice(idtd, 1);
+//
+//                    // Fix sequence numbers.
+//                    for (let j = 0; j < sts.length; j++) {
+//                        sts[j].sequenceId = j + 1;
+//                    }
+//                }
+//
+//                const resp = await request(app)
+//                                   .delete(`/api/workflows/${wf.id}/stages/${sttd.id}`)
+//                                   .set("User-Id", `${usr.id}`);
+//
+//                expect(resp).not.toBeUndefined();
+//
+//                // Stage permissions depend on workflow.
+//                if (wf.permission === DBConstants.READ) {
+//                    const stdb = await stRep.findOne(sttd.id);
+//
+//                    expect(resp.status).toEqual(403);
+//                    expect(stdb).not.toBeUndefined();
+//
+//                    // Should have the same sequence ID if it wasn't deleted.
+//                    await verifySTDB(sttd, wf, seq);
+//                } else {
+//                    await verifySTDeleted(sttd, sts);
+//                }
+//            }
+//        }
+//    });
+//
+//    it("Test deleting stages with no documents, group permissions.", async () => {
+//        const wfNum = 10;
+//        const stNum = 5;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
+//
+//        // Test to try group permissions for stages, workflow permissions don't change.
+//        await changeWFSSTPermToGroup(wfs);
+//
+//        for (const wf of wfs) {
+//             for (let i = 0; i < stNum; i++) {
+//                const sts = wf.stages;
+//
+//                // Choose a random stage to delete.
+//                const idtd = Math.floor(Math.random() * sts.length);
+//                const sttd = sts[idtd];
+//                const seq = sttd.sequenceId;
+//
+//                // Only change locally if we expect it to be deleted remotely too.
+//                if (wf.permission === DBConstants.WRITE) {
+//                    // Delete the stage from our 'local' copy.
+//                    sts.splice(idtd, 1);
+//
+//                    // Fix sequence numbers.
+//                    for (let j = 0; j < sts.length; j++) {
+//                        sts[j].sequenceId = j + 1;
+//                    }
+//                }
+//
+//                const resp = await request(app)
+//                                   .delete(`/api/workflows/${wf.id}/stages/${sttd.id}`)
+//                                   .set("User-Id", `${usr.id}`);
+//
+//                expect(resp).not.toBeUndefined();
+//
+//                // Stage permissions depend on workflow.
+//                if (wf.permission === DBConstants.READ) {
+//                    const stdb = await stRep.findOne(sttd.id);
+//
+//                    expect(resp.status).toEqual(403);
+//                    expect(stdb).not.toBeUndefined();
+//
+//                    // Should have the same sequence ID if it wasn't deleted.
+//                    await verifySTDB(sttd, wf, seq);
+//                } else {
+//                    await verifySTDeleted(sttd, sts);
+//                }
+//            }
+//        }
+//    });
+//
+//    it("Test deleting stages with documents, user permissions.", async () => {
+//        const wfNum = 3;
+//        const stNum = 5;
+//        const dcNum = 3;
+//
+//        // WRITE permissions initially to be able to add stages.
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        // Randomize them now for testing.
+//        await changeWFSPerms(wfs, "RAND", "USER", true);
+//        await changeWFSSTSPerms(wfs, "RAND", "USER", true);
+//
+//        for (const wf of wfs) {
+//            const sts = wf.stages;
+//
+//            for (let i = 0; i < stNum; i++) {
+//                // Choose a random stage to delete.
+//                const idtd = Math.floor(Math.random() * sts.length);
+//                const sttd = sts[idtd];
+//                const seq = sttd.sequenceId;
+//                let docs = null;
+//
+//                // Only change locally if we expect it to be deleted remotely too.
+//                if (wf.permission === DBConstants.WRITE) {
+//                    docs = sttd.documents;
+//
+//                    // Documents move to first stage.
+//                    if (idtd !== 0) {
+//                        for (const dc of docs) {
+//                            dc.stage = sts[0];
+//                        }
+//
+//                        // Delete the stage from our 'local' copy.
+//                        sts.splice(idtd, 1);
+//
+//                        // Move documents to first stage.
+//                        sts[0].documents = sts[0].documents.concat(docs);
+//                    } else {
+//                        for (const dc of docs) {
+//                            dc.stage = null;
+//                            dc.workflow = null;
+//                        }
+//
+//                        sts.splice(idtd, 1);
+//                    }
+//
+//                    // If there is only one stage left, we will have just deleted it,
+//                    // so nothing to fix.
+//                    if (sts.length > 1) {
+//                        // Fix sequence numbers.
+//                        for (let j = 0; j < sts.length; j++) {
+//                            sts[j].sequenceId = j + 1;
+//                        }
+//                    }
+//                }
+//
+//                const resp = await request(app)
+//                                   .delete(`/api/workflows/${wf.id}/stages/${sttd.id}`)
+//                                   .set("User-Id", `${usr.id}`);
+//
+//                expect(resp).not.toBeUndefined();
+//                const strs = resp.body;
+//
+//                // Stage permissions depend on workflow.
+//                if (wf.permission === DBConstants.READ) {
+//                    const stdb = await stRep.findOne(sttd.id);
+//
+//                    expect(resp.status).toEqual(403);
+//                    expect(stdb).not.toBeUndefined();
+//
+//                    // Should have the same sequence ID if it wasn't deleted.
+//                    await verifySTDB(sttd, wf, seq);
+//                } else {
+//                    await verifySTResps(sts, strs, wf, true, "ST");
+//                    await verifySTDeleted(sttd, sts);
+//
+//                    if (idtd !== 0) {
+//                        await verifyDCSInST(docs, sts[0]);
+//                    } else {
+//                        await verifyDCSInST(docs, null);
+//                    }
+//                }
+//            }
+//        }
+//    });
+//
+//    it("Test deleting stages with documents, group permissions.", async () => {
+//        const wfNum = 3;
+//        const stNum = 5;
+//        const dcNum = 3;
+//
+//        // WRITE permissions initially to be able to add stages.
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        // Randomize to group permissions for both workflows and stages.
+//        await changeWFSPermsToGroup(wfs);
+//        await changeWFSSTPermToGroup(wfs);
+//
+//        for (const wf of wfs) {
+//            const sts = wf.stages;
+//
+//            for (let i = 0; i < stNum; i++) {
+//                // Choose a random stage to delete.
+//                const idtd = Math.floor(Math.random() * sts.length);
+//                const sttd = sts[idtd];
+//                const seq = sttd.sequenceId;
+//                let docs = null;
+//
+//                // Only change locally if we expect it to be deleted remotely too.
+//                if (wf.permission === DBConstants.WRITE) {
+//                    docs = sttd.documents;
+//
+//                    // Documents move to first stage.
+//                    if (idtd !== 0) {
+//                        for (const dc of docs) {
+//                            dc.stage = sts[0];
+//                        }
+//
+//                        // Delete the stage from our 'local' copy.
+//                        sts.splice(idtd, 1);
+//
+//                        // Move documents to first stage.
+//                        sts[0].documents = sts[0].documents.concat(docs);
+//                    } else {
+//                        for (const dc of docs) {
+//                            dc.stage = null;
+//                            dc.workflow = null;
+//                        }
+//
+//                        sts.splice(idtd, 1);
+//                    }
+//
+//                    // If there is only one stage left, we will have just deleted it,
+//                    // so nothing to fix.
+//                    if (sts.length > 1) {
+//                        // Fix sequence numbers.
+//                        for (let j = 0; j < sts.length; j++) {
+//                            sts[j].sequenceId = j + 1;
+//                        }
+//                    }
+//                }
+//
+//                const resp = await request(app)
+//                                   .delete(`/api/workflows/${wf.id}/stages/${sttd.id}`)
+//                                   .set("User-Id", `${usr.id}`);
+//
+//                expect(resp).not.toBeUndefined();
+//                const strs = resp.body;
+//
+//                // Stage permissions depend on workflow.
+//                if (wf.permission === DBConstants.READ) {
+//                    const stdb = await stRep.findOne(sttd.id);
+//
+//                    expect(resp.status).toEqual(403);
+//                    expect(stdb).not.toBeUndefined();
+//
+//                    // Should have the same sequence ID if it wasn't deleted.
+//                    await verifySTDB(sttd, wf, seq);
+//                } else {
+//                    await verifySTResps(sts, strs, wf, true, "ST");
+//                    await verifySTDeleted(sttd, sts);
+//
+//                    if (idtd !== 0) {
+//                        await verifyDCSInST(docs, sts[0]);
+//                    } else {
+//                        await verifyDCSInST(docs, null);
+//                    }
+//                }
+//            }
+//        }
+//    });
+//});
+//
+//describe("PUT /:wid/stages/:sid", () => {
+//    it("Test updating stages in different workflows.", async () => {
+//        const wfNum = 3;
+//        const stNum = 5;
+//        const dcNum = 3;
+//
+//        // WRITE permissions initially to be able to add stages.
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        for (let i = 0; i < wfNum; i++) {
+//            for (let j = 0; j < stNum; j++) {
+//                const st = wfs[i].stages[j];
+//                st.name = st.name + "_NEW";
+//                st.description = st.name + "_DESC";
+//
+//                const resp = await request(app)
+//                                   .put(`/api/workflows/${wfs[i].id}/stages/${st.id}`)
+//                                   .send(st)
+//                                   .set("User-Id", `${usr.id}`);
+//
+//                expect(resp).not.toBeUndefined();
+//                expect(resp.status).toEqual(200);
+//
+//                const str = resp.body;
+//                await verifySTResp(st, str, wfs[i], false, "ST");
+//                await verifySTDB(st, wfs[i], st.sequenceId);
+//                await verifySTInWF(str, wfs[i]);
+//                await verifyDCSInST(st.documents, str);
+//            }
+//       }
+//    });
+//
+//    it("Test updating stages with mixed user permissions.", async () => {
+//        const wfNum = 3;
+//        const stNum = 5;
+//        const dcNum = 3;
+//
+//        // WRITE permissions initially to be able to add stages.
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        await changeWFSPerms(wfs, "RAND", "USER", true);
+//        await changeWFSSTSPerms(wfs, "RAND", "USER", true);
+//
+//        for (let i = 0; i < wfNum; i++) {
+//            for (let j = 0; j < stNum; j++) {
+//                const st = wfs[i].stages[j];
+//                const stbk = JSON.parse(JSON.stringify(st));
+//
+//                st.name = st.name + "_NEW";
+//                st.description = st.name + "_DESC";
+//
+//                const resp = await request(app)
+//                                   .put(`/api/workflows/${wfs[i].id}/stages/${st.id}`)
+//                                   .send(st)
+//                                   .set("User-Id", `${usr.id}`);
+//
+//                expect(resp).not.toBeUndefined();
+//                const str = resp.body;
+//
+//                if (wfs[i].permission === DBConstants.READ) {
+//                    expect(resp.status).toEqual(403);
+//
+//                    await verifySTDB(stbk, wfs[i], stbk.sequenceId);
+//                    await verifySTInWF(stbk, wfs[i]);
+//                    await verifyDCSInST(stbk.documents, stbk);
+//                } else {
+//                    expect(resp.status).toEqual(200);
+//
+//                    await verifySTResp(st, str, wfs[i], false, "ST");
+//                    await verifySTDB(st, wfs[i], st.sequenceId);
+//                    await verifySTInWF(str, wfs[i]);
+//                    await verifyDCSInST(st.documents, str);
+//                }
+//            }
+//       }
+//    });
+//
+//    it("Test updating stages with mixed group permissions.", async () => {
+//        const wfNum = 3;
+//        const stNum = 5;
+//        const dcNum = 3;
+//
+//        // WRITE permissions initially to be able to add stages.
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        await changeWFSPermsToGroup(wfs);
+//        await changeWFSSTPermToGroup(wfs);
+//
+//        for (let i = 0; i < wfNum; i++) {
+//            for (let j = 0; j < stNum; j++) {
+//                const st = wfs[i].stages[j];
+//                const stbk = JSON.parse(JSON.stringify(st));
+//
+//                st.name = st.name + "_NEW";
+//                st.description = st.name + "_DESC";
+//
+//                const resp = await request(app)
+//                                   .put(`/api/workflows/${wfs[i].id}/stages/${st.id}`)
+//                                   .send(st)
+//                                   .set("User-Id", `${usr.id}`);
+//
+//                expect(resp).not.toBeUndefined();
+//                const str = resp.body;
+//
+//                if (wfs[i].permission === DBConstants.READ) {
+//                    expect(resp.status).toEqual(403);
+//
+//                    await verifySTDB(stbk, wfs[i], stbk.sequenceId);
+//                    await verifySTInWF(stbk, wfs[i]);
+//                    await verifyDCSInST(stbk.documents, stbk);
+//                } else {
+//                    expect(resp.status).toEqual(200);
+//
+//                    await verifySTResp(st, str, wfs[i], false, "ST");
+//                    await verifySTDB(st, wfs[i], st.sequenceId);
+//                    await verifySTInWF(str, wfs[i]);
+//                    await verifyDCSInST(st.documents, str);
+//                }
+//            }
+//       }
+//    });
+//});
+//
+//// ----------------------------------------------------------------------------------
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// |                                 DOCUMENT TESTS                                 |
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// ----------------------------------------------------------------------------------
+//
+//describe("POST /api/documents", () => {
+//    it("Test creating documents with permissions.", async () => {
+//        const wfNum = 3;
+//        const stNum = 5;
+//        const dcNum = 1;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//    });
+//
+//    it("Test creating documents in stages without permissions.", async () => {
+//        const wfNum = 2;
+//        const stNum = 3;
+//        const dcNum = 5;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "READ", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 403);
+//    });
+//
+//    it("Test creating a document in a workflow with no stages.", async () => {
+//        const wfNum = 2;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//
+//        for (const wf of wfs) {
+//            const dc = new NRDocument();
+//            dc.id = dcSeq;
+//            dcSeq++;
+//            dc.name = Guid.create().toString();
+//            dc.description = dc.name + "_DESC";
+//            dc.workflow = wf;
+//
+//            const resp = await request(app)
+//                               .post(`/api/documents/`)
+//                               .send(dc)
+//                               .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//            expect(resp.status).toEqual(403);
+//        }
+//    });
+//
+//    it("Test passing no stage defaults to putting document in first stage.", async () => {
+//        const wfNum = 2;
+//        const stNum = 3;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//
+//        for (const wf of wfs) {
+//            const dc = new NRDocument();
+//            dc.id = dcSeq;
+//            dcSeq++;
+//            dc.name = Guid.create().toString();
+//            dc.description = dc.name + "_DESC";
+//            dc.workflow = wf;
+//
+//            const resp = await request(app)
+//                               .post(`/api/documents/`)
+//                               .send(dc)
+//                               .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//            expect(resp.status).toEqual(200);
+//
+//            const dcr = resp.body;
+//
+//            expect(dcr.stage.id).toEqual(wf.stages[0].id);
+//        }
+//    });
+//});
+//
+//describe("GET /api/documents", () => {
+//    it("Test getting all documents", async () => {
+//        const wfNum = 2;
+//        const stNum = 3;
+//        const dcNum = 5;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        const expDocNum = wfNum * stNum * dcNum;
+//
+//        const resp = await request(app)
+//                           .get("/api/documents")
+//                           .set("User-Id", `${usr.id}`);
+//
+//        expect(resp).not.toBeUndefined();
+//        expect(resp.status).toEqual(200);
+//
+//        const dcrs: NRDocument[] = resp.body;
+//        expect(dcrs.length).toEqual(expDocNum);
+//
+//        for (const wf of wfs) {
+//            for (const st of wf.stages) {
+//                for (let i = 0; i < dcNum; i++) {
+//                    const dc = st.documents[i];
+//                    const dch = dcrs.find((x) => x.id === dc.id);
+//
+//                    await verifyDCDB(dc, st, wf);
+//                    await verifyDCDB(dch, st, wf);
+//                    await verifyDCResp(dc, dch, st, wf);
+//                }
+//            }
+//        }
+//    });
+//});
+//
+//describe("GET /api/documents/user", () => {
+//    it("Test getting all documents that the logged in user has permissions to edit.", async () => {
+//        const wfNum = 7;
+//        const stNum = 3;
+//        const dcNum = 1;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        const grps = [];
+//        for (let i = 0; i < 4; i++) {
+//            grps.push(await addUserToGroup(Guid.create().toString(), usr, 200));
+//        }
+//
+//        // Clear created permissions from baseline data creation.
+//        await clearAllPermissions();
+//
+//        let expDocs: NRDocument[] = [];
+//        let ind = 0;
+//
+//        // grps[0] has READ permissions on first workflow, no additions.
+//        await setWFPermForGroup(grps[ind], wfs[ind], "READ", 200);
+//        ind++;
+//
+//        // grps[1] has WRITE permissions on the first two stages of the second workflow.
+//        // Addition for the documents in each stage.
+//        await setSTPermForGroup(grps[ind], wfs[ind].stages[0], "WRITE", 200);
+//        await setSTPermForGroup(grps[ind], wfs[ind].stages[1], "WRITE", 200);
+//        expDocs = expDocs.concat(wfs[ind].stages[0].documents);
+//        expDocs = expDocs.concat(wfs[ind].stages[1].documents);
+//        ind++;
+//
+//        // grps[2] has WRITE permissions on third workflow, no additions.
+//        await setWFPermForGroup(grps[ind], wfs[ind], "WRITE", 200);
+//        ind++;
+//
+//        // user has WRITE permissions on fourth workflow, no additions.
+//        await changeWFPerm(wfs[ind], "WRITE", "USER", false);
+//        ind++;
+//
+//        // user has READ permissions on fifth workflow, no additions.
+//        await changeWFPerm(wfs[ind], "READ", "USER", false);
+//        ind++;
+//
+//        // user has WRITE permissions on the first two stages of the sixth workflow.
+//        // Addition for the documents in each stage.
+//        await changeSTPerm(wfs[ind].stages[0], "WRITE", "USER", false);
+//        await changeSTPerm(wfs[ind].stages[1], "WRITE", "USER", false);
+//        expDocs = expDocs.concat(wfs[ind].stages[0].documents);
+//        expDocs = expDocs.concat(wfs[ind].stages[1].documents);
+//        ind++;
+//
+//        // 'user' has mixed permissions for stages in seventh workflow.
+//        // Workflow itself needs to be READ.
+//        await changeWFPerm(wfs[ind], "READ", "USER", false);
+//        for (let j = 0; j < stNum; j++) {
+//            if (j % 2 === 0) {
+//                await changeSTPerm(wfs[ind].stages[j], "READ", "USER", false);
+//            } else {
+//                // Addition for the documents in each stage with WRITE permissions.
+//                await changeSTPerm(wfs[ind].stages[j], "WRITE", "USER", false);
+//                expDocs = expDocs.concat(wfs[ind].stages[j].documents);
+//            }
+//        }
+//
+//        const resp = await request(app)
+//                           .get("/api/documents/user")
+//                           .set("User-Id", `${usr.id}`);
+//
+//        expect(resp).not.toBeUndefined();
+//        expect(resp.status).toEqual(200);
+//
+//        const dcrs = resp.body;
+//        expect(dcrs.length).toEqual(expDocs.length);
+//
+//        // Sort by ID for easy comparisons.
+//        dcrs.sort((a: NRDocument, b: NRDocument) => a.id - b.id);
+//        expDocs.sort((a: NRDocument, b: NRDocument) => a.id - b.id);
+//
+//        // Verify we got the right documents back.
+//        for (let i = 0; i < expDocs.length; i++) {
+//            expect(dcrs[i].id).toEqual(expDocs[i].id);
+//        }
+//    });
+//});
+//
+//describe("GET /api/documents/:did", () => {
+//    it("Test getting individual documents.", async () => {
+//        const wfNum = 5;
+//        const stNum = 3;
+//        const dcNum = 2;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        // Now randomize the stage permissions.
+//        await changeWFSSTSPerms(wfs, "RAND", "USER", true);
+//        await changeWFSDCSPermToMatchSTS(wfs);
+//
+//        for (const wf of wfs) {
+//            for (const st of wf.stages) {
+//                for (const dc of st.documents) {
+//                    const resp = await request(app)
+//                                       .get(`/api/documents/${dc.id}`)
+//                                       .set("User-Id", `${usr.id}`);
+//
+//                    expect(resp).not.toBeUndefined();
+//                    expect(resp.status).toEqual(200);
+//
+//                    const dcr = resp.body;
+//
+//                    await verifyDCResp(dc, dcr, st, wf);
+//                }
+//            }
+//        }
+//    });
+//});
+//
+//describe("GET /api/documents/author/:aid", () => {
+//    it("Test getting all documents written by a particular author.", async () => {
+//        const wfNum = 5;
+//        const stNum = 3;
+//        const dcNum = 2;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        // Change the user and create more documents.
+//        usr = await createUser();
+//
+//        // Give new user WRITE permissions on the existing stages.
+//        await changeWFSSTSPerms(wfs, "WRITE", "USER", false);
+//
+//        // Add documents created by this user.
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        const expDocNum = wfNum * stNum * dcNum;
+//
+//        const resp = await request(app)
+//                           .get(`/api/documents/author/${usr.id}`)
+//                           .set("User-Id", `${usr.id}`);
+//
+//        expect(resp).not.toBeUndefined();
+//        expect(resp.status).toEqual(200);
+//
+//        const usdcs = resp.body;
+//
+//        expect(usdcs).toHaveLength(expDocNum);
+//    });
+//});
+//
+//describe("GET /api/documents/stage/:sid", () => {
+//    it("Test getting all documents in a certain stage.", async () => {
+//        const wfNum = 5;
+//        const stNum = 3;
+//        const dcNum = 2;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        for (const wf of wfs) {
+//            for (const st of wf.stages) {
+//                const resp = await request(app)
+//                                  .get(`/api/documents/stage/${st.id}`)
+//                                  .set("User-Id", `${usr.id}`);
+//
+//                expect(resp).not.toBeUndefined();
+//                expect(resp.status).toEqual(200);
+//
+//                const dcs: NRDocument[] = resp.body;
+//
+//                expect(dcs).toHaveLength(dcNum);
+//
+//                for (const dc of dcs) {
+//                    await verifyDCInST(dc, st);
+//                }
+//
+//            }
+//        }
+//    });
+//});
+//
+//describe("GET /api/documents/workflow/:wid", () => {
+//    it("Test getting all documents in a certain workflow.", async () => {
+//        const wfNum = 5;
+//        const stNum = 3;
+//        const dcNum = 2;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        const expDocNum = stNum * dcNum;
+//
+//        for (const wf of wfs) {
+//            const resp = await request(app)
+//                                .get(`/api/documents/workflow/${wf.id}`)
+//                                .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//            expect(resp.status).toEqual(200);
+//
+//            const dcs: NRDocument[] = resp.body;
+//
+//            expect(dcs).toHaveLength(expDocNum);
+//
+//            for (const st of wf.stages) {
+//                for (const dc of st.documents) {
+//                    const dch = dcs.find((x) => x.id === dc.id);
+//                    await verifyDCInST(dch, st);
+//                }
+//            }
+//        }
+//    });
+//});
+//
+//describe("GET /api/documents/orphan", () => {
+//    it("Test getting all orphan documents.", async () => {
+//        const wfNum = 5;
+//        const stNum = 3;
+//        const dcNum = 2;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        let expDocNum = 0;
+//
+//        for (const wf of wfs) {
+//            // Delete each workflow, causing documents to become orphans.
+//            let resp = await request(app)
+//                             .delete(`/api/workflows/${wf.id}`)
+//                             .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//            expect(resp.status).toEqual(204);
+//
+//            expDocNum += stNum * dcNum;
+//
+//            resp = await request(app)
+//                         .get(`/api/documents/all/orphan/docs`)
+//                         .set("User-Id", `${usr.id}`);
+//
+//            expect(resp).not.toBeUndefined();
+//            expect(resp.status).toEqual(200);
+//
+//            const odcs: NRDocument[] = resp.body;
+//            expect(odcs).toHaveLength(expDocNum);
+//        }
+//    });
+//});
+//
+//describe("PUT /api/documents/:did", () => {
+//    it("Test updating documents with mixed permissions.", async () => {
+//        const wfNum = 5;
+//        const stNum = 3;
+//        const dcNum = 2;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//        await changeWFSSTSPerms(wfs, "RAND", "USER", true);
+//
+//        for (const wf of wfs) {
+//            for (const st of wf.stages) {
+//                for (const dc of st.documents) {
+//                    const ndc = JSON.parse(JSON.stringify(dc));
+//                    ndc.name = "NEW_" + Guid.create().toString();
+//                    ndc.description = ndc.name + "_DESC";
+//
+//                    const resp = await request(app)
+//                                       .put(`/api/documents/${dc.id}`)
+//                                       .send(ndc)
+//                                       .set("User-Id", `${usr.id}`);
+//
+//                    expect(resp).not.toBeUndefined();
+//
+//                    const dcr = resp.body;
+//
+//                    if (st.permission === DBConstants.WRITE) {
+//                        expect(resp.status).toEqual(200);
+//
+//                        await verifyDCResp(ndc, dcr, st, wf);
+//                    } else {
+//                        expect(resp.status).toEqual(403);
+//                    }
+//                }
+//            }
+//        }
+//    });
+//});
+//
+//describe("DELETE /api/documents/:did", () => {
+//    it("Test deleting documents with mixed permissions.", async () => {
+//        const wfNum = 5;
+//        const stNum = 3;
+//        const dcNum = 2;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//        await changeWFSSTSPerms(wfs, "RAND", "USER", true);
+//
+//        for (const wf of wfs) {
+//            for (const st of wf.stages) {
+//                for (const dc of st.documents) {
+//                    const resp = await request(app)
+//                                       .delete(`/api/documents/${dc.id}`)
+//                                       .set("User-Id", `${usr.id}`);
+//
+//                    expect(resp).not.toBeUndefined();
+//
+//                    if (st.permission === DBConstants.WRITE) {
+//                        expect(resp.status).toEqual(204);
+//
+//                        await verifyDCDeleted(dc, true);
+//                    } else {
+//                        expect(resp.status).toEqual(403);
+//
+//                        await verifyDCDB(dc, st, wf);
+//                    }
+//                }
+//            }
+//        }
+//    });
+//});
+//
+//describe("PUT /api/documents/:did/next", () => {
+//    it("Test moving documents to the next stage with mixed user permissions.", async () => {
+//        const wfNum = 5;
+//        const stNum = 5;
+//        const dcNum = 5;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        await changeWFSSTSPerms(wfs, "RAND", "USER", true);
+//
+//        for (const wf of wfs) {
+//            for (const st of wf.stages) {
+//                for (const dc of st.documents) {
+//                    let nst;
+//
+//                    // Update local copies if we expect it to actually be moved.
+//                    if ((st.permission === DBConstants.WRITE) && (st.sequenceId !== stNum)) {
+//                        nst = await stRep.findOne({ where: { sequenceId: st.sequenceId + 1,
+//                                                             workflow: wf } });
+//
+//                        dc.stage = nst;
+//                        // dc.permission = nst.access;
+//                        // nst.permission = nst.access;
+//                    }
+//
+//                    const resp = await request(app)
+//                                       .put(`/api/documents/${dc.id}/next`)
+//                                       .set("User-Id", `${usr.id}`);
+//
+//                    expect(resp).not.toBeUndefined();
+//
+//                    const dcr = resp.body;
+//
+//                    if (st.permission === DBConstants.WRITE) {
+//                        expect(resp.status).toEqual(200);
+//
+//                        const dcdb = await dcRep.findOne(dcr.id, { relations: ["stage"] });
+//
+//                        // Can't move past last stage.
+//                        if (st.sequenceId !== stNum) {
+//                            expect(dcdb.stage.sequenceId).toEqual(nst.sequenceId);
+//                            await verifyDCResp(dc, dcr, nst, wf);
+//                        } else {
+//                            expect(dcdb.stage.sequenceId).toEqual(st.sequenceId);
+//                            await verifyDCResp(dc, dcr, st, wf);
+//                        }
+//
+//                    } else {
+//                        // Nothing returned if we don't have permissions.
+//                        expect(resp.status).toEqual(403);
+//                    }
+//                }
+//            }
+//        }
+//    });
+//
+//    it("Test moving documents to the next stage with mixed group permissions.", async () => {
+//        const wfNum = 5;
+//        const stNum = 5;
+//        const dcNum = 5;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        // Randomize stage permissions for groups.
+//        await changeWFSSTPermToGroup(wfs);
+//
+//        for (const wf of wfs) {
+//            for (const st of wf.stages) {
+//                for (const dc of st.documents) {
+//                    let nst;
+//
+//                    // Update local copies if we expect it to actually be moved.
+//                    if ((st.permission === DBConstants.WRITE) && (st.sequenceId !== stNum)) {
+//                        nst = await stRep.findOne({ where: { sequenceId: st.sequenceId + 1,
+//                                                             workflow: wf } });
+//                        const nstp = await stPRep.findOne({ where: { stage: nst,
+//                                                                     user: usr } });
+//
+//                        dc.stage = nst;
+//                        dc.permission = nstp.access;
+//                        nst.permission = nstp.access;
+//                    }
+//
+//                    const resp = await request(app)
+//                                       .put(`/api/documents/${dc.id}/next`)
+//                                       .set("User-Id", `${usr.id}`);
+//
+//                    expect(resp).not.toBeUndefined();
+//
+//                    const dcr = resp.body;
+//
+//                    if (st.permission === DBConstants.WRITE) {
+//                        expect(resp.status).toEqual(200);
+//
+//                        const dcdb = await dcRep.findOne(dcr.id, { relations: ["stage"] });
+//
+//                        // Can't move past last stage.
+//                        if (st.sequenceId !== stNum) {
+//                            expect(dcdb.stage.sequenceId).toEqual(nst.sequenceId);
+//                            await verifyDCResp(dc, dcr, nst, wf);
+//                        } else {
+//                            expect(dcdb.stage.sequenceId).toEqual(st.sequenceId);
+//                            await verifyDCResp(dc, dcr, st, wf);
+//                        }
+//
+//                    } else {
+//                        // Nothing returned if we don't have permissions.
+//                        expect(resp.status).toEqual(403);
+//                    }
+//                }
+//            }
+//        }
+//    });
+//});
+//
+//describe("PUT /api/documents/:did/prev", () => {
+//    it("Test moving documents to the previous stage with mixed user permissions.", async () => {
+//        const wfNum = 5;
+//        const stNum = 5;
+//        const dcNum = 5;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        await changeWFSSTSPerms(wfs, "RAND", "USER", true);
+//
+//        for (const wf of wfs) {
+//            for (const st of wf.stages) {
+//                for (const dc of st.documents) {
+//                    let nst;
+//
+//                    // Update local copies if we expect it to actually be moved.
+//                    if ((st.permission === DBConstants.WRITE) && (st.sequenceId !== 1)) {
+//                        nst = await stRep.findOne({ where: { sequenceId: st.sequenceId - 1,
+//                                                             workflow: wf } });
+//
+//                        dc.stage = nst;
+//                        // dc.permission = nstp.access;
+//                        // nst.permission = nstp.access;
+//                    }
+//
+//                    const resp = await request(app)
+//                                       .put(`/api/documents/${dc.id}/prev`)
+//                                       .set("User-Id", `${usr.id}`);
+//
+//                    expect(resp).not.toBeUndefined();
+//
+//                    const dcr = resp.body;
+//
+//                    if (st.permission === DBConstants.WRITE) {
+//                        expect(resp.status).toEqual(200);
+//
+//                        const dcdb = await dcRep.findOne(dcr.id, { relations: ["stage"] });
+//
+//                        // Can't move past last stage.
+//                        if (st.sequenceId !== 1) {
+//                            expect(dcdb.stage.sequenceId).toEqual(nst.sequenceId);
+//                            await verifyDCResp(dc, dcr, nst, wf);
+//                        } else {
+//                            expect(dcdb.stage.sequenceId).toEqual(st.sequenceId);
+//                            await verifyDCResp(dc, dcr, st, wf);
+//                        }
+//
+//                    } else {
+//                        // Nothing returned if we don't have permissions.
+//                        expect(resp.status).toEqual(403);
+//                    }
+//                }
+//            }
+//        }
+//    });
+//
+//    it("Test moving documents to the next stage with mixed group permissions.", async () => {
+//        const wfNum = 5;
+//        const stNum = 5;
+//        const dcNum = 5;
+//
+//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
+//        await addStagesToWFS(wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+//        await addDocsToWFSStages(wfs, dcNum, 200);
+//
+//        // Randomize stage permissions for groups.
+//        await changeWFSSTPermToGroup(wfs);
+//
+//        for (const wf of wfs) {
+//            for (const st of wf.stages) {
+//                for (const dc of st.documents) {
+//                    let nst;
+//
+//                    // Update local copies if we expect it to actually be moved.
+//                    if ((st.permission === DBConstants.WRITE) && (st.sequenceId !== 1)) {
+//                        nst = await stRep.findOne({ where: { sequenceId: st.sequenceId - 1,
+//                                                             workflow: wf } });
+//                        const nstp = await stPRep.findOne({ where: { stage: nst,
+//                                                                     user: usr } });
+//
+//                        dc.stage = nst;
+//                        dc.permission = nstp.access;
+//                        nst.permission = nstp.access;
+//                    }
+//
+//                    const resp = await request(app)
+//                                       .put(`/api/documents/${dc.id}/prev`)
+//                                       .set("User-Id", `${usr.id}`);
+//
+//                    expect(resp).not.toBeUndefined();
+//
+//                    const dcr = resp.body;
+//
+//                    if (st.permission === DBConstants.WRITE) {
+//                        expect(resp.status).toEqual(200);
+//
+//                        const dcdb = await dcRep.findOne(dcr.id, { relations: ["stage"] });
+//
+//                        // Can't move past last stage.
+//                        if (st.sequenceId !== 1) {
+//                            expect(dcdb.stage.sequenceId).toEqual(nst.sequenceId);
+//                            await verifyDCResp(dc, dcr, nst, wf);
+//                        } else {
+//                            expect(dcdb.stage.sequenceId).toEqual(st.sequenceId);
+//                            await verifyDCResp(dc, dcr, st, wf);
+//                        }
+//
+//                    } else {
+//                        // Nothing returned if we don't have permissions.
+//                        expect(resp.status).toEqual(403);
+//                    }
+//                }
+//            }
+//        }
+//    });
+//});
+//
+//// ----------------------------------------------------------------------------------
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// |                                 GENERATE DATA                                  |
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// |--------------------------------------------------------------------------------|
+//// ----------------------------------------------------------------------------------
+//
+//describe("Generate data, this should always be run last.", () => {
+//    it("Generate data for testing.", async () => {
+//        const usrNum = 25;
+//        const wfNum = 10;
+//        const dcNum = 4;
+//
+//        // Create an admin user.
+//        const adminUserNew = new NRUser();
+//        adminUserNew.firstName = "Administrative";
+//        adminUserNew.lastName = "User";
+//        adminUserNew.userName = "admin";
+//        adminUserNew.email = "admin@newsroom.com";
+//
+//        const adminUser = await usrRep.save(adminUserNew);
+//        usr = adminUser;
+//
+//        // Create users.
+//        const createdUsers: NRUser[] = [];
+//        const usrFirst = [
+//            "Greg", "Samantha", "Peter",
+//            "Joe", "Andrew", "Justin",
+//            "Katherine", "Jake", "Conner",
+//            "Youssef", "Kyle", "Clark",
+//        ];
+//        const usrLast = [
+//            "Smith", "Johnson", "French",
+//             "King", "Graves", "Bradley",
+//             "Wright", "Parker", "Hunt", "Nelson",
+//        ];
+//        for (let i = 0; i < usrNum; i++) {
+//            // Make sure that usernames are unique.
+//            const usrNew = new NRUser();
+//            do {
+//                usrNew.firstName = usrFirst[Math.round(Math.random() * usrFirst.length)];
+//                usrNew.lastName = usrLast[Math.round(Math.random() * usrLast.length)];
+//                usrNew.userName = usrNew.firstName.charAt(0).toLowerCase() + usrNew.lastName.toLowerCase();
+//            } while (createdUsers.findIndex((x) => x.userName === usrNew.userName) !== -1);
+//
+//            usrNew.email = usrNew.userName + "@newsroom.com";
+//
+//            const resp = await request(app)
+//                              .post("/api/users")
+//                              .send(usrNew)
+//                              .set("User-Id", `${usr.id}`);
+//
+//            expect(resp.status).toEqual(200);
+//            createdUsers.push(resp.body);
+//        }
+//
+//        // Create workflows.
+//        const createdWorkflows: NRWorkflow[] = [];
+//        const wfFirst = [ "World", "Sports", "Fashion", "Opinion", "Health", "Food", "Travel", "Tech", "Arts", "Business"];
+//        const wfLast = ["Articles", "Blogs", "Papers", "Tidbits", "Pieces"];
+//        for (let i = 0; i < wfNum; i++) {
+//            // Make sure workflow names are unique.
+//            const wfNew = new NRWorkflow();
+//            do {
+//                wfNew.name = wfFirst[Math.round(Math.random() * wfFirst.length)] + wfLast[Math.round(Math.random() * wfLast.length)];
+//            } while (createdWorkflows.findIndex((x) => x.name === wfNew.name) !== -1);
+//
+//            wfNew.description = "A workflow for " + wfNew.name + ".";
+//            wfNew.permission = 1;
+//
+//            const resp = await request(app)
+//                               .post("/api/workflows")
+//                               .send(wfNew)
+//                               .set("User-Id", `${usr.id}`);
+//
+//            expect(resp.status).toEqual(200);
+//            createdWorkflows.push(resp.body);
+//        }
+//
+//        // Create stages.
+//        const stFirstDraft = ["First Draft", "The first draft of an article, intended to flesh out ideas and get them on paper."];
+//        const stSecondDraft = ["Second Draft", "A more formalized draft with cohesive writing and progress towards a more finished product."];
+//        const stFactCheck = ["Fact Check", "Pertaining to articles that involve real-world facts or statistics, this stage serves to the author of the article and forces them to double check their own facts."];
+//        const stPeerReview = ["Peer Review", "Before moving onto the edit phase, get feedback from others about the general topic of your piece without them actually looking at it."];
+//        const stFirstEdit = ["First Edit", "The first edit phase, focused more on ideas and overall article flow rather than formatting and grammatical errors."];
+//        const stSecondEdit = ["Second Edit", "The second edit phase, focused more on formatting and grammatical errors as well as final checks."];
+//        const stFinalReview = ["Final Review", "The final review meant to hopefully catch any mistakes that were missed earlier."];
+//        const stReadyToPublish = ["Ready to Publish", "The document has been fully finalized and is ready to publish."];
+//        const stDefault = [
+//            stFirstDraft,
+//            stSecondDraft,
+//            stFactCheck,
+//            stPeerReview,
+//            stFirstEdit,
+//            stSecondEdit,
+//            stFinalReview,
+//            stReadyToPublish,
+//        ];
+//        const stUrgent = [stFirstDraft, stFactCheck, stFirstEdit, stFinalReview, stReadyToPublish];
+//        const stOpinion = [stFirstDraft, stSecondDraft, stPeerReview, stFirstEdit, stFinalReview, stReadyToPublish];
+//        for (const wf of createdWorkflows) {
+//            let choice;
+//            if (
+//                (wf.name.toLowerCase().search("opinion") === 0 ) ||
+//                (wf.name.toLowerCase().search("blog") === 0 )  ||
+//                (wf.name.toLowerCase().search("fashion") === 0 )
+//            ) {
+//                choice = stOpinion;
+//            } else if (
+//                (wf.name.toLowerCase().search("world") === 0 ) ||
+//                (wf.name.toLowerCase().search("business") === 0 )
+//            ) {
+//                choice = stUrgent;
+//            } else {
+//                choice = stDefault;
+//            }
+//
+//            for (const st of choice) {
+//                const stNew = new NRStage();
+//                stNew.name = st[0];
+//                stNew.description = st[1];
+//                stNew.permission = 1;
+//
+//                const resp = await request(app)
+//                                   .post(`/api/workflows/${wf.id}/stages`)
+//                                   .send(stNew)
+//                                   .set("User-Id", `${usr.id}`);
+//
+//                expect(resp.status).toEqual(200);
+//                wf.stages.push(resp.body);
+//            }
+//        }
+//    });
+//});
 
 // ----------------------------------------------------------------------------------
 // |--------------------------------------------------------------------------------|
@@ -1999,7 +2001,7 @@ describe("Generate data, this should always be run last.", () => {
 // |--------------------------------------------------------------------------------|
 // ----------------------------------------------------------------------------------
 
-function createWF(priv: string) {
+function createWF(perm: string) {
     const wf = new NRWorkflow();
     wf.id = wfSeq;
     wfSeq++;
@@ -2007,32 +2009,41 @@ function createWF(priv: string) {
     wf.name = "WF_" + Guid.create().toString();
     wf.description = wf.name + "_DESC";
 
-    if (priv === "RAND") {
-        // Either 1 or 0.
-        wf.permission = Math.round(Math.random());
-    } else if (priv !== null) {
-        wf.permission = (priv === "WRITE") ? 1 : 0;
+    if (perm === "WRITE") {
+        wf.permission = DBConstants.WRITE;
+    } else if (perm === "READ") {
+        wf.permission = DBConstants.READ;
     }
 
     return wf;
 }
 
-async function reqWFGetResp(priv: string, status: number) {
-    const wf = createWF(priv);
+/**
+ * Create a workflow and return the response.
+ * 
+ * The workflow is created as 'us', expects 'status' as response.stats,
+ * and can additionally give 'perm' to each user in 'users'.
+ */
+async function reqWFGetResp(us: NRUser, status: number, perm: string, users: NRUser[]) {
+    const wf = createWF(perm);
 
     const resp = await request(app)
                        .post("/api/workflows")
                        .send(wf)
-                       .set("User-Id", `${usr.id}`);
+                       .set("User-Id", `${us.id}`);
 
     expect(resp).not.toBeUndefined();
     expect(resp.status).toEqual(status);
 
-    if (status === 200) {
-        // Won't have stages yet.
-        await verifyWFResp(wf, resp.body, false);
+    const wfr = resp.body;
 
-        await verifyWFDB(wf);
+    if (users !== null) {
+        expect(true).toEqual(false);
+    }
+
+    if (status === 200) {
+        await verifyWFResp(us, wf, wfr, false);
+        await verifyWFDB(us, wf);
     }
 
     return resp.body;
@@ -2042,7 +2053,7 @@ async function reqWFSGetResps(num: number, priv: string, status: number) {
     const wfrs: NRWorkflow[] = [];
 
     for (let i = 0; i < num; i++) {
-        wfrs.push(await reqWFGetResp(priv, status));
+        // wfrs.push(await reqWFGetResp(priv, status));
     }
 
     return wfrs;
@@ -2150,10 +2161,6 @@ async function changeWFPerm(wf: NRWorkflow, perm: string, type: string, exists: 
         const wfup = resp.body;
         expect(wfup.access).toEqual(priv);
 
-        const wfusdb = await wfUSRep.findOne(wfup.id, { relations: ["workflow"] });
-        expect(wfusdb.workflow.id).toEqual(wf.id);
-        expect(wfusdb.access).toEqual(priv);
-
         wf.permission = priv;
     } else if (type === "GROUP") {
         if (exists === false) {
@@ -2202,10 +2209,6 @@ async function changeSTPerm(st: NRStage, perm: string, type: string, exists: boo
 
         const stup = resp.body;
         expect(stup.access).toEqual(priv);
-
-        const stusdb = await stUSRep.findOne(stup.id, { relations: ["stage"] });
-        expect(stusdb.stage.id).toEqual(st.id);
-        expect(stusdb.access).toEqual(priv);
 
         st.permission = priv;
     } else if (type === "GROUP") {
@@ -2395,16 +2398,6 @@ async function setSTPermForGroup(role: NRRole, st: NRStage, perm: string, status
 }
 
 async function clearAllPermissions() {
-    await wfUSRep.createQueryBuilder()
-                 .delete()
-                 .from(NRWFUSPermission)
-                 .execute();
-
-    await stUSRep.createQueryBuilder()
-                 .delete()
-                 .from(NRSTUSPermission)
-                 .execute();
-
     await wfPRep.createQueryBuilder()
                 .delete()
                 .from(NRWFPermission)
@@ -2417,12 +2410,6 @@ async function clearAllPermissions() {
  }
 
 async function clearWFPermissions(wf: NRWorkflow) {
-    await wfUSRep.createQueryBuilder()
-                 .delete()
-                 .from(NRWFUSPermission)
-                 .where(`${DBConstants.WFUSPERM_TABLE}.workflowId = :wid`, { wid: wf.id })
-                 .execute();
-
     await wfPRep.createQueryBuilder()
                 .delete()
                 .from(NRWFPermission)
@@ -2433,12 +2420,6 @@ async function clearWFPermissions(wf: NRWorkflow) {
 
     if (wf.stages !== undefined) {
         for (const st of wf.stages) {
-            await stUSRep.createQueryBuilder()
-                         .delete()
-                         .from(NRSTUSPermission)
-                         .where(`${DBConstants.STUSPERM_TABLE}.stageId = :sid`, { sid: st.id })
-                         .execute();
-
             await stPRep.createQueryBuilder()
                         .delete()
                         .from(NRSTPermission)
@@ -2451,12 +2432,6 @@ async function clearWFPermissions(wf: NRWorkflow) {
  }
 
 async function clearSTPermissions(st: NRStage) {
-    await stUSRep.createQueryBuilder()
-                    .delete()
-                    .from(NRSTUSPermission)
-                    .where(`${DBConstants.STUSPERM_TABLE}.stageId = :sid`, { sid: st.id })
-                    .execute();
-
     await stPRep.createQueryBuilder()
                 .delete()
                 .from(NRSTPermission)
@@ -2584,8 +2559,8 @@ async function createUser() {
 // |--------------------------------------------------------------------------------|
 // ----------------------------------------------------------------------------------
 
-async function verifyWFDB(wf: NRWorkflow) {
-    const wfdb = await wfRep.findOneOrFail({ where: { id: wf.id }});
+async function verifyWFDB(us: NRUser, wf: NRWorkflow) {
+    const wfdb = await wfRep.findOneOrFail(wf.id);
 
     expect(wfdb.name).not.toBeUndefined();
     expect(wf.name).toEqual(wfdb.name);
@@ -2594,9 +2569,9 @@ async function verifyWFDB(wf: NRWorkflow) {
     expect(wf.description).toEqual(wfdb.description);
 
     if (wf.permission === undefined) {
-        expect(await permServ.getWFPermForUser(wf, usr)).toEqual(DBConstants.READ);
+        expect(await permServ.getWFPermForUser(wf, us)).toEqual(DBConstants.READ);
     } else {
-        expect(wf.permission).toEqual(await permServ.getWFPermForUser(wf, usr));
+        expect(wf.permission).toEqual(await permServ.getWFPermForUser(wf, us));
     }
 
     if (wf.stages !== undefined) {
@@ -2604,13 +2579,13 @@ async function verifyWFDB(wf: NRWorkflow) {
     }
 }
 
-async function verifyWFSDB(wfs: NRWorkflow[]) {
+async function verifyWFSDB(us: NRUser, wfs: NRWorkflow[]) {
     for (const wf of wfs) {
-        await verifyWFDB(wf);
+        await verifyWFDB(us, wf);
     }
 }
 
-async function verifyWFResp(wf: NRWorkflow, wfr: NRWorkflow, verifyStages: boolean) {
+async function verifyWFResp(us: NRUser, wf: NRWorkflow, wfr: NRWorkflow, verifyStages: boolean) {
     expect(wf.id).toEqual(wfr.id);
 
     expect(wfr.name).not.toBeUndefined();
@@ -2633,14 +2608,14 @@ async function verifyWFResp(wf: NRWorkflow, wfr: NRWorkflow, verifyStages: boole
     }
 }
 
-async function verifyWFResps(wfs: NRWorkflow[], wfrs: NRWorkflow[], verifyStages: boolean) {
+async function verifyWFResps(us: NRUser, wfs: NRWorkflow[], wfrs: NRWorkflow[], verifyStages: boolean) {
     expect(wfs.length).toEqual(wfrs.length);
 
     const wfss = wfs.sort((a: NRWorkflow, b: NRWorkflow) => a.id - b.id);
     const wfrss = wfrs.sort((a: NRWorkflow, b: NRWorkflow) => a.id - b.id);
 
     for (let i = 0; i < wfs.length; i++) {
-        await verifyWFResp(wfss[i], wfrss[i], verifyStages);
+        await verifyWFResp(us, wfss[i], wfrss[i], verifyStages);
     }
 }
 
@@ -2835,9 +2810,6 @@ async function verifyWFDeleted(wf: NRWorkflow, hadStages: boolean) {
     const wfdb = await wfRep.findOne(wf.id);
     expect(wfdb).toBeUndefined();
 
-    const wfupdb = await wfUSRep.find({ where: { workflow: wf.id } });
-    expect(wfupdb).toHaveLength(0);
-
     const wfpdb = await wfPRep.find({ where: { workflow: wf.id } });
     expect(wfpdb).toHaveLength(0);
 
@@ -2857,9 +2829,6 @@ async function verifyWFDeleted(wf: NRWorkflow, hadStages: boolean) {
 async function verifySTDeleted(st: NRStage, sts: NRStage[]) {
     const stdb = await stRep.findOne(st.id);
     expect(stdb).toBeUndefined();
-
-    const stupdb = await stUSRep.find({ where: { stage: st.id } });
-    expect(stupdb).toHaveLength(0);
 
     const stpdb = await stPRep.find({ where: { stage: st.id } });
     expect(stpdb).toHaveLength(0);

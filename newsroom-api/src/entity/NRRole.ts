@@ -9,7 +9,6 @@ import {
 } from "typeorm";
 
 import { DBConstants } from "./DBConstants";
-import { NRDCPermission } from "./NRDCPermission";
 import { NRSTPermission } from "./NRSTPermission";
 import { NRUser } from "./NRUser";
 import { NRWFPermission } from "./NRWFPermission";
@@ -72,16 +71,4 @@ export class NRRole {
         (permissions) => permissions.role,
     )
     public stpermissions: NRSTPermission[];
-
-    /**
-     * Relationship: NRDCPermission
-     *      - One: Each permission is only associated with a role.
-     *      - Many: Each role can have many different permissions.
-     */
-    @OneToMany(
-        (type) => NRDCPermission,
-        (permissions) => permissions.role,
-    )
-    public dcpermissions: NRDCPermission[];
-
 }

@@ -17,11 +17,8 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 import {
     NRRole,
     NRSTPermission,
-    NRSTUSPermission,
     NRUser,
-    NRUserSummary,
-    NRWFPermission,
-    NRWFUSPermission,
+    NRWFPermission
 } from "../entity";
 import { RoleService } from "../services/RoleService";
 import { UserService } from "../services/UserService";
@@ -44,12 +41,6 @@ export class UserResource {
 
     @InjectRepository(NRSTPermission)
     private stPRep: Repository<NRSTPermission>;
-
-    @InjectRepository(NRWFUSPermission)
-    private wfUSRep: Repository<NRWFUSPermission>;
-
-    @InjectRepository(NRSTUSPermission)
-    private stUSRep: Repository<NRSTUSPermission>;
 
     @Inject()
     private usServ: UserService;
@@ -352,84 +343,6 @@ export class UserResource {
     }
 
     /**
-     * Give the specified user an individual permission on a workflow.
-     * Note that this will change if it exists, otherwise it will create it.
-     *
-     * path:
-     *      - uid: The unique id of the user to give the permission to.
-     *      - wid: The unique id of the workflow to give permissions to.
-     *      - perm: 1 for WRITE, 0 for READ.
-     *
-     * request:
-     *      - None.
-     *
-     * response:
-     *      - NRWFUSPermission with the following relations:
-     *          - None.
-     */
-    @PUT
-    @Path("/:uid/wfperm/:wid/:perm")
-    public async addWFPerm(@IsInt @PathParam("uid") uid: number,
-                           @IsInt @PathParam("wid") wid: number,
-                           @IsInt @PathParam("perm") permission: number): Promise<NRWFUSPermission> {
-        const usr = await this.usServ.getUser(uid);
-        const wf = await this.wfServ.getWorkflow(wid);
-
-        const wfup = await this.wfUSRep.findOne({
-            where: {
-                user: usr,
-                workflow: wf,
-            },
-        });
-
-        if (wfup === undefined) {
-            return await this.wfServ.createWFUSPermission(wid, usr, permission);
-        } else {
-            wfup.access = permission;
-            return await this.wfUSRep.save(wfup);
-        }
-    }
-
-    /**
-     * Give the specified user an individual permission on a stage.
-     * Note that this will change if it exists, otherwise it will create it.
-     *
-     * path:
-     *      - uid: The unique id of the user to give the permission to.
-     *      - sid: The unique id of the stage to give permissions to.
-     *      - perm: 1 for WRITE, 0 for READ.
-     *
-     * request:
-     *      - None.
-     *
-     * response:
-     *      - NRSTUSPermission with the following relations:
-     *          - None.
-     */
-    @PUT
-    @Path("/:uid/stperm/:sid/:perm")
-    public async addSTPerm(@IsInt @PathParam("uid") uid: number,
-                           @IsInt @PathParam("sid") sid: number,
-                           @IsInt @PathParam("perm") permission: number): Promise<NRSTUSPermission> {
-        const usr = await this.usServ.getUser(uid);
-        const st = await this.wfServ.getStage(sid);
-
-        const stup = await this.stUSRep.findOne({
-            where: {
-                stage: st,
-                user: usr,
-            },
-        });
-
-        if (stup === undefined) {
-            return await this.wfServ.createSTUSPermission(sid, usr, permission);
-        } else {
-            stup.access = permission;
-            return await this.stUSRep.save(stup);
-        }
-    }
-
-    /**
      * Provide a summary of a user and their associated permissions.
      *
      * path:
@@ -446,8 +359,6 @@ export class UserResource {
     public async getUserSummary(@IsInt @PathParam("uid") uid: number): Promise<NRUser> {
         const usr = await this.usServ.getUser(uid);
 
-        const usum = new NRUserSummary();
-
         // Individual permissions.
         const usrwp = await this.usRep.findOne(usr.id, {
             relations: ["stpermissions",
@@ -458,50 +369,5 @@ export class UserResource {
         });
 
         return usrwp;
-
-        // for (const stus of usrwp.stpermissions) {
-        //     if (stus.access === DBConstants.WRITE) {
-        //         usum.userWriteStages.add(stus.stage);
-        //     } else {
-        //         usum.userReadStages.add(stus.stage);
-        //     }
-        // }
-
-        // for (const wfus of usrwp.wfpermissions) {
-        //     if (wfus.access === DBConstants.WRITE) {
-        //         usum.userWriteWorkflows.add(wfus.workflow);
-        //     } else {
-        //         usum.userReadWorkflows.add(wfus.workflow);
-        //     }
-        // }
-
-        // // Group permissions.
-        // const uwrs = await this.usRep.findOne(usr.id, { relations: ["roles"] });
-
-        // for (const rl of uwrs.roles) {
-        //     const rlwp = await this.rlRep.findOne(rl.id, { relations: ["wfpermissions",
-        //                                                                "wfpermissions.workflow",
-        //                                                                "stpermissions",
-        //                                                                "stpermissions.stage"]});
-        //     for (const wfp of rlwp.wfpermissions) {
-        //         if (wfp.access === DBConstants.WRITE) {
-        //             usum.groupWriteWorkflows.add(wfp.workflow);
-        //         } else {
-        //             usum.groupReadWorkflows.add(wfp.workflow);
-        //         }
-        //     }
-
-        //     for (const stp of rlwp.stpermissions) {
-        //         if (stp.access === DBConstants.WRITE) {
-        //             usum.groupWriteStages.add(stp.stage);
-        //         } else {
-        //             usum.groupReadStages.add(stp.stage);
-        //         }
-        //     }
-        // }
-
-        // usum.groups = uwrs.roles;
-
-        // return usum;
     }
 }

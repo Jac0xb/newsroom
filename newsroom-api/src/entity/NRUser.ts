@@ -1,11 +1,8 @@
-import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, OneToMany,
-         PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinTable, ManyToOne,
+         ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 import { DBConstants } from "./DBConstants";
-import { NRDCUSPermission } from "./NRDCUSPermission";
 import { NRRole } from "./NRRole";
-import { NRSTUSPermission } from "./NRSTUSPermission";
-import { NRWFUSPermission } from "./NRWFUSPermission";
 
 /**
  * NRUser objects are used to track information about any user of the system.
@@ -49,6 +46,14 @@ export class NRUser {
     })
     public accessToken: string;
 
+    @Column({
+        length: 1,
+        nullable: true,
+        type: "varchar",
+    })
+    public admin: string;
+
+
     @CreateDateColumn()
     public created: Date;
 
@@ -66,37 +71,4 @@ export class NRUser {
     )
     @JoinTable()
     public roles: NRRole[];
-
-    /**
-     * Relationship: NRWFUSPermission
-     *      - One: Each permission is only associated with a user.
-     *      - Many: Each user can have many different permissions.
-     */
-    @OneToMany(
-        (type) => NRWFUSPermission,
-        (permissions) => permissions.user,
-    )
-    public wfpermissions: NRWFUSPermission[];
-
-    /**
-     * Relationship: NRSTUSPermission
-     *      - One: Each permission is only associated with a user.
-     *      - Many: Each user can have many different permissions.
-     */
-    @OneToMany(
-        (type) => NRSTUSPermission,
-        (permissions) => permissions.user,
-    )
-    public stpermissions: NRSTUSPermission[];
-
-    /**
-     * Relationship: NRDCUSPermission
-     *      - One: Each permission is only associated with a user.
-     *      - Many: Each user can have many different permissions.
-     */
-    @OneToMany(
-        (type) => NRDCUSPermission,
-        (permissions) => permissions.user,
-    )
-    public dcpermissions: NRDCUSPermission[];
 }

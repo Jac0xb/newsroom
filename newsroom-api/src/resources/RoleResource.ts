@@ -5,7 +5,7 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 
 import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { NRDCPermission, NRDocument, NRRole, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
+import { NRDocument, NRRole, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { RoleService } from "../services/RoleService";

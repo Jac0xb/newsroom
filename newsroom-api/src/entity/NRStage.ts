@@ -4,7 +4,6 @@ import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne,
 import { DBConstants } from "./DBConstants";
 import { NRDocument } from "./NRDocument";
 import { NRSTPermission } from "./NRSTPermission";
-import { NRSTUSPermission } from "./NRSTUSPermission";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
 
@@ -89,16 +88,4 @@ export class NRStage {
     )
     @JoinTable()
     public permissions: NRSTPermission[];
-
-    /**
-     * Relationship: NRSTUSPermission
-     *      - One: Each user permission is only associated with one stage.
-     *      - Many: Each stage can have many user permissions.
-     */
-    @OneToMany(
-        (type) => NRSTUSPermission,
-        (permission) => permission.stage,
-    )
-    @JoinTable()
-    public usrpermissions: NRSTUSPermission[];
 }

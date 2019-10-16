@@ -62,20 +62,18 @@ export class WorkflowResource {
         try {
             const user = await this.servCont.user();
             wf.creator = await this.usServ.getUser(user.id);
-            const wfdb = await this.wfRep.save(wf);
 
-            if (wf.permission !== undefined) {
-                const wfup = await this.wfServ.createWFUSPermission(wfdb.id,
-                                                                    user,
-                                                                    wf.permission);
+            // Only administrators can create workflows.
+            const allowed = await this.permServ.isUserAdmin(user);
 
-                // 'permission' is just for the response, so load it here.
-                wfdb.permission = wfup.access;
+            if (allowed === true) {
+                const wfdb = await this.wfRep.save(wf);
+                wfdb.permission = DBConstants.WRITE;
+
+                return wfdb;
             } else {
-                wf.permission = DBConstants.READ;
+                throw new Errors.ForbiddenError('Only administrators can create workflows.')
             }
-
-            return wfdb;
         } catch (err) {
             console.log(err);
 
@@ -276,12 +274,7 @@ export class WorkflowResource {
             const st = await this.stRep.save(stage);
 
             if (stage.permission !== undefined) {
-                const stup = await this.wfServ.createSTUSPermission(st.id,
-                                                                    user,
-                                                                    stage.permission);
-
-                // 'permission' is just for the response, so load it here.
-                st.permission = stup.access;
+                st.permission = DBConstants.WRITE;
             } else {
                 st.permission = DBConstants.READ;
             }
@@ -454,12 +447,7 @@ export class WorkflowResource {
             stage = await this.stRep.save(stage);
 
             if (stage.permission !== undefined) {
-                const stup = await this.wfServ.createSTUSPermission(stage.id,
-                                                                    user,
-                                                                    stage.permission);
-
-                // 'permission' is just for the response, so load it here.
-                stage.permission = stup.access;
+                stage.permission = DBConstants.WRITE;
             } else {
                 stage.permission = DBConstants.READ;
             }
