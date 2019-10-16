@@ -4,7 +4,6 @@ import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import { Link, Redirect } from 'react-router-dom';
-import { Cookies, withCookies } from 'react-cookie';
 import { compose } from 'recompose';
 import { TreeSelect, Select } from 'antd';
 import { Typography as AntTypography } from 'antd';
@@ -22,8 +21,6 @@ export namespace GroupCreate {
 
     export interface Props extends GroupCreateDispatchers, GroupCreateReducerState {
         classes: Record<string, string>
-        match?: { params: any }
-        cookies: Cookies
     }
 
     export interface SimplePermission {
@@ -31,7 +28,9 @@ export namespace GroupCreate {
         access: number
     }
 
-    // Add refresh button to workflows.
+    /**
+     * TODO: Documentation.
+     */
     export class Component extends React.Component<Props> {
 
         constructor(props: Props, context?: any) {
@@ -39,18 +38,16 @@ export namespace GroupCreate {
         }
 
         componentDidMount() {
-                       
            this.props.fetchWorkflows();
            this.props.fetchUsers();
-            
         }
 
         /**
-         * On submit.
+         * TODO: Documentation
          */
         onSubmit() {
 
-            this.props.induceFlash("");
+            this.props.induceFlash();
 
             var users: { id: number }[] = [];
             var wfpermissions: GroupCreate.SimplePermission[] = [];
@@ -88,7 +85,8 @@ export namespace GroupCreate {
                 description: this.props.description,
                 users
             };
-
+            
+            // TODO: Extract API call out.
             axios.post("/api/roles", newRole).then(async (response: any) => {
                 
                 var roleId = response.data.id
@@ -146,6 +144,7 @@ export namespace GroupCreate {
                 return newWorkflow;
             })
 
+            // TODO: Add Clear State
             if (this.props.submitted) {
                 return <Redirect push to="/groups"/>;
             }
@@ -219,7 +218,6 @@ export namespace GroupCreate {
 
 export default compose<GroupCreate.Props, {}>(
     withStyles(styles, {withTheme: true}),
-    withCookies
 )(connect<GroupCreate.Props>(
     mapStateToProps,
     mapDispatchToProps

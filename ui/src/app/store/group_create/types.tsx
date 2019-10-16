@@ -32,7 +32,7 @@ export interface GroupCreateDispatchers {
     fetchWorkflows: () => any;
     fetchStages: () => any;
     fetchUsers: () => any;
-    induceFlash: (message: string) => any;
+    induceFlash: (message?: string) => any;
     induceSubmission: () => any;
     updateUserSelection: (users: { name: string, id: number }[]) => any;
     updateItemSelection: (items: string[]) => any;

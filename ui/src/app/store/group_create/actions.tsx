@@ -67,10 +67,10 @@ export function fetchUsers() : any {
     };
 }
 
-export function induceFlash(message: string) : any {
+export function induceFlash(message = "") : any {
     return {
         type: ActionTypes.INDUCE_FLASH,
-        payload: message
+        payload: message || ""
     };
 }
 
