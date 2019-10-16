@@ -138,73 +138,94 @@ beforeEach(async (done) => {
 // ----------------------------------------------------------------------------------
 
 describe("1. POST /api/workflows", () => {
-    it("Test creating a single workflow.", async () => {
+    it("Test creating a single workflow as an administrator.", async () => {
         await reqWFGetResp(adminUsr, 200, "WRITE", null);
     });
 
-    it("Test creating 5 workflows with different permissions.", async () => {
+    it("Test creating many workflows as an administrator.", async () => {
         const wfNum = 5;
 
         await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
     });
 
-//    it("Test creating workflows when specifying no permissions.", async () => {
-//        const wfNum = 2;
-//
-//        await reqWFSGetResps(wfNum, null, 200);
-//    });
+    it("Test creating as a non-administrator.", async () => {
+        const wfNum = 2;
+
+        await reqWFSGetResps(usr, 403, wfNum, "READ", null);
+    });
 });
 
-//describe("GET /api/workflows", () => {
-//    it("Test getting all workflows when none have stages.", async () => {
-//        const wfNum = 5;
-//
-//        const wfs = await reqWFSGetResps(wfNum, "RAND", 200);
-//        const resp = await request(app)
-//                           .get("/api/workflows")
-//                           .set("User-Id", `${usr.id}`);
-//
-//        expect(resp).not.toBeUndefined();
-//        expect(resp.status).toEqual(200);
-//
-//        const wfrs = resp.body;
-//        expect(wfrs).toHaveLength(wfNum);
-//
-//        // Shouldn't return stages, this is for dashboard view.
-//        await verifyWFResps(wfs, wfrs, false);
-//        await verifyWFSDB(wfs);
-//        await verifyWFSDB(wfrs);
-//    });
-//
-//    it("Test getting all workflows with stages.", async () => {
-//        const wfNum = 3;
-//        const stNum = 3;
-//
-//        const wfs = await reqWFSGetResps(wfNum, "WRITE", 200);
-//
-//        // Don't verify stage documents, we haven't created any.
-//        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
-//
-//        const resp = await request(app)
-//                           .get("/api/workflows")
-//                           .set("User-Id", `${usr.id}`);
-//
-//        expect(resp).not.toBeUndefined();
-//        expect(resp.status).toEqual(200);
-//
-//        const wfrs = resp.body;
-//        expect(wfrs).toHaveLength(wfNum);
-//
-//        // Shouldn't return stages, this is for dashboard view.
-//        await verifyWFResps(wfs, wfrs, false);
-//        await verifyWFSDB(wfs);
-//        await verifyWFSDB(wfrs);
-//
-//        // No stages are returned, but we still expect them to be correct in the DB.
-//        // Use the original WF.
-//        await verifyWFSSTSDB(wfs);
-//    });
-//});
+describe("2. GET /api/workflows", () => {
+    it("Test getting workflows with no stages.", async () => {
+        const wfNum = 5;
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+
+        // As an admin user.
+        let resp = await request(app)
+                           .get("/api/workflows")
+                           .set("User-Id", `${adminUsr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(200);
+
+        let wfrs = resp.body;
+        expect(wfrs).toHaveLength(wfNum);
+
+        // Shouldn't return stages, this is for dashboard view.
+        await verifyWFResps(adminUsr, wfs, wfrs, false);
+        await verifyWFSDB(adminUsr, wfs);
+        await verifyWFSDB(adminUsr, wfrs);
+
+        // As a non-admin user.
+        resp = await request(app)
+                      .get("/api/workflows")
+                      .set("User-Id", `${usr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(200);
+
+        // The response will have 'permission: 0' because we switched users,
+        // but our local objects still have 'permission: 1' because we created
+        // them as an admin.
+        changeLocalWFSPerms(wfs, "READ");
+
+        wfrs = resp.body;
+        expect(wfrs).toHaveLength(wfNum);
+
+        // Shouldn't return stages, this is for dashboard view.
+        await verifyWFResps(usr, wfs, wfrs, false);
+        await verifyWFSDB(usr, wfs);
+        await verifyWFSDB(usr, wfrs);
+    });
+
+    it("Test getting workflows with stages.", async () => {
+        const wfNum = 3;
+        const stNum = 3;
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(wfs, stNum, 200, "RAND", "RAND", false, "ST");
+
+        const resp = await request(app)
+                           .get("/api/workflows")
+                           .set("User-Id", `${usr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(200);
+
+        const wfrs = resp.body;
+        expect(wfrs).toHaveLength(wfNum);
+
+        // Shouldn't return stages, this is for dashboard view.
+        await verifyWFResps(wfs, wfrs, false);
+        await verifyWFSDB(wfs);
+        await verifyWFSDB(wfrs);
+
+        // No stages are returned, but we still expect them to be correct in the DB.
+        // Use the original WF.
+        await verifyWFSSTSDB(wfs);
+    });
+});
 //
 //describe("GET /api/workflows/:wid", () => {
 //    it("Test getting workflows with no stages.", async () => {
@@ -2044,22 +2065,25 @@ async function reqWFGetResp(us: NRUser, status: number, perm: string, users: NRU
     if (status === 200) {
         await verifyWFResp(us, wf, wfr, false);
         await verifyWFDB(us, wf);
+    } else if (status === 403) {
+        const wfdb = await wfRep.findOne(wf.id);
+        expect(wfdb).toBeUndefined();
     }
 
     return resp.body;
 }
 
-async function reqWFSGetResps(num: number, priv: string, status: number) {
+async function reqWFSGetResps(us: NRUser, status: number, num: number, perm: string, users: NRUser[]) {
     const wfrs: NRWorkflow[] = [];
 
     for (let i = 0; i < num; i++) {
-        // wfrs.push(await reqWFGetResp(priv, status));
+        wfrs.push(await reqWFGetResp(us, status, perm, users));
     }
 
     return wfrs;
 }
 
-async function addStageToWF(wf: NRWorkflow, status: number, perm: string,
+async function addStageToWF(us: NRUser, wf: NRWorkflow, status: number, perm: string,
                             pos: string, verifyDocs: boolean, whichPerm: string) {
     if (wf.stages === undefined) {
         wf.stages = [];
@@ -2545,6 +2569,12 @@ async function createUser() {
     return usrr;
 }
 
+function changeLocalWFSPerms(wfs: NRWorkflow[], perm: string) {
+    for (const wf of wfs) {
+        wf.permission = (perm === "WRITE") ? 1 : 0;
+    }
+}
+
 // ----------------------------------------------------------------------------------
 // |--------------------------------------------------------------------------------|
 // |--------------------------------------------------------------------------------|
@@ -2604,7 +2634,11 @@ async function verifyWFResp(us: NRUser, wf: NRWorkflow, wfr: NRWorkflow, verifyS
     if (verifyStages === true) {
         expect(wfr.stages).not.toBeUndefined();
     } else {
-        expect(wfr.stages).toBeUndefined();
+        if (wfr.stages === undefined) {
+            expect(wfr.stages).toBeUndefined();
+        } else {
+            expect(wfr.stages).toHaveLength(0);
+        }
     }
 }
 
@@ -2647,7 +2681,7 @@ async function verifySTDB(st: NRStage, wf: NRWorkflow, seq: number) {
 }
 
 async function verifySTSDB(sts: NRStage[], wf: NRWorkflow) {
-    expect(sts.length).toBeGreaterThan(0);
+    expect(sts.length).toBeGreaterThanOrEqual(0);
 
     let i = 1;
 

@@ -75,9 +75,12 @@ export class WorkflowResource {
                 throw new Errors.ForbiddenError('Only administrators can create workflows.')
             }
         } catch (err) {
-            console.log(err);
+            if (err instanceof Errors.ForbiddenError) {
+                throw err;
+            } 
 
-            const errStr = `Error creating workflow.`;
+            console.error(err);
+            const errStr = 'Error creating workflow.';
             throw new Errors.InternalServerError(errStr);
         }
     }
