@@ -13,29 +13,6 @@ import { connect } from "react-redux";
 import { WorkflowDispatchers, WorkflowState } from "app/store/workflow/types";
 import WorkflowSidebar from './components/WorkflowSidebar';
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: any;
-  value: any;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <Typography
-      component="div"
-      role="tabpanel"
-      hidden={value !== index}
-      id={`scrollable-auto-tabpanel-${index}`}
-      aria-labelledby={`scrollable-auto-tab-${index}`}
-      {...other}
-    >
-      <Box p={3}>{children}</Box>
-    </Typography>
-  );
-}
-
 export namespace Workflow {
   export interface Props extends WorkflowDispatchers, WorkflowState {
     classes?: any
@@ -232,6 +209,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
         </Tabs>
       </AppBar>
       <WorkflowSidebar />
+      <div>Article, due date, assinged to</div>
       {/* <div hidden={value !== index}>
         Item One
       </div> */}

@@ -8,6 +8,9 @@ const initialState: UserState = {
   groups: [],
   selectedGroups: [],
   selectedPermissions: [],
+  userName: "",
+  firstName: "",
+  lastName: "",
 };
 
 export function userReducer(state = initialState, action: any): UserState {
@@ -26,6 +29,9 @@ export function userReducer(state = initialState, action: any): UserState {
     }
     case ActionTypes.UPDATE_USER: {
       return {...state};
+    }
+    case ActionTypes.TEXT_CHANGE: {
+      return {...state, [action.name]: action.payload};
     }
     default:
       return state;

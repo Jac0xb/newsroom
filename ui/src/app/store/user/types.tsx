@@ -7,6 +7,10 @@ export interface UserState {
   groups: Array<NRRole>
   selectedGroups: Array<NRRole>
   selectedPermissions: Array<NRWorkflow>
+  userName: string
+  firstName: string
+  lastName: string
+
 }
   
 // Describing the different ACTION NAMES available
@@ -16,6 +20,7 @@ export const ActionTypes = {
   SET_GROUPS:"SET_GROUPS",
   SET_SELECT:"SET_SELECT",
   UPDATE_USER: "UPDATE_USER",
+  TEXT_CHANGE: "TEXT_CHANGE",
 }
 
 // export const SET_PERMISSIONS = "SET_PERMISSIONS";
@@ -48,6 +53,7 @@ export interface UserDispatchers {
   fetchSetGroups: (groups: Array<NRRole>) => any
   fetchSelectChange: (name: string, payload: Array<NRRole>) => any
   fetchUpdateUser: (id: number, payload: any) => any
+  fetchHandleTextChange: (name: string, payload: string) => any
 }
 
 // export type UserActionTypes = 

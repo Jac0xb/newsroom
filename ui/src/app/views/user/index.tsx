@@ -1,20 +1,13 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
-import { Grid, FormLabel, Select, MenuItem, OutlinedInput, FormControl, Paper, Typography, Chip, Button} from '@material-ui/core';
+import { Grid, Select, MenuItem, OutlinedInput, FormControl, Paper, Typography, Chip, Button, FormLabel, TextField } from '@material-ui/core';
 import { styles } from './styles';
 import axios from 'axios';
 import { mapStateToProps  } from 'app/store/user/reducers';
 import { mapDispatchToProps } from "app/store/user/actions";
 import { connect } from "react-redux";
 import { UserDispatchers, UserState } from "app/store/user/types";
-import { NRGroup, NRRole, NRWorkflow, NRStage } from 'app/utils/models';
-
-import { TreeSelect, Select as AntSelect } from 'antd';
-import { Typography as AntTypography } from 'antd';
-import { Input } from 'antd';
-const { Option } = AntSelect;
-const { TextArea } = Input;
-import _ from 'lodash';
+import {  NRRole } from 'app/utils/models';
 
 export namespace EditUser {
     export interface Props extends UserDispatchers, UserState {
@@ -25,25 +18,16 @@ export namespace EditUser {
             }
         }
     }
-    export interface State { masterList: Array<NRRole>; selectedItems: Array<any>; fetchedWorkflows: NRWorkflow[]; fetchedStages: NRStage[]}
+    export interface State { masterList: Array<NRRole>; }
 }
 
 class EditUser extends React.Component<EditUser.Props, EditUser.State> {
     constructor(props: EditUser.Props) {
         super(props);
-        this.state = { masterList: [], selectedItems: [], fetchedWorkflows: [], fetchedStages: [], }
+        this.state = { masterList: [] }
     }
 
     async componentDidMount() {
-        var {data : workflows } = await axios.get<NRWorkflow[]>("/api/workflows");
-            
-            for (var i = 0; i < workflows.length; i++) {
-                let { data : stages } = await axios.get<NRStage[]>(`/api/workflows/${workflows[i].id}/stages`);
-                workflows[i].stages = stages;
-            }
-            
-        this.setState({fetchedWorkflows: workflows});
-
         this.getGroups()
         this.getUserSummary()
     }
@@ -60,6 +44,9 @@ class EditUser extends React.Component<EditUser.Props, EditUser.State> {
         const userId = this.props.match.params.id
 
         axios.get("/api/users/" + userId + "/summary").then((response) => {
+
+            console.log(response.data)
+
             // Need to add roles from the master group list
             response.data.roles.forEach((role: NRRole)=> {
                 // If role matches group, add to list
@@ -104,18 +91,7 @@ class EditUser extends React.Component<EditUser.Props, EditUser.State> {
     }
 
     render() {
-        const { classes, flash, permissions, groups, selectedGroups } = this.props;
-        
-        var treeData = _.map(this.state.fetchedWorkflows, (workflow) => {
-            var newWorkflow = { title: workflow.name, value: `${workflow.id}`, children: new Array<{title: string, value: string}>() }
-
-            for (var i = 0; i < workflow.stages.length; i++) {
-                let stage = workflow.stages[i] 
-                newWorkflow.children.push({ title : stage.name, value: `${workflow.id}-${stage.id}` })
-            }
-
-            return newWorkflow;
-        })
+        const { classes, flash, permissions, groups, selectedGroups, firstName} = this.props;
 
         return (
             <React.Fragment>
@@ -130,7 +106,18 @@ class EditUser extends React.Component<EditUser.Props, EditUser.State> {
                             <div></div>
                         }
                         <FormControl>
-                            <AntTypography.Text strong={true}>Edit Groups</AntTypography.Text>
+                            <TextField
+                                id="outlined-name"
+                                label="First Name"
+                                className={classes.textField}
+                                value={firstName}
+                                onChange={(event) => this.props.fetchHandleTextChange('firstName', event.target.value as string)}
+                                margin="normal"
+                                variant="outlined"
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Groups</FormLabel>
                             <Select
                                 multiple
                                 value={selectedGroups} 
@@ -154,38 +141,6 @@ class EditUser extends React.Component<EditUser.Props, EditUser.State> {
                                 )}
                             </Select>
                         </FormControl>
-                        <FormControl>
-                            <AntTypography.Text strong={true}>Edit Permissions</AntTypography.Text>
-                                <TreeSelect
-                                    showSearch
-                                    treeData={treeData}
-                                    value={this.state.selectedItems}
-                                    style={{marginBottom: "16px"}}
-                                    placeholder="Type to filter.."
-                                    allowClear
-                                    multiple
-                                    treeDefaultExpandAll
-                                    onChange={(value) => this.setState({selectedItems: value})}
-                                />
-                        </FormControl>
-                        {/* <FormControl>
-                            <FormLabel className={classes.formLabel}>Edit Permissions</FormLabel>
-                            <Select 
-                                value={""}
-                                className={classes.formSelect}
-                                onChange={(event) => this.props.fetchSelectChange("selectedGroups", event.target.value as Array<NRRole>)}
-                                input={<OutlinedInput 
-                                    labelWidth={1}
-                                    name="permissions"
-                                    id="outlined-groups-dropdown" 
-                                />}
-                                >
-                                <MenuItem value={""}><em>None</em></MenuItem>
-                                {permissions.map((permission: any, index: number) =>
-                                    <MenuItem key={index} value={index}>{permission.name}</MenuItem>
-                                )}
-                            </Select>
-                        </FormControl> */}
                         <FormControl className={classes.buttonGroup}>
                             <Button variant="contained" className={classes.button} onClick={() => this.handleSubmit()}>Update</Button>
                         </FormControl>

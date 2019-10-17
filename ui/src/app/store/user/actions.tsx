@@ -48,6 +48,13 @@ export function dispatchUpdateUser(id: number, payload: NRRole) : any {
       }
   };
 }
+export function dispatchHandleTextChange(name: string, payload: string): any {
+  return {
+    type: ActionTypes.TEXT_CHANGE,
+    name: name,
+    payload: payload
+  };
+}
 
 // Map Dispatch
 export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, any>, ownProps: T) : UserDispatchers {
@@ -58,5 +65,6 @@ export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, any>, ow
     fetchSetGroups: bindActionCreators(dispatchSetGroups, dispatch),
     fetchSelectChange: bindActionCreators(dispatchSelectChange, dispatch),
     fetchUpdateUser: bindActionCreators(dispatchUpdateUser, dispatch),
+    fetchHandleTextChange: bindActionCreators(dispatchHandleTextChange, dispatch),
   }
 };
