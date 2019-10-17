@@ -69,10 +69,13 @@ export namespace GroupCreate {
                 var match = regex.exec(item);
                 
                 if (match && match[1] != undefined && match[2] == undefined) {
-                    wfpermissions.push(new NRWFPermission({
-                        id: parseInt(match[0]),
-                        access: 1
-                    }));
+                    //wfpermissions.push(new NRWFPermission({
+                    //    id: parseInt(match[0]),
+                    //    access: 1
+                    //}));
+                    // 
+                    // https://stackoverflow.com/questions/39614311/class-constructor-type-in-typescript
+                    // https://dev.to/stereobooster/typescript-type-vs-interface-2n0c
                 } 
                 else if (match && match[2] != undefined) {
                     /*stpermissions.push(new NRSTPermission({ 

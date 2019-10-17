@@ -137,7 +137,8 @@ export class NRWorkflow implements INRWorkflow {
 }
 
 export class NRDCPermission implements INRDCPermission {
-    id: number;    access: number;
+    id: number;    
+    access: number;
     document: INRDocument;
     role: INRRole;
 
@@ -147,7 +148,8 @@ export class NRDCPermission implements INRDCPermission {
 }
 
 export class NRWFUSPermission implements INRWFUSPermission {
-    id: number;    access: number;
+    id: number;    
+    access: number;
     workflow: INRWorkflow;
     user: INRUser;
 
@@ -157,17 +159,19 @@ export class NRWFUSPermission implements INRWFUSPermission {
 }
 
 export class NRWFPermission implements INRWFPermission {
-    id: number;    access: number;
+    id: number;    
+    access: number;
     workflow: INRWorkflow;
     role: INRRole;
 
-    constructor(init?: Partial<NRWFPermission>) {
+    constructor (init?: Partial<NRWFPermission>) {
         Object.assign(this, init);
     }
 }
 
 export class NRSTPermission implements INRSTPermission {
-    id: number;    access: number;
+    id: number;    
+    access: number;
     stage: INRStage;
     role: INRRole;
 
@@ -211,7 +215,8 @@ export class NRTrigger implements INRTrigger {
 }
 
 export class NRUserSummary implements INRUserSummary {
-    userWriteWorkflows: Set<INRWorkflow>;    userWriteStages: Set<INRStage>;
+    userWriteWorkflows: Set<INRWorkflow>;    
+    userWriteStages: Set<INRStage>;
     userReadWorkflows: Set<INRWorkflow>;
     userReadStages: Set<INRStage>;
     groupWriteWorkflows: Set<INRWorkflow>;
