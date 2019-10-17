@@ -38,18 +38,16 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                 }}
             >
                 <List>
-                {['Tool 1', 'Tool 2'].map((text, index) => (
+                {['Stage Name', 'Stage Desc', 'Triggers'].map((text, index) => (
                     <ListItem button key={text}>
-                    <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
                     <ListItemText primary={text} />
                     </ListItem>
                 ))}
                 </List>
                 <Divider />
                 <List>
-                {['Help'].map((text, index) => (
+                {['Due Date'].map((text, index) => (
                     <ListItem button key={text}>
-                    {/* <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon> */}
                     <ListItemText primary={text} />
                     </ListItem>
                 ))}

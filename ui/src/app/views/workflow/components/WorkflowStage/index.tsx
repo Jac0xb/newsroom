@@ -5,6 +5,8 @@ import { Paper, Typography, Divider, Grid, Menu, MenuItem, IconButton } from '@m
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import { DocumentTileComponent } from 'app/views/dashboard/components/DocumentTile';
 import axios from 'axios';
+import MaterialTable from 'material-table';
+import { NRDocument } from 'app/utils/models';
 
 export namespace WorkflowStage {
     export interface Props {
@@ -20,7 +22,7 @@ export namespace WorkflowStage {
     }
     export interface State {
       openMenu: boolean
-      stageDocuments: any[]
+      stageDocuments: Array<NRDocument>
       anchorEl?: any
     }
 }
@@ -41,22 +43,22 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
 
   // Get documents for this stage from database
   getDocuments() {
-    const stageDocuments: any[] = [] 
+    var stageDocuments: Array<NRDocument> = []
 
-		axios.get("/api/documents/").then((response) => {
-
-      const documents: any[] = response.data
+		axios.get("/api/documents/stage/" + this.props.id).then((response) => {
+      console.log(response.data)
+      // var documents: Array<NRDocument>[] = response.data
 
       // Get all documents for this stage
-      documents.forEach(document => {
-        if(document.stage != null){
-          if(document.stage.id == this.props.id){
-            stageDocuments.push(document)
-          }
-        }
-      });
+    //   documents.forEach(document => {
+    //     if(document.stage != null){
+    //       if(document.stage.id == this.props.id){
+    //         stageDocuments.push(document)
+    //       }
+    //     }
+    //   });
       
-			this.setState({ stageDocuments })
+		// 	this.setState({ stageDocuments })
 		});
   }
   
@@ -74,7 +76,7 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
     const { openMenu, stageDocuments } = this.state;
 
     // Get most up-to-date documents list
-    this.getDocuments();
+    // this.getDocuments();
 
     const docList = stageDocuments.map((document, i) =>
 			<DocumentTileComponent key={i} document={document} compressed={true} onDelete={() => {}} />
@@ -83,6 +85,19 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
     return (
       <main className={classes.layout}>
         {
+          show == index ? 
+            <MaterialTable
+              columns={[
+                  {title: "Aricle", field: "name"},
+                  {title: "Assinged", field: "assinged"},
+                  {title: "Due", field: "due"},
+                  // {title: "", render: (user: NRUser) => this.deleteUser.bind(this)(user)}
+              ]}
+              data={docList}
+              title="Documents"/>
+          : null
+        }
+        {/* {
           show == index ? 
             <Paper className={classes.stage} key={this.props.id}>
               <div className={classes.headingDiv}>
@@ -130,7 +145,7 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
               </Grid>
             </Paper>
           : null
-        }
+        } */}
         
       </main>
     );

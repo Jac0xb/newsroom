@@ -12,6 +12,7 @@ import { mapDispatchToProps } from "app/store/workflow/actions";
 import { connect } from "react-redux";
 import { WorkflowDispatchers, WorkflowState } from "app/store/workflow/types";
 import WorkflowSidebar from './components/WorkflowSidebar';
+import MaterialTable from 'material-table';
 
 export namespace Workflow {
   export interface Props extends WorkflowDispatchers, WorkflowState {
@@ -209,16 +210,6 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
         </Tabs>
       </AppBar>
       <WorkflowSidebar />
-      <div>Article, due date, assinged to</div>
-      {/* <div hidden={value !== index}>
-        Item One
-      </div> */}
-      {/* <TabPanel value={value} index={0}>
-        Item One
-      </TabPanel>
-      <TabPanel value={value} index={1}>
-        Item Two
-      </TabPanel> */}
 
         {(this.props.flash != "") ?
             <Paper className={classes.flashMessage}>
@@ -241,12 +232,12 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
               {this.props.stages.map((stage, index) => (
                 <div className={classes.stage}>
                   <WorkflowStage show={this.state.value} index={index} canEdit={this.props.canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(stageID: number) => this.handleStageEditClick(stageID)} onDeleteClick={(stageID: number) => this.handleStageDeleteClick(stageID)}/>
-                  { this.props.canEdit ? 
+                  {/* { this.props.canEdit ? 
                     <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index+1)} className={classes.addButton}>
                       <AddIcon />
                     </Fab> 
                     : null 
-                  }
+                  } */}
                 </div>
               ))}
               <DialogItem textBoxName={this.props.dialogTextName} textBoxDesc={this.props.dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={this.props.createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.props.fetchCloseDialog()} handleSave={this.handleStageAdd}/>

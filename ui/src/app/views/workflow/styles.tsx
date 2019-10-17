@@ -12,17 +12,15 @@ export function styles(theme: Theme) {
             zIndex: 1,
         },
         workflowContent: {
-            // marginTop: theme.spacing.unit * 3,
             padding: theme.spacing(2),
             display: "flex",
             overflowX: "auto",
         },
         content: {
-            display: 'inline-flex',
+
         },
         stage: {
-            display: "inline-flex",
-            margin: 8,
+            // width: "-webkit-fill-available",
         },
         stageGrid: {
             margin: theme.spacing(),
