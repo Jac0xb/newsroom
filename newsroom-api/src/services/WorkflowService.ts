@@ -2,7 +2,7 @@ import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Errors } from "typescript-rest";
-import { DBConstants, NRDocument, NRStage, NRSTPermission, 
+import { DBConstants, NRDocument, NRStage, NRSTPermission,
          NRUser, NRWorkflow } from "../entity";
 import { PermissionService } from "./PermissionService";
 
@@ -71,7 +71,7 @@ export class WorkflowService {
             if (wf.stages === undefined) {
                 wf.stages = [];
             }
-            
+
             wf = await this.appendPermToWF(wf, user);
             await this.appendPermToSTS(wf.stages, user);
         }

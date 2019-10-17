@@ -1,5 +1,5 @@
-import { Column, CreateDateColumn, Entity, JoinTable, ManyToOne,
-         ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany,
+         ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 import { DBConstants } from "./DBConstants";
 import { NRRole } from "./NRRole";
@@ -52,7 +52,6 @@ export class NRUser {
         type: "varchar",
     })
     public admin: string;
-
 
     @CreateDateColumn()
     public created: Date;

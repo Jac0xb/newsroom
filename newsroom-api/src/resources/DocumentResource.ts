@@ -84,7 +84,7 @@ export class DocumentResource {
         if (!(document.stage)) {
             const minSeq = await this.wfServ.getMinStageSequenceId(wf);
 
-            if (minSeq === -1) {
+            if (minSeq === null) {
                 const errStr = `Can't create a document in workflow ${wf.id} with no stages.`;
 
                 console.log(errStr);
@@ -104,7 +104,6 @@ export class DocumentResource {
         // They have permissions, so we know they have WRITE access already.
         document.permission = DBConstants.WRITE;
 
-        console.log(user);
         document.creator = await this.usServ.getUser(user.id);
         document.googleDocId = await this.dcServ.createGoogleDocument(user, document);
 
@@ -149,10 +148,11 @@ export class DocumentResource {
     @GET
     @Path("/user")
     public async getUserDocuments(): Promise<NRDocument[]> {
+        console.log("CALLED USER ENDPOINT");
         const usr = await this.serviceContext.user();
         const docs = new Set<NRDocument>();
 
-        // Group permissions..
+        // Group permissions.
         const ar = await this.usServ.getUserRoles(usr.id);
         for (const rl of ar) {
             const stp = await this.stPRep.find({ relations: ["stage"],
@@ -160,7 +160,10 @@ export class DocumentResource {
                                                           role: rl } });
 
             for (const st of stp) {
-                docs.add(await this.dcRep.findOne({ where: { stage: st.stage }}));
+                const stdocs = await this.dcRep.find({ where: { stage: st.stage }});
+                for (const dc of stdocs) {
+                    docs.add(dc);
+                }
             }
         }
 
@@ -186,6 +189,7 @@ export class DocumentResource {
     @Path("/:did")
     public async getDocument(@PathParam("did") did: number): Promise<NRDocument> {
         const user = await this.serviceContext.user();
+        console.log("CALLED INDIV ENDPOINT");
         const dc = await this.dcServ.getDocument(did);
         const dcwst = await this.dcRep.findOne(dc.id, { relations: ["stage", "workflow", "workflow.stages"] });
 
@@ -210,6 +214,7 @@ export class DocumentResource {
     @GET
     @Path("/author/:aid")
     public async getDocumentsForAuthor(@PathParam("aid") aid: number): Promise<NRDocument[]> {
+        console.log("CALLED AUTHOR ENDPOINT");
         const user = await this.usServ.getUser(aid);
         const udcs = await this.dcRep.find({ where: { creator: user } });
 
@@ -234,6 +239,7 @@ export class DocumentResource {
     @GET
     @Path("/stage/:sid")
     public async getAllDocumentsForStage(@IsInt @PathParam("sid") sid: number): Promise<NRDocument[]> {
+        console.log("CALLED STAGE ENDPOINT");
         const st = await this.wfServ.getStage(sid);
 
         return await this.dcRep.find({ where: { stage: st } });
@@ -257,6 +263,7 @@ export class DocumentResource {
     @GET
     @Path("/workflow/:wid")
     public async getAllDocumentsForWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRDocument[]> {
+        console.log("CALLED WORKFLOW ENDPOINT");
         const wf = await this.wfServ.getWorkflow(wid);
 
         return await this.dcRep.find({ where: { workflow: wf } });
@@ -280,6 +287,7 @@ export class DocumentResource {
     @GET
     @Path("/all/orphan/docs")
     public async getAllOrphanDocuments(): Promise<NRDocument[]> {
+        console.log("CALLED ORPHANS ENDPOINT");
         return await this.dcRep.find( { where: [ { stage: IsNull(),
                                                    workflow: IsNull() } ] });
     }

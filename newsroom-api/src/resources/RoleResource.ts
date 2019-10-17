@@ -217,17 +217,14 @@ export class RoleResource {
                                  @IsInt @PathParam("sid") sid: number,
                                  access: any): Promise<NRSTPermission> {
         let perm: NRSTPermission;
-        let st: NRStage;
-        let rl: NRRole;
+
+        const st = await this.wfServ.getStage(sid);
+        const rl = await this.rlServ.getRole(rid);
 
         try {
-            perm = await this.permServ.getSTPermissionFromSTRL(sid, rid);
-            st = perm.stage;
-            rl = perm.role;
+            perm = await this.permServ.getSTPermissionFromSTRL(st, rl);
         } catch (NotFoundError) {
             perm = new NRSTPermission();
-            rl = await this.rlServ.getRole(rid);
-            st = await this.wfServ.getStage(sid);
         }
 
         perm.access = access.access;

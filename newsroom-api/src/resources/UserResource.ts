@@ -18,7 +18,7 @@ import {
     NRRole,
     NRSTPermission,
     NRUser,
-    NRWFPermission
+    NRWFPermission,
 } from "../entity";
 import { RoleService } from "../services/RoleService";
 import { UserService } from "../services/UserService";

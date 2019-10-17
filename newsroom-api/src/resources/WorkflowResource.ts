@@ -48,7 +48,7 @@ export class WorkflowResource {
      *          "description": <string>
      *      }
      *          - name: Must be unique versus other names.
-                - The logged in user must be an admin to create workflows.
+     *          - The logged in user must be an admin to create workflows.
      *
      * response:
      *      - NRWorkflow object with the following relations:
@@ -70,15 +70,15 @@ export class WorkflowResource {
 
                 return wfdb;
             } else {
-                throw new Errors.ForbiddenError('Only administrators can create workflows.')
+                throw new Errors.ForbiddenError("Only administrators can create workflows.");
             }
         } catch (err) {
             if (err instanceof Errors.ForbiddenError) {
                 throw err;
-            } 
+            }
 
             console.error(err);
-            const errStr = 'Error creating workflow.';
+            const errStr = "Error creating workflow.";
             throw new Errors.InternalServerError(errStr);
         }
     }
@@ -142,7 +142,7 @@ export class WorkflowResource {
         //      1. Are the permissions returned with a stage for moving or editing?
         //          - i.e. They are overridden by workflow for editing, but not for moving.
         // await this.wfServ.matchSTPermToWF(wf);
-        
+
         return wf;
     }
 
