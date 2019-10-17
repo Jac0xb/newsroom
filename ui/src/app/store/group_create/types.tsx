@@ -8,7 +8,7 @@ export interface GroupCreateReducerState {
     fetchedStages: NRStage[]
     fetchedUsers: NRUser[]
     selectedItems : string[]
-    selectedUsers: { name: string, id: number }[]
+    selectedUsers: NRUser[]
     name?: string
     description?: string
     pending: boolean

@@ -1,7 +1,7 @@
 import * as express from "express";
 import { Errors } from "typescript-rest";
 import { NRTrigger } from "../entity";
-import { NRTriggerType } from "../entity/NRTrigger";
+import { NRTriggerType } from "../interfaces/NRTrigger";
 
 export function createTriggerValidator(req: express.Request): void {
     const trigger = req.body as NRTrigger;

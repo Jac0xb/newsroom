@@ -1,7 +1,3 @@
-import "reflect-metadata";
-
-export { DBConstants } from "./DBConstants";
-
 export { NRRole } from "./NRRole";
 export { NRUser } from "./NRUser";
 export { NRStage } from "./NRStage";
@@ -13,6 +9,6 @@ export { NRSTPermission } from "./NRSTPermission";
 export { NRWFUSPermission } from "./NRWFUSPermission";
 export { NRDCUSPermission } from "./NRDCUSPermission";
 export { NRSTUSPermission } from "./NRSTUSPermission";
-export { NRTrigger } from "./NRTrigger";
+export { NRTrigger, NRTriggerType } from "./NRTrigger";
 export { NRUserSummary } from "./NRUserSummary";
 export { NRDocComment } from "./NRDocComment";

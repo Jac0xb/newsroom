@@ -1,5 +1,7 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 
+import { NRSTUSPermission as INRSTUSPermission } from "../interfaces";
+
 import { DBConstants } from "./DBConstants";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
@@ -8,7 +10,7 @@ import { NRUser } from "./NRUser";
  * NRSTUSPermission objects track permissions between stages and users.
  */
 @Entity(DBConstants.STUSPERM_TABLE)
-export class NRSTUSPermission {
+export class NRSTUSPermission implements INRSTUSPermission {
     @PrimaryGeneratedColumn()
     public id: number;
 

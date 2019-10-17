@@ -1,12 +1,14 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 
+import { NRWFPermission as INRWFPermission } from "../interfaces";
+
 import { DBConstants } from "./DBConstants";
 import { NRRole } from "./NRRole";
 import { NRWorkflow } from "./NRWorkflow";
 
 // NRWFPermission objects track permissions between workflows and roles.
 @Entity(DBConstants.WFPERM_TABLE)
-export class NRWFPermission {
+export class NRWFPermission implements INRWFPermission {
     @PrimaryGeneratedColumn()
     public id: number;
 

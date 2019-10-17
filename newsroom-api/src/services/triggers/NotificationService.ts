@@ -2,7 +2,7 @@ import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRDocument, NRTrigger, NRWorkflow } from "../../entity";
-import { NRTriggerType } from "../../entity/NRTrigger";
+import { NRTriggerType } from "../../interfaces/NRTrigger";
 import { SlackNotificationService } from "./slack/SlackNotificationService";
 
 @Service()

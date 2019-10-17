@@ -8,6 +8,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import { NRRole as INRRole } from "../interfaces";
+
 import { DBConstants } from "./DBConstants";
 import { NRDCPermission } from "./NRDCPermission";
 import { NRSTPermission } from "./NRSTPermission";
@@ -16,7 +18,7 @@ import { NRWFPermission } from "./NRWFPermission";
 
 // NRRole objects group sets of users and tie them to permissions.
 @Entity(DBConstants.ROLE_TABLE)
-export class NRRole {
+export class NRRole implements INRRole {
     @PrimaryGeneratedColumn()
     public id: number;
 

@@ -1,6 +1,8 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne,
          OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
+import { NRStage as INRStage } from "./../interfaces";
+
 import { DBConstants } from "./DBConstants";
 import { NRDocument } from "./NRDocument";
 import { NRSTPermission } from "./NRSTPermission";
@@ -12,7 +14,8 @@ import { NRWorkflow } from "./NRWorkflow";
  * NRStage objects are pieced together to make a workflow.
  */
 @Entity(DBConstants.STGE_TABLE)
-export class NRStage {
+export class NRStage implements INRStage {
+
     @PrimaryGeneratedColumn()
     public id: number;
 
