@@ -470,7 +470,6 @@ describe("4. PUT /api/workflows/:wid", () => {
             await verifyWFDB(adminUsr, wfr, false);
 
             await verifySTSDB(adminUsr, wf.stages, wf);
-            await verifySTSDB(adminUsr, wfr.stages, wfr);
 
             // Create a group and give the user mixed permissions.
             const wfPerm = ((i % 2) === 0) ? "READ" : "WRITE";
