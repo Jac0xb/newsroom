@@ -9,11 +9,13 @@ import { NRUser } from "./NRUser";
 import { NRWFPermission } from "./NRWFPermission";
 import { NRWFUSPermission } from "./NRWFUSPermission";
 
+import { NRWorkflow as INRWorkflow } from "./../models";
+
 /**
  * NRWorkflow objects are made up by stages used to track documents.
  */
 @Entity(DBConstants.WRKF_TABLE)
-export class NRWorkflow {
+export class NRWorkflow implements INRWorkflow {
     @PrimaryGeneratedColumn()
     public id: number;
 

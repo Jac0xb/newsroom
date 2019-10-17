@@ -1,4 +1,5 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import { NRDCUSPermission as INRDCUSPermission } from "../interfaces";
 
 import { DBConstants } from "./DBConstants";
 import { NRDocument } from "./NRDocument";
@@ -8,7 +9,7 @@ import { NRUser } from "./NRUser";
  * NRDCUSPermission objects track permissions between documents and users.
  */
 @Entity(DBConstants.DCUSPERM_TABLE)
-export class NRDCUSPermission {
+export class NRDCUSPermission implements INRDCUSPermission {
     @PrimaryGeneratedColumn()
     public id: number;
 

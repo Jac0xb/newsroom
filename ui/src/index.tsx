@@ -8,6 +8,7 @@ import { createBrowserHistory } from 'history';
 import 'style-loader';
 import 'css-loader';
 import '../node_modules/antd/dist/antd.css';
+import * as ReflectMetadata from 'reflect-metadata';
 
 const history = createBrowserHistory();
 const store = configureStore();

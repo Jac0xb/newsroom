@@ -1,4 +1,5 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { NRDCPermission as INRDCPermission } from "../interfaces";
 
 import { DBConstants } from "./DBConstants";
 import { NRDocument } from "./NRDocument";
@@ -6,7 +7,8 @@ import { NRRole } from "./NRRole";
 
 // NRDCPermission objects track permissions between documents and roles.
 @Entity(DBConstants.DCPERM_TABLE)
-export class NRDCPermission {
+export class NRDCPermission implements INRDCPermission {
+
     @PrimaryGeneratedColumn()
     public id: number;
 

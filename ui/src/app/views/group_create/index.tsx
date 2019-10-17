@@ -8,6 +8,7 @@ import { compose } from 'recompose';
 import { TreeSelect, Select } from 'antd';
 import { Typography as AntTypography } from 'antd';
 import { Input } from 'antd';
+import { NRRole, NRUser, NRWorkflow, NRStage, NRWFPermission, NRSTPermission } from 'app/utils/models'
 const { Option } = Select;
 const { TextArea } = Input;
 import _ from 'lodash';
@@ -45,13 +46,12 @@ export namespace GroupCreate {
         /**
          * TODO: Documentation
          */
-        onSubmit() {
+        async onSubmit() {
 
             this.props.induceFlash();
 
-            var users: { id: number }[] = [];
-            var wfpermissions: GroupCreate.SimplePermission[] = [];
-            var stpermissions: GroupCreate.SimplePermission[] = [];
+            var wfpermissions: NRWFPermission[] = [];
+            var stpermissions: NRSTPermission[] = [];
 
             if (this.props.selectedItems.length == 0) {
                 this.props.induceFlash("You have not given this group any permissions.");
@@ -66,45 +66,55 @@ export namespace GroupCreate {
             this.props.selectedItems.map((item) => {
                 
                 var regex = /^([0-9]{1,})-{0,1}([0-9]{1,}){0,1}$/
-                var match = regex.exec(item)
+                var match = regex.exec(item);
                 
                 if (match && match[1] != undefined && match[2] == undefined) {
-                    wfpermissions.push({ id: parseInt(match[0]), access: 1 })
-                }
-                if (match && match[2] != undefined) {
-                    stpermissions.push({ id: parseInt(match[1]), access: 1 })
+                    /*wfpermissions.push(new NRWFPermission({
+                        id: parseInt(match[0]),
+                        access: 1
+                    }));*/
+                } 
+                else if (match && match[2] != undefined) {
+                    /*stpermissions.push(new NRSTPermission({ 
+                        id: parseInt(match[1]), 
+                        access: 1 
+                    }));*/
                 }
             })
 
-            users = this.props.selectedUsers.map((users) => {
-                return {id: users.id}
+            var users = this.props.selectedUsers.map((users) => {
+                return {id: users.id} as NRUser;
             })
 
-            const newRole = {
-                name: this.props.name,
-                description: this.props.description,
-                users
+            var newRole : Partial<NRRole> = {
+                name: this.props.name || "",
+                description: this.props.description || "",
+                users,
+                wfpermissions: [],
+                stpermissions: []
             };
             
             // TODO: Extract API call out.
-            axios.post("/api/roles", newRole).then(async (response: any) => {
-                
-                var roleId = response.data.id
+            
+            try {
 
-                for (var i = 0; i < wfpermissions.length; i++) {
-                    await axios.put(`/api/roles/${roleId}/workflow/${wfpermissions[i].id}`, {access: wfpermissions[i].access})
-                }
-                for (var i = 0; i < stpermissions.length; i++) {
-                    await axios.put(`/api/roles/${roleId}/stage/${stpermissions[i].id}`, {access: stpermissions[i].access})
-                }
+                var responseRole = await axios.post<NRRole>("/api/roles", newRole);
 
-                if (response) {
-                    this.props.induceSubmission();
-                }
+                //for (var i = 0; i < wfpermissions.length; i++) {
+                //    await axios.put(`/api/roles/${responseRole.data.id}/workflow/${wfpermissions[i].id}`, {access: wfpermissions[i].access})
+                //}
+                //for (var i = 0; i < stpermissions.length; i++) {
+                //    await axios.put(`/api/roles/${responseRole.data.id}/stage/${stpermissions[i].id}`, {access: stpermissions[i].access})
+                //}
 
-            }).catch((error) => {
-                this.props.induceFlash(error.response.data.message || "Something has gone terribly wrong. We don't even know.");
-            });
+                //if (responseRole) {
+                //    this.props.induceSubmission();
+                //}
+
+            }
+            catch (err) {
+                this.props.induceFlash(err.response.data.message || "Something has gone terribly wrong. We don't even know.");
+            }
         }
 
         renderUsers() {

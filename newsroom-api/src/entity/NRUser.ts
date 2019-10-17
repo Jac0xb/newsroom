@@ -7,11 +7,13 @@ import { NRRole } from "./NRRole";
 import { NRSTUSPermission } from "./NRSTUSPermission";
 import { NRWFUSPermission } from "./NRWFUSPermission";
 
+import { NRUser as INRUser } from "./../models";
+
 /**
  * NRUser objects are used to track information about any user of the system.
  */
 @Entity(DBConstants.USER_TABLE)
-export class NRUser {
+export class NRUser implements INRUser {
     @PrimaryGeneratedColumn()
     public id: number;
 

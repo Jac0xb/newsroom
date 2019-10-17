@@ -4,11 +4,13 @@ import { DBConstants } from "./DBConstants";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
 
+import { NRWFUSPermission as INRWFUSPermission } from "./../models";
+
 /**
  * NRWFUSPermission objects track permissions between workflows and users.
  */
 @Entity(DBConstants.WFUSPERM_TABLE)
-export class NRWFUSPermission {
+export class NRWFUSPermission implements INRWFUSPermission {
     @PrimaryGeneratedColumn()
     public id: number;
 

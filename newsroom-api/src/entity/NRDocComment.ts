@@ -2,11 +2,13 @@ import { Column, CreateDateColumn, Entity, Index, JoinColumn,
          JoinTable, ManyToOne, OneToMany, PrimaryColumn,
          PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
+import { NRDocComment as INRDocComment } from "../interfaces";
+
 import { DBConstants } from "./DBConstants";
 import { NRDocument } from "./NRDocument";
 
 @Entity(DBConstants.DCCOMM_TABLE)
-export class NRDocComment {
+export class NRDocComment implements INRDocComment {
     @PrimaryGeneratedColumn()
     @PrimaryColumn()
     public id: number;

@@ -12,6 +12,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import { NRDocument as INRDocument } from "./../models";
+
 import { DBConstants } from "./DBConstants";
 import { NRDCPermission } from "./NRDCPermission";
 import { NRDCUSPermission } from "./NRDCUSPermission";
@@ -21,7 +23,7 @@ import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
 
 @Entity(DBConstants.DOCU_TABLE)
-export class NRDocument {
+export class NRDocument implements INRDocument {
     @PrimaryGeneratedColumn()
     @PrimaryColumn()
     public id: number;

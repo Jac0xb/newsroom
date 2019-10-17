@@ -2,8 +2,10 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { NRDocument } from "./NRDocument";
 import { NRWorkflow } from "./NRWorkflow";
 
+import { NRTrigger as INRTrigger, NRTriggerType } from "./../models";
+
 @Entity()
-export class NRTrigger {
+export class NRTrigger implements INRTrigger {
     @PrimaryGeneratedColumn()
     public id: number;
 
@@ -29,8 +31,4 @@ export class NRTrigger {
         (workflow) => workflow.id,
     )
     public workflows: NRWorkflow[];
-}
-
-export enum NRTriggerType {
-    SLACK = "slack",
 }
