@@ -89,7 +89,8 @@ export class RoleResource {
     @GET
     public async getAllRoles(): Promise<NRRole[]> {
         try {
-            return await this.rlRep.find();
+            return await this.rlRep.find({ relations: ["stpermissions", "stpermissions.stage",
+                                                       "wfpermissions", "wfpermissions.workflow"] });
         } catch (err) {
             console.log(err);
 
