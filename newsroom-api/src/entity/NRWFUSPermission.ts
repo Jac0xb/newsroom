@@ -4,7 +4,7 @@ import { DBConstants } from "./DBConstants";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
 
-import { NRWFUSPermission as INRWFUSPermission } from "./../models";
+import { NRWFUSPermission as INRWFUSPermission } from "../interfaces";
 
 /**
  * NRWFUSPermission objects track permissions between workflows and users.

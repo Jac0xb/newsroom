@@ -15,7 +15,7 @@ import {
     NRTrigger as INRTrigger, 
     NRUserSummary as INRUserSummary,
     NRDocComment as INRDocComment
-} from "./../../../../newsroom-api/src/interfaces";
+} from "../../../../newsroom-api/src/interfaces";
 
 
 export class NRRole implements INRRole {
@@ -200,7 +200,7 @@ export class NRSTUSPermission implements INRSTUSPermission {
  
 export class NRTrigger implements INRTrigger {
     id: number;    name: string;
-    type: import("../../../../newsroom-api/src/models/NRTrigger").NRTriggerType;
+    type: import("../../../../newsroom-api/src/interfaces/NRTrigger").NRTriggerType;
     channelName: string;
     documents: INRDocument[];
     workflows: INRWorkflow[];

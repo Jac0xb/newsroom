@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne,
          OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-import { NRStage as INRStage } from "./../models";
+import { NRStage as INRStage } from "./../interfaces";
 
 import { DBConstants } from "./DBConstants";
 import { NRDocument } from "./NRDocument";

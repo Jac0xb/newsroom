@@ -1,6 +1,6 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 
-import { NRSTPermission as INRSTPermission } from "./../models";
+import { NRSTPermission as INRSTPermission } from "../interfaces";
 
 import { DBConstants } from "./DBConstants";
 import { NRRole } from "./NRRole";

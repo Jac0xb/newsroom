@@ -69,10 +69,10 @@ export namespace GroupCreate {
                 var match = regex.exec(item);
                 
                 if (match && match[1] != undefined && match[2] == undefined) {
-                    /*wfpermissions.push(new NRWFPermission({
+                    wfpermissions.push(new NRWFPermission({
                         id: parseInt(match[0]),
                         access: 1
-                    }));*/
+                    }));
                 } 
                 else if (match && match[2] != undefined) {
                     /*stpermissions.push(new NRSTPermission({ 

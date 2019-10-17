@@ -9,7 +9,7 @@ import { NRUser } from "./NRUser";
 import { NRWFPermission } from "./NRWFPermission";
 import { NRWFUSPermission } from "./NRWFUSPermission";
 
-import { NRWorkflow as INRWorkflow } from "./../models";
+import { NRWorkflow as INRWorkflow } from "../interfaces";
 
 /**
  * NRWorkflow objects are made up by stages used to track documents.

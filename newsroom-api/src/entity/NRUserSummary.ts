@@ -1,6 +1,6 @@
 import { NRRole, NRStage, NRWorkflow } from ".";
 
-import { NRUserSummary as INRUserSummary } from "./../models";
+import { NRUserSummary as INRUserSummary } from "../interfaces";
 
 export class NRUserSummary implements INRUserSummary {
     public userWriteWorkflows: Set<NRWorkflow>;

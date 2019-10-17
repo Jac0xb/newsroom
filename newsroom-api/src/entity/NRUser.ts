@@ -7,7 +7,7 @@ import { NRRole } from "./NRRole";
 import { NRSTUSPermission } from "./NRSTUSPermission";
 import { NRWFUSPermission } from "./NRWFUSPermission";
 
-import { NRUser as INRUser } from "./../models";
+import { NRUser as INRUser } from "../interfaces";
 
 /**
  * NRUser objects are used to track information about any user of the system.

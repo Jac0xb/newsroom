@@ -12,7 +12,7 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { NRDocument as INRDocument } from "./../models";
+import { NRDocument as INRDocument } from "../interfaces";
 
 import { DBConstants } from "./DBConstants";
 import { NRDCPermission } from "./NRDCPermission";
