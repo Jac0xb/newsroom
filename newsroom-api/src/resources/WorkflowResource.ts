@@ -45,16 +45,14 @@ export class WorkflowResource {
      * request:
      *      {
      *          "name": <string>,
-     *          "description": <string>,
-     *          "permission": <number>
+     *          "description": <string>
      *      }
      *          - name: Must be unique versus other names.
-     *          - permission: 1 to create with WRITE, 0 to create with READ, or not passed at all.
-     *                        This permission is created for the logged in user only, not related to groups.
+                - The logged in user must be an admin to create workflows.
      *
      * response:
      *      - NRWorkflow object with the following relations:
-     *          - permission: The READ/WRITE permissions of the user for this workflow.
+     *          - None.
      */
     @POST
     @PreProcessor(createWorkflowValidator)
@@ -135,10 +133,17 @@ export class WorkflowResource {
         let wf = await this.wfServ.getWorkflow(wid);
         wf = await this.wfServ.addStageRelationsToWF(wf);
 
-        // User can edit any stage based on permissions to the workflow itself.
-        const wfr = await this.wfServ.appendPermToWF(wf, user);
-        this.wfServ.matchSTPermToWF(wfr);
-        return wfr;
+        // Only admins can edit the workflows, so match the stage permissions to the workflow
+        // permissions.
+        await this.wfServ.appendPermToWF(wf, user);
+        await this.wfServ.appendPermToSTS(wf.stages, user);
+
+        // TODO: Decide what we want to do here:
+        //      1. Are the permissions returned with a stage for moving or editing?
+        //          - i.e. They are overridden by workflow for editing, but not for moving.
+        // await this.wfServ.matchSTPermToWF(wf);
+        
+        return wf;
     }
 
     /**

@@ -231,6 +231,8 @@ export class RoleResource {
         }
 
         perm.access = access.access;
+        perm.stage = st;
+        perm.role = rl;
 
         await this.stRep.save(st);
         await this.rlRep.save(rl);

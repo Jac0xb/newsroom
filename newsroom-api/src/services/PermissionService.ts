@@ -120,7 +120,7 @@ export class PermissionService {
     public async getWFPermForUser(wf: NRWorkflow, user: NRUser): Promise<number> {
         let allowed = false;
         
-        if (await this.isUserAdmin(user) === true) {
+        if (await this.isUserAdmin(user)) {
             return DBConstants.WRITE;
         }
 
@@ -155,6 +155,10 @@ export class PermissionService {
     // DONE.
     public async getSTPermForUser(st: NRStage, user: NRUser): Promise<number> {
         let allowed = false;
+
+        if (await this.isUserAdmin(user)) {
+            return DBConstants.WRITE;
+        }
 
         const allRoles = await this.usServ.getUserRoles(user.id);
 
@@ -192,8 +196,9 @@ export class PermissionService {
     // DONE.
     public async checkWFWritePermissions(user: NRUser, wf: NRWorkflow) {
         const allowed = await this.getWFPermForUser(wf, user);
+        const admin = await this.isUserAdmin(user);
 
-        if (!(allowed)) {
+        if ((!(allowed)) && (!(admin))) {
             const errStr = `User with ID ${user.id} does not have WF write permissions.`;
             throw new Errors.ForbiddenError(errStr);
         }
@@ -202,8 +207,9 @@ export class PermissionService {
     // DONE.
     public async checkSTWritePermissions(user: NRUser, st: NRStage) {
         const allowed = await this.getSTPermForUser(st, user);
+        const admin = await this.isUserAdmin(user);
 
-        if (!(allowed)) {
+        if ((!(allowed)) && (!(admin))) {
             const errStr = `User with ID ${user.id} does not have ST write permissions.`;
             throw new Errors.ForbiddenError(errStr);
         }

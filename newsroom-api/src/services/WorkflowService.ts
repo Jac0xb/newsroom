@@ -68,7 +68,12 @@ export class WorkflowService {
 
     public async appendPermToWFS(wfs: NRWorkflow[], user: NRUser): Promise<NRWorkflow[]> {
         for (let wf of wfs) {
+            if (wf.stages === undefined) {
+                wf.stages = [];
+            }
+            
             wf = await this.appendPermToWF(wf, user);
+            await this.appendPermToSTS(wf.stages, user);
         }
 
         return wfs;

@@ -266,7 +266,11 @@ export class UserResource {
         const usdb = await this.usRep.findOne(user.id, {relations: ["roles"]});
         usdb.roles.push(role);
 
+        const rldb = await this.rlRep.findOne(role.id, {relations: ["users"]});
+        rldb.users.push(user);
+
         try {
+            await this.rlRep.save(rldb);
             return await this.usRep.save(usdb);
         } catch (err) {
             console.log(err);
