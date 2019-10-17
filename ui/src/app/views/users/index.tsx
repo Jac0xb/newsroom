@@ -42,6 +42,7 @@ class Users extends React.Component<Users.Props, Users.State> {
         return (
             <React.Fragment>
                 <MaterialTable
+                    title="Users"
                     columns={[
                         {title: "Avatar", render: Users.getUserAvatar},
                         {title: "User Name", render: Users.getUserName},
@@ -51,7 +52,7 @@ class Users extends React.Component<Users.Props, Users.State> {
                         {title: "", render: (user: NRUser) => this.deleteUser.bind(this)(user)}
                     ]}
                     data={users}
-                    title="Users"/>
+                />
             </React.Fragment>
         );
     }

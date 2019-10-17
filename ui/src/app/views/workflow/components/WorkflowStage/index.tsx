@@ -4,6 +4,7 @@ import { styles } from './styles'
 import { Paper, Typography, Divider, Grid, Menu, MenuItem, IconButton } from '@material-ui/core';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import { DocumentTileComponent } from 'app/views/dashboard/components/DocumentTile';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import MaterialTable from 'material-table';
 import { NRDocument } from 'app/utils/models';
@@ -43,10 +44,8 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
 
   // Get documents for this stage from database
   getDocuments() {
-    var stageDocuments: Array<NRDocument> = []
 
 		axios.get("/api/documents/stage/" + this.props.id).then((response) => {
-      console.log(response.data)
       // var documents: Array<NRDocument>[] = response.data
 
       // Get all documents for this stage
@@ -58,7 +57,7 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
     //     }
     //   });
       
-		// 	this.setState({ stageDocuments })
+			this.setState({ stageDocuments: response.data })
 		});
   }
   
@@ -70,6 +69,14 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
     this.setState({ openMenu: false, anchorEl: null });
   }
 
+  static getStageDocs(doc: NRDocument) {
+    return (
+      <Link style={{ textDecoration: "none" }} to={`/document/${doc.id}/edit`}>
+        {doc.name}
+      </Link>
+    )
+}
+
   render() {
 
     const { classes, show, index } = this.props;
@@ -78,23 +85,30 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
     // Get most up-to-date documents list
     // this.getDocuments();
 
-    const docList = stageDocuments.map((document, i) =>
-			<DocumentTileComponent key={i} document={document} compressed={true} onDelete={() => {}} />
-    );
+    // const docList = stageDocuments.map((document, i) =>
+		// 	<DocumentTileComponent key={i} document={document} compressed={true} onDelete={() => {}} />
+    // );
 
     return (
       <main className={classes.layout}>
         {
           show == index ? 
             <MaterialTable
+              title="Documents"
               columns={[
-                  {title: "Aricle", field: "name"},
+                  {title: "Aricle", render: WorkflowStage.getStageDocs},
                   {title: "Assinged", field: "assinged"},
                   {title: "Due", field: "due"},
-                  // {title: "", render: (user: NRUser) => this.deleteUser.bind(this)(user)}
               ]}
-              data={docList}
-              title="Documents"/>
+              data={stageDocuments}
+              actions={[
+                {
+                  icon: 'edit',
+                  tooltip: 'Edit',
+                  onClick: (event, rowData) => console.log(rowData) //todo
+                }
+              ]}
+              />
           : null
         }
         {/* {
