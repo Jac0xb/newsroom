@@ -1199,23 +1199,23 @@ describe("12. POST /api/documents", () => {
         await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
     });
 
-   it("Test creating documents without any permissions.", async () => {
+    it("Test creating documents without any permissions.", async () => {
         const wfNum = 5;
         const stNum = 5;
         const dcNum = 3;
-     
+
         const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
         await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
 
         await addDocsToWFSStages(usr1, wfs, dcNum, 403);
    });
 
-   it("Test creating documents with READ permissions on the workflow.", async () => {
+    it("Test creating documents with READ permissions on the workflow.", async () => {
         const wfNum = 3;
         const stNum = 3;
         const dcNum = 3;
         const grpName = "g";
-     
+
         const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
         await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
 
@@ -1229,12 +1229,12 @@ describe("12. POST /api/documents", () => {
         }
     });
 
-   it("Test creating documents with WRITE permissions on the workflow.", async () => {
+    it("Test creating documents with WRITE permissions on the workflow.", async () => {
         const wfNum = 3;
         const stNum = 3;
         const dcNum = 3;
         const grpName = "g";
-     
+
         const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
         await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
 
@@ -1253,7 +1253,7 @@ describe("12. POST /api/documents", () => {
         const stNum = 3;
         const dcNum = 3;
         const grpName = "g";
-     
+
         const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
         await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
 
@@ -1277,7 +1277,7 @@ describe("12. POST /api/documents", () => {
         const stNum = 3;
         const dcNum = 3;
         const grpName = "g";
-     
+
         const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
 
         for (const wf of wfs) {
@@ -1303,7 +1303,7 @@ describe("12. POST /api/documents", () => {
         const stNum = 3;
         const dcNum = 3;
         const grpName = "g";
-    
+
         const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
         await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
 
@@ -1333,7 +1333,7 @@ describe("12. POST /api/documents", () => {
             await verifyDCResp(dc, dcr, st, wf);
             await verifyDCDB(dcr, st, wf);
         }
-   });   
+   });
 });
 
 describe("13. GET /api/documents", () => {
@@ -1407,7 +1407,7 @@ describe("13. GET /api/documents", () => {
                 for (let i = 0; i < dcNum; i++) {
                     const dc = st.documents[i];
                     const dch = dcrs.find((x) => x.id === dc.id);
-                    
+
                     await verifyDCDB(dc, st, wf);
                     await verifyDCDB(dch, st, wf);
                     await verifyDCResp(dc, dch, st, wf);
@@ -1423,9 +1423,9 @@ describe("14. GET /api/documents/user", () => {
         const stNum = 3;
         const dcNum = 2;
 
-        const grp1 = 'g1';
-        const grp2 = 'g2';
-        const grp3 = 'g3';
+        const grp1 = "g1";
+        const grp2 = "g2";
+        const grp3 = "g3";
 
         const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
         await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
@@ -1475,7 +1475,6 @@ describe("14. GET /api/documents/user", () => {
         dcrs = resp.body;
         expect(dcrs.length).toEqual(0);
 
-
         resp = await request(app)
                      .get(`/api/documents/user/${usr3.id}`)
                      .set("User-Id", `${usr3.id}`);
@@ -1510,7 +1509,7 @@ describe("15. GET /api/documents/:did", () => {
 
         await setWFSSTSPermsForGroup(adminUsr, grpName, wfs, "WRITE", 200, [Math.floor(stNum / 2)]);
         await addUserToGroup(adminUsr, grpName, usr1, 200);
-        
+
         for (const wf of wfs) {
             for (const st of wf.stages) {
                 for (const dc of st.documents) {
@@ -1546,7 +1545,7 @@ describe("16. GET /api/documents/author/:aid", () => {
 
         await setWFSSTSPermsForGroup(adminUsr, grpName, wfs, "WRITE", 200, []);
         await addUserToGroup(adminUsr, grpName, usr1, 200);
-        
+
         // Documents created by user.
         await addDocsToStage(usr1, wfs[0].stages[0], dcNum, 200);
         await addDocsToStage(usr1, wfs[1].stages[0], dcNum, 200);
@@ -1609,7 +1608,7 @@ describe("17. GET /api/documents/stage/:sid", () => {
 
                 expect(resp).not.toBeUndefined();
                 expect(resp.status).toEqual(200);
-                
+
                 const dcrs: NRDocument[] = resp.body;
                 expect(dcrs.length).toEqual(dcNum);
 
@@ -1644,7 +1643,7 @@ describe("18. GET /api/documents/workflow/:wid", () => {
 
             expect(resp).not.toBeUndefined();
             expect(resp.status).toEqual(200);
-            
+
             const dcrs: NRDocument[] = resp.body;
             expect(dcrs.length).toEqual(expDocNum);
 
@@ -1691,7 +1690,7 @@ describe("19. GET /api/documents/orphan", () => {
 
             expect(resp).not.toBeUndefined();
             expect(resp.status).toEqual(200);
-            
+
             const dcrs: NRDocument[] = resp.body;
             expect(dcrs.length).toEqual(expDocNum);
 
@@ -1947,8 +1946,498 @@ describe("23. PUT /api/documents/:did/prev", () => {
     });
 });
 
-// Group tests.
+// User tests.
+describe("24. PUT /api/users/:uid", () => {
+    it("Test updating a user as an admin.", async () => {
+        const tstUsr = new NRUser();
+        tstUsr.id = usrSeq;
+        usrSeq++;
 
+        tstUsr.firstName = "Test";
+        tstUsr.lastName = "User";
+        tstUsr.userName = "tuser";
+        tstUsr.email = "tuser@newsroom.com";
+        tstUsr.admin = "N";
+        await usrRep.save(tstUsr);
+
+        tstUsr.firstName = "dsfasfd";
+        tstUsr.lastName = "sadfsafds";
+        tstUsr.userName = "asdfasfdsad";
+
+        const resp = await request(app)
+                           .put(`/api/users/${tstUsr.id}`)
+                           .send(tstUsr)
+                           .set("User-Id", `${adminUsr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(200);
+
+        const usdb = await usrRep.findOne(tstUsr.id);
+        expect(usdb).not.toBeUndefined();
+        expect(usdb.firstName).toEqual(tstUsr.firstName);
+        expect(usdb.lastName).toEqual(tstUsr.lastName);
+        expect(usdb.userName).toEqual(tstUsr.userName);
+    });
+
+    it("Test updating a user as themselves.", async () => {
+        const tstUsr = new NRUser();
+        tstUsr.id = usrSeq;
+        usrSeq++;
+
+        tstUsr.firstName = "Test";
+        tstUsr.lastName = "User";
+        tstUsr.userName = "tuser";
+        tstUsr.email = "tuser@newsroom.com";
+        tstUsr.admin = "N";
+        await usrRep.save(tstUsr);
+
+        tstUsr.firstName = "dsfasfd";
+        tstUsr.lastName = "sadfsafds";
+        tstUsr.userName = "asdfasfdsad";
+
+        const resp = await request(app)
+                           .put(`/api/users/${tstUsr.id}`)
+                           .send(tstUsr)
+                           .set("User-Id", `${tstUsr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(200);
+
+        const usdb = await usrRep.findOne(tstUsr.id);
+        expect(usdb).not.toBeUndefined();
+        expect(usdb.firstName).toEqual(tstUsr.firstName);
+        expect(usdb.lastName).toEqual(tstUsr.lastName);
+        expect(usdb.userName).toEqual(tstUsr.userName);
+    });
+
+    it("Test updating a user without permissions.", async () => {
+        const tstUsr = new NRUser();
+        tstUsr.id = usrSeq;
+        usrSeq++;
+
+        tstUsr.firstName = "Test";
+        tstUsr.lastName = "User";
+        tstUsr.userName = "tuser";
+        tstUsr.email = "tuser@newsroom.com";
+        tstUsr.admin = "N";
+        await usrRep.save(tstUsr);
+
+        const usrbk = JSON.parse(JSON.stringify(tstUsr));
+
+        tstUsr.firstName = "dsfasfd";
+        tstUsr.lastName = "sadfsafds";
+        tstUsr.userName = "asdfasfdsad";
+
+        const resp = await request(app)
+                           .put(`/api/users/${tstUsr.id}`)
+                           .send(tstUsr)
+                           .set("User-Id", `${usr1.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(403);
+
+        const usdb = await usrRep.findOne(tstUsr.id);
+        expect(usdb).not.toBeUndefined();
+        expect(usdb.firstName).toEqual(usrbk.firstName);
+        expect(usdb.lastName).toEqual(usrbk.lastName);
+        expect(usdb.userName).toEqual(usrbk.userName);
+    });
+});
+
+describe("25. DELETE /api/users/:uid", () => {
+    it("Test deleting a user as an admin.", async () => {
+        const tstUsr = new NRUser();
+        tstUsr.id = usrSeq;
+        usrSeq++;
+
+        tstUsr.firstName = "Test";
+        tstUsr.lastName = "User";
+        tstUsr.userName = "tuser";
+        tstUsr.email = "tuser@newsroom.com";
+        tstUsr.admin = "N";
+        await usrRep.save(tstUsr);
+
+        const resp = await request(app)
+                           .delete(`/api/users/${tstUsr.id}`)
+                           .set("User-Id", `${adminUsr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(204);
+
+        const usdb = await usrRep.findOne(tstUsr.id);
+        expect(usdb).toBeUndefined();
+    });
+
+    it("Test deleting a user without permissions.", async () => {
+        const tstUsr = new NRUser();
+        tstUsr.id = usrSeq;
+        usrSeq++;
+
+        tstUsr.firstName = "Test";
+        tstUsr.lastName = "User";
+        tstUsr.userName = "tuser";
+        tstUsr.email = "tuser@newsroom.com";
+        tstUsr.admin = "N";
+        await usrRep.save(tstUsr);
+
+        const resp = await request(app)
+                           .delete(`/api/users/${tstUsr.id}`)
+                           .set("User-Id", `${usr1.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(403);
+
+        const usdb = await usrRep.findOne(tstUsr.id);
+        expect(usdb).not.toBeUndefined();
+    });
+
+    it("Test deleting a user who is a member of multiple groups.", async () => {
+        const wfNum = 5;
+        const stNum = 3;
+        const dcNum = 2;
+        const grpName = "g";
+
+        const tstUsr = new NRUser();
+        tstUsr.id = usrSeq;
+        usrSeq++;
+
+        tstUsr.firstName = "Test";
+        tstUsr.lastName = "User";
+        tstUsr.userName = "tuser";
+        tstUsr.email = "tuser@newsroom.com";
+        tstUsr.admin = "N";
+        await usrRep.save(tstUsr);
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+        await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
+
+        // Give the group mixed permissions on workflows and stages.
+        await setWFSPermsForGroup(adminUsr, grpName, wfs, "READ", 200, [Math.floor(wfNum / 2)]);
+        await setWFSSTSPermsForGroup(adminUsr, grpName, wfs, "WRITE", 200, [Math.floor(stNum / 2)]);
+        await addUserToGroup(adminUsr, grpName, tstUsr, 200);
+
+        const resp = await request(app)
+                           .delete(`/api/users/${tstUsr.id}`)
+                           .set("User-Id", `${adminUsr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(204);
+
+        const usdb = await usrRep.findOne(tstUsr.id);
+        expect(usdb).toBeUndefined();
+
+        const grpdb = await rlRep.findOne({ where: { name: grpName } });
+        expect(grpdb).not.toBeUndefined();
+    });
+
+});
+
+describe("26. PUT /api/users/:uid/role/:rid", () => {
+    it("Test adding a role to a user as an admin.", async () => {
+        const wfNum = 5;
+        const stNum = 3;
+        const dcNum = 2;
+        const grpName = "g";
+
+        const tstUsr = new NRUser();
+        tstUsr.id = usrSeq;
+        usrSeq++;
+
+        tstUsr.firstName = "Test";
+        tstUsr.lastName = "User";
+        tstUsr.userName = "tuser";
+        tstUsr.email = "tuser@newsroom.com";
+        tstUsr.admin = "N";
+        await usrRep.save(tstUsr);
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+        await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
+
+        // Give the group mixed permissions on workflows and stages.
+        await setWFSPermsForGroup(adminUsr, grpName, wfs, "READ", 200, [Math.floor(wfNum / 2)]);
+        await setWFSSTSPermsForGroup(adminUsr, grpName, wfs, "WRITE", 200, [Math.floor(stNum / 2)]);
+        await addUserToGroup(adminUsr, grpName, tstUsr, 200);
+
+        const usdb = await usrRep.findOne(tstUsr.id, { relations: ["roles"] });
+        expect(usdb).not.toBeUndefined();
+        expect(usdb.roles).not.toBeUndefined();
+        expect(usdb.roles).toHaveLength(1);
+        expect(usdb.roles[0].name).toEqual(grpName);
+    });
+
+    it("Test adding a role to a user without privileges.", async () => {
+        const wfNum = 5;
+        const stNum = 3;
+        const dcNum = 2;
+        const grpName = "g";
+
+        const tstUsr = new NRUser();
+        tstUsr.id = usrSeq;
+        usrSeq++;
+
+        tstUsr.firstName = "Test";
+        tstUsr.lastName = "User";
+        tstUsr.userName = "tuser";
+        tstUsr.email = "tuser@newsroom.com";
+        tstUsr.admin = "N";
+        await usrRep.save(tstUsr);
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+        await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
+
+        // Give the group mixed permissions on workflows and stages.
+        await setWFSPermsForGroup(adminUsr, grpName, wfs, "READ", 200, [Math.floor(wfNum / 2)]);
+        await setWFSSTSPermsForGroup(adminUsr, grpName, wfs, "WRITE", 200, [Math.floor(stNum / 2)]);
+        await addUserToGroup(usr1, grpName, tstUsr, 403);
+
+        const usdb = await usrRep.findOne(tstUsr.id, { relations: ["roles"] });
+        expect(usdb).not.toBeUndefined();
+        expect(usdb.roles).toHaveLength(0);
+    });
+});
+
+describe("27. DELETE /api/users/:uid/role/:rid", () => {
+    it("Test removing a role from a user as an admin.", async () => {
+        const wfNum = 5;
+        const stNum = 3;
+        const dcNum = 2;
+        const grpName = "g";
+
+        const tstUsr = new NRUser();
+        tstUsr.id = usrSeq;
+        usrSeq++;
+
+        tstUsr.firstName = "Test";
+        tstUsr.lastName = "User";
+        tstUsr.userName = "tuser";
+        tstUsr.email = "tuser@newsroom.com";
+        tstUsr.admin = "N";
+        await usrRep.save(tstUsr);
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+        await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
+
+        // Give the group mixed permissions on workflows and stages.
+        await setWFSPermsForGroup(adminUsr, grpName, wfs, "READ", 200, [Math.floor(wfNum / 2)]);
+        await setWFSSTSPermsForGroup(adminUsr, grpName, wfs, "WRITE", 200, [Math.floor(stNum / 2)]);
+        await addUserToGroup(adminUsr, grpName, tstUsr, 200);
+
+        const rl = await rlRep.findOne({ where: { name: grpName } });
+        const resp = await request(app)
+                           .delete(`/api/users/${tstUsr.id}/role/${rl.id}`)
+                           .set("User-Id", `${adminUsr.id}`);
+
+        console.log(resp.text);
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(200);
+
+        const usdb = await usrRep.findOne(tstUsr.id, { relations: ["roles"] });
+        expect(usdb).not.toBeUndefined();
+        expect(usdb.roles).not.toBeUndefined();
+        expect(usdb.roles).toHaveLength(0);
+    });
+
+    it("Test adding a role to a user without privileges.", async () => {
+        const wfNum = 5;
+        const stNum = 3;
+        const dcNum = 2;
+        const grpName = "g";
+
+        const tstUsr = new NRUser();
+        tstUsr.id = usrSeq;
+        usrSeq++;
+
+        tstUsr.firstName = "Test";
+        tstUsr.lastName = "User";
+        tstUsr.userName = "tuser";
+        tstUsr.email = "tuser@newsroom.com";
+        tstUsr.admin = "N";
+        await usrRep.save(tstUsr);
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+        await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
+
+        // Give the group mixed permissions on workflows and stages.
+        await setWFSPermsForGroup(adminUsr, grpName, wfs, "READ", 200, [Math.floor(wfNum / 2)]);
+        await setWFSSTSPermsForGroup(adminUsr, grpName, wfs, "WRITE", 200, [Math.floor(stNum / 2)]);
+        await addUserToGroup(adminUsr, grpName, tstUsr, 200);
+
+        const rl = await rlRep.findOne({ where: { name: grpName } });
+        const resp = await request(app)
+                           .delete(`/api/users/${tstUsr.id}/role/${rl.id}`)
+                           .set("User-Id", `${usr1.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(403);
+
+        const usdb = await usrRep.findOne(tstUsr.id, { relations: ["roles"] });
+        expect(usdb).not.toBeUndefined();
+        expect(usdb.roles).toHaveLength(1);
+        expect(usdb.roles[0].name).toEqual(grpName);
+    });
+});
+
+// Group tests.
+describe("28. POST /api/roles", () => {
+    it("Test creating a group as an admin.", async () => {
+        await createGroup(adminUsr, "g", 200);
+    });
+
+    it("Test creating a group as a non-admin.", async () => {
+        await createGroup(usr1, "g", 403);
+    });
+});
+
+describe("29. PUT /api/roles/:rid", () => {
+    it("Test updating role as an admin.", async () => {
+        const grp = await createGroup(adminUsr, "g", 200);
+
+        grp.name = "DSFSFSD";
+        grp.description = "SDFSdfsfasdfaf";
+
+        const resp = await request(app)
+                           .put(`/api/roles/${grp.id}`)
+                           .send(grp)
+                           .set("User-Id", `${adminUsr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(200);
+
+        const rldb = await rlRep.findOne(grp.id);
+        expect(rldb.name).toEqual(grp.name);
+        expect(rldb.description).toEqual(grp.description);
+    });
+
+    it("Test updating role as a non-admin.", async () => {
+        const grp = await createGroup(adminUsr, "g", 200);
+
+        const grpbk = JSON.parse(JSON.stringify(grp));
+
+        grp.name = "DSFSFSD";
+        grp.description = "SDFSdfsfasdfaf";
+
+        const resp = await request(app)
+                           .put(`/api/roles/${grp.id}`)
+                           .send(grp)
+                           .set("User-Id", `${usr1.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(403);
+
+        const rldb = await rlRep.findOne(grp.id);
+        expect(rldb.name).toEqual(grpbk.name);
+        expect(rldb.description).toEqual(grpbk.description);
+    });
+});
+
+describe("30. DELETE /api/roles/:rid", () => {
+    it("Test deleting a role as an admin.", async () => {
+        const wfNum = 5;
+        const stNum = 3;
+        const dcNum = 2;
+        const grpName = "g";
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+        await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
+
+        // Give the group mixed permissions on workflows and stages.
+        await setWFSPermsForGroup(adminUsr, grpName, wfs, "READ", 200, [Math.floor(wfNum / 2)]);
+        await setWFSSTSPermsForGroup(adminUsr, grpName, wfs, "WRITE", 200, [Math.floor(stNum / 2)]);
+        await addUserToGroup(adminUsr, grpName, usr1, 200);
+
+        const grp = await rlRep.findOne({ where: { name: grpName } });
+        const resp = await request(app)
+                           .delete(`/api/roles/${grp.id}`)
+                           .set("User-Id", `${adminUsr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(204);
+
+        const usdb = await usrRep.findOne(usr1.id, { relations: ["roles"] });
+        expect(usdb).not.toBeUndefined();
+        expect(usdb.roles).not.toBeUndefined();
+        expect(usdb.roles).toHaveLength(0);
+
+        const stpdb = await stPRep.find();
+        expect(stpdb).toHaveLength(0);
+
+        const wfpdb = await wfPRep.find();
+        expect(wfpdb).toHaveLength(0);
+    });
+
+    it("Test deleting a role as a non-admin.", async () => {
+        const wfNum = 5;
+        const stNum = 3;
+        const dcNum = 2;
+        const grpName = "g";
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+        await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
+
+        // Give the group mixed permissions on workflows and stages.
+        await setWFSPermsForGroup(adminUsr, grpName, wfs, "READ", 200, [Math.floor(wfNum / 2)]);
+        await setWFSSTSPermsForGroup(adminUsr, grpName, wfs, "WRITE", 200, [Math.floor(stNum / 2)]);
+        await addUserToGroup(adminUsr, grpName, usr1, 200);
+
+        const grp = await rlRep.findOne({ where: { name: grpName } });
+        const resp = await request(app)
+                           .delete(`/api/roles/${grp.id}`)
+                           .set("User-Id", `${usr1.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(403);
+
+        const usdb = await usrRep.findOne(usr1.id, { relations: ["roles"] });
+        expect(usdb).not.toBeUndefined();
+        expect(usdb.roles).not.toBeUndefined();
+        expect(usdb.roles).toHaveLength(1);
+
+        const stpdb = await stPRep.find();
+        expect(stpdb.length).toBeGreaterThan(0);
+
+        const wfpdb = await wfPRep.find();
+        expect(wfpdb.length).toBeGreaterThan(0);
+    });
+});
+
+describe("31. PUT /api/roles/:rid/stage/:sid", () => {
+    it("Test adding stage permissions for a group as a non-admin.", async () => {
+        const wfNum = 5;
+        const stNum = 3;
+        const dcNum = 2;
+        const grpName = "g";
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+        await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
+
+        await createGroup(adminUsr, grpName, 200);
+        await setSTPermForGroup(usr1, grpName, wfs[0].stages[0], "WRITE", 403);
+    });
+});
+
+describe("32. PUT /api/roles/:rid/workflow/:wid", () => {
+    it("Test adding workflow permissions for a group as a non-admin.", async () => {
+        const wfNum = 5;
+        const stNum = 3;
+        const dcNum = 2;
+        const grpName = "g";
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+        await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
+
+        await createGroup(adminUsr, grpName, 200);
+        await setWFPermForGroup(usr1, grpName, wfs[0], "WRITE", 403);
+    });
+});
 
 //// ----------------------------------------------------------------------------------
 //// |--------------------------------------------------------------------------------|
@@ -2381,6 +2870,10 @@ async function createGroup(us: NRUser, name: string, status: number) {
     expect(resp.status).not.toBeUndefined();
     expect(resp.status).toEqual(status);
 
+    if (status === 403) {
+        return;
+    }
+
     const grp = resp.body;
     expect(grp.id).toEqual(role.id);
     expect(grp.name).toEqual(role.name);
@@ -2450,6 +2943,10 @@ async function setWFPermForGroup(us: NRUser, name: string, wf: NRWorkflow, perm:
     expect(resp).not.toBeUndefined();
     expect(resp.status).toEqual(status);
 
+    if (status === 403) {
+        return;
+    }
+
     const wfpr = resp.body;
     expect(wfpr.access).toEqual(resPerm);
 
@@ -2494,6 +2991,10 @@ async function setSTPermForGroup(us: NRUser, name: string, st: NRStage, perm: st
 
     expect(resp).not.toBeUndefined();
     expect(resp.status).toEqual(status);
+
+    if (status === 403) {
+        return;
+    }
 
     const stpr = resp.body;
     expect(stpr.access).toEqual(resPerm);

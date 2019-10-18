@@ -59,17 +59,17 @@ export class RoleResource {
     @POST
     @PreProcessor(createRoleValidator)
     public async createRole(role: NRRole): Promise<NRRole> {
+        const user = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can create roles.";
+            throw new Errors.ForbiddenError(msg);
+        }
+
         try {
             // Form data already validated.
             const newRole = await this.rlRep.save(role);
-
-            // for (const wfPerm of newRole.wfpermissions) {
-            //     await this.permWFRepository.save(wfPerm);
-            // }
-
-            // for (const stPerm of newRole.stpermissions) {
-            //     await this.permSTRepository.save(stPerm);
-            // }
 
             return newRole;
         } catch (err) {
@@ -129,6 +129,13 @@ export class RoleResource {
     public async updateRole(@IsInt @PathParam("rid") rid: number,
                             role: NRRole): Promise<NRRole> {
         const currRole = await this.rlServ.getRole(rid);
+        const user = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can update roles.";
+            throw new Errors.ForbiddenError(msg);
+        }
 
         if (role.name) {
             currRole.name = role.name;
@@ -159,6 +166,13 @@ export class RoleResource {
     @Path("/:rid")
     public async deleteRole(@IsInt @PathParam("rid") rid: number) {
         const currRole = await this.rlServ.getRole(rid);
+        const user = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can delete roles.";
+            throw new Errors.ForbiddenError(msg);
+        }
 
         try {
             await this.rlRep.remove(currRole);
@@ -188,6 +202,13 @@ export class RoleResource {
 
         const wf = await this.wfServ.getWorkflow(wid);
         const rl = await this.rlServ.getRole(rid);
+        const user = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can assign role permissions.";
+            throw new Errors.ForbiddenError(msg);
+        }
 
         try {
             perm = await this.permServ.getWFPermissionFromWFRL(wf, rl);
@@ -220,6 +241,13 @@ export class RoleResource {
 
         const st = await this.wfServ.getStage(sid);
         const rl = await this.rlServ.getRole(rid);
+        const user = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can assign role permissions.";
+            throw new Errors.ForbiddenError(msg);
+        }
 
         try {
             perm = await this.permServ.getSTPermissionFromSTRL(st, rl);

@@ -20,6 +20,7 @@ import {
     NRUser,
     NRWFPermission,
 } from "../entity";
+import { PermissionService } from "../services/PermissionService";
 import { RoleService } from "../services/RoleService";
 import { UserService } from "../services/UserService";
 import { WorkflowService } from "../services/WorkflowService";
@@ -46,6 +47,9 @@ export class UserResource {
     private usServ: UserService;
 
     @Inject()
+    private permServ: PermissionService;
+
+    @Inject()
     private rlServ: RoleService;
 
     @Inject()
@@ -53,43 +57,6 @@ export class UserResource {
 
     @Context
     private serviceContext: ServiceContext;
-
-    /**
-     * Create a new user.
-     *
-     * path:
-     *      - None.
-     *
-     * request:
-     *      {
-     *          userName: <string>,
-     *          firstName: <string>,
-     *          lastName: <string>,
-     *          email: <string>
-     *      }
-     *          - None of the above can be missing.
-     *          - 'userName' must be unique.
-     *
-     * response:
-     *      - NRUser with the following relations:
-     *          - None.
-     *      - BadRequestError (400)
-     *          - If properties are missing or wrong type.
-     *      - InternalServerError (500)
-     *          - If something went wrong.
-     */
-    @POST
-    @PreProcessor(createUserValidator)
-    public async createUser(user: NRUser): Promise<NRUser> {
-        try {
-            return await this.usRep.save(user);
-        } catch (err) {
-            console.log(err);
-
-            const errStr = `Error creating user.`;
-            throw new Errors.InternalServerError(errStr);
-        }
-    }
 
     /**
      * Get all existent users.
@@ -118,6 +85,20 @@ export class UserResource {
         }
     }
 
+    /**
+     * Get the user who is currently logged in.
+     *
+     * path:
+     *      - None.
+     *
+     * request:
+     *      - None.
+     *
+     * response:
+     *      - NRUser with the following relations:
+     *          - None.
+     *
+     */
     @GET
     @Path("/current")
     public async getCurrentUser(): Promise<NRUser> {
@@ -148,9 +129,6 @@ export class UserResource {
     }
 
     /**
-     * TODO: How does this interact with oauth? Seems like this would cause problems. Maybe if updated
-     *       we just automatically log the user out?
-     *
      * Update a users information
      *
      * path:
@@ -160,8 +138,7 @@ export class UserResource {
      *      {
      *          userName: <string>,
      *          firstName: <string>,
-     *          lastName: <string>,
-     *          email: <string>
+     *          lastName: <string>
      *      }
      *          - None of the above is required, but will be updated if passed.
      *          - 'userName' must be unique.
@@ -180,26 +157,29 @@ export class UserResource {
     @PreProcessor(updateUserValidator)
     public async updateUser(@IsInt @PathParam("uid") uid: number,
                             user: NRUser): Promise<NRUser> {
-        const currUser = await this.usServ.getUser(uid);
+        const updUser = await this.usServ.getUser(uid);
 
-        if (user.userName) {
-            currUser.userName = user.userName;
+        const usr = await this.serviceContext.user();
+        const admin = await this.permServ.isUserAdmin(usr);
+        if ((!(admin)) && (usr.id !== updUser.id)) {
+            const msg = `Must be an admin or the the user in question to update a user.`;
+            throw new Errors.ForbiddenError(msg);
         }
 
-        if (user.email) {
-            currUser.email = user.email;
+        if (user.userName) {
+            updUser.userName = user.userName;
         }
 
         if (user.firstName) {
-            currUser.firstName = user.firstName;
+            updUser.firstName = user.firstName;
         }
 
         if (user.lastName) {
-            currUser.lastName = user.lastName;
+            updUser.lastName = user.lastName;
         }
 
         try {
-            return await this.usRep.save(currUser);
+            return await this.usRep.save(updUser);
         } catch (err) {
             console.log(err);
 
@@ -227,11 +207,18 @@ export class UserResource {
      */
     @DELETE
     @Path("/:uid")
-    public async deleteUser(@IsInt @PathParam("uid") uid: number) {
-        const currUser = await this.usServ.getUser(uid);
+    public async deleteUser(@IsInt @PathParam("uid") uid: number): Promise<void> {
+        const delUsr = await this.usServ.getUser(uid);
+        const usr = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(usr);
+        if (!(admin)) {
+            throw new Errors.ForbiddenError(`Must be an admin to delete other users.`);
+        }
 
         try {
-            await this.usRep.remove(currUser);
+            await this.usRep.remove(delUsr);
+            return;
         } catch (err) {
             console.log(err);
 
@@ -262,6 +249,12 @@ export class UserResource {
                          @IsInt @PathParam("rid") rid: number): Promise<NRUser> {
         const user = await this.usServ.getUser(uid);
         const role = await this.rlServ.getRole(rid);
+
+        const usr = await this.serviceContext.user();
+        const admin = await this.permServ.isUserAdmin(usr);
+        if (!(admin)) {
+            throw new Errors.ForbiddenError(`Must be an admin to assign roles.`);
+        }
 
         const usdb = await this.usRep.findOne(user.id, {relations: ["roles"]});
         usdb.roles.push(role);
@@ -329,11 +322,21 @@ export class UserResource {
     @DELETE
     @Path("/:uid/role/:rid")
     public async removeRole(@IsInt @PathParam("uid") uid: number,
-                            @IsInt @PathParam("rid") rid: number) {
+                            @IsInt @PathParam("rid") rid: number): Promise<NRUser> {
         const user = await this.usServ.getUser(uid);
         const role = await this.rlServ.getRole(rid);
 
+        const usr = await this.serviceContext.user();
+        const admin = await this.permServ.isUserAdmin(usr);
+        if (!(admin)) {
+            throw new Errors.ForbiddenError(`Must be an admin to remove groups.`);
+        }
+
         try {
+            if (user.roles === undefined) {
+                user.roles = [];
+            }
+
             const ind = user.roles.indexOf(role);
             user.roles.splice(ind, 1);
 
