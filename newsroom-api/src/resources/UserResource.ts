@@ -58,6 +58,20 @@ export class UserResource {
     @Context
     private serviceContext: ServiceContext;
 
+    public async configure() {
+        const initAdmin = new NRUser();
+
+        if (process.env.ADMIN_EMAIL) {
+            initAdmin.email = process.env.ADMIN_EMAIL;
+        }
+
+        initAdmin.userName = "a";
+        initAdmin.firstName = "a";
+        initAdmin.lastName = "a";
+
+        this.usRep.save(initAdmin);
+    }
+
     /**
      * Get all existent users.
      *

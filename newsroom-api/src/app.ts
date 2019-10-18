@@ -43,6 +43,9 @@ class App {
         // Start app server and listen for connections.
         await createConnection().then(async (connection) => {
             if (auth) {
+                // Setup admin based on ADMIN_EMAIL and ADMIN_USERNAME.
+                Container.get(UserResource).configure();
+
                 Container.get(AuthConfig).configure(this.express);
 
                 Container.get(GoogleOAuth2Provider).configure(this.express);

@@ -2291,6 +2291,85 @@ describe("28. POST /api/roles", () => {
     it("Test creating a group as a non-admin.", async () => {
         await createGroup(usr1, "g", 403);
     });
+
+    it("Test creating a group while passing workflow and stage permission objects.", async () => {
+        const wfNum = 5;
+        const stNum = 3;
+        const grpName = "g";
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+
+        const nrl = new NRRole();
+        nrl.id = rlSeq;
+        rlSeq++;
+        
+        nrl.name = "sdfasdfas";
+        nrl.description = "sdfasfasfdasfd";
+
+        nrl.wfpermissions = [];
+        nrl.stpermissions = [];
+
+        for (const wf of wfs) {
+            const wfp = new NRWFPermission();
+            wfp.id = wfPSeq;
+            wfPSeq++;
+
+            const tmpwf = new NRWorkflow();
+            tmpwf.id = wf.id;
+            wfp.workflow = tmpwf;
+            wfp.access = Math.round(Math.random());
+
+            nrl.wfpermissions.push(wfp);
+
+            for (const st of wf.stages) {
+                const stp = new NRSTPermission();
+                stp.id = stPSeq;
+                stPSeq++;
+
+                const tmpst = new NRStage();
+                tmpst.id = st.id;
+                stp.stage = tmpst;
+                stp.access = Math.round(Math.random());
+
+                nrl.stpermissions.push(stp);
+            }
+        }
+
+        const resp = await request(app)
+                       .post(`/api/roles`)
+                       .send(nrl)
+                       .set("User-Id", `${adminUsr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(200);
+        
+        const rlr = resp.body;
+        expect(rlr.name).toEqual(nrl.name);
+        expect(rlr.description).toEqual(nrl.description);
+
+        const rldb = await rlRep.findOne(nrl.id, { relations: ["stpermissions", "wfpermissions"] });
+        expect(rldb).not.toBeUndefined();
+        expect(rldb.wfpermissions).not.toBeUndefined();
+        expect(rldb.wfpermissions).toHaveLength(wfNum);
+
+        expect(rldb.stpermissions).not.toBeUndefined();
+        expect(rldb.stpermissions).toHaveLength(wfNum * stNum);
+
+        rldb.wfpermissions.sort((a: NRWFPermission, b: NRWFPermission) => a.id - b.id);
+        nrl.wfpermissions.sort((a: NRWFPermission, b: NRWFPermission) => a.id - b.id);
+
+        for (let i = 0; i < wfNum; i++) {
+            expect(nrl.wfpermissions[i].access).toEqual(rldb.wfpermissions[i].access);
+        }
+
+        rldb.stpermissions.sort((a: NRSTPermission, b: NRSTPermission) => a.id - b.id);
+        nrl.stpermissions.sort((a: NRSTPermission, b: NRSTPermission) => a.id - b.id);
+
+        for (let i = 0; i < (wfNum * stNum); i++) {
+            expect(nrl.stpermissions[i].access).toEqual(rldb.stpermissions[i].access);
+        }
+    });
 });
 
 describe("29. PUT /api/roles/:rid", () => {

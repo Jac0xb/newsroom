@@ -71,6 +71,39 @@ export class RoleResource {
             // Form data already validated.
             const newRole = await this.rlRep.save(role);
 
+            if (role.wfpermissions !== undefined) {
+                for (let i = 0; i < role.wfpermissions.length; i++) {
+                    const wfp = role.wfpermissions[i];
+
+                    wfp.workflow = await this.wfRep.findOne(wfp.workflow.id);
+                    wfp.role = newRole;
+
+                    await this.wfPRep.save(wfp);
+                    await this.rlRep.save(newRole);
+                    await this.wfRep.save(wfp.workflow);
+
+                    // Prevent circular stringify problems.
+                    wfp.role = undefined;
+                }
+            }
+
+            if (role.stpermissions !== undefined) {
+                for (let i = 0; i < role.stpermissions.length; i++) {
+                    const stp = role.stpermissions[i];
+
+                    stp.stage = await this.stRep.findOne(stp.stage.id);
+                    stp.role = newRole;
+                    stp.access = stp.access;
+
+                    await this.stPRep.save(stp);
+                    await this.rlRep.save(newRole);
+                    await this.stRep.save(stp.stage);
+
+                    // Prevent circular stringify problems.
+                    stp.role = undefined;
+                }
+            }
+
             return newRole;
         } catch (err) {
             console.log(err);
