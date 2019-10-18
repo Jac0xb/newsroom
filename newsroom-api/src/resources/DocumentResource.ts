@@ -5,8 +5,7 @@ import { Context, DELETE, GET, Path, PathParam, POST,
          PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 import { BadRequestError } from "typescript-rest/dist/server/model/errors";
-import { DBConstants, NRDocument, NRStage, NRSTPermission,
-         NRSTUSPermission } from "../entity";
+import { DBConstants, NRDocument, NRStage, NRSTPermission} from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { NotificationService } from "../services/triggers/NotificationService";
@@ -28,9 +27,6 @@ export class DocumentResource {
 
     @InjectRepository(NRSTPermission)
     private stPRep: Repository<NRSTPermission>;
-
-    @InjectRepository(NRSTUSPermission)
-    private stUSRep: Repository<NRSTUSPermission>;
 
     @Inject()
     private wfServ: WorkflowService;
@@ -88,7 +84,7 @@ export class DocumentResource {
         if (!(document.stage)) {
             const minSeq = await this.wfServ.getMinStageSequenceId(wf);
 
-            if (minSeq === -1) {
+            if (minSeq === null) {
                 const errStr = `Can't create a document in workflow ${wf.id} with no stages.`;
 
                 console.log(errStr);
@@ -108,7 +104,6 @@ export class DocumentResource {
         // They have permissions, so we know they have WRITE access already.
         document.permission = DBConstants.WRITE;
 
-        console.log(user);
         document.creator = await this.usServ.getUser(user.id);
         document.googleDocId = await this.dcServ.createGoogleDocument(user, document);
 
@@ -135,53 +130,6 @@ export class DocumentResource {
 
         await this.dcServ.appendPermsToDCS(dcs, user);
         return dcs;
-    }
-
-    /**
-     * Get all documents a user has write permissions on.
-     *
-     * path:
-     *      - None.
-     *
-     * request:
-     *      - None.
-     *
-     * response:
-     *      - NRDocument[] where each has the following relations:
-     *          - permission: The permissions for the logged in user to the document.
-     */
-    @GET
-    @Path("/user")
-    public async getUserDocuments(): Promise<NRDocument[]> {
-        const usr = await this.serviceContext.user();
-        const docs = new Set<NRDocument>();
-
-        // Individual permissions.
-        const ap = await this.stUSRep.find({ relations: ["stage"],
-                                             where: { access: DBConstants.WRITE,
-                                                      userId: usr.id } });
-
-        for (const perm of ap) {
-            const st = await this.stRep.findOne(perm.stage.id, { relations: ["documents"] });
-
-            for (const doc of st.documents) {
-                docs.add(doc);
-            }
-        }
-
-        // Group permissions..
-        const ar = await this.usServ.getUserRoles(usr.id);
-        for (const rl of ar) {
-            const stp = await this.stPRep.find({ relations: ["stage"],
-                                                 where: { access: DBConstants.WRITE,
-                                                          role: rl } });
-
-            for (const st of stp) {
-                docs.add(await this.dcRep.findOne({ where: { stage: st.stage }}));
-            }
-        }
-
-        return Array.from(docs.values());
     }
 
     /**
@@ -212,6 +160,44 @@ export class DocumentResource {
     }
 
     /**
+     * Get all documents a user has write permissions on.
+     *
+     * path:
+     *      - None.
+     *
+     * request:
+     *      - None.
+     *
+     * response:
+     *      - NRDocument[] where each has the following relations:
+     *          - permission: The permissions for the logged in user to the document.
+     */
+    @GET
+    @Path("/user/:uid")
+    public async getUserDocuments(@PathParam("uid") uid: number): Promise<NRDocument[]> {
+        // const usr = await this.serviceContext.user();
+        const usr = await this.usServ.getUser(uid);
+        const docs = new Set<NRDocument>();
+
+        // Group permissions.
+        const ar = await this.usServ.getUserRoles(usr.id);
+        for (const rl of ar) {
+            const stp = await this.stPRep.find({ relations: ["stage"],
+                                                 where: { access: DBConstants.WRITE,
+                                                          role: rl } });
+
+            for (const st of stp) {
+                const stdocs = await this.dcRep.find({ where: { stage: st.stage }});
+                for (const dc of stdocs) {
+                    docs.add(dc);
+                }
+            }
+        }
+
+        return Array.from(docs.values());
+    }
+
+    /**
      * Get all documents for a specific author.
      *
      * path:
@@ -227,8 +213,11 @@ export class DocumentResource {
     @GET
     @Path("/author/:aid")
     public async getDocumentsForAuthor(@PathParam("aid") aid: number): Promise<NRDocument[]> {
-        const user = await this.usServ.getUser(aid);
-        const udcs = await this.dcRep.find({ where: { creator: user } });
+        const user = await this.serviceContext.user();
+        const author = await this.usServ.getUser(aid);
+        const udcs = await this.dcRep.find({ where: { creator: author } });
+
+        await this.dcServ.appendPermsToDCS(udcs, user);
 
         return udcs;
     }
@@ -251,9 +240,13 @@ export class DocumentResource {
     @GET
     @Path("/stage/:sid")
     public async getAllDocumentsForStage(@IsInt @PathParam("sid") sid: number): Promise<NRDocument[]> {
+        const user = await this.serviceContext.user();
         const st = await this.wfServ.getStage(sid);
+        const dcs = await this.dcRep.find({ where: { stage: st } });
 
-        return await this.dcRep.find({ where: { stage: st } });
+        await this.dcServ.appendPermsToDCS(dcs, user);
+
+        return dcs;
     }
 
     /**
@@ -274,9 +267,13 @@ export class DocumentResource {
     @GET
     @Path("/workflow/:wid")
     public async getAllDocumentsForWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRDocument[]> {
+        const user = await this.serviceContext.user();
         const wf = await this.wfServ.getWorkflow(wid);
+        const dcs = await this.dcRep.find({ where: { workflow: wf } });
 
-        return await this.dcRep.find({ where: { workflow: wf } });
+        await this.dcServ.appendPermsToDCS(dcs, user);
+
+        return dcs;
     }
 
     /**
@@ -297,8 +294,13 @@ export class DocumentResource {
     @GET
     @Path("/all/orphan/docs")
     public async getAllOrphanDocuments(): Promise<NRDocument[]> {
-        return await this.dcRep.find( { where: [ { stage: IsNull(),
-                                                   workflow: IsNull() } ] });
+        const user = await this.serviceContext.user();
+        const dcs = await this.dcRep.find( { where: [ { stage: IsNull(),
+                                                        workflow: IsNull() } ] });
+
+        await this.dcServ.appendPermsToDCS(dcs, user);
+
+        return dcs;
     }
 
     /**

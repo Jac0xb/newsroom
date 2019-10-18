@@ -17,12 +17,10 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 import {
     NRRole,
     NRSTPermission,
-    NRSTUSPermission,
     NRUser,
-    NRUserSummary,
     NRWFPermission,
-    NRWFUSPermission,
 } from "../entity";
+import { PermissionService } from "../services/PermissionService";
 import { RoleService } from "../services/RoleService";
 import { UserService } from "../services/UserService";
 import { WorkflowService } from "../services/WorkflowService";
@@ -45,14 +43,11 @@ export class UserResource {
     @InjectRepository(NRSTPermission)
     private stPRep: Repository<NRSTPermission>;
 
-    @InjectRepository(NRWFUSPermission)
-    private wfUSRep: Repository<NRWFUSPermission>;
-
-    @InjectRepository(NRSTUSPermission)
-    private stUSRep: Repository<NRSTUSPermission>;
-
     @Inject()
     private usServ: UserService;
+
+    @Inject()
+    private permServ: PermissionService;
 
     @Inject()
     private rlServ: RoleService;
@@ -63,41 +58,18 @@ export class UserResource {
     @Context
     private serviceContext: ServiceContext;
 
-    /**
-     * Create a new user.
-     *
-     * path:
-     *      - None.
-     *
-     * request:
-     *      {
-     *          userName: <string>,
-     *          firstName: <string>,
-     *          lastName: <string>,
-     *          email: <string>
-     *      }
-     *          - None of the above can be missing.
-     *          - 'userName' must be unique.
-     *
-     * response:
-     *      - NRUser with the following relations:
-     *          - None.
-     *      - BadRequestError (400)
-     *          - If properties are missing or wrong type.
-     *      - InternalServerError (500)
-     *          - If something went wrong.
-     */
-    @POST
-    @PreProcessor(createUserValidator)
-    public async createUser(user: NRUser): Promise<NRUser> {
-        try {
-            return await this.usRep.save(user);
-        } catch (err) {
-            console.log(err);
+    public async configure() {
+        const initAdmin = new NRUser();
 
-            const errStr = `Error creating user.`;
-            throw new Errors.InternalServerError(errStr);
+        if (process.env.ADMIN_EMAIL) {
+            initAdmin.email = process.env.ADMIN_EMAIL;
         }
+
+        initAdmin.userName = "a";
+        initAdmin.firstName = "a";
+        initAdmin.lastName = "a";
+
+        this.usRep.save(initAdmin);
     }
 
     /**
@@ -127,6 +99,20 @@ export class UserResource {
         }
     }
 
+    /**
+     * Get the user who is currently logged in.
+     *
+     * path:
+     *      - None.
+     *
+     * request:
+     *      - None.
+     *
+     * response:
+     *      - NRUser with the following relations:
+     *          - None.
+     *
+     */
     @GET
     @Path("/current")
     public async getCurrentUser(): Promise<NRUser> {
@@ -157,9 +143,6 @@ export class UserResource {
     }
 
     /**
-     * TODO: How does this interact with oauth? Seems like this would cause problems. Maybe if updated
-     *       we just automatically log the user out?
-     *
      * Update a users information
      *
      * path:
@@ -169,8 +152,7 @@ export class UserResource {
      *      {
      *          userName: <string>,
      *          firstName: <string>,
-     *          lastName: <string>,
-     *          email: <string>
+     *          lastName: <string>
      *      }
      *          - None of the above is required, but will be updated if passed.
      *          - 'userName' must be unique.
@@ -189,26 +171,29 @@ export class UserResource {
     @PreProcessor(updateUserValidator)
     public async updateUser(@IsInt @PathParam("uid") uid: number,
                             user: NRUser): Promise<NRUser> {
-        const currUser = await this.usServ.getUser(uid);
+        const updUser = await this.usServ.getUser(uid);
 
-        if (user.userName) {
-            currUser.userName = user.userName;
+        const usr = await this.serviceContext.user();
+        const admin = await this.permServ.isUserAdmin(usr);
+        if ((!(admin)) && (usr.id !== updUser.id)) {
+            const msg = `Must be an admin or the the user in question to update a user.`;
+            throw new Errors.ForbiddenError(msg);
         }
 
-        if (user.email) {
-            currUser.email = user.email;
+        if (user.userName) {
+            updUser.userName = user.userName;
         }
 
         if (user.firstName) {
-            currUser.firstName = user.firstName;
+            updUser.firstName = user.firstName;
         }
 
         if (user.lastName) {
-            currUser.lastName = user.lastName;
+            updUser.lastName = user.lastName;
         }
 
         try {
-            return await this.usRep.save(currUser);
+            return await this.usRep.save(updUser);
         } catch (err) {
             console.log(err);
 
@@ -236,11 +221,18 @@ export class UserResource {
      */
     @DELETE
     @Path("/:uid")
-    public async deleteUser(@IsInt @PathParam("uid") uid: number) {
-        const currUser = await this.usServ.getUser(uid);
+    public async deleteUser(@IsInt @PathParam("uid") uid: number): Promise<void> {
+        const delUsr = await this.usServ.getUser(uid);
+        const usr = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(usr);
+        if (!(admin)) {
+            throw new Errors.ForbiddenError(`Must be an admin to delete other users.`);
+        }
 
         try {
-            await this.usRep.remove(currUser);
+            await this.usRep.remove(delUsr);
+            return;
         } catch (err) {
             console.log(err);
 
@@ -272,10 +264,20 @@ export class UserResource {
         const user = await this.usServ.getUser(uid);
         const role = await this.rlServ.getRole(rid);
 
+        const usr = await this.serviceContext.user();
+        const admin = await this.permServ.isUserAdmin(usr);
+        if (!(admin)) {
+            throw new Errors.ForbiddenError(`Must be an admin to assign roles.`);
+        }
+
         const usdb = await this.usRep.findOne(user.id, {relations: ["roles"]});
         usdb.roles.push(role);
 
+        const rldb = await this.rlRep.findOne(role.id, {relations: ["users"]});
+        rldb.users.push(user);
+
         try {
+            await this.rlRep.save(rldb);
             return await this.usRep.save(usdb);
         } catch (err) {
             console.log(err);
@@ -334,11 +336,21 @@ export class UserResource {
     @DELETE
     @Path("/:uid/role/:rid")
     public async removeRole(@IsInt @PathParam("uid") uid: number,
-                            @IsInt @PathParam("rid") rid: number) {
+                            @IsInt @PathParam("rid") rid: number): Promise<NRUser> {
         const user = await this.usServ.getUser(uid);
         const role = await this.rlServ.getRole(rid);
 
+        const usr = await this.serviceContext.user();
+        const admin = await this.permServ.isUserAdmin(usr);
+        if (!(admin)) {
+            throw new Errors.ForbiddenError(`Must be an admin to remove groups.`);
+        }
+
         try {
+            if (user.roles === undefined) {
+                user.roles = [];
+            }
+
             const ind = user.roles.indexOf(role);
             user.roles.splice(ind, 1);
 
@@ -348,84 +360,6 @@ export class UserResource {
 
             const errStr = `Error removing role from user.`;
             throw new Errors.InternalServerError(errStr);
-        }
-    }
-
-    /**
-     * Give the specified user an individual permission on a workflow.
-     * Note that this will change if it exists, otherwise it will create it.
-     *
-     * path:
-     *      - uid: The unique id of the user to give the permission to.
-     *      - wid: The unique id of the workflow to give permissions to.
-     *      - perm: 1 for WRITE, 0 for READ.
-     *
-     * request:
-     *      - None.
-     *
-     * response:
-     *      - NRWFUSPermission with the following relations:
-     *          - None.
-     */
-    @PUT
-    @Path("/:uid/wfperm/:wid/:perm")
-    public async addWFPerm(@IsInt @PathParam("uid") uid: number,
-                           @IsInt @PathParam("wid") wid: number,
-                           @IsInt @PathParam("perm") permission: number): Promise<NRWFUSPermission> {
-        const usr = await this.usServ.getUser(uid);
-        const wf = await this.wfServ.getWorkflow(wid);
-
-        const wfup = await this.wfUSRep.findOne({
-            where: {
-                user: usr,
-                workflow: wf,
-            },
-        });
-
-        if (wfup === undefined) {
-            return await this.wfServ.createWFUSPermission(wid, usr, permission);
-        } else {
-            wfup.access = permission;
-            return await this.wfUSRep.save(wfup);
-        }
-    }
-
-    /**
-     * Give the specified user an individual permission on a stage.
-     * Note that this will change if it exists, otherwise it will create it.
-     *
-     * path:
-     *      - uid: The unique id of the user to give the permission to.
-     *      - sid: The unique id of the stage to give permissions to.
-     *      - perm: 1 for WRITE, 0 for READ.
-     *
-     * request:
-     *      - None.
-     *
-     * response:
-     *      - NRSTUSPermission with the following relations:
-     *          - None.
-     */
-    @PUT
-    @Path("/:uid/stperm/:sid/:perm")
-    public async addSTPerm(@IsInt @PathParam("uid") uid: number,
-                           @IsInt @PathParam("sid") sid: number,
-                           @IsInt @PathParam("perm") permission: number): Promise<NRSTUSPermission> {
-        const usr = await this.usServ.getUser(uid);
-        const st = await this.wfServ.getStage(sid);
-
-        const stup = await this.stUSRep.findOne({
-            where: {
-                stage: st,
-                user: usr,
-            },
-        });
-
-        if (stup === undefined) {
-            return await this.wfServ.createSTUSPermission(sid, usr, permission);
-        } else {
-            stup.access = permission;
-            return await this.stUSRep.save(stup);
         }
     }
 
@@ -446,8 +380,6 @@ export class UserResource {
     public async getUserSummary(@IsInt @PathParam("uid") uid: number): Promise<NRUser> {
         const usr = await this.usServ.getUser(uid);
 
-        const usum = new NRUserSummary();
-
         // Individual permissions.
         const usrwp = await this.usRep.findOne(usr.id, {
             relations: ["stpermissions",
@@ -458,50 +390,5 @@ export class UserResource {
         });
 
         return usrwp;
-
-        // for (const stus of usrwp.stpermissions) {
-        //     if (stus.access === DBConstants.WRITE) {
-        //         usum.userWriteStages.add(stus.stage);
-        //     } else {
-        //         usum.userReadStages.add(stus.stage);
-        //     }
-        // }
-
-        // for (const wfus of usrwp.wfpermissions) {
-        //     if (wfus.access === DBConstants.WRITE) {
-        //         usum.userWriteWorkflows.add(wfus.workflow);
-        //     } else {
-        //         usum.userReadWorkflows.add(wfus.workflow);
-        //     }
-        // }
-
-        // // Group permissions.
-        // const uwrs = await this.usRep.findOne(usr.id, { relations: ["roles"] });
-
-        // for (const rl of uwrs.roles) {
-        //     const rlwp = await this.rlRep.findOne(rl.id, { relations: ["wfpermissions",
-        //                                                                "wfpermissions.workflow",
-        //                                                                "stpermissions",
-        //                                                                "stpermissions.stage"]});
-        //     for (const wfp of rlwp.wfpermissions) {
-        //         if (wfp.access === DBConstants.WRITE) {
-        //             usum.groupWriteWorkflows.add(wfp.workflow);
-        //         } else {
-        //             usum.groupReadWorkflows.add(wfp.workflow);
-        //         }
-        //     }
-
-        //     for (const stp of rlwp.stpermissions) {
-        //         if (stp.access === DBConstants.WRITE) {
-        //             usum.groupWriteStages.add(stp.stage);
-        //         } else {
-        //             usum.groupReadStages.add(stp.stage);
-        //         }
-        //     }
-        // }
-
-        // usum.groups = uwrs.roles;
-
-        // return usum;
     }
 }

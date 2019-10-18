@@ -45,16 +45,14 @@ export class WorkflowResource {
      * request:
      *      {
      *          "name": <string>,
-     *          "description": <string>,
-     *          "permission": <number>
+     *          "description": <string>
      *      }
      *          - name: Must be unique versus other names.
-     *          - permission: 1 to create with WRITE, 0 to create with READ, or not passed at all.
-     *                        This permission is created for the logged in user only, not related to groups.
+     *          - The logged in user must be an admin to create workflows.
      *
      * response:
      *      - NRWorkflow object with the following relations:
-     *          - permission: The READ/WRITE permissions of the user for this workflow.
+     *          - None.
      */
     @POST
     @PreProcessor(createWorkflowValidator)
@@ -62,24 +60,25 @@ export class WorkflowResource {
         try {
             const user = await this.servCont.user();
             wf.creator = await this.usServ.getUser(user.id);
-            const wfdb = await this.wfRep.save(wf);
 
-            if (wf.permission !== undefined) {
-                const wfup = await this.wfServ.createWFUSPermission(wfdb.id,
-                                                                    user,
-                                                                    wf.permission);
+            // Only administrators can create workflows.
+            const allowed = await this.permServ.isUserAdmin(user);
 
-                // 'permission' is just for the response, so load it here.
-                wfdb.permission = wfup.access;
+            if (allowed === true) {
+                const wfdb = await this.wfRep.save(wf);
+                wfdb.permission = DBConstants.WRITE;
+
+                return wfdb;
             } else {
-                wf.permission = DBConstants.READ;
+                throw new Errors.ForbiddenError("Only administrators can create workflows.");
+            }
+        } catch (err) {
+            if (err instanceof Errors.ForbiddenError) {
+                throw err;
             }
 
-            return wfdb;
-        } catch (err) {
-            console.log(err);
-
-            const errStr = `Error creating workflow.`;
+            console.error(err);
+            const errStr = "Error creating workflow.";
             throw new Errors.InternalServerError(errStr);
         }
     }
@@ -134,10 +133,17 @@ export class WorkflowResource {
         let wf = await this.wfServ.getWorkflow(wid);
         wf = await this.wfServ.addStageRelationsToWF(wf);
 
-        // User can edit any stage based on permissions to the workflow itself.
-        const wfr = await this.wfServ.appendPermToWF(wf, user);
-        this.wfServ.matchSTPermToWF(wfr);
-        return wfr;
+        // Only admins can edit the workflows, so match the stage permissions to the workflow
+        // permissions.
+        await this.wfServ.appendPermToWF(wf, user);
+        await this.wfServ.appendPermToSTS(wf.stages, user);
+
+        // TODO: Decide what we want to do here:
+        //      1. Are the permissions returned with a stage for moving or editing?
+        //          - i.e. They are overridden by workflow for editing, but not for moving.
+        // await this.wfServ.matchSTPermToWF(wf);
+
+        return wf;
     }
 
     /**
@@ -276,12 +282,7 @@ export class WorkflowResource {
             const st = await this.stRep.save(stage);
 
             if (stage.permission !== undefined) {
-                const stup = await this.wfServ.createSTUSPermission(st.id,
-                                                                    user,
-                                                                    stage.permission);
-
-                // 'permission' is just for the response, so load it here.
-                st.permission = stup.access;
+                st.permission = DBConstants.WRITE;
             } else {
                 st.permission = DBConstants.READ;
             }
@@ -454,12 +455,7 @@ export class WorkflowResource {
             stage = await this.stRep.save(stage);
 
             if (stage.permission !== undefined) {
-                const stup = await this.wfServ.createSTUSPermission(stage.id,
-                                                                    user,
-                                                                    stage.permission);
-
-                // 'permission' is just for the response, so load it here.
-                stage.permission = stup.access;
+                stage.permission = DBConstants.WRITE;
             } else {
                 stage.permission = DBConstants.READ;
             }

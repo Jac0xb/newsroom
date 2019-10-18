@@ -5,7 +5,7 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 
 import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { NRDCPermission, NRDocument, NRRole, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
+import { NRDocument, NRRole, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { RoleService } from "../services/RoleService";
@@ -59,9 +59,50 @@ export class RoleResource {
     @POST
     @PreProcessor(createRoleValidator)
     public async createRole(role: NRRole): Promise<NRRole> {
+        const user = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can create roles.";
+            throw new Errors.ForbiddenError(msg);
+        }
+
         try {
             // Form data already validated.
             const newRole = await this.rlRep.save(role);
+
+            if (role.wfpermissions !== undefined) {
+                for (let i = 0; i < role.wfpermissions.length; i++) {
+                    const wfp = role.wfpermissions[i];
+
+                    wfp.workflow = await this.wfRep.findOne(wfp.workflow.id);
+                    wfp.role = newRole;
+
+                    await this.wfPRep.save(wfp);
+                    await this.rlRep.save(newRole);
+                    await this.wfRep.save(wfp.workflow);
+
+                    // Prevent circular stringify problems.
+                    wfp.role = undefined;
+                }
+            }
+
+            if (role.stpermissions !== undefined) {
+                for (let i = 0; i < role.stpermissions.length; i++) {
+                    const stp = role.stpermissions[i];
+
+                    stp.stage = await this.stRep.findOne(stp.stage.id);
+                    stp.role = newRole;
+                    stp.access = stp.access;
+
+                    await this.stPRep.save(stp);
+                    await this.rlRep.save(newRole);
+                    await this.stRep.save(stp.stage);
+
+                    // Prevent circular stringify problems.
+                    stp.role = undefined;
+                }
+            }
 
             return newRole;
         } catch (err) {
@@ -122,6 +163,13 @@ export class RoleResource {
     public async updateRole(@IsInt @PathParam("rid") rid: number,
                             role: NRRole): Promise<NRRole> {
         const currRole = await this.rlServ.getRole(rid);
+        const user = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can update roles.";
+            throw new Errors.ForbiddenError(msg);
+        }
 
         if (role.name) {
             currRole.name = role.name;
@@ -152,6 +200,13 @@ export class RoleResource {
     @Path("/:rid")
     public async deleteRole(@IsInt @PathParam("rid") rid: number) {
         const currRole = await this.rlServ.getRole(rid);
+        const user = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can delete roles.";
+            throw new Errors.ForbiddenError(msg);
+        }
 
         try {
             await this.rlRep.remove(currRole);
@@ -181,6 +236,13 @@ export class RoleResource {
 
         const wf = await this.wfServ.getWorkflow(wid);
         const rl = await this.rlServ.getRole(rid);
+        const user = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can assign role permissions.";
+            throw new Errors.ForbiddenError(msg);
+        }
 
         try {
             perm = await this.permServ.getWFPermissionFromWFRL(wf, rl);
@@ -210,20 +272,26 @@ export class RoleResource {
                                  @IsInt @PathParam("sid") sid: number,
                                  access: any): Promise<NRSTPermission> {
         let perm: NRSTPermission;
-        let st: NRStage;
-        let rl: NRRole;
+
+        const st = await this.wfServ.getStage(sid);
+        const rl = await this.rlServ.getRole(rid);
+        const user = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can assign role permissions.";
+            throw new Errors.ForbiddenError(msg);
+        }
 
         try {
-            perm = await this.permServ.getSTPermissionFromSTRL(sid, rid);
-            st = perm.stage;
-            rl = perm.role;
+            perm = await this.permServ.getSTPermissionFromSTRL(st, rl);
         } catch (NotFoundError) {
             perm = new NRSTPermission();
-            rl = await this.rlServ.getRole(rid);
-            st = await this.wfServ.getStage(sid);
         }
 
         perm.access = access.access;
+        perm.stage = st;
+        perm.role = rl;
 
         await this.stRep.save(st);
         await this.rlRep.save(rl);

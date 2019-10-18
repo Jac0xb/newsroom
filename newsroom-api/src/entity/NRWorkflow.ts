@@ -7,7 +7,6 @@ import { NRDocument } from "./NRDocument";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
 import { NRWFPermission } from "./NRWFPermission";
-import { NRWFUSPermission } from "./NRWFUSPermission";
 
 import { NRWorkflow as INRWorkflow } from "../interfaces";
 
@@ -87,17 +86,4 @@ export class NRWorkflow implements INRWorkflow {
     )
     @JoinTable()
     public permissions: NRWFPermission[];
-
-    /**
-     * Relationship: NRWFUSPermission
-     *      - One: Each user permission is only associated with one workflow.
-     *      - Many: Each workflow can have many user permissions.
-     */
-    @OneToMany(
-        (type) => NRWFUSPermission,
-        (permission) => permission.workflow,
-    )
-    @JoinTable()
-    public usrpermissions: NRWFUSPermission[];
-
 }
