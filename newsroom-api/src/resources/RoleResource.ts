@@ -63,14 +63,6 @@ export class RoleResource {
             // Form data already validated.
             const newRole = await this.rlRep.save(role);
 
-            // for (const wfPerm of newRole.wfpermissions) {
-            //     await this.permWFRepository.save(wfPerm);
-            // }
-
-            // for (const stPerm of newRole.stpermissions) {
-            //     await this.permSTRepository.save(stPerm);
-            // }
-
             return newRole;
         } catch (err) {
             console.log(err);

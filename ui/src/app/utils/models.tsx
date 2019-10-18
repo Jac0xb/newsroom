@@ -142,7 +142,7 @@ export class NRDCPermission implements INRDCPermission {
     document: INRDocument;
     role: INRRole;
 
-    constructor(init?: Partial<NRDCPermission>) {
+    public constructor(init?: Partial<NRDCPermission>) {
         Object.assign(this, init);
     }
 }
@@ -153,7 +153,7 @@ export class NRWFUSPermission implements INRWFUSPermission {
     workflow: INRWorkflow;
     user: INRUser;
 
-    constructor(init?: Partial<NRWFUSPermission>) {
+    public constructor(init?: Partial<NRWFUSPermission>) {
         Object.assign(this, init);
     }
 }
@@ -164,7 +164,7 @@ export class NRWFPermission implements INRWFPermission {
     workflow: INRWorkflow;
     role: INRRole;
 
-    constructor (init?: Partial<NRWFPermission>) {
+    public constructor (init?: Partial<NRWFPermission>) {
         Object.assign(this, init);
     }
 }
@@ -175,7 +175,7 @@ export class NRSTPermission implements INRSTPermission {
     stage: INRStage;
     role: INRRole;
 
-    constructor(init?: Partial<NRSTPermission>) {
+    public constructor(init?: Partial<NRSTPermission>) {
         Object.assign(this, init);
     }
 }
@@ -186,7 +186,7 @@ export class NRDCUSPermission implements INRDCUSPermission {
     document: INRDocument;
     user: INRUser;
 
-    constructor(init?: Partial<NRDCUSPermission>) {
+    public constructor(init?: Partial<NRDCUSPermission>) {
         Object.assign(this, init);
     }
 } 
@@ -197,7 +197,7 @@ export class NRSTUSPermission implements INRSTUSPermission {
     stage: INRStage;
     user: INRUser;
 
-    constructor(init?: Partial<NRSTUSPermission>) {
+    public constructor(init?: Partial<NRSTUSPermission>) {
         Object.assign(this, init);
     }
 }
@@ -209,7 +209,7 @@ export class NRTrigger implements INRTrigger {
     documents: INRDocument[];
     workflows: INRWorkflow[];
 
-    constructor(init?: Partial<NRTrigger>) {
+    public constructor(init?: Partial<NRTrigger>) {
         Object.assign(this, init);
     }
 }
@@ -225,7 +225,7 @@ export class NRUserSummary implements INRUserSummary {
     groupReadStages: Set<INRStage>;
     groups: INRRole[];
 
-    constructor(init?: Partial<NRUserSummary>) {
+    public constructor(init?: Partial<NRUserSummary>) {
         Object.assign(this, init);
     }
 }
