@@ -1,7 +1,4 @@
-import { NRDCUSPermission } from "./NRDCUSPermission";
 import { NRRole } from "./NRRole";
-import { NRSTUSPermission } from "./NRSTUSPermission";
-import { NRWFUSPermission } from "./NRWFUSPermission";
 
 export interface NRUser {
 
@@ -22,11 +19,4 @@ export interface NRUser {
     lastUpdated: Date;
 
     roles: NRRole[];
-
-    wfpermissions: NRWFUSPermission[];
-
-    stpermissions: NRSTUSPermission[];
-
-    dcpermissions: NRDCUSPermission[];
-
 }

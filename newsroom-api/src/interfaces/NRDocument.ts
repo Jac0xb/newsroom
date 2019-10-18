@@ -1,5 +1,3 @@
-import { NRDCPermission } from "./NRDCPermission";
-import { NRDCUSPermission } from "./NRDCUSPermission";
 import { NRDocComment } from "./NRDocComment";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
@@ -26,10 +24,6 @@ export interface NRDocument {
     workflow: NRWorkflow;
 
     stage: NRStage;
-
-    permissions: NRDCPermission[];
-
-    usrpermissions: NRDCUSPermission[];
 
     comments: NRDocComment[];
 }

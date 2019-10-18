@@ -2,7 +2,6 @@ import { NRDocument } from "./NRDocument";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
 import { NRWFPermission } from "./NRWFPermission";
-import { NRWFUSPermission } from "./NRWFUSPermission";
 
 export interface NRWorkflow {
 
@@ -25,7 +24,5 @@ export interface NRWorkflow {
     stages: NRStage[];
 
     permissions: NRWFPermission[];
-
-    usrpermissions: NRWFUSPermission[];
 
 }

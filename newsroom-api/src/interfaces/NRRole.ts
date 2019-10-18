@@ -1,4 +1,3 @@
-import { NRDCPermission } from "./NRDCPermission";
 import { NRSTPermission } from "./NRSTPermission";
 import { NRUser } from "./NRUser";
 import { NRWFPermission } from "./NRWFPermission";
@@ -20,7 +19,5 @@ export interface NRRole {
     wfpermissions: NRWFPermission[];
 
     stpermissions: NRSTPermission[];
-
-    dcpermissions: NRDCPermission[];
 
 }

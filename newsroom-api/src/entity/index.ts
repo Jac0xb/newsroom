@@ -16,4 +16,3 @@ export { NRDocument } from "./NRDocument";
 export { NRDocComment } from "./NRDocComment";
 
 export { NRTrigger } from "./NRTrigger";
-

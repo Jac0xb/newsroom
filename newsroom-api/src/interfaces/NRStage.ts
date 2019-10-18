@@ -1,6 +1,5 @@
 import { NRDocument } from "./NRDocument";
 import { NRSTPermission } from "./NRSTPermission";
-import { NRSTUSPermission } from "./NRSTUSPermission";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
 
@@ -27,6 +26,4 @@ export interface NRStage {
     documents: NRDocument[];
 
     permissions: NRSTPermission[];
-
-    usrpermissions: NRSTUSPermission[];
 }

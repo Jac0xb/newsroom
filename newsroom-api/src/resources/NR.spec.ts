@@ -2303,7 +2303,7 @@ describe("28. POST /api/roles", () => {
         const nrl = new NRRole();
         nrl.id = rlSeq;
         rlSeq++;
-        
+
         nrl.name = "sdfasdfas";
         nrl.description = "sdfasfasfdasfd";
 
@@ -2343,7 +2343,7 @@ describe("28. POST /api/roles", () => {
 
         expect(resp).not.toBeUndefined();
         expect(resp.status).toEqual(200);
-        
+
         const rlr = resp.body;
         expect(rlr.name).toEqual(nrl.name);
         expect(rlr.description).toEqual(nrl.description);
