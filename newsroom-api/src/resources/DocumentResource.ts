@@ -133,6 +133,33 @@ export class DocumentResource {
     }
 
     /**
+     * Get a specific document by ID.
+     *
+     * path:
+     *      - did: The unique id of the document in question.
+     *
+     * request:
+     *      - None.
+     *
+     * response:
+     *      - NRDocument with the following relations:
+     *          - permission: The permissions for the logged in user to the document.
+     *      - NotFoundError (404)
+     *          - If document not found.
+     */
+    @GET
+    @Path("/:did")
+    public async getDocument(@PathParam("did") did: number): Promise<NRDocument> {
+        const user = await this.serviceContext.user();
+        const dc = await this.dcServ.getDocument(did);
+        const dcwst = await this.dcRep.findOne(dc.id, { relations: ["stage", "workflow", "workflow.stages"] });
+
+        await this.dcServ.appendPermToDC(dcwst, dcwst.stage, user);
+
+        return dcwst;
+    }
+
+    /**
      * Get all documents a user has write permissions on.
      *
      * path:
@@ -146,10 +173,10 @@ export class DocumentResource {
      *          - permission: The permissions for the logged in user to the document.
      */
     @GET
-    @Path("/user")
-    public async getUserDocuments(): Promise<NRDocument[]> {
-        console.log("CALLED USER ENDPOINT");
-        const usr = await this.serviceContext.user();
+    @Path("/user/:uid")
+    public async getUserDocuments(@PathParam("uid") uid: number): Promise<NRDocument[]> {
+        // const usr = await this.serviceContext.user();
+        const usr = await this.usServ.getUser(uid);
         const docs = new Set<NRDocument>();
 
         // Group permissions.
@@ -171,34 +198,6 @@ export class DocumentResource {
     }
 
     /**
-     * Get a specific document by ID.
-     *
-     * path:
-     *      - did: The unique id of the document in question.
-     *
-     * request:
-     *      - None.
-     *
-     * response:
-     *      - NRDocument with the following relations:
-     *          - permission: The permissions for the logged in user to the document.
-     *      - NotFoundError (404)
-     *          - If document not found.
-     */
-    @GET
-    @Path("/:did")
-    public async getDocument(@PathParam("did") did: number): Promise<NRDocument> {
-        const user = await this.serviceContext.user();
-        console.log("CALLED INDIV ENDPOINT");
-        const dc = await this.dcServ.getDocument(did);
-        const dcwst = await this.dcRep.findOne(dc.id, { relations: ["stage", "workflow", "workflow.stages"] });
-
-        await this.dcServ.appendPermToDC(dcwst, dcwst.stage, user);
-
-        return dcwst;
-    }
-
-    /**
      * Get all documents for a specific author.
      *
      * path:
@@ -214,9 +213,11 @@ export class DocumentResource {
     @GET
     @Path("/author/:aid")
     public async getDocumentsForAuthor(@PathParam("aid") aid: number): Promise<NRDocument[]> {
-        console.log("CALLED AUTHOR ENDPOINT");
-        const user = await this.usServ.getUser(aid);
-        const udcs = await this.dcRep.find({ where: { creator: user } });
+        const user = await this.serviceContext.user();
+        const author = await this.usServ.getUser(aid);
+        const udcs = await this.dcRep.find({ where: { creator: author } });
+
+        await this.dcServ.appendPermsToDCS(udcs, user);
 
         return udcs;
     }
@@ -239,10 +240,13 @@ export class DocumentResource {
     @GET
     @Path("/stage/:sid")
     public async getAllDocumentsForStage(@IsInt @PathParam("sid") sid: number): Promise<NRDocument[]> {
-        console.log("CALLED STAGE ENDPOINT");
+        const user = await this.serviceContext.user();
         const st = await this.wfServ.getStage(sid);
+        const dcs = await this.dcRep.find({ where: { stage: st } });
 
-        return await this.dcRep.find({ where: { stage: st } });
+        await this.dcServ.appendPermsToDCS(dcs, user);
+
+        return dcs;
     }
 
     /**
@@ -263,10 +267,13 @@ export class DocumentResource {
     @GET
     @Path("/workflow/:wid")
     public async getAllDocumentsForWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRDocument[]> {
-        console.log("CALLED WORKFLOW ENDPOINT");
+        const user = await this.serviceContext.user();
         const wf = await this.wfServ.getWorkflow(wid);
+        const dcs = await this.dcRep.find({ where: { workflow: wf } });
 
-        return await this.dcRep.find({ where: { workflow: wf } });
+        await this.dcServ.appendPermsToDCS(dcs, user);
+
+        return dcs;
     }
 
     /**
@@ -287,9 +294,13 @@ export class DocumentResource {
     @GET
     @Path("/all/orphan/docs")
     public async getAllOrphanDocuments(): Promise<NRDocument[]> {
-        console.log("CALLED ORPHANS ENDPOINT");
-        return await this.dcRep.find( { where: [ { stage: IsNull(),
-                                                   workflow: IsNull() } ] });
+        const user = await this.serviceContext.user();
+        const dcs = await this.dcRep.find( { where: [ { stage: IsNull(),
+                                                        workflow: IsNull() } ] });
+
+        await this.dcServ.appendPermsToDCS(dcs, user);
+
+        return dcs;
     }
 
     /**
