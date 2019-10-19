@@ -19,4 +19,6 @@ export interface NRUser {
     lastUpdated: Date;
 
     roles: NRRole[];
+
+    admin: boolean;
 }

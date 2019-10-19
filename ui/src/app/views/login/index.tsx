@@ -31,8 +31,8 @@ class LoginPage extends React.Component<LoginPage.Props> {
                         To login, please click the link below.
                     </Typography>
                     <Button variant="contained"
-                        color="primary"
                         className={classes.button}
+                        color={"primary"}
                         onClick={this.handleLogin}
                     >
                         <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"

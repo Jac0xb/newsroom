@@ -83,16 +83,18 @@ class HeaderComponent extends React.Component<HeaderComponent.Props, HeaderCompo
      */
     render() {
         const {sideMenuOpen} = this.state;
-        const {classes, loggedOut} = this.props;
+        const {classes} = this.props;
         //const matches = useMediaQuery(theme.breakpoints.up('sm'));
         //console.log(matches)
+        
+        var userid = localStorage.getItem("user-id")
 
         return (
             <AppBar className={classes.header} style={{backgroundColor: "#1890ff", boxShadow: 'none'}}>
                 <Toolbar>
                     <Grid container justify="space-between" alignItems="center">
                         <Grid item>
-                        { (!loggedOut) ?  (
+                        { (userid) ?  (
                             <IconButton className={classes.menuButton} color="inherit" aria-label="Open Drawer"
                                         onClick={() => this.toggleDrawer(true)}>
                                 <MenuIcon/>
@@ -110,7 +112,7 @@ class HeaderComponent extends React.Component<HeaderComponent.Props, HeaderCompo
                             </Link>
                         </Grid>
                         <Grid item>
-                            { (!loggedOut) ?  (
+                            { (userid) ?  (
                             <Link to={AuthAPI.logout()}>
                             <Button style={{color: "white"}}>
                                 Sign Out

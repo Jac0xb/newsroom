@@ -63,6 +63,7 @@ export class UserResource {
 
         if (process.env.ADMIN_EMAIL) {
             initAdmin.email = process.env.ADMIN_EMAIL;
+            console.info(process.env.ADMIN_EMAIL);
         }
 
         initAdmin.userName = "a";

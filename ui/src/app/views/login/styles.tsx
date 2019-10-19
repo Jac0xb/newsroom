@@ -8,7 +8,8 @@ export function styles(theme: Theme) {
             paddingTop: "64px",
         },
         paper: {
-            padding: "128px 128px"
+            padding: "128px 128px",
+            textAlign: "center"
         },
         title: {
             textAlign: "center"
@@ -19,6 +20,13 @@ export function styles(theme: Theme) {
         },
         googleImage: {
             marginRight: "10px"
+        },
+        button: {
+            '&:hover': {
+                backgroundColor: "#5DB1FF"
+            },
+            backgroundColor: "#1890ff",
+            color: "white"
         }
     } as StyleRules);
 }

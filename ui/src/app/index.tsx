@@ -68,11 +68,13 @@ class App extends React.Component<App.Props, App.State, any> {
             var response = await axios.get<NRUser>(`/api/users/current`);
             this.setState({isAuthenticated: response.status != 401});
             
+            console.log(response.data)
             localStorage.setItem("user-id", response.data.id.toString());
         }
         catch (err) {
             localStorage.removeItem("user-id");
-            console.log(err);
+            this.setState({isAuthenticated: false});
+            //console.log(err);
         }
     };
 
@@ -83,11 +85,14 @@ class App extends React.Component<App.Props, App.State, any> {
 
         if (!isAuthenticated) {
             return (
+                
                 <React.Fragment>
-                    <AppHeader loggedOut={false}/>
-                    <div style={headerMargin}>
-                        <LoginPage/>
-                    </div>
+                    <MuiThemeProvider theme = { theme }>
+                        <AppHeader loggedOut={false}/>
+                        <div style={headerMargin}>
+                            <LoginPage/>
+                        </div>
+                    </MuiThemeProvider>
                 </React.Fragment>
             )
         }
