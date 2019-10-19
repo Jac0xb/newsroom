@@ -78,6 +78,11 @@ class HeaderComponent extends React.Component<HeaderComponent.Props, HeaderCompo
     toggleDrawer(open: boolean) {
         this.setState({sideMenuOpen: open});
     }
+
+    logout() {
+        window.location.href = "/auth/logout";
+    }
+
     /**
      * TODO: Document
      */
@@ -110,11 +115,10 @@ class HeaderComponent extends React.Component<HeaderComponent.Props, HeaderCompo
                         </Grid>
                         <Grid item>
                             { (loggedIn) ?  (
-                            <Link to={AuthAPI.logout()}>
-                            <Button style={{color: "white"}}>
+                            <Button style={{color: "white"}} onClick={() => this.logout()}>
                                 Sign Out
                             </Button>
-                            </Link>) : [] }
+                            ) : []}
                         </Grid>
                     </Grid>
 

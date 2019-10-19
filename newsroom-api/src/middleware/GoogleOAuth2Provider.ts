@@ -28,7 +28,12 @@ export class GoogleOAuth2Provider {
 
                 const un = email.split("@")[0];
 
-                let user = await this.userRepository.findOne({ where: { userName: un } });
+                if (!email) {
+                    console.log("Email could not be found.");
+                }
+
+                let user = await this.userRepository.findOne({ where: { email } });
+                // let user = await this.userRepository.findOne({ where: { userName: un } });
 
                 if (user === null) {
                     console.log("USER WAS NULL.");
@@ -41,6 +46,7 @@ export class GoogleOAuth2Provider {
                     console.log("USER WAS NOT NULL.");
                     user.firstName = profile.name.givenName;
                     user.lastName = profile.name.familyName;
+                    console.info(user);
                 }
 
                 user.accessToken = accessToken;

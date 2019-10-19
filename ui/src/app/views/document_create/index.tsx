@@ -52,10 +52,6 @@ export namespace DocumentCreate {
 
             axios.post("/api/documents", postMessage).then((response: any) => {
 
-                if (response) {
-                    this.props.induceSubmission();
-                }
-
             }).catch((error) => {
                 this.props.induceFlash(error.response.data.message || "Something has gone terribly wrong. We don't even know.");
                 this.props.updatePending(false);

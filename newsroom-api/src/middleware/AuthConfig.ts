@@ -40,10 +40,13 @@ export class AuthConfig {
 
         app.get("/auth/logout", async (req, res) => {
             await req.logout();
+            res.clearCookie("session");
+            res.clearCookie("seassion.sig");
             res.redirect("/");
         });
 
         serializeUser((user: any, done) => {
+            console.info(user);
             done(null, user.id);
         });
 
