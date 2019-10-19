@@ -5,7 +5,7 @@ import { Context, DELETE, GET, Path, PathParam, POST,
          PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 import { BadRequestError } from "typescript-rest/dist/server/model/errors";
-import { DBConstants, NRDocument, NRStage, NRSTPermission} from "../entity";
+import { DBConstants, NRUser, NRDocument, NRStage, NRSTPermission} from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { NotificationService } from "../services/triggers/NotificationService";
@@ -21,6 +21,9 @@ export class DocumentResource {
 
     @InjectRepository(NRStage)
     private stRep: Repository<NRStage>;
+
+    @InjectRepository(NRUser)
+    private usRep: Repository<NRUser>;
 
     @InjectRepository(NRDocument)
     private dcRep: Repository<NRDocument>;
@@ -54,7 +57,8 @@ export class DocumentResource {
      *          name: <string>,
      *          workflow: <NRWorkflow>,
      *          stage: <NRStage>,
-     *          description: <string>
+     *          description: <string>,
+     *          assignee: <NRUser>
      *      }
      *          - workflow: Needs to be a full workflow "object" but only "id" needs to be populated.
      *                      Must be present in the request.
@@ -104,6 +108,10 @@ export class DocumentResource {
         // They have permissions, so we know they have WRITE access already.
         document.permission = DBConstants.WRITE;
 
+        if (document.assignee) {
+            document.assignee = await this.usRep.findOne(document.assignee.id);
+        }
+
         document.creator = await this.usServ.getUser(user.id);
         document.googleDocId = await this.dcServ.createGoogleDocument(user, document);
 
@@ -129,6 +137,8 @@ export class DocumentResource {
         const dcs = await this.dcRep.find();
 
         await this.dcServ.appendPermsToDCS(dcs, user);
+        await this.dcServ.appendAssigneeToDCS(dcs);
+
         return dcs;
     }
 
@@ -155,6 +165,7 @@ export class DocumentResource {
         const dcwst = await this.dcRep.findOne(dc.id, { relations: ["stage", "workflow", "workflow.stages"] });
 
         await this.dcServ.appendPermToDC(dcwst, dcwst.stage, user);
+        await this.dcServ.appendAssigneeToDC(dcwst);
 
         return dcwst;
     }
@@ -194,7 +205,10 @@ export class DocumentResource {
             }
         }
 
-        return Array.from(docs.values());
+        const all: NRDocument[] = Array.from(docs.values());
+        await this.dcServ.appendAssigneeToDCS(all);
+
+        return all;
     }
 
     /**
@@ -218,6 +232,7 @@ export class DocumentResource {
         const udcs = await this.dcRep.find({ where: { creator: author } });
 
         await this.dcServ.appendPermsToDCS(udcs, user);
+        await this.dcServ.appendAssigneeToDCS(udcs);
 
         return udcs;
     }
@@ -245,6 +260,7 @@ export class DocumentResource {
         const dcs = await this.dcRep.find({ where: { stage: st } });
 
         await this.dcServ.appendPermsToDCS(dcs, user);
+        await this.dcServ.appendAssigneeToDCS(dcs);
 
         return dcs;
     }
@@ -272,6 +288,7 @@ export class DocumentResource {
         const dcs = await this.dcRep.find({ where: { workflow: wf } });
 
         await this.dcServ.appendPermsToDCS(dcs, user);
+        await this.dcServ.appendAssigneeToDCS(dcs);
 
         return dcs;
     }
@@ -299,6 +316,7 @@ export class DocumentResource {
                                                         workflow: IsNull() } ] });
 
         await this.dcServ.appendPermsToDCS(dcs, user);
+        await this.dcServ.appendAssigneeToDCS(dcs);
 
         return dcs;
     }
@@ -313,6 +331,7 @@ export class DocumentResource {
      *      {
      *          name: <string>,
      *          description: <string>
+     *          assignee: <NRUser>
      *      }
      *          - Don't have to pass either, but those that are passed will be updated.
      *
@@ -345,6 +364,10 @@ export class DocumentResource {
 
         if (document.description) {
             dc.description = document.description;
+        }
+
+        if (document.assignee) {
+            dc.assignee = await this.usRep.findOne(dc.assignee.id);
         }
 
         await this.dcRep.save(dc);
@@ -403,7 +426,7 @@ export class DocumentResource {
         const user = await this.serviceContext.user();
         await this.dcServ.getDocument(did);
 
-        const cd = await this.dcRep.findOne(did, { relations: ["stage", "workflow"] });
+        const cd = await this.dcRep.findOne(did, { relations: ["assignee", "stage", "workflow"] });
         const cs = cd.stage;
         const cw = cd.workflow;
 
@@ -452,7 +475,7 @@ export class DocumentResource {
         const user = await this.serviceContext.user();
         await this.dcServ.getDocument(did);
 
-        const cd = await this.dcRep.findOne(did, { relations: ["stage", "workflow"] });
+        const cd = await this.dcRep.findOne(did, { relations: ["assignee", "stage", "workflow"] });
         const cs = cd.stage;
         const cw = cd.workflow;
 
@@ -474,4 +497,38 @@ export class DocumentResource {
         await this.dcServ.appendPermToDC(cd, cd.stage, user);
         return cd;
     }
+
+    /**
+     * Assign a document to a user.
+     *
+     * path:
+     *     - did: The unique id of the document in question.
+     *     - uid: The user to assign the document to. 
+     *
+     * request:
+     *      - None.
+     *
+     * response:
+     *      - NRDocument with the following relations:
+     *          - permission: The permissions for the logged in user to the document.
+     *          - assignee: The user that the document is currently assigned to.
+     *      - NotFoundError (404)
+     *          - If document not found or the assignee is not found.
+     */
+    @PUT
+    @Path("/:did/assignee/:uid")
+    public async assignDocument(@IsInt @PathParam("did") did: number,
+                                @IsInt @PathParam("uid") uid: number): Promise<NRDocument> {
+        const user = await this.serviceContext.user();
+        const dc = await this.dcServ.getDocument(did);
+        const ass = await this.usServ.getUser(uid);
+
+        dc.assignee = ass;
+
+        await this.dcRep.save(dc);
+        await this.dcServ.appendPermToDC(dc, dc.stage, user);
+
+        return dc;
+    }
+
 }

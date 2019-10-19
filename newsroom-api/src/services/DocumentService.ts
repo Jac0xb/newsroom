@@ -105,4 +105,15 @@ export class DocumentService {
 
         return oAuth2Client;
     }
+
+    public async appendAssigneeToDC(dc: NRDocument) {
+        const ass = await this.dcRep.findOne(dc.id, { relations: ["assignee"] });
+        dc.assignee = ass.assignee;
+    }
+
+    public async appendAssigneeToDCS(dcs: NRDocument[]) {
+        for (const dc of dcs) {
+            await this.appendAssigneeToDC(dc);
+        }
+    }
 }

@@ -65,6 +65,18 @@ export class NRDocument implements INRDocument {
     public creator: NRUser;
 
     /**
+     * Relationship: NRUser
+     *      - Many: Users can be assigned many documents.
+     *      - One: Each document only has a single assignee.
+     */
+    @ManyToOne(
+        (type) => NRUser,
+    )
+    @JoinColumn({name: "assignee"})
+    public assignee: NRUser;
+
+
+    /**
      * Relationship: NRWorkflow
      *      - Many: Workflows can have many documents.
      *      - One: Each document is a part of only one workflow.

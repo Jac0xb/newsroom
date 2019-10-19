@@ -1946,6 +1946,57 @@ describe("23. PUT /api/documents/:did/prev", () => {
     });
 });
 
+describe("33. PUT /api/documents/:did/assignee/:uid", () => {
+    it("Test assigning a document to a user.", async () => {
+        const wfNum = 5;
+        const stNum = 3;
+        const dcNum = 2;
+        const grpName = "g";
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+        await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
+
+        let u;
+        let i = 0;
+        for (const wf of wfs) {
+            for (const st of wf.stages) {
+                for (const dc of st.documents) {
+                    if ((i % 3) === 1) {
+                        u = usr1;
+                    } else if ((i % 3 ) === 0) {
+                        u = usr2;
+                    } else {
+                        u = usr3;
+                    }
+
+                    const resp = await request(app)
+                                 .put(`/api/documents/${dc.id}/assignee/${u.id}`)
+                                 .set("User-Id", `${adminUsr.id}`);
+
+                    expect(resp).not.toBeUndefined();
+                    expect(resp.status).toEqual(200);
+
+                    dc.assignee = u;
+                    i++;
+                }
+            }
+        }
+
+        for (const wf of wfs) {
+            for (const st of wf.stages) {
+                for (const dc of st.documents) {
+                    await verifyDCDB(dc, st, wf);
+                    const dcdb = await dcRep.findOne(dc.id, { relations: ["assignee"] });
+
+                    expect(dcdb.assignee.id).toEqual(dc.assignee.id);
+                }
+            }
+        }
+
+    });
+});
+
 // User tests.
 describe("24. PUT /api/users/:uid", () => {
     it("Test updating a user as an admin.", async () => {
