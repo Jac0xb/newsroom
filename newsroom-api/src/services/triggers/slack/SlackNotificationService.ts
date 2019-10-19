@@ -1,6 +1,6 @@
 import { WebClient } from "@slack/web-api";
 import { Inject, Service } from "typedi";
-import { NRTrigger } from "../../../interfaces";
+import { NRTrigger } from "../../../entity";
 import { ChannelIdService } from "./ChannelIdService";
 
 @Service()

@@ -12,11 +12,9 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { NRDocument as INRDocument } from "../interfaces";
+import { INRDocument } from "../../../interfaces";
 
 import { DBConstants } from "./DBConstants";
-import { NRDCPermission } from "./NRDCPermission";
-import { NRDCUSPermission } from "./NRDCUSPermission";
 import { NRDocComment } from "./NRDocComment";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
@@ -67,6 +65,17 @@ export class NRDocument implements INRDocument {
     public creator: NRUser;
 
     /**
+     * Relationship: NRUser
+     *      - Many: Users can be assigned many documents.
+     *      - One: Each document only has a single assignee.
+     */
+    @ManyToOne(
+        (type) => NRUser,
+    )
+    @JoinColumn({name: "assignee"})
+    public assignee: NRUser;
+
+    /**
      * Relationship: NRWorkflow
      *      - Many: Workflows can have many documents.
      *      - One: Each document is a part of only one workflow.
@@ -89,30 +98,6 @@ export class NRDocument implements INRDocument {
         { onDelete: "SET NULL" },
     )
     public stage: NRStage;
-
-    /**
-     * Relationship: NRDCPermission
-     *      - One: Each permission is only associated with one document.
-     *      - Many: Each document can have many permissions.
-     */
-    @OneToMany(
-        (type) => NRDCPermission,
-        (permission) => permission.document,
-    )
-    @JoinTable()
-    public permissions: NRDCPermission[];
-
-    /**
-     * Relationship: NRDCUSPermission
-     *      - One: Each user permission is only associated with one document.
-     *      - Many: Each document can have many user permissions.
-     */
-    @OneToMany(
-        (type) => NRDCUSPermission,
-        (permission) => permission.document,
-    )
-    @JoinTable()
-    public usrpermissions: NRDCUSPermission[];
 
     /**
      * Relationship: NRDocComment

@@ -69,19 +69,17 @@ export namespace GroupCreate {
                 var match = regex.exec(item);
                 
                 if (match && match[1] != undefined && match[2] == undefined) {
-                    //wfpermissions.push(new NRWFPermission({
-                    //    id: parseInt(match[0]),
-                    //    access: 1
-                    //}));
-                    // 
-                    // https://stackoverflow.com/questions/39614311/class-constructor-type-in-typescript
-                    // https://dev.to/stereobooster/typescript-type-vs-interface-2n0c
+                    wfpermissions.push(new NRWFPermission({
+                        workflow: new NRWorkflow({id: parseInt(match[1])}), 
+                        access: 1
+                    }));
+
                 } 
                 else if (match && match[2] != undefined) {
-                    /*stpermissions.push(new NRSTPermission({ 
-                        id: parseInt(match[1]), 
-                        access: 1 
-                    }));*/
+                    stpermissions.push(new NRSTPermission({ 
+                        stage: new NRStage({id: parseInt(match[2])}), 
+                        access: 1
+                    }));
                 }
             })
 
@@ -89,31 +87,18 @@ export namespace GroupCreate {
                 return {id: users.id} as NRUser;
             })
 
-            var newRole : Partial<NRRole> = {
+            var newRole = new NRRole({
                 name: this.props.name || "",
                 description: this.props.description || "",
                 users,
-                wfpermissions: [],
-                stpermissions: []
-            };
-            
-            // TODO: Extract API call out.
+                wfpermissions,
+                stpermissions
+            });
             
             try {
 
                 var responseRole = await axios.post<NRRole>("/api/roles", newRole);
-
-                //for (var i = 0; i < wfpermissions.length; i++) {
-                //    await axios.put(`/api/roles/${responseRole.data.id}/workflow/${wfpermissions[i].id}`, {access: wfpermissions[i].access})
-                //}
-                //for (var i = 0; i < stpermissions.length; i++) {
-                //    await axios.put(`/api/roles/${responseRole.data.id}/stage/${stpermissions[i].id}`, {access: stpermissions[i].access})
-                //}
-
-                //if (responseRole) {
-                //    this.props.induceSubmission();
-                //}
-
+                
             }
             catch (err) {
                 this.props.induceFlash(err.response.data.message || "Something has gone terribly wrong. We don't even know.");

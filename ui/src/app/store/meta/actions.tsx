@@ -1,0 +1,42 @@
+import { ActionTypes, MetaReducerState, MetaDispatchers } from './types'
+import { bindActionCreators } from "redux";
+import { ThunkDispatch } from "redux-thunk";
+import { NRUser } from 'app/utils/models';
+import axios from 'axios';
+
+function login() {
+    return async (dispatch: any) => { 
+        try {
+            var response = await axios.get<NRUser>(`/api/users/current`);
+            
+            if (response.status != 401) {
+                dispatch({
+                    type: ActionTypes.AUTH_LOGIN,
+                    payload: response.data.id
+                })
+            } else {
+                throw response.status; 
+            }
+        }
+        catch (err) {
+            dispatch({
+                type: ActionTypes.AUTH_LOGIN_FAILED,
+                payload: err
+            })
+        }
+    }
+}
+
+export function logout(): any {
+    return {
+        type: ActionTypes.AUTH_LOGOUT
+    }
+}
+
+export function mapDispatchToProps<T>(dispatch: ThunkDispatch<MetaReducerState, any, any>, ownProps: T) : MetaDispatchers {
+    return {
+        ...ownProps,
+        login: bindActionCreators(login, dispatch),
+        logout: bindActionCreators(logout, dispatch)
+    }
+};

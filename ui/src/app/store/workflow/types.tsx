@@ -15,16 +15,15 @@ export interface WorkflowState {
 }
   
 // Describing the different ACTION NAMES available
-export const SET_PERMISSIONS = "SET_PERMISSIONS";
-export const ADD_STAGE = "ADD_STAGE";
-export const EDIT_STAGE = "EDIT_STAGE";
-export const SET_STAGES = "SET_STAGES";
-export const ADD_STAGE_CLICK = "ADD_STAGE_CLICK";
-export const EDIT_STAGE_CLICK = "EDIT_STAGE_CLICK";
-export const TEXT_CHANGE = "TEXT_CHANGE";
-export const CLOSE_DIALOG = "CLOSE_DIALOG";
-export const EDIT_FLASH = "EDIT_FLASH";
-export const STAGE_CHANGE = "STAGE_CHANGE";
+export const SET_PERMISSIONS = "@@workflow/SET_PERMISSIONS";
+export const ADD_STAGE = "@@workflow/ADD_STAGE";
+export const EDIT_STAGE = "@@workflow/EDIT_STAGE";
+export const SET_STAGES = "@@workflow/SET_STAGES";
+export const ADD_STAGE_CLICK = "@@workflow/ADD_STAGE_CLICK";
+export const EDIT_STAGE_CLICK = "@@workflow/DIT_STAGE_CLICK";
+export const TEXT_CHANGE = "@@workflow/TEXT_CHANGE";
+export const CLOSE_DIALOG = "@@workflow/CLOSE_DIALOG";
+export const EDIT_FLASH = "@@workflow/EDIT_FLASH";
   
 interface SetPermissionsAction {
   type: typeof SET_PERMISSIONS;

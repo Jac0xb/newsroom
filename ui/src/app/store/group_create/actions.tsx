@@ -1,68 +1,73 @@
 import { ActionTypes, GroupCreateReducerState, GroupCreateDispatchers } from './types'
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
-import { RSAA } from 'redux-api-middleware';
 import { WorkflowsAPI } from 'app/api/workflow';
+import { NRWorkflow, NRStage, NRUser } from 'app/utils/models'
 import { StagesAPI} from 'app/api/stage';
 import { UsersAPI } from 'app/api/user'
+import axios from 'axios';
 
 export function fetchWorkflows() : any {
 
-    var requestHeaders: HeadersInit = new Headers(
-        {'Content-Type': 'application/json'}
-    );
+    return () => async (dispatch: any) => {
+        
+        dispatch({ type: ActionTypes.FETCH_REQUEST })
 
-    return {
-        [RSAA]: {
-            endpoint: () => WorkflowsAPI.getAllWorkflows(),
-            method: 'GET',
-            headers: () => requestHeaders,
-            types: [
-                ActionTypes.FETCH_REQUEST,
-                ActionTypes.WORKFLOWS_SUCCESS,
-                ActionTypes.FETCH_FAILURE
-            ]
+        try {
+            
+            var workflows = await axios.get<NRWorkflow[]>(WorkflowsAPI.getAllWorkflows());
+        
+            dispatch({
+                type: ActionTypes.WORKFLOWS_SUCCESS,
+                payload: workflows
+            });
+
+        }
+        catch(err) {
+           dispatch({ type: ActionTypes.FETCH_FAILURE });
         }
     };
 }
 
 
 export function fetchStages() : any {
+    return () => async (dispatch: any) => {
+        
+        dispatch({ type: ActionTypes.FETCH_REQUEST })
 
-    var requestHeaders: HeadersInit = new Headers(
-        {'Content-Type': 'application/json'}
-    );
+        try {
+            
+            var workflows = await axios.get<NRStage[]>(StagesAPI.getAllStages());
+        
+            dispatch({
+                type: ActionTypes.STAGES_SUCCESS,
+                payload: workflows
+            });
 
-    return {
-        [RSAA]: {
-            endpoint: () => StagesAPI.getAllStages(),
-            method: 'GET',
-            headers: () => requestHeaders,
-            types: [
-                ActionTypes.FETCH_REQUEST,
-                ActionTypes.STAGES_SUCCESS,
-                ActionTypes.FETCH_FAILURE
-            ]
+        }
+        catch(err) {
+           dispatch({ type: ActionTypes.FETCH_FAILURE });
         }
     };
 }
 
 export function fetchUsers() : any {
+    return () => async (dispatch: any) => {
+        
+        dispatch({ type: ActionTypes.FETCH_REQUEST })
 
-    var requestHeaders: HeadersInit = new Headers(
-        {'Content-Type': 'application/json'}
-    );
+        try {
+            
+            var workflows = await axios.get<NRUser[]>(UsersAPI.getAllUsers());
+        
+            dispatch({
+                type: ActionTypes.USERS_SUCCESS,
+                payload: workflows
+            });
 
-    return {
-        [RSAA]: {
-            endpoint: () => UsersAPI.getAllUsers(),
-            method: 'GET',
-            headers: () => requestHeaders,
-            types: [
-                ActionTypes.FETCH_REQUEST,
-                ActionTypes.USERS_SUCCESS,
-                ActionTypes.FETCH_FAILURE
-            ]
+        }
+        catch(err) {
+           dispatch({ type: ActionTypes.FETCH_FAILURE });
         }
     };
 }

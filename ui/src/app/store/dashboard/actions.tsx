@@ -1,45 +1,50 @@
-import { ActionTypes, DashboardReducerState } from './types'
+import { ActionTypes, DashboardReducerState } from './types';
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 import { RSAA } from 'redux-api-middleware';
-import { DocumentsAPI } from 'app/api/document'
+import { DocumentsAPI } from 'app/api/document';
+import { NRDocument } from 'app/utils/models';
+import axios from 'axios';
 
 export function fetchDocuments() : any {
 
-    var requestHeaders: HeadersInit = new Headers(
-        {'Content-Type': 'application/json'}
-    );
+    return () => async (dispatch: any) => {
+        
+        dispatch({ type: ActionTypes.DOCUMENTS_REQUEST })
 
-    return {
-        [RSAA]: {
-            endpoint: () => DocumentsAPI.getAllDocuments(),
-            method: 'GET',
-            headers: () => requestHeaders,
-            types: [
-                ActionTypes.DOCUMENTS_REQUEST,
-                ActionTypes.DOCUMENTS_SUCCESS,
-                ActionTypes.DOCUMENTS_FAILURE
-            ]
+        try {
+            
+            var documents = await axios.get<NRDocument[]>(DocumentsAPI.getAllDocuments());
+        
+            dispatch({
+                type: ActionTypes.DOCUMENTS_SUCCESS,
+                payload: documents
+            });
+
+        }
+        catch(err) {
+           dispatch({ type: ActionTypes.DOCUMENTS_FAILURE });
         }
     };
 }
 
 export function deleteDocument(id: number) : any {
 
-    var requestHeaders: HeadersInit = new Headers(
-        {'Content-Type': 'application/json'}
-    );
+    return () => async (dispatch: any) => {
+        
+        dispatch({ type: ActionTypes.DELETE_REQUEST })
 
-    return {
-        [RSAA]: {
-            endpoint: () => DocumentsAPI.deleteDocument(id),
-            method: 'DELETE',
-            headers: () => requestHeaders,
-            types: [
-                ActionTypes.DOCUMENTS_REQUEST,
-                ActionTypes.DOCUMENTS_SUCCESS,
-                ActionTypes.DOCUMENTS_FAILURE
-            ]
+        try {
+            
+            await axios.delete(DocumentsAPI.deleteDocument(id));
+        
+            dispatch({
+                type: ActionTypes.DELETE_SUCCESS,
+            });
+
+        }
+        catch(err) {
+           dispatch({ type: ActionTypes.DELETE_FAILURE });
         }
     };
 }

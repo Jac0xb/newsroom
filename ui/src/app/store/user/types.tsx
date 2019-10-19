@@ -15,12 +15,12 @@ export interface UserState {
   
 // Describing the different ACTION NAMES available
 export const ActionTypes = {
-  SET_PERMISSIONS: "SET_PERMISSIONS", 
-  EDIT_FLASH: "EDIT_FLASH",
-  SET_GROUPS:"SET_GROUPS",
-  SET_SELECT:"SET_SELECT",
-  UPDATE_USER: "UPDATE_USER",
-  TEXT_CHANGE: "TEXT_CHANGE",
+  SET_PERMISSIONS: "@@user/SET_PERMISSIONS", 
+  EDIT_FLASH: "@@user/EDIT_FLASH",
+  SET_GROUPS:"@@user/SET_GROUPS",
+  SET_SELECT:"@@user/SET_SELECT",
+  UPDATE_USER: "@@user/UPDATE_USER",
+  TEXT_CHANGE: "@@user/TEXT_CHANGE",
 }
 
 // export const SET_PERMISSIONS = "SET_PERMISSIONS";

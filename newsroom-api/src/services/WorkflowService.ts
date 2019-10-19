@@ -2,8 +2,8 @@ import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Errors } from "typescript-rest";
-import { DBConstants, NRDocument, NRStage, NRSTPermission, NRSTUSPermission,
-         NRUser, NRWFUSPermission, NRWorkflow } from "../entity";
+import { DBConstants, NRDocument, NRStage, NRSTPermission,
+         NRUser, NRWorkflow } from "../entity";
 import { PermissionService } from "./PermissionService";
 
 @Service()
@@ -13,12 +13,6 @@ export class WorkflowService {
 
     @InjectRepository(NRStage)
     private stageRepository: Repository<NRStage>;
-
-    @InjectRepository(NRWFUSPermission)
-    private wfUSRepository: Repository<NRWFUSPermission>;
-
-    @InjectRepository(NRSTUSPermission)
-    private stUSRepository: Repository<NRSTUSPermission>;
 
     @InjectRepository(NRSTPermission)
     private permSTRepository: Repository<NRSTPermission>;
@@ -74,7 +68,12 @@ export class WorkflowService {
 
     public async appendPermToWFS(wfs: NRWorkflow[], user: NRUser): Promise<NRWorkflow[]> {
         for (let wf of wfs) {
+            if (wf.stages === undefined) {
+                wf.stages = [];
+            }
+
             wf = await this.appendPermToWF(wf, user);
+            await this.appendPermToSTS(wf.stages, user);
         }
 
         return wfs;
@@ -92,36 +91,6 @@ export class WorkflowService {
         }
 
         return stgs;
-    }
-
-    public async createWFUSPermission(wid: number,
-                                      user: NRUser,
-                                      perm: number): Promise<NRWFUSPermission> {
-        const wf = await this.getWorkflow(wid);
-
-        const wfup = new NRWFUSPermission();
-        wfup.workflow = wf;
-        wfup.user = user;
-        wfup.access = perm;
-
-        await this.userRepository.save(user);
-        await this.workflowRepository.save(wf);
-        return await this.wfUSRepository.save(wfup);
-    }
-
-    public async createSTUSPermission(sid: number,
-                                      user: NRUser,
-                                      perm: number): Promise<NRSTUSPermission> {
-        const st = await this.getStage(sid);
-
-        const stup = new NRSTUSPermission();
-        stup.stage = st;
-        stup.user = user;
-        stup.access = perm;
-
-        await this.userRepository.save(user);
-        await this.stageRepository.save(st);
-        return await this.stUSRepository.save(stup);
     }
 
    public async getStage(sid: number): Promise<NRStage> {
