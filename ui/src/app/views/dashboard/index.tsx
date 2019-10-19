@@ -13,6 +13,8 @@ import { withStyles } from '@material-ui/core/styles';
 
 import { LinkedButton } from './components/LinkedButton';
 import { styles } from './styles';
+import MaterialTable from 'material-table';
+import { Link } from 'react-router-dom';
 
 export namespace Dashboard {
 
@@ -45,7 +47,7 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
             this.props.fetchDocuments();
         }
         catch (err) {
-            console.log(err);
+            //this.props.induceFlash(err);
         }
 
     }
@@ -59,7 +61,7 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 
     render() {
 
-        const { classes, pending } = this.props;
+        const { classes, pending, documents } = this.props;
 
         return (
             <main className={classes.main}>
@@ -71,7 +73,22 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
                     <LoadingComponent />
                 :
                 <div className={classes.documentGrid}>
-                    {this.renderDocuments()}
+                    { <MaterialTable
+                        columns={[
+                            {title: "Headline", render: (document: NRDocument) => {
+                                return <Link to={`/document/${document.id}/edit`}>
+                                    {document.name}
+                                </Link>
+                            }},
+                            {title: "Workflow", field: "Workflow"},
+                            {title: "Created", field: "created"},
+                            {title: "Last Updated", field: "lastUpdated"},
+                            {title: "", render: (group: any) => {
+                                
+                            }}
+                        ]}
+                        data={documents}
+                        title="Groups"/>}
                 </div>
                 }
             </main>

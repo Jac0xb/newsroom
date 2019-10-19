@@ -21,12 +21,12 @@ import { GroupCreateReducerState, GroupCreateDispatchers } from 'app/store/group
 export namespace GroupCreate {
 
     export interface Props extends GroupCreateDispatchers, GroupCreateReducerState {
-        classes: Record<string, string>
+        classes: Record<string, string>;
     }
 
     export interface SimplePermission {
-        id: number
-        access: number
+        id: number;
+        access: number;
     }
 
     /**
