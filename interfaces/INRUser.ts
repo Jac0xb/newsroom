@@ -1,6 +1,6 @@
-import { NRRole } from "./NRRole";
+import { INRRole } from "./INRRole";
 
-export interface NRUser {
+export interface INRUser {
 
     id: number;
 
@@ -18,7 +18,7 @@ export interface NRUser {
 
     lastUpdated: Date;
 
-    roles: NRRole[];
+    roles: INRRole[];
 
-    admin: boolean;
+    admin: string;
 }

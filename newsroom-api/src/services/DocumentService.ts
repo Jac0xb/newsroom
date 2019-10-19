@@ -96,16 +96,6 @@ export class DocumentService {
         });
     }
 
-    private createOAuth2Client(user: NRUser) {
-        const oAuth2Client = new google.auth.OAuth2(DocumentService.OAUTH_CREDS);
-
-        oAuth2Client.setCredentials({
-            access_token: user.accessToken,
-        });
-
-        return oAuth2Client;
-    }
-
     public async appendAssigneeToDC(dc: NRDocument) {
         const ass = await this.dcRep.findOne(dc.id, { relations: ["assignee"] });
         dc.assignee = ass.assignee;
@@ -115,5 +105,15 @@ export class DocumentService {
         for (const dc of dcs) {
             await this.appendAssigneeToDC(dc);
         }
+    }
+
+    private createOAuth2Client(user: NRUser) {
+        const oAuth2Client = new google.auth.OAuth2(DocumentService.OAUTH_CREDS);
+
+        oAuth2Client.setCredentials({
+            access_token: user.accessToken,
+        });
+
+        return oAuth2Client;
     }
 }

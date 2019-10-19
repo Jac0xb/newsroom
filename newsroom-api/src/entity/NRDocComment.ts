@@ -2,7 +2,7 @@ import { Column, CreateDateColumn, Entity, Index, JoinColumn,
          JoinTable, ManyToOne, OneToMany, PrimaryColumn,
          PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-import { NRDocComment as INRDocComment } from "../interfaces";
+import { INRDocComment } from "../../../interfaces";
 
 import { DBConstants } from "./DBConstants";
 import { NRDocument } from "./NRDocument";

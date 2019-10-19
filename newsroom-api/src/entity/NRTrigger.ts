@@ -2,7 +2,7 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { NRDocument } from "./NRDocument";
 import { NRWorkflow } from "./NRWorkflow";
 
-import { NRTrigger as INRTrigger, NRTriggerType } from "../interfaces";
+import { INRTrigger, NRTriggerType } from "../../../interfaces";
 
 @Entity()
 export class NRTrigger implements INRTrigger {

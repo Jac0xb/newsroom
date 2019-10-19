@@ -10,7 +10,8 @@
     "start:watch": "nodemon -e ts --watch src --exec 'yarn start'",
     "test": "jest --runInBand",
     "typeorm": "tsc && ts-node node_modules/typeorm/cli.js",
-    "buildDB": "yarn typeorm schema:sync && yarn typeorm migration:run"
+    "buildDB": "yarn typeorm schema:sync && yarn typeorm migration:run",
+    "buildstart": "yarn run build && yarn typeorm schema:sync && yarn typeorm migration:run && ts-node ."
   },
   "repository": {
     "type": "git",

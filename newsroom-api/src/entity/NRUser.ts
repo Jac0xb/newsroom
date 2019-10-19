@@ -4,7 +4,7 @@ import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany,
 import { DBConstants } from "./DBConstants";
 import { NRRole } from "./NRRole";
 
-import { NRUser as INRUser } from "../interfaces";
+import { INRUser } from "../../..//interfaces";
 
 /**
  * NRUser objects are used to track information about any user of the system.

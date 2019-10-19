@@ -8,7 +8,7 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { NRRole as INRRole } from "../interfaces";
+import { INRRole } from "../../../interfaces";
 
 import { DBConstants } from "./DBConstants";
 import { NRSTPermission } from "./NRSTPermission";

@@ -5,7 +5,7 @@ import { Context, DELETE, GET, Path, PathParam, POST,
          PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 import { BadRequestError } from "typescript-rest/dist/server/model/errors";
-import { DBConstants, NRUser, NRDocument, NRStage, NRSTPermission} from "../entity";
+import { DBConstants, NRDocument, NRStage, NRSTPermission, NRUser} from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { NotificationService } from "../services/triggers/NotificationService";
@@ -503,7 +503,7 @@ export class DocumentResource {
      *
      * path:
      *     - did: The unique id of the document in question.
-     *     - uid: The user to assign the document to. 
+     *     - uid: The user to assign the document to.
      *
      * request:
      *      - None.

@@ -8,7 +8,7 @@ import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
 import { NRWFPermission } from "./NRWFPermission";
 
-import { NRWorkflow as INRWorkflow } from "../interfaces";
+import { INRWorkflow } from "../../../interfaces";
 
 /**
  * NRWorkflow objects are made up by stages used to track documents.

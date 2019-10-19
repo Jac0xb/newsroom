@@ -12,7 +12,7 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { NRDocument as INRDocument } from "../interfaces";
+import { INRDocument } from "../../../interfaces";
 
 import { DBConstants } from "./DBConstants";
 import { NRDocComment } from "./NRDocComment";
@@ -74,7 +74,6 @@ export class NRDocument implements INRDocument {
     )
     @JoinColumn({name: "assignee"})
     public assignee: NRUser;
-
 
     /**
      * Relationship: NRWorkflow

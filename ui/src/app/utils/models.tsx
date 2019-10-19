@@ -1,41 +1,19 @@
 
 import { 
-    NRRole as INRRole, 
-    NRRole as INRGroup, 
-    NRUser as INRUser, 
-    NRStage as INRStage, 
-    NRDocument as INRDocument, 
-    NRWorkflow as INRWorkflow, 
-    //NRDCPermission as INRDCPermission, 
-    //NRWFUSPermission as INRWFUSPermission, 
-    NRWFPermission as INRWFPermission, 
-    NRSTPermission as INRSTPermission, 
-    //NRDCUSPermission as INRDCUSPermission, 
-    //NRSTUSPermission as INRSTUSPermission,
+    INRRole, 
+    INRUser, 
+    INRStage, 
+    INRDocument, 
+    INRWorkflow,
+    INRWFPermission, 
+    INRSTPermission,
     NRTriggerType,
-    NRTrigger as INRTrigger, 
-    //NRUserSummary as INRUserSummary,
-    NRDocComment as INRDocComment
-} from "../../../../newsroom-api/src/interfaces";
+    INRTrigger, 
+    INRDocComment
+} from "../../../../interfaces/index";
 
 
 export class NRRole implements INRRole {
-    id: number;
-    name: string;
-    description: string;
-    created: Date;
-    lastUpdated: Date;
-    users: INRUser[];
-    wfpermissions: INRWFPermission[];
-    stpermissions: INRSTPermission[];
-    dcpermissions: any[];
-
-    constructor(init?: Partial<NRRole>) {
-        Object.assign(this, init);
-    }
-}
-
-export class NRGroup implements INRGroup {
     id: number;
     name: string;
     description: string;
@@ -61,6 +39,7 @@ export class NRUser implements INRUser {
     created: Date;
     lastUpdated: Date;
     roles: INRRole[];
+    admin: string;
 
     constructor(init?: Partial<NRUser>) {
         Object.assign(this, init);
