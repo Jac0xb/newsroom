@@ -24,85 +24,17 @@ export const EDIT_STAGE_CLICK = "@@workflow/DIT_STAGE_CLICK";
 export const TEXT_CHANGE = "@@workflow/TEXT_CHANGE";
 export const CLOSE_DIALOG = "@@workflow/CLOSE_DIALOG";
 export const EDIT_FLASH = "@@workflow/EDIT_FLASH";
-  
-interface SetPermissionsAction {
-  type: typeof SET_PERMISSIONS;
-  canEdit: boolean;
-}
-
-interface AddStageAction {
-  type: typeof ADD_STAGE;
-  payload: NRStage;
-  index: number;
-}
-
-interface EditStageAction {
-  type: typeof EDIT_STAGE;
-  updatedStage: NRStage
-}
-
-interface CloseDialogAction {
-  type: typeof CLOSE_DIALOG;
-}
-
-interface SetStagesAction {
-  type: typeof SET_STAGES;
-  payload: Array<NRStage>;
-}
-
-interface StageAddClickAction {
-  type: typeof ADD_STAGE_CLICK;
-  seqID: number;
-}
-
-interface StageEditClickAction {
-  type: typeof EDIT_STAGE_CLICK;
-  stageID: number;
-  seqID: number;
-  name: string;
-  desc: string;
-}
-
-interface StageTextChangeAction {
-  type: typeof TEXT_CHANGE;
-  fieldName: string;
-  newValue: string;
-}
-
-interface EditFlashAction {
-  type: typeof EDIT_FLASH;
-  flash: string;
-}
-
-interface StageChangeAction {
-  type: typeof STAGE_CHANGE;
-  seqID: number
-}
 
 // Define Dispatchers
 export interface WorkflowDispatchers {
-  fetchSetPermissions: (canEdit: boolean) => WorkflowActionTypes
-  fetchSetStages: (stages: Array<NRStage>) => WorkflowActionTypes
-  fetchAddStage: (stage: NRStage, index: number) => WorkflowActionTypes
-  fetchStageAddClick: (seqID: number) => WorkflowActionTypes
-  fetchTextBoxChange: (fieldName: string, newValue: string) => WorkflowActionTypes
-  fetchStageEditClick: (stageID: number, seqID: number, newName: string, newDesc: string) => WorkflowActionTypes
-  fetchEditStage: (updatedStage: NRStage) => WorkflowActionTypes
-  fetchCloseDialog: () => WorkflowActionTypes
-  fetchEditFlash: (flash: string) => WorkflowActionTypes
-  fetchStageChange: (seqID: number) => WorkflowActionTypes
+  fetchSetPermissions: (canEdit: boolean) => any
+  fetchSetStages: (stages: Array<NRStage>) => any
+  fetchAddStage: (stage: NRStage, index: number) => any
+  fetchStageAddClick: (seqID: number) => any
+  fetchTextBoxChange: (fieldName: string, newValue: string) => any
+  fetchStageEditClick: (stageID: number, seqID: number, newName: string, newDesc: string) => any
+  fetchEditStage: (updatedStage: NRStage) => any
+  fetchCloseDialog: () => any
+  fetchEditFlash: (flash: string) => any
+  fetchStageChange: (seqID: number) => any
 }
-
-export type WorkflowActionTypes = 
-  AddStageAction 
-  | EditStageAction 
-  | SetStagesAction 
-  | StageAddClickAction 
-  | StageTextChangeAction 
-  | StageEditClickAction 
-  | CloseDialogAction 
-  | EditFlashAction
-  | SetPermissionsAction
-  | StageChangeAction;
-
-  
