@@ -11,6 +11,7 @@ export interface WorkflowState {
   dialogTextName: string,
   dialogTextDesc: string,
   canEdit: boolean
+  currentStage: NRStage
 }
   
 // Describing the different ACTION NAMES available
@@ -23,6 +24,7 @@ export const EDIT_STAGE_CLICK = "EDIT_STAGE_CLICK";
 export const TEXT_CHANGE = "TEXT_CHANGE";
 export const CLOSE_DIALOG = "CLOSE_DIALOG";
 export const EDIT_FLASH = "EDIT_FLASH";
+export const STAGE_CHANGE = "STAGE_CHANGE";
   
 interface SetPermissionsAction {
   type: typeof SET_PERMISSIONS;
@@ -37,6 +39,7 @@ interface AddStageAction {
 
 interface EditStageAction {
   type: typeof EDIT_STAGE;
+  updatedStage: NRStage
 }
 
 interface CloseDialogAction {
@@ -72,6 +75,11 @@ interface EditFlashAction {
   flash: string;
 }
 
+interface StageChangeAction {
+  type: typeof STAGE_CHANGE;
+  seqID: number
+}
+
 // Define Dispatchers
 export interface WorkflowDispatchers {
   fetchSetPermissions: (canEdit: boolean) => WorkflowActionTypes
@@ -80,9 +88,10 @@ export interface WorkflowDispatchers {
   fetchStageAddClick: (seqID: number) => WorkflowActionTypes
   fetchTextBoxChange: (fieldName: string, newValue: string) => WorkflowActionTypes
   fetchStageEditClick: (stageID: number, seqID: number, newName: string, newDesc: string) => WorkflowActionTypes
-  fetchEditStage: () => WorkflowActionTypes
+  fetchEditStage: (updatedStage: NRStage) => WorkflowActionTypes
   fetchCloseDialog: () => WorkflowActionTypes
   fetchEditFlash: (flash: string) => WorkflowActionTypes
+  fetchStageChange: (seqID: number) => WorkflowActionTypes
 }
 
 export type WorkflowActionTypes = 
@@ -94,6 +103,7 @@ export type WorkflowActionTypes =
   | StageEditClickAction 
   | CloseDialogAction 
   | EditFlashAction
-  | SetPermissionsAction;
+  | SetPermissionsAction
+  | StageChangeAction;
 
   

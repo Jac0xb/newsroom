@@ -10,8 +10,10 @@ import {
   CLOSE_DIALOG, 
   WorkflowState, 
   WorkflowActionTypes, 
-  EDIT_FLASH 
+  EDIT_FLASH, 
+  STAGE_CHANGE
 } from "./types";
+import { NRStage } from "app/utils/models";
 
 const initialState: WorkflowState = {
   stages: [],
@@ -22,7 +24,8 @@ const initialState: WorkflowState = {
   seqID: 0,
   dialogTextName: "",
   dialogTextDesc: "",
-  canEdit: false
+  canEdit: false,
+  currentStage: new NRStage({id: 0, name: "", description: ""}),
 };
 
 export function workflowReducer(
@@ -31,37 +34,19 @@ export function workflowReducer(
 ): WorkflowState {
   switch (action.type) {
     case SET_PERMISSIONS: {
-      return {
-        ...state,
-        canEdit: action.canEdit,
-      };
+      return { ...state, canEdit: action.canEdit, };
     }
     case ADD_STAGE: {
-      return {
-        ...state,
-        stages: [...state.stages.slice(0, action.index), action.payload, ...state.stages.slice(action.index)],
-        createDialogOpen: false,
-
-      };
+      return { ...state, stages: [...state.stages.slice(0, action.index), action.payload, ...state.stages.slice(action.index)], createDialogOpen: false, };
     }
     case EDIT_STAGE: {
-      return {
-        ...state,
-        editDialogOpen: false,
-      };
+      return { ...state, currentStage: action.updatedStage};
     }
     case CLOSE_DIALOG: {
-      return {
-        ...state,
-        editDialogOpen: false,
-        createDialogOpen: false,
-      };
+      return { ...state, editDialogOpen: false, createDialogOpen: false, };
     }
     case SET_STAGES: {
-      return {
-        ...state,
-        stages: action.payload,
-      };
+      return { ...state, stages: action.payload, };
     }
     case ADD_STAGE_CLICK: {
       return {
@@ -83,16 +68,16 @@ export function workflowReducer(
       };
     }
     case TEXT_CHANGE: {
-      return {
-        ...state,
-        [action.fieldName]: action.newValue,
-      };
+      return { ...state, [action.fieldName]: action.newValue, };
     }
     case EDIT_FLASH: {
-      return {
-        ...state,
-        flash: action.flash,
-      };
+      return { ...state, flash: action.flash, };
+    }
+    case STAGE_CHANGE: {
+      // console.log(action.seqID)
+      // console.log(state.stages)
+      // console.log(state.stages.find(x => x.sequenceId == action.seqID))
+      return { ...state, currentStage: state.stages.find(x => x.sequenceId == action.seqID) || new NRStage};
     }
     default:
       return state;

@@ -17,6 +17,7 @@ export namespace WorkflowStage {
         desc: string
         onEditClick: Function
         onDeleteClick: Function
+        onStageEditClick: Function
         canEdit: boolean
         show: number
         index: number
@@ -46,17 +47,6 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
   getDocuments() {
 
 		axios.get("/api/documents/stage/" + this.props.id).then((response) => {
-      // var documents: Array<NRDocument>[] = response.data
-
-      // Get all documents for this stage
-    //   documents.forEach(document => {
-    //     if(document.stage != null){
-    //       if(document.stage.id == this.props.id){
-    //         stageDocuments.push(document)
-    //       }
-    //     }
-    //   });
-      
 			this.setState({ stageDocuments: response.data })
 		});
   }
@@ -81,13 +71,7 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
 
     const { classes, show, index } = this.props;
     const { openMenu, stageDocuments } = this.state;
-
-    // Get most up-to-date documents list
-    // this.getDocuments();
-
-    // const docList = stageDocuments.map((document, i) =>
-		// 	<DocumentTileComponent key={i} document={document} compressed={true} onDelete={() => {}} />
-    // );
+    // this.props.onStageEditClick(rowData)
 
     return (
       <main className={classes.layout}>
@@ -101,13 +85,13 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
                   {title: "Due", field: "due"},
               ]}
               data={stageDocuments}
-              actions={[
-                {
-                  icon: 'edit',
-                  tooltip: 'Edit',
-                  onClick: (event, rowData) => console.log(rowData) //todo
-                }
-              ]}
+              // actions={[
+              //   {
+              //     icon: 'edit',
+              //     tooltip: 'Edit',
+              //     onClick: (event, rowData) => this.props.onStageEditClick(rowData) //todo
+              //   }
+              // ]}
               />
           : null
         }

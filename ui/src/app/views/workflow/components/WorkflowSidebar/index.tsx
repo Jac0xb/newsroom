@@ -1,14 +1,17 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import { Drawer, List, ListItem, Divider, ListItemText, ListItemIcon } from '@material-ui/core';
+import { Drawer, List, ListItem, Divider, ListItemText, ListItemIcon, TextField } from '@material-ui/core';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
 
 
 export namespace WorkflowMenuBar {
     export interface Props {
-        classes?: any 
+        classes?: any
+        textName: string
+        textDesc: string 
+        onTextChange: Function
     }
     export interface State {
 
@@ -22,6 +25,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
             
         }
     }
+
     render() {
 
         const { classes } = this.props;
@@ -37,16 +41,26 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                 paper: classes.drawerPaper,
                 }}
             >
+                <TextField
+                    id="name"
+                    label="Name"
+                    className={classes.textField}
+                    value={this.props.textName}
+                    onChange={(event) => this.props.onTextChange('name', event.target.value)}
+                    margin="normal"
+                />
+                <TextField
+                    id="desc"
+                    label="Description"
+                    className={classes.textField}
+                    value={this.props.textDesc}
+                    onChange={(event) => this.props.onTextChange('description', event.target.value)}
+                    margin="normal"
+                    variant="standard"
+                />
+                {/* <Divider /> */}
                 <List>
-                {['Stage Name', 'Stage Desc', 'Triggers'].map((text, index) => (
-                    <ListItem button key={text}>
-                    <ListItemText primary={text} />
-                    </ListItem>
-                ))}
-                </List>
-                <Divider />
-                <List>
-                {['Due Date'].map((text, index) => (
+                {['Triggers', 'Due Date'].map((text, index) => (
                     <ListItem button key={text}>
                     <ListItemText primary={text} />
                     </ListItem>
