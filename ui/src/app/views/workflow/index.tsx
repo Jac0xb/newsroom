@@ -12,7 +12,8 @@ import { mapDispatchToProps } from "app/store/workflow/actions";
 import { connect } from "react-redux";
 import { WorkflowDispatchers, WorkflowState } from "app/store/workflow/types";
 import WorkflowSidebar from './components/WorkflowSidebar';
-import MaterialTable from 'material-table';
+import { NRDocument } from '../../../../../newsroom-api/src/interfaces';
+import { NRStage } from 'app/utils/models';
 
 export namespace Workflow {
   export interface Props extends WorkflowDispatchers, WorkflowState {
@@ -23,14 +24,14 @@ export namespace Workflow {
       }
     }
   }
-  export interface State { value: number }
+  export interface State { }
 }
 
 class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
   constructor(props: Workflow.Props) {
         super(props)
-        this.state = { value: 0 }
+        this.state = { }
   }
 
   componentDidMount() {
@@ -46,6 +47,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
       const stages = response.data;
       this.props.fetchSetStages(stages);
+      this.props.fetchStageChange(0)
     })
   }
 
@@ -149,7 +151,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
       this.getStages()
 
       // close dialog
-      this.props.fetchEditStage()
+      // this.props.fetchEditStage()
     }).catch((error) => {
 
         if (error.response.status == 403) {
@@ -177,6 +179,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
   };
 
+  // For scrollable stage tabs
   a11yProps(index: any) {
     return {
       id: `scrollable-auto-tab-${index}`,
@@ -184,22 +187,30 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
     };
   }
 
-  handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
-    this.setState({ value: newValue })
+  handleTextChange = (name: string, newValue: string) => {
+    var updateCurrent = this.props.currentStage
+
+    if(name == "name")
+      updateCurrent.name = newValue;
+    if(name == "description")
+      updateCurrent.description = newValue;
+    
+
+    this.props.fetchEditStage(updateCurrent)
   };
 
   render() {
 
-    const { classes } = this.props;
-    const { value } = this.state;
+    const { classes, currentStage } = this.props;
+    const { } = this.state;
 
     return (
       <React.Fragment>
         <main className={classes.main}>
         <AppBar position="static" color="default">
         <Tabs
-          value={value}
-          onChange={this.handleChange}
+          value={currentStage.sequenceId}
+          onChange={(event: React.ChangeEvent<{}>, sequenceID: number) => this.props.fetchStageChange(sequenceID)}
           indicatorColor="primary"
           textColor="primary"
           variant="scrollable"
@@ -211,7 +222,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
           <Tab label="Stage Three" {...this.a11yProps(2)} />
         </Tabs>
       </AppBar>
-      <WorkflowSidebar />
+      <WorkflowSidebar textName={currentStage.name} textDesc={currentStage.description} onTextChange={this.handleTextChange} />
 
         {(this.props.flash != "") ?
             <Paper className={classes.flashMessage}>
@@ -233,7 +244,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
               </div>
               {this.props.stages.map((stage, index) => (
                 <div className={classes.stage}>
-                  <WorkflowStage show={this.state.value} index={index} canEdit={this.props.canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(stageID: number) => this.handleStageEditClick(stageID)} onDeleteClick={(stageID: number) => this.handleStageDeleteClick(stageID)}/>
+                  <WorkflowStage show={currentStage.sequenceId} index={stage.sequenceId} canEdit={this.props.canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(stageID: number) => this.handleStageEditClick(stageID)} onDeleteClick={(stageID: number) => this.handleStageDeleteClick(stageID)} onStageEditClick={this.props.fetchStageChange}/>
                   {/* { this.props.canEdit ? 
                     <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index+1)} className={classes.addButton}>
                       <AddIcon />

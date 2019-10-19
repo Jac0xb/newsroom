@@ -15,6 +15,10 @@ export function styles(theme: Theme)  {
             minWidth: 250,
             top: 'auto',
         },
+        textField: {
+            margin: 8,
+            paddingBottom: 8,
+        },
         toolbar: theme.mixins.toolbar,
 
     } as StyleRules);

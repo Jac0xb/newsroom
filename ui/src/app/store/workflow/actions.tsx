@@ -1,4 +1,4 @@
-import { WorkflowActionTypes, SET_PERMISSIONS, ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK, CLOSE_DIALOG, EDIT_FLASH, WorkflowDispatchers } from "./types";
+import { WorkflowActionTypes, SET_PERMISSIONS, ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK, CLOSE_DIALOG, EDIT_FLASH, WorkflowDispatchers, STAGE_CHANGE } from "./types";
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 import { NRStage } from "app/utils/models";
@@ -18,9 +18,10 @@ export function dispatchAddStage(newStage: NRStage, index: number): WorkflowActi
   };
 }
 
-export function dispatchEditStage(): WorkflowActionTypes {
+export function dispatchEditStage(updatedStage: NRStage): WorkflowActionTypes {
   return {
     type: EDIT_STAGE,
+    updatedStage: updatedStage
   };
 }
 
@@ -70,6 +71,13 @@ export function dispatchEditFlash(flash: string): WorkflowActionTypes {
   };
 }
 
+export function dispatchStageChange(seqID: number) : WorkflowActionTypes {
+  return {
+    type: STAGE_CHANGE,
+    seqID: seqID
+  };
+}
+
 // Map Dispatch
 export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, WorkflowActionTypes>, ownProps: T) : WorkflowDispatchers {
   return {
@@ -83,5 +91,6 @@ export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, Workflow
     fetchCloseDialog: bindActionCreators(dispatchCloseDialog, dispatch),
     fetchEditStage: bindActionCreators(dispatchEditStage, dispatch),
     fetchEditFlash: bindActionCreators(dispatchEditFlash, dispatch),
+    fetchStageChange: bindActionCreators(dispatchStageChange, dispatch),
   }
 };
