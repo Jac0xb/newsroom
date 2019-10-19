@@ -62,16 +62,24 @@ export class UserResource {
         const initAdmin = new NRUser();
 
         if (process.env.ADMIN_EMAIL) {
+            console.info("ADMIN_EMAIL=", process.env.ADMIN_EMAIL);
+
+            const u = await this.usRep.findOne( { where: { email: process.env.ADMIN_EMAIL } });
+            console.log(u);
+
             initAdmin.email = process.env.ADMIN_EMAIL;
-            console.info(process.env.ADMIN_EMAIL);
+
+            const un = initAdmin.email.split("@")[0];
+
+            initAdmin.userName = un;
+            initAdmin.firstName = un;
+            initAdmin.lastName = un;
+            initAdmin.admin = "Y";
+
+            this.usRep.save(initAdmin);
+        } else {
+            console.error("ERROR: ADMIN_EMAIL IS NOT SET");
         }
-
-        initAdmin.userName = "a";
-        initAdmin.firstName = "a";
-        initAdmin.lastName = "a";
-        initAdmin.admin = "Y";
-
-        this.usRep.save(initAdmin);
     }
 
     /**

@@ -26,14 +26,19 @@ export class GoogleOAuth2Provider {
             async (accessToken, refreshToken, profile, done) => {
                 const email = profile.emails[0].value;
 
-                const userName = email.split("@")[0];
+                const un = email.split("@")[0];
 
-                let user = await this.userRepository.findOne({userName});
+                let user = await this.userRepository.findOne({ where: { userName: un } });
 
-                if (user == null) {
+                if (user === null) {
+                    console.log("USER WAS NULL.");
                     user = this.userRepository.create();
                     user.email = email;
-                    user.userName = userName;
+                    user.userName = un;
+                    user.firstName = profile.name.givenName;
+                    user.lastName = profile.name.familyName;
+                } else if (user.email === email) {
+                    console.log("USER WAS NOT NULL.");
                     user.firstName = profile.name.givenName;
                     user.lastName = profile.name.familyName;
                 }
