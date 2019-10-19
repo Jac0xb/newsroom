@@ -17,7 +17,7 @@ export function fetchDocuments() : any {
         
             dispatch({
                 type: ActionTypes.DOCUMENTS_SUCCESS,
-                payload: documents
+                payload: documents.data
             });
 
         }

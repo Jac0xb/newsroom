@@ -19,7 +19,7 @@ export function fetchWorkflows() : any {
         
             dispatch({
                 type: ActionTypes.WORKFLOWS_SUCCESS,
-                payload: workflows
+                payload: workflows.data
             });
 
         }
@@ -37,11 +37,11 @@ export function fetchStages() : any {
 
         try {
             
-            var workflows = await axios.get<NRStage[]>(StagesAPI.getAllStages());
+            var stages = await axios.get<NRStage[]>(StagesAPI.getAllStages());
         
             dispatch({
                 type: ActionTypes.STAGES_SUCCESS,
-                payload: workflows
+                payload: stages.data
             });
 
         }
@@ -58,11 +58,11 @@ export function fetchUsers() : any {
 
         try {
             
-            var workflows = await axios.get<NRUser[]>(UsersAPI.getAllUsers());
+            var users = await axios.get<NRUser[]>(UsersAPI.getAllUsers());
         
             dispatch({
                 type: ActionTypes.USERS_SUCCESS,
-                payload: workflows
+                payload: users.data
             });
 
         }
