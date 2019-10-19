@@ -69,6 +69,7 @@ export class UserResource {
         initAdmin.userName = "a";
         initAdmin.firstName = "a";
         initAdmin.lastName = "a";
+        initAdmin.admin = "Y";
 
         this.usRep.save(initAdmin);
     }
