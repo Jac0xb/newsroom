@@ -17,7 +17,7 @@ export function fetchWorkflows() : any {
         
             dispatch({
                 type: ActionTypes.WORKFLOWS_SUCCESS,
-                payload: workflows
+                payload: workflows.data
             });
 
         }
