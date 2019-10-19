@@ -33,7 +33,7 @@ export function dispatchSelectChange(name: string, payload: Array<NRRole>): any 
 
 export function dispatchUpdateUser(id: number, payload: NRRole) : any {
 
-    return () => async (dispatch: any) => {
+    return async (dispatch: any) => {
 
         try {
             

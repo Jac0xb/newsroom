@@ -7,7 +7,7 @@ import axios from 'axios';
 
 export function fetchWorkflows() : any {
 
-    return () => async (dispatch: any) => {
+    return async (dispatch: any) => {
         
         dispatch({ type: ActionTypes.FETCH_REQUEST })
 

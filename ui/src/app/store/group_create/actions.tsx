@@ -9,7 +9,7 @@ import axios from 'axios';
 
 export function fetchWorkflows() : any {
 
-    return () => async (dispatch: any) => {
+    return async (dispatch: any) => {
         
         dispatch({ type: ActionTypes.FETCH_REQUEST })
 
@@ -31,7 +31,7 @@ export function fetchWorkflows() : any {
 
 
 export function fetchStages() : any {
-    return () => async (dispatch: any) => {
+    return async (dispatch: any) => {
         
         dispatch({ type: ActionTypes.FETCH_REQUEST })
 
@@ -52,7 +52,7 @@ export function fetchStages() : any {
 }
 
 export function fetchUsers() : any {
-    return () => async (dispatch: any) => {
+    return async (dispatch: any) => {
         
         dispatch({ type: ActionTypes.FETCH_REQUEST })
 

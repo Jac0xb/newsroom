@@ -1,14 +1,13 @@
 import { ActionTypes, DashboardReducerState } from './types';
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
-import { RSAA } from 'redux-api-middleware';
 import { DocumentsAPI } from 'app/api/document';
 import { NRDocument } from 'app/utils/models';
 import axios from 'axios';
 
 export function fetchDocuments() : any {
 
-    return () => async (dispatch: any) => {
+    return async (dispatch: any) => {
         
         dispatch({ type: ActionTypes.DOCUMENTS_REQUEST })
 
@@ -30,7 +29,7 @@ export function fetchDocuments() : any {
 
 export function deleteDocument(id: number) : any {
 
-    return () => async (dispatch: any) => {
+    return async (dispatch: any) => {
         
         dispatch({ type: ActionTypes.DELETE_REQUEST })
 
