@@ -24,7 +24,7 @@ export namespace HeaderComponent {
 
     export interface Props {
         classes: Record<string, string>
-        loggedOut?: boolean
+        loggedIn?: boolean
     }
 
     export interface State {
@@ -82,19 +82,16 @@ class HeaderComponent extends React.Component<HeaderComponent.Props, HeaderCompo
      * TODO: Document
      */
     render() {
+
         const {sideMenuOpen} = this.state;
-        const {classes} = this.props;
-        //const matches = useMediaQuery(theme.breakpoints.up('sm'));
-        //console.log(matches)
-        
-        var userid = localStorage.getItem("user-id")
+        const {classes, loggedIn} = this.props;
 
         return (
             <AppBar className={classes.header} style={{backgroundColor: "#1890ff", boxShadow: 'none'}}>
                 <Toolbar>
                     <Grid container justify="space-between" alignItems="center">
                         <Grid item>
-                        { (userid) ?  (
+                        { (loggedIn) ?  (
                             <IconButton className={classes.menuButton} color="inherit" aria-label="Open Drawer"
                                         onClick={() => this.toggleDrawer(true)}>
                                 <MenuIcon/>
@@ -112,7 +109,7 @@ class HeaderComponent extends React.Component<HeaderComponent.Props, HeaderCompo
                             </Link>
                         </Grid>
                         <Grid item>
-                            { (userid) ?  (
+                            { (loggedIn) ?  (
                             <Link to={AuthAPI.logout()}>
                             <Button style={{color: "white"}}>
                                 Sign Out

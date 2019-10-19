@@ -1,25 +1,28 @@
 import { ActionTypes, DocumentCreateReducerState, DocumentCreateDispatchers } from './types'
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
-import { RSAA } from 'redux-api-middleware';
-import { WorkflowsAPI } from 'app/api/workflow';
+import { NRWorkflow } from 'app/utils/models'
+import { WorkflowsAPI } from 'app/api/workflow'
+import axios from 'axios';
 
 export function fetchWorkflows() : any {
 
-    var requestHeaders: HeadersInit = new Headers(
-        {'Content-Type': 'application/json'}
-    );
+    return () => async (dispatch: any) => {
+        
+        dispatch({ type: ActionTypes.FETCH_REQUEST })
 
-    return {
-        [RSAA]: {
-            endpoint: () => WorkflowsAPI.getAllWorkflows(),
-            method: 'GET',
-            headers: () => requestHeaders,
-            types: [
-                ActionTypes.FETCH_REQUEST,
-                ActionTypes.WORKFLOWS_SUCCESS,
-                ActionTypes.FETCH_FAILURE
-            ]
+        try {
+            
+            var workflows = await axios.get<NRWorkflow[]>(WorkflowsAPI.getAllWorkflows());
+        
+            dispatch({
+                type: ActionTypes.WORKFLOWS_SUCCESS,
+                payload: workflows
+            });
+
+        }
+        catch(err) {
+           dispatch({ type: ActionTypes.FETCH_FAILURE });
         }
     };
 }

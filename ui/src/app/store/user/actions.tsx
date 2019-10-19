@@ -1,9 +1,9 @@
 import { ActionTypes, UserDispatchers } from "./types";
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
-import { NRRole as NRGroup, NRWorkflow, NRRole } from "app/utils/models";
-import { RSAA } from 'redux-api-middleware';
+import { NRRole, NRWorkflow } from "app/utils/models";
 import { UsersAPI } from 'app/api/user'
+import axios from 'axios';
 
 export function dispatchSetPermissions(permissions: Array<NRWorkflow>): any {
   return {
@@ -30,24 +30,26 @@ export function dispatchSelectChange(name: string, payload: Array<NRRole>): any 
     payload: payload
   };
 }
+
 export function dispatchUpdateUser(id: number, payload: NRRole) : any {
 
-  var requestHeaders: HeadersInit = new Headers(
-      {'Content-Type': 'application/json'}
-  );
+    return () => async (dispatch: any) => {
 
-  return {
-      [RSAA]: {
-          endpoint: () => UsersAPI.updateUserRoles(id),
-          method: 'PUT',
-          headers: () => requestHeaders,
-          body: payload,
-          types: [
-            ActionTypes.UPDATE_USER,
-          ]
-      }
-  };
+        try {
+            
+            await axios.put(UsersAPI.updateUserRoles(id), payload);
+        
+            dispatch({
+                type: ActionTypes.UPDATE_USER
+            });
+
+        }
+        catch(err) {
+           //dispatch({ type: ActionTypes.FETCH_FAILURE });
+        }
+    };
 }
+
 export function dispatchHandleTextChange(name: string, payload: string): any {
   return {
     type: ActionTypes.TEXT_CHANGE,

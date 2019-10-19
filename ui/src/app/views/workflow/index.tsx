@@ -53,8 +53,8 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
   getRole() {
     // TODO: Set User edit permissions
     const wfId = this.props.match.params.id;
-    var user = Number(localStorage.getItem("user-id"))
 
+    /*
     //get users roles
     axios.get("/api/users/" + user + "/roles").then((response) => {
       var role = response.data[0].id
@@ -69,6 +69,8 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
         });
       })
     })
+    */
+    this.props.fetchSetPermissions(true)
   }
 
   // Change text dialog text boxes

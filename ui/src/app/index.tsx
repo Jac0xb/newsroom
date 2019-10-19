@@ -21,107 +21,93 @@ import Group from "app/views/group";
 import GroupCreate from 'app/views/group_create';
 import AppHeader from 'app/components/common/header';
 import LoginPage from 'app/views/login';
-import axios from 'axios';
-import { NRUser } from 'app/utils/models';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';  
 
+import { compose } from 'recompose';
+import { connect } from 'react-redux';
+import { mapDispatchToProps } from 'app/store/meta/actions';
+import { mapStateToProps } from 'app/store/meta/reducers';
+import { MetaReducerState, MetaDispatchers } from 'app/store/meta/types';
+
 export namespace App {
-    export interface Props {
+
+    export interface Props extends MetaReducerState, MetaDispatchers {
         classes?: any
     }
 
-    export interface State {
-        isAuthenticated: Boolean,
-        users: NRUser[]
-    }
-}
-
-const theme = createMuiTheme({
-    palette: {
-       primary: {
-          light: '#1890ff',
-          main: '#1890ff',
-          dark: '#1890ff'
-       },
-       secondary: {
-         main: '#1890ff',
-       },
-    }
- });
- 
-
-class App extends React.Component<App.Props, App.State, any> {
-
-    constructor(props: App.Props) {
-        super(props);
-        this.state = {
-            isAuthenticated: false,
-            users: []
+    export const Theme = createMuiTheme({
+        palette: {
+           primary: {
+              light: '#1890ff',
+              main: '#1890ff',
+              dark: '#1890ff'
+           },
+           secondary: {
+             main: '#1890ff',
+           },
         }
-    }
-
-    async componentDidMount() {
-
-        var id = localStorage.getItem("user-id");
-        
-        try {
-            var response = await axios.get<NRUser>(`/api/users/current`);
-            this.setState({isAuthenticated: response.status != 401});
-            
-            console.log(response.data)
-            localStorage.setItem("user-id", response.data.id.toString());
+     });
+     
+    
+    export class Component extends React.Component<App.Props, any> {
+    
+        constructor(props: App.Props) {
+            super(props);
         }
-        catch (err) {
-            localStorage.removeItem("user-id");
-            this.setState({isAuthenticated: false});
-            //console.log(err);
+    
+        componentDidMount() {
+            this.props.login();
         }
-    };
-
-    render() {
-
-        const {isAuthenticated} = this.state;
-        const headerMargin = { marginTop: "64px" };
-
-        if (!isAuthenticated) {
+    
+        render() {
+    
+            const { userid } = this.props;
+            const headerMargin = { marginTop: "64px" };
+    
+            if (!userid) {
+                return (
+                    
+                    <React.Fragment>
+                        <MuiThemeProvider theme = { App.Theme }>
+                            <AppHeader />
+                            <div style={headerMargin}>
+                                <LoginPage/>
+                            </div>
+                        </MuiThemeProvider>
+                    </React.Fragment>
+                )
+            }
+    
             return (
-                
                 <React.Fragment>
-                    <MuiThemeProvider theme = { theme }>
-                        <AppHeader loggedOut={false}/>
-                        <div style={headerMargin}>
-                            <LoginPage/>
-                        </div>
-                    </MuiThemeProvider>
+                    <CssBaseline/>
+                    <AppHeader loggedIn={true} />
+    
+                    <div style={headerMargin}>
+                        <MuiThemeProvider theme = { App.Theme }>
+                            <Switch>
+                                <Route exact path="/" component={Dashboard} userid={userid}/>
+                                <Route exact path="/document" component={Dashboard} userid={userid}/>
+                                <Route exact path="/document/create" component={DocumentCreator} userid={userid}/>
+                                <Route exact path="/workflow" component={Workflows} userid={userid}/>
+                                <Route path="/document/:id/edit" component={DocumentEditor} userid={userid}/>
+                                <Route path="/workflow/:id/edit" component={Workflow} userid={userid}/>
+                                <Route exact path="/groups" component={Groups} userid={userid}/>
+                                <Route exact path="/groups/create" component={GroupCreate} userid={userid}/>
+                                <Route path="/groups/:id" component={Group} userid={userid}/>
+                                <Route exact path="/users" component={Users} userid={userid}/>
+                                <Route path="/users/:id" component={EditUser} userid={userid}/>
+                            </Switch>
+                        </MuiThemeProvider>
+                    </div>
                 </React.Fragment>
-            )
+            );
         }
-
-        return (
-            <React.Fragment>
-                <CssBaseline/>
-                <AppHeader />
-
-                <div style={headerMargin}>
-                    <MuiThemeProvider theme = { theme }>
-                        <Switch>
-                            <Route exact path="/" component={Dashboard}/>
-                            <Route exact path="/document" component={Dashboard}/>
-                            <Route exact path="/document/create" component={DocumentCreator}/>
-                            <Route exact path="/workflow" component={Workflows}/>
-                            <Route path="/document/:id/edit" component={DocumentEditor}/>
-                            <Route path="/workflow/:id/edit" component={Workflow}/>
-                            <Route exact path="/groups" component={Groups}/>
-                            <Route exact path="/groups/create" component={GroupCreate}/>
-                            <Route path="/groups/:id" component={Group}/>
-                            <Route exact path="/users" component={Users}/>
-                            <Route path="/users/:id" component={EditUser}/>
-                        </Switch>
-                    </MuiThemeProvider>
-                </div>
-            </React.Fragment>
-        );
     }
 }
 
-export default hot(module)(App);
+export default hot(module)(compose<App.Props, {}>(
+)(connect<App.Props>(
+    mapStateToProps,
+    mapDispatchToProps
+)(App.Component)));
