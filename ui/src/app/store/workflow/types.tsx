@@ -24,6 +24,7 @@ export const EDIT_STAGE_CLICK = "@@workflow/DIT_STAGE_CLICK";
 export const TEXT_CHANGE = "@@workflow/TEXT_CHANGE";
 export const CLOSE_DIALOG = "@@workflow/CLOSE_DIALOG";
 export const EDIT_FLASH = "@@workflow/EDIT_FLASH";
+export const STAGE_CHANGE = "@@workflow/STAGE_CHANGE";
   
 interface SetPermissionsAction {
   type: typeof SET_PERMISSIONS;

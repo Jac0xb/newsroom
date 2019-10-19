@@ -12,7 +12,7 @@ import { mapDispatchToProps } from "app/store/workflow/actions";
 import { connect } from "react-redux";
 import { WorkflowDispatchers, WorkflowState } from "app/store/workflow/types";
 import WorkflowSidebar from './components/WorkflowSidebar';
-import { NRDocument } from '../../../../../newsroom-api/src/interfaces';
+// import { NRDocument } from '../../../../../newsroom-api/src/interfaces';
 import { NRStage } from 'app/utils/models';
 
 export namespace Workflow {
