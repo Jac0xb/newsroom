@@ -4,7 +4,7 @@ export function styles(theme: Theme)  {
     return (
     {
         layout: {
-            display: "flex",
+            width: "100%",
         },
         stage: {
             padding: theme.spacing(2),

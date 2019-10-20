@@ -1,18 +1,16 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import { Drawer, List, ListItem, Divider, ListItemText, ListItemIcon, TextField, FormLabel, FormControl } from '@material-ui/core';
+import { Drawer, List, ListItem, ListItemText, TextField, FormLabel, FormControl, Button } from '@material-ui/core';
 import { NRStage } from 'app/utils/models';
 
 
 export namespace WorkflowMenuBar {
     export interface Props {
         classes?: any
-        // textName: string
-        // textDesc: string 
-        // stageId: number
         stage: NRStage
         onTextChange: Function
+        onUpdateClick: Function
     }
     export interface State {
 
@@ -25,6 +23,10 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
         this.state = {
             
         }
+    }
+
+    handleUpdateClick = () => {
+        this.props.onUpdateClick(this.props.stage)
     }
 
     render() {
@@ -63,14 +65,16 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                         // variant="outlined"
                     />
                 </FormControl>
-                {/* <Divider /> */}
                 <List>
                 {['Triggers', 'Due Date'].map((text, index) => (
                     <ListItem button key={text}>
-                    <ListItemText primary={text} />
+                        <ListItemText primary={text} />
                     </ListItem>
                 ))}
                 </List>
+                <FormControl className={classes.buttonGroup}>
+                    <Button variant="contained" className={classes.button} onClick={this.handleUpdateClick} >Update</Button>
+                </FormControl>
             </Drawer>
         </main>
         );

@@ -11,6 +11,7 @@ import { WorkflowDispatchers, WorkflowState } from "app/store/workflow/types";
 import WorkflowSidebar from './components/WorkflowSidebar';
 import Subheader from 'app/components/common/subheader';
 import { values } from 'lodash-es';
+import { NRStage } from 'app/utils/models';
 
 export namespace Workflow {
     export interface Props extends WorkflowDispatchers, WorkflowState {
@@ -72,11 +73,6 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
         this.props.fetchSetPermissions(true)
     }
 
-    // Change text dialog text boxes
-    handleDialogTextChange = (name: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.props.fetchTextBoxChange(name, event.target.value)
-    };
-
     handleStageAddClick(open: boolean, seqID: number) {
         // Need the ID of the stage so that we know which button is being pressed and where to add the stage.
         this.props.fetchStageAddClick(seqID)
@@ -108,7 +104,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
         // The ID of the current workflow, the sequence id of the stage.
         const wfId = this.props.match.params.id;
-        const seqID = this.props.seqID;
+        const seqID = this.props.currentStage.sequenceId;
 
         // Post new stage req to backend
         axios.post("/api/workflows/" + wfId + "/stages/" + seqID, {
@@ -133,12 +129,12 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
     handleStageEdit = (textBoxName: string, textBoxDesc: string) => {
 
-        const { seqID, stageID } = this.props;
+        const { currentStage } = this.props;
         // The ID of the current workflow, the sequence id of the stage, the id of the stage.
         const wfId = this.props.match.params.id;
 
-        axios.put("/api/workflows/" + wfId + "/stages/" + stageID, {
-            sequenceId: seqID,
+        axios.put("/api/workflows/" + wfId + "/stages/" + currentStage.id, {
+            sequenceId: currentStage.sequenceId,
             name: textBoxName,
             description: textBoxDesc,
             creator: Number(localStorage.getItem("user-id")),
@@ -188,7 +184,9 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                 <main className={classes.main}>
                     <Subheader tabs={tabs} selectedTab={currentStage.sequenceId} onTabChange={((sequenceID: number) => this.props.fetchStageChange(sequenceID)).bind(this)}/>
                     <div className={classes.spacer} />
-                    <WorkflowSidebar stage={currentStage} onTextChange={this.props.fetchEditStage} />
+                    <WorkflowSidebar stage={currentStage} 
+                    onTextChange={this.props.fetchEditStage} 
+                    onUpdateClick={(updatedStage: NRStage) => this.props.fetchUpdateStage(this.props.match.params.id, updatedStage)} />
 
                     {(this.props.flash != "") ?
                         <Paper className={classes.flashMessage}>
@@ -203,6 +201,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                             {this.props.stages.map((stage, index) => (
                                 <div className={classes.stage}>
                                     <WorkflowStage show={currentStage.sequenceId}
+                                        key={index}
                                         index={stage.sequenceId} 
                                         canEdit={this.props.canEdit} 
                                         id={stage.id} 

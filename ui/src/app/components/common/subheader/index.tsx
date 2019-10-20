@@ -14,7 +14,7 @@ export namespace Subheader {
     }
 
     export interface State {
-        sideMenuOpen: boolean;
+        sideMenuOpen: boolean; 
     }
 
 
@@ -39,7 +39,7 @@ export namespace Subheader {
                     aria-label="scrollable auto tabs example"
                 >
                     {
-                        this.props.tabs.map((tabName: string, i: number) => <Tab label={tabName} />)
+                        this.props.tabs.map((tabName: string, index: number) => <Tab key={index} label={tabName} />)
                     }
                 </Tabs>
             </AppBar>);

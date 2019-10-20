@@ -23,29 +23,6 @@ export const ActionTypes = {
   TEXT_CHANGE: "@@user/TEXT_CHANGE",
 }
 
-// export const SET_PERMISSIONS = "SET_PERMISSIONS";
-// export const EDIT_FLASH = "EDIT_FLASH";
-// export const SET_GROUPS = "SET_GROUPS";
-// export const SET_SELECT = "SET_SELECT";
-  
-// interface SetPermissionsAction {
-//   type: typeof SET_PERMISSIONS;
-//   permissions: Array<NRWorkflow>;
-// }
-// interface EditFlashAction {
-//   type: typeof EDIT_FLASH;
-//   flash: string;
-// }
-// interface SetGroupsAction {
-//   type: typeof SET_GROUPS;
-//   groups: Array<NRGroup>;
-// }
-// interface SelectChangeAction {
-//   type: typeof SET_SELECT;
-//   name: string;
-//   payload: any;
-// }
-
 // Define Dispatchers
 export interface UserDispatchers {
   fetchSetPermissions: (permissions: Array<NRWorkflow>) => any
@@ -55,11 +32,5 @@ export interface UserDispatchers {
   fetchUpdateUser: (id: number, payload: any) => any
   fetchHandleTextChange: (name: string, payload: string) => any
 }
-
-// export type UserActionTypes = 
-//   SetPermissionsAction 
-//   | EditFlashAction
-//   | SetGroupsAction
-//   | SelectChangeAction;
 
   

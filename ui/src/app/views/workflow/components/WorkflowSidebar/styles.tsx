@@ -25,6 +25,14 @@ export function styles(theme: Theme)  {
             margin: 0,
             paddingBottom: 8,
         },
+        buttonGroup: {
+            margin: 16,
+            position: "fixed",
+            bottom: 0,
+            right: 0,
+            width: 220
+
+        },
         toolbar: theme.mixins.toolbar,
 
     } as StyleRules);

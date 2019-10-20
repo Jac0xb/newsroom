@@ -13,17 +13,16 @@ export function styles(theme: Theme) {
         },
         workflowContent: {
             padding: theme.spacing(2),
-            display: "flex",
             overflowX: "auto",
         },
         spacer: {
             height: 48,
         },
         content: {
-
+            marginRight: 250
         },
         stage: {
-            // width: "-webkit-fill-available",
+            width: "100%",
         },
         stageGrid: {
             margin: theme.spacing(),
