@@ -10,13 +10,19 @@ export function styles(theme: Theme)  {
             width: 240,
             flexShrink: 0,
         },
+        formComp:{
+            margin: 10,
+        },
+        formLabel:{
+            paddingBottom: 8,
+        },
         drawerPaper: {
             zIndex: 1,
             minWidth: 250,
             top: 'auto',
         },
         textField: {
-            margin: 8,
+            margin: 0,
             paddingBottom: 8,
         },
         toolbar: theme.mixins.toolbar,

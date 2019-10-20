@@ -1,9 +1,7 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import { Paper, Typography, Divider, Grid, Menu, MenuItem, IconButton } from '@material-ui/core';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
-import { DocumentTileComponent } from 'app/views/dashboard/components/DocumentTile';
+import {  } from '@material-ui/core';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import MaterialTable from 'material-table';
@@ -15,9 +13,7 @@ export namespace WorkflowStage {
         id: number
         name: string
         desc: string
-        onEditClick: Function
         onDeleteClick: Function
-        onStageEditClick: Function
         canEdit: boolean
         show: number
         index: number
@@ -70,8 +66,7 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
   render() {
 
     const { classes, show, index } = this.props;
-    const { openMenu, stageDocuments } = this.state;
-    // this.props.onStageEditClick(rowData)
+    const { stageDocuments } = this.state;
 
     return (
       <main className={classes.layout}>
@@ -85,13 +80,6 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
                   {title: "Due", field: "due"},
               ]}
               data={stageDocuments}
-              // actions={[
-              //   {
-              //     icon: 'edit',
-              //     tooltip: 'Edit',
-              //     onClick: (event, rowData) => this.props.onStageEditClick(rowData) //todo
-              //   }
-              // ]}
               />
           : null
         }

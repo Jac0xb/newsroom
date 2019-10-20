@@ -1,16 +1,17 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import { Drawer, List, ListItem, Divider, ListItemText, ListItemIcon, TextField } from '@material-ui/core';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import MailIcon from '@material-ui/icons/Mail';
+import { Drawer, List, ListItem, Divider, ListItemText, ListItemIcon, TextField, FormLabel, FormControl } from '@material-ui/core';
+import { NRStage } from 'app/utils/models';
 
 
 export namespace WorkflowMenuBar {
     export interface Props {
         classes?: any
-        textName: string
-        textDesc: string 
+        // textName: string
+        // textDesc: string 
+        // stageId: number
+        stage: NRStage
         onTextChange: Function
     }
     export interface State {
@@ -28,7 +29,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
 
     render() {
 
-        const { classes } = this.props;
+        const { classes, stage } = this.props;
         const {  } = this.state;
 
         return (
@@ -41,23 +42,27 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                 paper: classes.drawerPaper,
                 }}
             >
-                <TextField
-                    id="name"
-                    label="Name"
-                    className={classes.textField}
-                    value={this.props.textName}
-                    onChange={(event) => this.props.onTextChange('name', event.target.value)}
-                    margin="normal"
-                />
-                <TextField
-                    id="desc"
-                    label="Description"
-                    className={classes.textField}
-                    value={this.props.textDesc}
-                    onChange={(event) => this.props.onTextChange('description', event.target.value)}
-                    margin="normal"
-                    variant="standard"
-                />
+                <FormControl className={classes.formComp}>
+                    <FormLabel className={classes.formLabel}>Stage Name</FormLabel>
+                    <TextField
+                        id="name"
+                        className={classes.textField}
+                        value={stage.name}
+                        onChange={(event) => this.props.onTextChange(stage.id, 'name', event.target.value)}
+                        margin="normal"
+                    />
+                </FormControl>
+                <FormControl className={classes.formComp}>
+                    <FormLabel className={classes.formLabel}>Stage Description</FormLabel>
+                    <TextField
+                        id="desc"
+                        className={classes.textField}
+                        value={stage.description}
+                        onChange={(event) => this.props.onTextChange(stage.id, 'description', event.target.value)}
+                        margin="normal"
+                        // variant="outlined"
+                    />
+                </FormControl>
                 {/* <Divider /> */}
                 <List>
                 {['Triggers', 'Due Date'].map((text, index) => (

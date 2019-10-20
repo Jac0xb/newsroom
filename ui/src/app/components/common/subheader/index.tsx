@@ -25,9 +25,10 @@ export namespace Subheader {
         }
 
         render() {
+            const { classes } = this.props;
     
             return (                    
-            <AppBar color="default" style={{zIndex: 1000, position: "fixed", top:"64px"}}>
+            <AppBar color="default" className={classes.appBar}>
                 <Tabs
                     value={this.props.selectedTab}
                     onChange={(_event: React.ChangeEvent<{}>, sequenceID: number) => this.props.onTabChange(sequenceID)}

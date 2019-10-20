@@ -16,6 +16,9 @@ export function styles(theme: Theme) {
             display: "flex",
             overflowX: "auto",
         },
+        spacer: {
+            height: 48,
+        },
         content: {
 
         },

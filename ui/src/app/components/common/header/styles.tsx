@@ -7,7 +7,8 @@ export function styles(theme: Theme)  {
         	width: '100%',
         },
         header: {
-            position: "fixed"
+			position: "fixed",
+			maxHeight: 64
         },
         grow: {
         	flexGrow: 1,

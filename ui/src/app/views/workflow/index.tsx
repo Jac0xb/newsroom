@@ -1,8 +1,5 @@
-import { Fab, Tabs, Tab, AppBar, Box } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import AddIcon from '@material-ui/icons/Add';
 import WorkflowStage from 'app/views/workflow/components/WorkflowStage';
-import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
 import * as React from 'react';
 import { styles } from './styles';
@@ -12,9 +9,8 @@ import { mapDispatchToProps } from "app/store/workflow/actions";
 import { connect } from "react-redux";
 import { WorkflowDispatchers, WorkflowState } from "app/store/workflow/types";
 import WorkflowSidebar from './components/WorkflowSidebar';
-// import { NRDocument } from '../../../../../newsroom-api/src/interfaces';
-import { NRStage } from 'app/utils/models';
 import Subheader from 'app/components/common/subheader';
+import { values } from 'lodash-es';
 
 export namespace Workflow {
     export interface Props extends WorkflowDispatchers, WorkflowState {
@@ -87,26 +83,26 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
     };
 
     // Search and apply current stage info for dialog edit box
-    handleStageEditClick = (stageID: number) => {
+    // handleStageEditClick = (stageID: number) => {
 
-        const { stages } = this.props;
+    //     const { stages } = this.props;
 
-        var dialogTextName = ""
-        var dialogTextDesc = ""
-        var seqID = 0;
+    //     var dialogTextName = ""
+    //     var dialogTextDesc = ""
+    //     var seqID = 0;
 
-        stages.forEach((stage, index) => {
-            if (stage.id === stageID) {
-                dialogTextName = stage.name
-                dialogTextDesc = stage.description
-                seqID = index
-            }
-        });
+    //     stages.forEach((stage, index) => {
+    //         if (stage.id === stageID) {
+    //             dialogTextName = stage.name
+    //             dialogTextDesc = stage.description
+    //             seqID = index
+    //         }
+    //     });
 
-        // Show Dialog with current stage info
-        this.props.fetchStageEditClick(stageID, seqID, dialogTextName, dialogTextDesc)
+    //     // Show Dialog with current stage info
+    //     // this.props.fetchStageEditClick(stageID, seqID, dialogTextName, dialogTextDesc)
 
-    };
+    // };
 
     handleStageAdd = (textBoxName: string, textBoxDesc: string) => {
 
@@ -131,7 +127,6 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
             if (error.response.status == 403) {
                 this.props.fetchEditFlash("You lack permissions to add stages in this workflow.")
-                this.props.fetchCloseDialog()
             }
         });
     };
@@ -157,7 +152,6 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
             if (error.response.status == 403) {
                 this.props.fetchEditFlash("You lack permissions to edit a stage in this workflow.")
-                this.props.fetchCloseDialog()
             }
         });
 
@@ -180,18 +174,6 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
     };
 
-    handleTextChange = (name: string, newValue: string) => {
-        var updateCurrent = this.props.currentStage
-
-        if (name == "name")
-            updateCurrent.name = newValue;
-        if (name == "description")
-            updateCurrent.description = newValue;
-
-
-        this.props.fetchEditStage(updateCurrent)
-    };
-
     render() {
 
         const { classes, currentStage } = this.props;
@@ -201,13 +183,12 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
             return stage.name;
         });
 
-        console.log(tabs);
-
         return (
             <React.Fragment>
                 <main className={classes.main}>
                     <Subheader tabs={tabs} selectedTab={currentStage.sequenceId} onTabChange={((sequenceID: number) => this.props.fetchStageChange(sequenceID)).bind(this)}/>
-                    <WorkflowSidebar textName={currentStage.name} textDesc={currentStage.description} onTextChange={this.handleTextChange} />
+                    <div className={classes.spacer} />
+                    <WorkflowSidebar stage={currentStage} onTextChange={this.props.fetchEditStage} />
 
                     {(this.props.flash != "") ?
                         <Paper className={classes.flashMessage}>
@@ -219,27 +200,25 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                     }
                     <div className={classes.content}>
                         <div className={classes.workflowContent}>
-                            <div className={classes.stage}>
-                                {/* { !this.props.canEdit ? 
-                  <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.addButton}>
-                    <AddIcon />
-                  </Fab> 
-                  : null 
-                } */}
-                            </div>
                             {this.props.stages.map((stage, index) => (
                                 <div className={classes.stage}>
-                                    <WorkflowStage show={currentStage.sequenceId} index={stage.sequenceId} canEdit={this.props.canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(stageID: number) => this.handleStageEditClick(stageID)} onDeleteClick={(stageID: number) => this.handleStageDeleteClick(stageID)} onStageEditClick={this.props.fetchStageChange} />
-                                    {/* { this.props.canEdit ? 
-                    <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index+1)} className={classes.addButton}>
-                      <AddIcon />
-                    </Fab> 
-                    : null 
-                  } */}
+                                    <WorkflowStage show={currentStage.sequenceId}
+                                        index={stage.sequenceId} 
+                                        canEdit={this.props.canEdit} 
+                                        id={stage.id} 
+                                        name={stage.name} 
+                                        desc={stage.description} 
+                                        onDeleteClick={(stageID: number) => this.handleStageDeleteClick(stageID)} 
+                                    />
                                 </div>
                             ))}
+                            {/* 
+                            <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.addButton}>
+                            <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index+1)} className={classes.addButton}>
+                            <AddIcon />
                             <DialogItem textBoxName={this.props.dialogTextName} textBoxDesc={this.props.dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={this.props.createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.props.fetchCloseDialog()} handleSave={this.handleStageAdd} />
                             <DialogItem textBoxName={this.props.dialogTextName} textBoxDesc={this.props.dialogTextDesc} title={"Edit Stage"} desc={"Enter stage information"} show={this.props.editDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.props.fetchCloseDialog()} handleSave={this.handleStageEdit} />
+                            */}
                         </div>
                     </div>
                 </main>

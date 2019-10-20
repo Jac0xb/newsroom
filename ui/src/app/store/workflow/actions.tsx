@@ -1,4 +1,4 @@
-import { WorkflowActionTypes, SET_PERMISSIONS, ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_STAGE_CLICK, CLOSE_DIALOG, EDIT_FLASH, WorkflowDispatchers, STAGE_CHANGE } from "./types";
+import { WorkflowActionTypes, SET_PERMISSIONS, ADD_STAGE, EDIT_STAGE, SET_STAGES, ADD_STAGE_CLICK, TEXT_CHANGE, EDIT_FLASH, WorkflowDispatchers, STAGE_CHANGE } from "./types";
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 import { NRStage } from "app/utils/models";
@@ -18,19 +18,6 @@ export function dispatchAddStage(newStage: NRStage, index: number): WorkflowActi
   };
 }
 
-export function dispatchEditStage(updatedStage: NRStage): WorkflowActionTypes {
-  return {
-    type: EDIT_STAGE,
-    updatedStage: updatedStage
-  };
-}
-
-export function dispatchCloseDialog(): WorkflowActionTypes {
-  return {
-    type: CLOSE_DIALOG,
-  };
-}
-
 export function dispatchSetStages(stages: Array<NRStage>): WorkflowActionTypes {
   return {
     type: SET_STAGES,
@@ -45,13 +32,12 @@ export function dispatchStageAddClick(seqID: number): WorkflowActionTypes {
   };
 }
 
-export function dispatchStageEditClick(stageID: number, seqID: number, name: string, desc: string): WorkflowActionTypes {
+export function dispatchStageEdit(stageID: number, name: string, newValue: string) : WorkflowActionTypes {
   return {
-    type: EDIT_STAGE_CLICK,
+    type: EDIT_STAGE,
     stageID: stageID,
-    seqID: seqID,
     name: name,
-    desc: desc,
+    newValue: newValue,
     
   };
 }
@@ -87,9 +73,7 @@ export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, Workflow
     fetchAddStage: bindActionCreators(dispatchAddStage, dispatch),
     fetchStageAddClick: bindActionCreators(dispatchStageAddClick, dispatch),
     fetchTextBoxChange: bindActionCreators(dispatchTextBoxChange, dispatch),
-    fetchStageEditClick: bindActionCreators(dispatchStageEditClick, dispatch),
-    fetchCloseDialog: bindActionCreators(dispatchCloseDialog, dispatch),
-    fetchEditStage: bindActionCreators(dispatchEditStage, dispatch),
+    fetchEditStage: bindActionCreators(dispatchStageEdit, dispatch),
     fetchEditFlash: bindActionCreators(dispatchEditFlash, dispatch),
     fetchStageChange: bindActionCreators(dispatchStageChange, dispatch),
   }

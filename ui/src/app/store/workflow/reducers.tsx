@@ -6,8 +6,6 @@ import {
   SET_STAGES, 
   ADD_STAGE_CLICK, 
   TEXT_CHANGE, 
-  EDIT_STAGE_CLICK, 
-  CLOSE_DIALOG, 
   WorkflowState, 
   WorkflowActionTypes, 
   EDIT_FLASH, 
@@ -22,8 +20,8 @@ const initialState: WorkflowState = {
   editDialogOpen: false,
   stageID: 0,
   seqID: 0,
-  dialogTextName: "",
-  dialogTextDesc: "",
+  stageName: "",
+  stageDesc: "",
   canEdit: false,
   currentStage: new NRStage({id: 0, name: "", description: ""}),
 };
@@ -39,12 +37,6 @@ export function workflowReducer(
     case ADD_STAGE: {
       return { ...state, stages: [...state.stages.slice(0, action.index), action.payload, ...state.stages.slice(action.index)], createDialogOpen: false, };
     }
-    case EDIT_STAGE: {
-      return { ...state, currentStage: action.updatedStage};
-    }
-    case CLOSE_DIALOG: {
-      return { ...state, editDialogOpen: false, createDialogOpen: false, };
-    }
     case SET_STAGES: {
       return { ...state, stages: action.payload, };
     }
@@ -52,19 +44,15 @@ export function workflowReducer(
       return {
         ...state,
         createDialogOpen: true,
-        dialogTextName: "",
-        dialogTextDesc: "",
+        stageName: "",
+        stageDesc: "",
         seqID: action.seqID
       };
     }
-    case EDIT_STAGE_CLICK: {
+    case EDIT_STAGE: {
       return {
-        ...state,
-        editDialogOpen: true,
-        stageID: action.stageID,
-        seqID: action.seqID,
-        dialogTextName: action.name,
-        dialogTextDesc: action.desc,
+        ...state, 
+        currentStage: {...state.currentStage, [action.name]: action.newValue}
       };
     }
     case TEXT_CHANGE: {
@@ -74,9 +62,6 @@ export function workflowReducer(
       return { ...state, flash: action.flash, };
     }
     case STAGE_CHANGE: {
-      // console.log(action.seqID)
-      // console.log(state.stages)
-      // console.log(state.stages.find(x => x.sequenceId == action.seqID))
       return { ...state, currentStage: state.stages.find(x => x.sequenceId == action.seqID) || new NRStage};
     }
     default:
