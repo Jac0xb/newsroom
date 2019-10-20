@@ -19,13 +19,13 @@ import { Link } from 'react-router-dom';
 export namespace Dashboard {
 
     export interface Props extends DashboardDispatchers, DashboardReducerState {
-        classes?: any
-        history: any
-        match?: { params: any }
-        location: any,
+        classes?: any;
+        history: any;
+        match?: { params: any };
+        location: any;
     }
     export interface State {
-        documents: NRDocument[]
+        submitted: boolean;
     }
 }
 
@@ -33,7 +33,7 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 
     constructor(props: Dashboard.Props, context?: any) {
         super(props, context);
-        this.state = { documents: [] };
+        this.state = { submitted: false };
     }
 
     async componentDidMount() {
@@ -62,7 +62,7 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
     render() {
 
         const { classes, pending, documents } = this.props;
-
+        console.log(documents)
         return (
             <main className={classes.main}>
                 <div className={classes.buttonGroup}>
@@ -72,23 +72,34 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
                 {(pending) ?
                     <LoadingComponent />
                 :
-                <div className={classes.documentGrid}>
-                    { <MaterialTable
+                <div style={{width: "100%", padding: "0px 24px", marginTop: "24px"}}>
+                    { <MaterialTable 
                         columns={[
-                            {title: "Headline", render: (document: NRDocument) => {
+                            {title: "Headline", field:"name", render: (document: NRDocument) => {
                                 return <Link to={`/document/${document.id}/edit`}>
                                     {document.name}
                                 </Link>
                             }},
-                            {title: "Workflow", field: "Workflow"},
-                            {title: "Created", field: "created"},
-                            {title: "Last Updated", field: "lastUpdated"},
+                            {title: "Workflow", field:"workflow.name", render: (document: NRDocument) => { 
+                                return <Link to={`/workflow/${document.workflow.id}/edit`}>
+                                    {document.workflow.name}
+                                </Link>
+                            }},
+                            {title: "Created", field:"created", searchable: true, render: (document: NRDocument) => { 
+                                return <div>{`${document.created.getDay()}/${document.created.getMonth()}/${document.created.getFullYear()}`}</div>;
+                            }},
+                            {title: "Last Modified", field:"lastUpdated", render: (document: NRDocument) => { 
+                                return <div>{`${document.lastUpdated.getDay()}/${document.lastUpdated.getMonth()}/${document.lastUpdated.getFullYear()}`}</div>;
+                            }},
                             {title: "", render: (group: any) => {
                                 
                             }}
                         ]}
+                        options={{
+                            search: false
+                        }}
                         data={documents}
-                        title="Groups"/>}
+                        title="Documents"/>}
                 </div>
                 }
             </main>

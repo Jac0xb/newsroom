@@ -2,14 +2,6 @@ import { StyleRules, Theme } from '@material-ui/core/styles';
 
 export function styles(theme: Theme)  {
     return ({
-		documentGrid: {
-			display: "flex",
-			flexWrap: "wrap",
-			"& > *" : {
-				margin: "16px"
-            },
-            justifyContent: "center"
-		},
 		buttonGroup: {
 			display: "flex",
 			padding: "24px",
@@ -19,7 +11,10 @@ export function styles(theme: Theme)  {
 				marginRight: "16px"
 			},
 			flexWrap: 'wrap'
-		},
+        },
+        topDivider: {
+            margin: "0px 24px"
+        },
 		textField: {
 			marginRight: theme.spacing(),
 			marginTop: 0,

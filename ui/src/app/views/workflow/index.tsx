@@ -206,7 +206,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
         return (
             <React.Fragment>
                 <main className={classes.main}>
-                    <Subheader tabs={tabs} onTabChange={((sequenceID: number) => this.props.fetchStageChange(sequenceID)).bind(this)}/>
+                    <Subheader tabs={tabs} selectedTab={currentStage.sequenceId} onTabChange={((sequenceID: number) => this.props.fetchStageChange(sequenceID)).bind(this)}/>
                     <WorkflowSidebar textName={currentStage.name} textDesc={currentStage.description} onTextChange={this.handleTextChange} />
 
                     {(this.props.flash != "") ?
