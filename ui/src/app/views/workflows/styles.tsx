@@ -4,11 +4,9 @@ export function styles(theme: Theme)  {
         return (
         {
             button: {
-                margin: theme.spacing(),
                 color: "primary" ,
             },
             buttonGroup: {
-                padding: theme.spacing(2),
             },
             dialog: {
                 width: 'auto'

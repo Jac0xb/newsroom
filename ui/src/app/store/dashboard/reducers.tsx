@@ -17,7 +17,7 @@ export function dashboardReducer(state = initialState, action: any): DashboardRe
         case ActionTypes.DOCUMENTS_SUCCESS:
             return { documents: action.payload || [] };
         case ActionTypes.DOCUMENTS_FAILURE:
-            return { ...state, error: action.payload.response.message };
+            return { ...state, error: action.payload };
         default:
             return state;
     }

@@ -8,7 +8,9 @@ export function styles(theme: Theme)  {
         },
         header: {
 			position: "fixed",
-			maxHeight: 64
+            maxHeight: "64px", 
+            minHeight: "64px",
+            boxShadow: 'none'
         },
         grow: {
         	flexGrow: 1,
@@ -19,7 +21,7 @@ export function styles(theme: Theme)  {
 			marginRight: 20,
         },
         title: {
-			display: 'none',
+			display: 'block',
 			color: '#263238',
 			[theme.breakpoints.up('sm')]: {
 				display: 'block',

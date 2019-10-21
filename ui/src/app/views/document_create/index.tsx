@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Grid, Paper, FormGroup, Button, Typography } from '@material-ui/core';
+import { Grid, Paper, FormGroup, Button, Typography, AppBar } from '@material-ui/core';
 import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
@@ -90,14 +90,14 @@ export namespace DocumentCreate {
 
             return (
                 <main className={classes.main}>
-                    <div className={classes.buttonGroup}>
+                    <AppBar color="default" className={classes.appBar} style={{marginTop: "64px", padding: "16px"}}>
                         <Link style={{ textDecoration: "none" }} to="/">
                             <Button style={{ width: "calc(4*52px)" }} variant={"contained"}>
                                 Back to Dashboard
                             </Button>
                         </Link>
-                    </div>
-                    <Grid className={classes.outerGrid} alignContent={"center"} container spacing={4} direction="row" justify="center" alignItems="center">
+                    </AppBar>
+                    <Grid className={classes.outerGrid} style={{marginTop: "132px"}} alignContent={"center"} container spacing={4} direction="row" justify="center" alignItems="center">
                         <Grid item xs={8} md={6}>
                             <Paper className={classes.formPaper}>
                                 {(this.props.flash != "") ?

@@ -81,25 +81,25 @@ export namespace App {
             return (
                 <React.Fragment>
                     <CssBaseline/>
-                    <AppHeader loggedIn={true} />
-    
-                    <div style={headerMargin}>
-                        <MuiThemeProvider theme = { App.Theme }>
-                            <Switch>
-                                <Route exact path="/" component={Dashboard} userid={userid}/>
-                                <Route exact path="/document" component={Dashboard} userid={userid}/>
-                                <Route exact path="/document/create" component={DocumentCreator} userid={userid}/>
-                                <Route exact path="/workflow" component={Workflows} userid={userid}/>
-                                <Route path="/document/:id/edit" component={DocumentEditor} userid={userid}/>
-                                <Route path="/workflow/:id/edit" component={Workflow} userid={userid}/>
-                                <Route exact path="/groups" component={Groups} userid={userid}/>
-                                <Route exact path="/groups/create" component={GroupCreate} userid={userid}/>
-                                <Route path="/groups/:id" component={Group} userid={userid}/>
-                                <Route exact path="/users" component={Users} userid={userid}/>
-                                <Route path="/users/:id" component={EditUser} userid={userid}/>
-                            </Switch>
-                        </MuiThemeProvider>
-                    </div>
+                    <MuiThemeProvider theme = { App.Theme }>
+                        <AppHeader loggedIn={true} />
+        
+                        <div style={headerMargin}>
+                                <Switch>
+                                    <Route exact path="/" component={Dashboard} userid={userid}/>
+                                    <Route exact path="/document" component={Dashboard} userid={userid}/>
+                                    <Route exact path="/document/create" component={DocumentCreator} userid={userid}/>
+                                    <Route exact path="/workflow" component={Workflows} userid={userid}/>
+                                    <Route path="/document/:id/edit" component={DocumentEditor} userid={userid}/>
+                                    <Route path="/workflow/:id/edit" component={Workflow} userid={userid}/>
+                                    <Route exact path="/groups" component={Groups} userid={userid}/>
+                                    <Route exact path="/groups/create" component={GroupCreate} userid={userid}/>
+                                    <Route path="/groups/:id" component={Group} userid={userid}/>
+                                    <Route exact path="/users" component={Users} userid={userid}/>
+                                    <Route path="/users/:id" component={EditUser} userid={userid}/>
+                                </Switch>
+                        </div>
+                    </MuiThemeProvider>
                 </React.Fragment>
             );
         }
