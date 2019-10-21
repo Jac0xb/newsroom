@@ -99,6 +99,7 @@ export function dispatchDeleteStage(wfId: number, stageID: number) : any {
 
           // Get updated stages
           var { data: stages } = await axios.get(StagesAPI.getWorkflowStages(wfId))
+          console.log(stages)
 
           // dispatch updates
           dispatch({

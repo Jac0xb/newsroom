@@ -39,6 +39,10 @@ class Workflows extends React.Component<Workflows.Props, Workflows.State> {
 
 
     componentDidMount() {
+        this.getWorkflows()
+    }
+
+    getWorkflows = () => {
         axios.get("/api/workflows").then((response) => {
             this.setState({ workflows: response.data });
         })
@@ -86,9 +90,8 @@ class Workflows extends React.Component<Workflows.Props, Workflows.State> {
 
         axios.delete("/api/workflows/" + workflowID, {
         }).then((response) => {
-            this.setState({ workflows: response.data });
+            this.getWorkflows()
         }).catch((error) => {
-
             if (error.response.status == 403)
                 this.setState({ flash: "You lack permissions to delete this workflow" });
         });

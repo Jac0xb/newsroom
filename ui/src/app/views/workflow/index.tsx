@@ -183,9 +183,10 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
         return (
             <React.Fragment>
                 <main className={classes.main}>
-                    <Subheader tabs={tabs} selectedTab={currentStage.sequenceId} onTabChange={((sequenceID: number) => this.props.fetchStageChange(sequenceID)).bind(this)}/>
+                    <Subheader tabs={tabs} selectedTab={currentStage ? currentStage.sequenceId : 0} onTabChange={((sequenceID: number) => this.props.fetchStageChange(sequenceID)).bind(this)}/>
                     <div className={classes.spacer} />
-                    <WorkflowSidebar stage={currentStage} 
+                    <WorkflowSidebar 
+                        stage={currentStage ? currentStage : new NRStage} 
                         onTextChange={this.props.fetchEditStage}
                         onUpdateClick={(updatedStage: NRStage) => this.props.fetchUpdateStage(this.props.match.params.id, updatedStage)}
                         onDeleteClick={() => this.props.fetchDeleteStage(this.props.match.params.id, currentStage.id)}  

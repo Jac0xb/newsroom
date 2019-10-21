@@ -30,8 +30,6 @@ export function workflowReducer( state = initialState, action: any): WorkflowSta
       return { ...state, flash: action.flash, };
     }
     case ActionTypes.STAGE_CHANGE: {
-      console.log(state.stages)
-      console.log(action)
       return { ...state, currentStage: state.stages.find(x => x.sequenceId == action.seqID) || new NRStage};
     }
     default:
