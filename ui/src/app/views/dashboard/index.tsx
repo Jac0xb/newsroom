@@ -8,7 +8,7 @@ import _ from 'lodash-es';
 import * as React from 'react';
 import { connect } from 'react-redux';
 
-import { Divider } from '@material-ui/core';
+import { Divider, AppBar } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 
 import { LinkedButton } from './components/LinkedButton';
@@ -60,19 +60,18 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
     }
 
     render() {
-
+        console.log(this.props.location)
         const { classes, pending, documents } = this.props;
-        console.log(documents)
         return (
             <main className={classes.main}>
-                <div className={classes.buttonGroup}>
+                <AppBar color="default" className={classes.appBar} style={{marginTop: "64px", padding: "16px"}}>
                     <LinkedButton />
-                </div>
-                <Divider className={classes.topDivider} />
+                </AppBar>
+                
                 {(pending) ?
                     <LoadingComponent />
                 :
-                <div style={{width: "100%", padding: "0px 24px", marginTop: "24px"}}>
+                <div style={{width: "100%", padding: "24px 24px", marginTop: "132px"}}>
                     { <MaterialTable 
                         columns={[
                             {title: "Headline", field:"name", render: (document: NRDocument) => {

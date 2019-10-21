@@ -2,7 +2,7 @@ import { ActionTypes, DashboardReducerState } from './types';
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 import { DocumentsAPI } from 'app/api/document';
-import { NRDocument, } from 'app/utils/models';
+import { NRDocument, NRWorkflow, } from 'app/utils/models';
 import axios from 'axios';
 import { WorkflowsAPI } from 'app/api/workflow';
 
@@ -18,12 +18,19 @@ export function fetchDocuments() : any {
             
             for (var i = 0; i < documents.length; i++) {
                 try {
-                    documents[i].workflow = (await axios.get<NRDocument>(DocumentsAPI.getDocument(documents[i].id))).data.workflow;
+
                     documents[i].created = new Date(Date.parse(documents[i].created.toString()));
                     documents[i].lastUpdated = new Date(Date.parse(documents[i].lastUpdated.toString()));
+
+                    var workflow = (await axios.get<NRDocument>(DocumentsAPI.getDocument(documents[i].id))).data.workflow;
+                    
+                    if (!workflow)
+                        throw new Error("broke");
+
+                    documents[i].workflow = workflow;
                 }
                 catch(err) {
-                    dispatch({ type: ActionTypes.DOCUMENTS_FAILURE });
+                    documents[i].workflow = new NRWorkflow({name: "Undefined", id: -1})
                  }
             }
 

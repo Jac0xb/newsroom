@@ -2,7 +2,7 @@ import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import Button from '@material-ui/core/Button';
-import { Divider, Paper, Typography } from '@material-ui/core';
+import { Divider, Paper, Typography, AppBar } from '@material-ui/core';
 import WorkflowTile from './components/WorkflowTile';
 import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
@@ -82,7 +82,7 @@ class Workflows extends React.Component<Workflows.Props, Workflows.State> {
             this.state.workflows.push(workflow)
 
             // close dialog, rest text boxes
-            this.setState({ showDialog: false, workFlowName: "", workFlowDesc: "" });
+            this.setState({ showDialog: false, workFlowName: "", dialogBoxName: "", dialogBoxDesc: "", workFlowDesc: "" });
         });
     };
 
@@ -104,10 +104,11 @@ class Workflows extends React.Component<Workflows.Props, Workflows.State> {
 
         return (
             <main className={classes.main}>
-                <div className={classes.buttonGroup}>
-                    <Button variant="contained" onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create Workflow</Button>
-                </div>
-                <Divider style={{ margin: "0px 24px" }} />
+                <AppBar color="default" className={classes.appBar} style={{marginTop: "64px", padding: "16px"}}>
+                    <div className={classes.buttonGroup}>
+                        <Button variant="contained" onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create Workflow</Button>
+                    </div>
+                </AppBar>
                 {(flash != "") ?
                 <Paper className={classes.flashMessage}>
                     <Typography variant="caption">
@@ -116,14 +117,24 @@ class Workflows extends React.Component<Workflows.Props, Workflows.State> {
                 </Paper> :
                 <div></div>
                 }
-                <div className={classes.outerGrid}>
+                <div className={classes.outerGrid} style={{marginTop: "132px"}}>
                     {workflows.map(workflow => (
                         <WorkflowTile key={workflow.id} workflow={workflow} onClick={(id: number) => this.handleDeleteClick(id)} />
                     ))
                     }
                 </div>
 
-                <DialogItem textBoxName={dialogBoxName} textBoxDesc={dialogBoxDesc} title={"Create New Workflow"} desc={"Enter the name of the new workflow"} show={this.state.showDialog} handleTextBoxesChange={this.handleTextBoxesChange} handleClose={() => this.setState({ showDialog: false })} handleSave={this.handleCreateNew} />
+                <DialogItem 
+                    textBoxName={dialogBoxName} 
+                    textBoxDesc={dialogBoxDesc} 
+                    title={"Create New Workflow"} 
+                    desc={"Enter the name of the new workflow"} 
+                    
+                    show={this.state.showDialog} 
+                    handleTextBoxesChange={this.handleTextBoxesChange} 
+                    handleClose={() => this.setState({ showDialog: false })} 
+                    handleSave={this.handleCreateNew} 
+                />
             </main>
         );
     }
