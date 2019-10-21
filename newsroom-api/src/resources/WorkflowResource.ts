@@ -358,7 +358,7 @@ export class WorkflowResource {
     public async getStage(@IsInt @PathParam("wid") wid: number,
                           @IsInt @PathParam("sid") sid: number): Promise<NRStage> {
         console.log("CALLED getStage");
-        
+
         const user = await this.servCont.user();
         await this.wfServ.getWorkflow(wid);
 

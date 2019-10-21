@@ -2837,7 +2837,7 @@ async function addStageToWF(us: NRUser, wf: NRWorkflow, status: number, perm: st
             wf.stages.push(str);
         } else {
             // Fix sequence IDs manually.
-            console.log('LOC=', loc);
+            console.log("LOC=", loc);
             const newLoc = loc;
             wf.stages.splice(newLoc, 0, str);
 
