@@ -10,6 +10,7 @@ import { ErrorMapper } from "./middleware/ErrorMapper";
 import { FakeAuthConfig } from "./middleware/FakeAuthConfig";
 import { GoogleOAuth2Provider } from "./middleware/GoogleOAuth2Provider";
 import { Swagger } from "./middleware/Swagger";
+import { CurrentUserResource } from "./resources/CurrentUserResource";
 import { DocumentResource } from "./resources/DocumentResource";
 import { RoleResource } from "./resources/RoleResource";
 import { TriggerResource } from "./resources/TriggerResource";
@@ -64,7 +65,7 @@ class App {
             Server.registerServiceFactory(new TypeDIServiceFactory());
 
             Server.buildServices(this.express,
-                UserResource, RoleResource, DocumentResource, WorkflowResource, TriggerResource);
+                UserResource, CurrentUserResource, RoleResource, DocumentResource, WorkflowResource, TriggerResource);
 
             // Add error handler to return JSON error.
             this.express.use(ErrorMapper.mapError);

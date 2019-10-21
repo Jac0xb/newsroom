@@ -116,27 +116,6 @@ export class UserResource {
     }
 
     /**
-     * Get the user who is currently logged in.
-     *
-     * path:
-     *      - None.
-     *
-     * request:
-     *      - None.
-     *
-     * response:
-     *      - NRUser with the following relations:
-     *          - None.
-     *
-     */
-    @GET
-    @Path("/current")
-    public async getCurrentUser(): Promise<NRUser> {
-        console.log("CALLED getCurrentUser");
-        return this.serviceContext.user();
-    }
-
-    /**
      * Get a specific user by ID.
      *
      * path:
