@@ -35,6 +35,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
     componentDidMount() {
         this.getStages();
         this.getRole();
+        // this.props.fetchAddTrigger();
     }
 
     // Method to get stages of current workflow from database

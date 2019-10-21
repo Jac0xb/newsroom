@@ -1,9 +1,11 @@
 import { ActionTypes, WorkflowDispatchers } from "./types";
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
-import { NRStage } from "app/utils/models";
+import { NRStage, NRTrigger, NRWorkflow } from "app/utils/models";
 import axios from 'axios';
 import { StagesAPI } from "app/api/stage";
+import { TriggersAPI } from "app/api/triggers";
+import { NRTriggerType } from "../../../../../interfaces";
 
 export function dispatchSetPermissions(canEdit: boolean): any {
   return {
@@ -116,6 +118,39 @@ export function dispatchDeleteStage(wfId: number, stageID: number) : any {
   };
 }
 
+export function dispatchAddTrigger() : any {
+
+  return async (dispatch: any) => {
+
+      try {
+
+          // const t = new NRTrigger({ name: "trigger", workflows: [1] })
+          // updated a given stage
+          var { data: t } = await axios.post(TriggersAPI.postNewTrigger(), {
+            name: "nam",
+            type: NRTriggerType.SLACK,
+            channelName: "random",
+            // documents: NRDocument[],
+            workflows: new Array<NRWorkflow>(new NRWorkflow({id: 1}))
+
+          })
+          console.log(t)
+
+          // dispatch updates
+          // dispatch({
+          //     type: ActionTypes.DELETE_STAGE, 
+          //     stages: stages,
+          //     currentStage: stages[0]
+          // });
+
+      }
+      catch(err) {
+        console.log(err)
+        dispatch({ type: ActionTypes.EDIT_FLASH, flash: "You lack permissions to add triggers to this stage." });
+      }
+  };
+}
+
 // Map Dispatch
 export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, any>, ownProps: T) : WorkflowDispatchers {
   return {
@@ -128,5 +163,6 @@ export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, any>, ow
     fetchStageChange: bindActionCreators(dispatchStageChange, dispatch),
     fetchUpdateStage: bindActionCreators(dispatchUpdateStage, dispatch),
     fetchDeleteStage: bindActionCreators(dispatchDeleteStage, dispatch),
+    fetchAddTrigger: bindActionCreators(dispatchAddTrigger, dispatch),
   }
 };

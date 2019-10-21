@@ -29,6 +29,7 @@ export interface WorkflowDispatchers {
   fetchEditFlash: (flash: string) => any
   fetchStageChange: (seqID: number) => any
   fetchDeleteStage: (wfId: number, stageID: number) => any
+  fetchAddTrigger: () => any
 }
 
   
