@@ -3,7 +3,7 @@ import WorkflowStage from 'app/views/workflow/components/WorkflowStage';
 import axios from 'axios';
 import * as React from 'react';
 import { styles } from './styles';
-import { Paper, Typography } from '@material-ui/core';
+import { Paper, Typography, Button } from '@material-ui/core';
 import { mapStateToProps } from 'app/store/workflow/reducers';
 import { mapDispatchToProps } from "app/store/workflow/actions";
 import { connect } from "react-redux";
@@ -73,9 +73,10 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
         this.props.fetchSetPermissions(true)
     }
 
-    handleStageAddClick(open: boolean, seqID: number) {
+    handleStageAddClick() {
+        console.log("handlestageaddclick")
         // Need the ID of the stage so that we know which button is being pressed and where to add the stage.
-        this.props.fetchStageAddClick(seqID)
+        // this.props.fetchStageAddClick(seqID)
     };
 
     // Search and apply current stage info for dialog edit box
@@ -100,32 +101,32 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
     // };
 
-    handleStageAdd = (textBoxName: string, textBoxDesc: string) => {
+    // handleStageAdd = (textBoxName: string, textBoxDesc: string) => {
 
-        // The ID of the current workflow, the sequence id of the stage.
-        const wfId = this.props.match.params.id;
-        const seqID = this.props.currentStage.sequenceId;
+    //     // The ID of the current workflow, the sequence id of the stage.
+    //     const wfId = this.props.match.params.id;
+    //     const seqID = this.props.currentStage.sequenceId;
 
-        // Post new stage req to backend
-        axios.post("/api/workflows/" + wfId + "/stages/" + seqID, {
-            name: textBoxName,
-            description: textBoxDesc,
-            creator: Number(localStorage.getItem("userID")),
-        }).then((response) => {
+    //     // Post new stage req to backend
+    //     axios.post("/api/workflows/" + wfId + "/stages/" + seqID, {
+    //         name: textBoxName,
+    //         description: textBoxDesc,
+    //         creator: Number(localStorage.getItem("userID")),
+    //     }).then((response) => {
 
-            // Stages have their own ID, but their position in the workflow is their 'sequenceId'.
-            const index = response.data.sequenceId;
+    //         // Stages have their own ID, but their position in the workflow is their 'sequenceId'.
+    //         const index = response.data.sequenceId;
 
-            // Add Stage to correct position in array
-            this.props.fetchAddStage(response.data, index)
+    //         // Add Stage to correct position in array
+    //         this.props.fetchAddStage(response.data, index)
 
-        }).catch((error) => {
+    //     }).catch((error) => {
 
-            if (error.response.status == 403) {
-                this.props.fetchEditFlash("You lack permissions to add stages in this workflow.")
-            }
-        });
-    };
+    //         if (error.response.status == 403) {
+    //             this.props.fetchEditFlash("You lack permissions to add stages in this workflow.")
+    //         }
+    //     });
+    // };
 
     handleStageEdit = (textBoxName: string, textBoxDesc: string) => {
 
@@ -153,29 +154,29 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
     };
 
-    handleStageDeleteClick = (stageID: number) => {
-        const wfId = this.props.match.params.id;
+    // handleStageDeleteClick = (stageID: number) => {
+    //     const wfId = this.props.match.params.id;
 
-        axios.delete("/api/workflows/" + wfId + "/stages/" + stageID, {
-        }).then((response) => {
+    //     axios.delete("/api/workflows/" + wfId + "/stages/" + stageID, {
+    //     }).then((response) => {
 
-            // Render new stages edit
-            this.getStages();
+    //         // Render new stages edit
+    //         this.getStages();
 
-        }).catch((error) => {
+    //     }).catch((error) => {
 
-            if (error.response.status == 403)
-                this.props.fetchEditFlash("You lack permissions to delete a stage in this workflow.")
-        });
+    //         if (error.response.status == 403)
+    //             this.props.fetchEditFlash("You lack permissions to delete a stage in this workflow.")
+    //     });
 
-    };
+    // };
 
     render() {
 
         const { classes, currentStage } = this.props;
         const { } = this.state;
         
-        const tabs = this.props.stages.sort((a, b) => a.id - b.id ).map((stage) => {
+        const tabs = this.props.stages.sort((a, b) => a.sequenceId - b.sequenceId ).map((stage) => {
             return stage.name;
         });
 
@@ -185,8 +186,10 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                     <Subheader tabs={tabs} selectedTab={currentStage.sequenceId} onTabChange={((sequenceID: number) => this.props.fetchStageChange(sequenceID)).bind(this)}/>
                     <div className={classes.spacer} />
                     <WorkflowSidebar stage={currentStage} 
-                    onTextChange={this.props.fetchEditStage} 
-                    onUpdateClick={(updatedStage: NRStage) => this.props.fetchUpdateStage(this.props.match.params.id, updatedStage)} />
+                        onTextChange={this.props.fetchEditStage}
+                        onUpdateClick={(updatedStage: NRStage) => this.props.fetchUpdateStage(this.props.match.params.id, updatedStage)}
+                        onDeleteClick={() => this.props.fetchDeleteStage(this.props.match.params.id, currentStage.id)}  
+                    />
 
                     {(this.props.flash != "") ?
                         <Paper className={classes.flashMessage}>
@@ -198,6 +201,9 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                     }
                     <div className={classes.content}>
                         <div className={classes.workflowContent}>
+                            <div className={classes.buttonGroup}>
+                                <Button variant="contained" className={classes.button} onClick={() => this.props.fetchAddStage(this.props.match.params.id, new NRStage({name: "New Stage", description: ""}), this.props.stages.length)}>Add Stage</Button>
+                            </div>
                             {this.props.stages.map((stage, index) => (
                                 <div className={classes.stage}>
                                     <WorkflowStage show={currentStage.sequenceId}
@@ -207,7 +213,6 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                                         id={stage.id} 
                                         name={stage.name} 
                                         desc={stage.description} 
-                                        onDeleteClick={(stageID: number) => this.handleStageDeleteClick(stageID)} 
                                     />
                                 </div>
                             ))}

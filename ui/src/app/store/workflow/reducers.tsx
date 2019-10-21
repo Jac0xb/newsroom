@@ -15,16 +15,13 @@ export function workflowReducer( state = initialState, action: any): WorkflowSta
       return { ...state, canEdit: action.canEdit, };
     }
     case ActionTypes.ADD_STAGE: {
-      return { ...state, stages: [...state.stages.slice(0, action.index), action.payload, ...state.stages.slice(action.index)] };
+      return { ...state, currentStage: action.payload, stages: [...state.stages, action.payload] };
     }
     case ActionTypes.SET_STAGES: {
-      return { ...state, stages: action.payload, };
+      return { ...state, stages: action.payload };
     }
-    case ActionTypes.ADD_STAGE_CLICK: {
-      return {
-        ...state,
-        //todo
-      };
+    case ActionTypes.DELETE_STAGE: {
+      return { ...state, stages: action.stages, currentStage:  action.currentStage };
     }
     case ActionTypes.EDIT_STAGE: {
       return { ...state, currentStage: {...state.currentStage, [action.name]: action.newValue} };
@@ -33,6 +30,8 @@ export function workflowReducer( state = initialState, action: any): WorkflowSta
       return { ...state, flash: action.flash, };
     }
     case ActionTypes.STAGE_CHANGE: {
+      console.log(state.stages)
+      console.log(action)
       return { ...state, currentStage: state.stages.find(x => x.sequenceId == action.seqID) || new NRStage};
     }
     default:

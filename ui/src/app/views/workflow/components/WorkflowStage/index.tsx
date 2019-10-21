@@ -13,7 +13,6 @@ export namespace WorkflowStage {
         id: number
         name: string
         desc: string
-        onDeleteClick: Function
         canEdit: boolean
         show: number
         index: number

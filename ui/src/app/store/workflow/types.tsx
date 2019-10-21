@@ -14,21 +14,21 @@ export const ActionTypes = {
   ADD_STAGE: "@@workflow/ADD_STAGE",
   EDIT_STAGE: "@@workflow/EDIT_STAGE",
   SET_STAGES: "@@workflow/SET_STAGES",
-  ADD_STAGE_CLICK: "@@workflow/ADD_STAGE_CLICK",
   EDIT_FLASH: "@@workflow/EDIT_FLASH",
   STAGE_CHANGE: "@@workflow/STAGE_CHANGE",
+  DELETE_STAGE: "@@workflow/DELETE_STAGE",
 }
 
 // Define Dispatchers
 export interface WorkflowDispatchers {
   fetchSetPermissions: (canEdit: boolean) => any
   fetchSetStages: (stages: Array<NRStage>) => any
-  fetchAddStage: (stage: NRStage, index: number) => any
-  fetchStageAddClick: (seqID: number) => any
+  fetchAddStage: (wfId: number, stage: NRStage, index: number) => any
   fetchUpdateStage: (wfId: number, updatedStage: NRStage) => any
   fetchEditStage: (stageID: number, name: string, newValue: string) => any
   fetchEditFlash: (flash: string) => any
   fetchStageChange: (seqID: number) => any
+  fetchDeleteStage: (wfId: number, stageID: number) => any
 }
 
   
