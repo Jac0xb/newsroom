@@ -42,8 +42,8 @@ export namespace Header {
             this.state = {
                 route: "/",
                 categories: [
-                    {title: 'Document', url: "/"},
-                    {title: 'Workflow', url: "/workflow"},
+                    {title: 'Documents', url: "/"},
+                    {title: 'Workflows', url: "/workflow"},
                     {title: 'Users', url: '/users'},
                     {title: 'Groups', url: '/groups'}
                 ]

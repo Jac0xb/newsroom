@@ -61,6 +61,12 @@ export function updatePending(isPending: boolean) {
     };   
 }
 
+export function clearForm() {
+    return {
+        type: ActionTypes.CLEARFORM
+    }
+}
+
 export function mapDispatchToProps<T>(dispatch: ThunkDispatch<DocumentCreateDispatchers, any, any>, ownProps: T) : DocumentCreateDispatchers {
     return {
         ...ownProps,
@@ -69,6 +75,7 @@ export function mapDispatchToProps<T>(dispatch: ThunkDispatch<DocumentCreateDisp
         induceSubmission: bindActionCreators(induceSubmission, dispatch),
         updateWorkflow: bindActionCreators(updateWorkflow, dispatch),
         updateName: bindActionCreators(updateName, dispatch),
-        updatePending: bindActionCreators(updatePending, dispatch)
+        updatePending: bindActionCreators(updatePending, dispatch),
+        clearForm: bindActionCreators(clearForm, dispatch)
     }
 };

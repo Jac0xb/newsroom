@@ -28,7 +28,7 @@ class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, WorkflowM
     const { classes, workflow, currentStage } = this.props;
 
     const stages = workflow.stages.sort((a, b) => a.sequenceId - b.sequenceId);
-
+    
     const workflowRouterLink = (props: any) => <RouterLink to={"/workflow/" + workflow.id + "/edit"} {...props} />
 
     return (

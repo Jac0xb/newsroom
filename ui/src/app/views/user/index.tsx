@@ -106,45 +106,6 @@ class EditUser extends React.Component<EditUser.Props, EditUser.State> {
                             </Paper> :
                             <div></div>
                         }
-                        <FormControl>
-                            <TextField
-                                id="outlined-name"
-                                label="First Name"
-                                className={classes.textField}
-                                value={firstName}
-                                onChange={(event) => this.props.fetchHandleTextChange('firstName', event.target.value as string)}
-                                margin="normal"
-                                variant="outlined"
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Groups</FormLabel>
-                            <Select
-                                multiple
-                                value={selectedGroups} 
-                                className={classes.formSelect}
-                                onChange={(event) => this.props.fetchSelectChange("selectedGroups", event.target.value as Array<NRRole>)}
-                                input={<OutlinedInput 
-                                    labelWidth={1}
-                                    name="groups"
-                                    id="outlined-groups-dropdown" 
-                                />}
-                                renderValue={(selected: any) => (
-                                    <div className={classes.chips}>
-                                      {selected.map((group: any) => (
-                                        <Chip key={group.id} label={group.name} className={classes.chip} />
-                                      ))}
-                                    </div>
-                                  )}
-                                >
-                                {groups.map((group: any, index: number) =>
-                                    <MenuItem key={index} value={group}>{group.name}</MenuItem>
-                                )}
-                            </Select>
-                        </FormControl>
-                        <FormControl className={classes.buttonGroup}>
-                            <Button variant="contained" className={classes.button} onClick={() => this.handleSubmit()}>Update</Button>
-                        </FormControl>
                     </Paper>
                 </Grid>
                 

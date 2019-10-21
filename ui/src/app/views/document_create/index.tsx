@@ -52,6 +52,8 @@ export namespace DocumentCreate {
 
             axios.post("/api/documents", postMessage).then((response: any) => {
 
+                this.props.induceSubmission();
+
             }).catch((error) => {
                 this.props.induceFlash(error.response.data.message || "Something has gone terribly wrong. We don't even know.");
                 this.props.updatePending(false);
@@ -83,6 +85,7 @@ export namespace DocumentCreate {
         render() {
 
             if (this.props.submitted) {
+                this.props.clearForm();
                 return <Redirect push to="/" />;
             }
 

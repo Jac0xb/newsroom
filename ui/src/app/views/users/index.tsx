@@ -40,7 +40,7 @@ class Users extends React.Component<Users.Props, Users.State> {
         const {users} = this.state;
 
         return (
-            <React.Fragment>
+            <div style={{padding: "32px"}}>
                 <MaterialTable
                     title="Users"
                     columns={[
@@ -53,7 +53,7 @@ class Users extends React.Component<Users.Props, Users.State> {
                     ]}
                     data={users}
                 />
-            </React.Fragment>
+            </div>
         );
     }
 

@@ -4,7 +4,6 @@ export function styles(theme: Theme)  {
     return (
     {
         main: {
-            paddingTop: "32px"
         },
 		outerGrid: {
 			padding: "24px"

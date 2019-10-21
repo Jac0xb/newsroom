@@ -32,7 +32,9 @@ export function documentCreateReducer(state = initialState, action: any): Docume
         case ActionTypes.UPDATE_NAME:
                 return { ...state, name: action.payload }
         case ActionTypes.UPDATE_PENDING:
-            return { ...state, pending: action.payload }               
+            return { ...state, pending: action.payload }       
+        case ActionTypes.CLEARFORM:
+            return  {...initialState};
         default:
             return state;
     }

@@ -19,7 +19,8 @@ export const ActionTypes = {
     INDUCE_SUBMISSION: '@@document_create/INDUCE_SUBMISSION',
     UPDATE_WORKFLOW: '@@document_create/UPDATE_SELECTEDWORKFLOW',
     UPDATE_NAME: '@@document_create/UPDATE_NAME',
-    UPDATE_PENDING: '@@document_create/UPDATE_PENDING'
+    UPDATE_PENDING: '@@document_create/UPDATE_PENDING',
+    CLEARFORM: '@@document_create/CLEARFORM'
 }
 
 export interface DocumentCreateDispatchers {
@@ -29,4 +30,5 @@ export interface DocumentCreateDispatchers {
     updateWorkflow: (workflow: number) => any;
     updateName: (name: string) => any;
     updatePending: (isPending: boolean) => any;
+    clearForm: () => any;
 }

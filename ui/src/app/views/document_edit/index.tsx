@@ -1,4 +1,4 @@
-import { NRDocument } from 'app/utils/models';
+import { NRDocument, NRWorkflow, NRStage } from 'app/utils/models';
 import WorkflowMiniView from 'app/views/document_edit/components/WorkflowMiniview';
 import axios from 'axios';
 import * as React from 'react';
@@ -10,6 +10,7 @@ import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 
 import { styles } from './styles';
+import { WorkflowsAPI } from 'app/api/workflow';
 
 export namespace EditorContainer {
 	export interface Props {
@@ -32,16 +33,20 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
 
 	componentDidMount() {
 
-		const id = this.props.match.params.id;
+        const id = this.props.match.params.id;
+        
+        var task = async () => {
+            
+            var { data: document } = await axios.get<NRDocument>("/api/documents/" + id)
 
-		axios.get("/api/documents/" + id).then((response) => {
-			console.log(response);
+            this.setState({document: document});
 
-            const document = response.data;
-			this.setState({
-				document: document
-			});
-		});
+            //var { data: workflow } = await axios.get<NRWorkflow>(WorkflowsAPI.getWorkflow(document.workflow.id));
+            
+            //console.log("y")
+        };
+
+        task();
 	}
 
 	render() {
@@ -50,7 +55,15 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
 
 		if (!document || !document.workflow || !document.stage) {
 			return <div>Document did not exist, had no workflow, or had no stage</div>;
-		}
+        }  
+        
+        if (document.stage.permission == 0) {
+            return  <Paper className={classes.documentTitlePaper}>
+                <Typography variant="h5">
+                    You do not have permissions to editing this document.
+                </Typography>
+            </Paper>
+        }
 
         return (
             <main className={classes.main}>
@@ -90,15 +103,16 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
 	saveContent() {
 	}
 
-	handleMove(direction: string) {
+	async handleMove(direction: string) {
         
         if (!this.state.document)
             return;
 
-		axios.put("/api/documents/" + this.state.document.id + "/" + direction).then((response) => {
-			console.log(response);
-			this.setState({ document: response.data })
-		});
+        var reponse = await axios.put("/api/documents/" + this.state.document.id + "/" + direction);
+        
+        var { data: document } = await axios.get<NRDocument>("/api/documents/" + this.state.document.id);
+        this.setState({document: document});
+
 	}
 
 	handleDocumentNameChange(event: React.ChangeEvent<any>) {

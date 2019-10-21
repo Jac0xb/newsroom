@@ -85,7 +85,7 @@ export namespace App {
                         <AppHeader loggedIn={true} />
         
                         <div style={headerMargin}>
-                                <Switch>
+                                <Switch >
                                     <Route exact path="/" component={Dashboard} userid={userid}/>
                                     <Route exact path="/document" component={Dashboard} userid={userid}/>
                                     <Route exact path="/document/create" component={DocumentCreator} userid={userid}/>
