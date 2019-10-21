@@ -86,7 +86,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                 </FormControl> */}
                 <FormControl className={classes.buttonGroup}>
                     <Button variant="contained" className={classes.button} onClick={() => this.props.onUpdateClick(this.props.stage)}>Update</Button>
-                    <Button variant="contained" color="secondary" className={classes.button} onClick={() => this.props.onDeleteClick()}>Delete</Button>
+                    <Button variant="contained" color="secondary" className={classes.deleteButton} onClick={() => this.props.onDeleteClick()}>Delete</Button>
                 </FormControl>
             </Drawer>
         </main>

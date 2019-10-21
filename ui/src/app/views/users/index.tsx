@@ -62,9 +62,10 @@ class Users extends React.Component<Users.Props, Users.State> {
     }
 
     static getUserName(user: NRUser) {
-        return <Link style={{ textDecoration: "none" }} to={`/users/${user.id}`}>
-            {user.userName}
-        </Link>
+        // return <Link style={{ textDecoration: "none" }} to={`/users/${user.id}`}>
+        //     {user.userName}
+        // </Link>
+        return (<div>{user.userName}</div>)
     }
 
     deleteUser(user: NRUser) {
@@ -77,9 +78,12 @@ class Users extends React.Component<Users.Props, Users.State> {
             this.setState({users: response.data})
         } 
 
-        return (<Button variant="contained" onClick={onClick}>
-            Delete
-        </Button>)
+        return (
+            // <Button variant="contained" onClick={onClick}>
+            //     Delete
+            // </Button>
+            <div></div>
+        )
     }
 }
 

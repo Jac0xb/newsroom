@@ -46,6 +46,7 @@ class EditUser extends React.Component<EditUser.Props, EditUser.State> {
         const userId = this.props.match.params.id
 
         axios.get("/api/users/" + userId + "/summary").then((response) => {
+            console.log(response)
 
             // Need to add roles from the master group list
             response.data.roles.forEach((role: NRRole)=> {

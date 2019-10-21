@@ -33,6 +33,17 @@ export function styles(theme: Theme)  {
             width: 220
 
         },
+        button: {
+            margin: 8
+        },
+        deleteButton: {
+            margin: 8,
+            // backgroundColor: "red",
+            // color: "white",
+            // "& > *": {
+            //     backgroundColor: "red"
+            // }
+        },
         toolbar: theme.mixins.toolbar,
 
     } as StyleRules);
