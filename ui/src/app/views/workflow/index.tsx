@@ -73,61 +73,6 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
         this.props.fetchSetPermissions(true)
     }
 
-    handleStageAddClick() {
-        console.log("handlestageaddclick")
-        // Need the ID of the stage so that we know which button is being pressed and where to add the stage.
-        // this.props.fetchStageAddClick(seqID)
-    };
-
-    // Search and apply current stage info for dialog edit box
-    // handleStageEditClick = (stageID: number) => {
-
-    //     const { stages } = this.props;
-
-    //     var dialogTextName = ""
-    //     var dialogTextDesc = ""
-    //     var seqID = 0;
-
-    //     stages.forEach((stage, index) => {
-    //         if (stage.id === stageID) {
-    //             dialogTextName = stage.name
-    //             dialogTextDesc = stage.description
-    //             seqID = index
-    //         }
-    //     });
-
-    //     // Show Dialog with current stage info
-    //     // this.props.fetchStageEditClick(stageID, seqID, dialogTextName, dialogTextDesc)
-
-    // };
-
-    // handleStageAdd = (textBoxName: string, textBoxDesc: string) => {
-
-    //     // The ID of the current workflow, the sequence id of the stage.
-    //     const wfId = this.props.match.params.id;
-    //     const seqID = this.props.currentStage.sequenceId;
-
-    //     // Post new stage req to backend
-    //     axios.post("/api/workflows/" + wfId + "/stages/" + seqID, {
-    //         name: textBoxName,
-    //         description: textBoxDesc,
-    //         creator: Number(localStorage.getItem("userID")),
-    //     }).then((response) => {
-
-    //         // Stages have their own ID, but their position in the workflow is their 'sequenceId'.
-    //         const index = response.data.sequenceId;
-
-    //         // Add Stage to correct position in array
-    //         this.props.fetchAddStage(response.data, index)
-
-    //     }).catch((error) => {
-
-    //         if (error.response.status == 403) {
-    //             this.props.fetchEditFlash("You lack permissions to add stages in this workflow.")
-    //         }
-    //     });
-    // };
-
     handleStageEdit = (textBoxName: string, textBoxDesc: string) => {
 
         const { currentStage } = this.props;
@@ -153,23 +98,6 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
         });
 
     };
-
-    // handleStageDeleteClick = (stageID: number) => {
-    //     const wfId = this.props.match.params.id;
-
-    //     axios.delete("/api/workflows/" + wfId + "/stages/" + stageID, {
-    //     }).then((response) => {
-
-    //         // Render new stages edit
-    //         this.getStages();
-
-    //     }).catch((error) => {
-
-    //         if (error.response.status == 403)
-    //             this.props.fetchEditFlash("You lack permissions to delete a stage in this workflow.")
-    //     });
-
-    // };
 
     render() {
 
@@ -217,13 +145,6 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                                     />
                                 </div>
                             ))}
-                            {/* 
-                            <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.addButton}>
-                            <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index+1)} className={classes.addButton}>
-                            <AddIcon />
-                            <DialogItem textBoxName={this.props.dialogTextName} textBoxDesc={this.props.dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={this.props.createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.props.fetchCloseDialog()} handleSave={this.handleStageAdd} />
-                            <DialogItem textBoxName={this.props.dialogTextName} textBoxDesc={this.props.dialogTextDesc} title={"Edit Stage"} desc={"Enter stage information"} show={this.props.editDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.props.fetchCloseDialog()} handleSave={this.handleStageEdit} />
-                            */}
                         </div>
                     </div>
                 </main>

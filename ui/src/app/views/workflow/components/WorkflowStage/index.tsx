@@ -82,56 +82,6 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
               />
           : null
         }
-        {/* {
-          show == index ? 
-            <Paper className={classes.stage} key={this.props.id}>
-              <div className={classes.headingDiv}>
-                  <Typography className={classes.heading}>
-                    {this.props.name}
-                  </Typography>
-                  { this.props.canEdit ? 
-                    <div>
-                      <IconButton
-                        onClick={(event) => this.handleMenuClick(event)}
-                        aria-controls="simple-menu"
-                        aria-haspopup="true"
-                      >
-                        <MoreVertIcon />
-                      </IconButton>
-                        <Menu
-                          id="long-menu"
-                          anchorEl={this.state.anchorEl}
-                          open={openMenu}
-                          onClose={() => this.handleMenuClose()}
-                          PaperProps={{
-                            style: {
-                              maxHeight: 216,
-                              width: 200,
-                            },
-                          }}
-                        >
-                          <MenuItem key={0} onClick={() => {this.props.onEditClick(this.props.id); this.setState({openMenu: false})}}>
-                            Edit
-                          </MenuItem>
-                          <MenuItem key={1} onClick={() => {this.props.onDeleteClick(this.props.id); this.setState({openMenu: false})}}>
-                            Delete
-                          </MenuItem>
-                        </Menu>
-                    </div>
-                    : null
-                  }
-              </div>
-              <Divider style={{marginBottom: "8px"}}/>
-              <Typography component="p">
-                {(this.props.desc) === "" ? "(No Description)" : this.props.desc}
-              </Typography>
-              <Grid className={classes.documentGrid} container>
-                {docList}
-              </Grid>
-            </Paper>
-          : null
-        } */}
-        
       </main>
     );
   }
