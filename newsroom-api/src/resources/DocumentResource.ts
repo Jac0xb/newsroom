@@ -136,7 +136,7 @@ export class DocumentResource {
     @GET
     public async getDocuments(): Promise<NRDocument[]> {
         console.log("CALLED getDocuments");
-        
+
         const user = await this.serviceContext.user();
         const dcs = await this.dcRep.find();
 

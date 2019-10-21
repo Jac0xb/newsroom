@@ -58,6 +58,7 @@ export class WorkflowResource {
     @PreProcessor(createWorkflowValidator)
     public async createWorkflow(wf: NRWorkflow): Promise<NRWorkflow> {
         console.log("CALLED createWorkflow");
+
         try {
             const user = await this.servCont.user();
             wf.creator = await this.usServ.getUser(user.id);
@@ -65,7 +66,7 @@ export class WorkflowResource {
             // Only administrators can create workflows.
             const allowed = await this.permServ.isUserAdmin(user);
 
-            if (allowed === true) {
+            if (allowed) {
                 const wfdb = await this.wfRep.save(wf);
                 wfdb.permission = DBConstants.WRITE;
 
@@ -100,6 +101,7 @@ export class WorkflowResource {
     @GET
     public async getWorkflows(): Promise<NRWorkflow[]> {
         console.log("CALLED getWorkflows");
+
         try {
             const user = await this.servCont.user();
             const wfs = await this.wfRep.find({ relations: ["stages"]});
@@ -132,6 +134,7 @@ export class WorkflowResource {
     @Path("/:wid")
     public async getWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRWorkflow> {
         console.log("CALLED getWorkflow");
+
         const user = await this.servCont.user();
         let wf = await this.wfServ.getWorkflow(wid);
         wf = await this.wfServ.addStageRelationsToWF(wf);
@@ -140,11 +143,6 @@ export class WorkflowResource {
         // permissions.
         await this.wfServ.appendPermToWF(wf, user);
         await this.wfServ.appendPermToSTS(wf.stages, user);
-
-        // TODO: Decide what we want to do here:
-        //      1. Are the permissions returned with a stage for moving or editing?
-        //          - i.e. They are overridden by workflow for editing, but not for moving.
-        // await this.wfServ.matchSTPermToWF(wf);
 
         return wf;
     }
@@ -172,6 +170,7 @@ export class WorkflowResource {
     public async updateWorkflow(@IsInt @PathParam("wid") wid: number,
                                 workflow: NRWorkflow): Promise<NRWorkflow> {
         console.log("CALLED updateWorkflow");
+
         const user = await this.servCont.user();
         let wf = await this.wfServ.getWorkflow(wid);
 
@@ -216,6 +215,7 @@ export class WorkflowResource {
     @Path("/:wid")
     public async deleteWorkflow(@IsInt @PathParam("wid") wid: number): Promise<void> {
         console.log("CALLED deleteWorkflow");
+
         const user = await this.servCont.user();
         const wf = await this.wfServ.getWorkflow(wid);
 
@@ -243,10 +243,8 @@ export class WorkflowResource {
      * request:
      *      {
      *          "name": <string>,
-     *          "description": <string>,
-     *          "permission": <number>
+     *          "description": <string>
      *      }
-     *          - permission: 1 to create with WRITE, 0 to create with READ, or not passed at all.
      *
      * response:
      *      - NRStage that was created with the following relations:
@@ -267,6 +265,7 @@ export class WorkflowResource {
     public async appendStage(@IsInt @PathParam("wid") wid: number,
                              stage: NRStage): Promise<NRStage> {
         console.log("CALLED appendStage");
+
         const user = await this.servCont.user();
         const wf = await this.wfServ.getWorkflow(wid);
 
@@ -275,7 +274,7 @@ export class WorkflowResource {
         const maxSeqId = await this.wfServ.getMaxStageSequenceId(wf);
 
         if (maxSeqId == null) {
-            stage.sequenceId = 1;
+            stage.sequenceId = 0;
         } else {
             stage.sequenceId = maxSeqId + 1;
         }
@@ -359,6 +358,7 @@ export class WorkflowResource {
     public async getStage(@IsInt @PathParam("wid") wid: number,
                           @IsInt @PathParam("sid") sid: number): Promise<NRStage> {
         console.log("CALLED getStage");
+        
         const user = await this.servCont.user();
         await this.wfServ.getWorkflow(wid);
 
@@ -389,10 +389,8 @@ export class WorkflowResource {
      * request:
      *      {
      *          "name": <string>,
-     *          "description": <string>,
-     *          "permission": <number>
+     *          "description": <string>
      *      }
-     *          - permission: 1 to create with WRITE, 0 to create with READ, or not passed at all.
      *
      * response:
      *      - NRStage with the following relations:
@@ -411,9 +409,10 @@ export class WorkflowResource {
                             @IsInt @PathParam("wid") wid: number,
                             @IsInt @PathParam("pos") position: number): Promise<NRStage> {
         console.log("CALLED addStageAt");
+
         // Invalid position.
-        if (position <= 0) {
-            position = 1;
+        if (position < 0) {
+            position = 0;
         }
 
         const user = await this.servCont.user();
@@ -428,7 +427,7 @@ export class WorkflowResource {
 
             // Add if no stages yet.
             if (maxSeqId === null) {
-                stage.sequenceId = 1;
+                stage.sequenceId = 0;
             } else if (position > maxSeqId + 1) {
                 stage.sequenceId = maxSeqId + 1;
             } else {
@@ -436,7 +435,7 @@ export class WorkflowResource {
                 let currSeq = maxSeqId;
 
                 // Update sequences.
-                while (currSeq > 0) {
+                while (currSeq > -1) {
                     if (currSeq === (position - 1)) {
                         break;
                     }
@@ -460,11 +459,7 @@ export class WorkflowResource {
             await this.wfRep.save(wf);
             stage = await this.stRep.save(stage);
 
-            if (stage.permission !== undefined) {
-                stage.permission = DBConstants.WRITE;
-            } else {
-                stage.permission = DBConstants.READ;
-            }
+            stage.permission = DBConstants.WRITE;
 
             return stage;
         } catch (err) {
@@ -503,6 +498,7 @@ export class WorkflowResource {
     public async deleteStage(@IsInt @PathParam("wid") wid: number,
                              @PathParam("sid") sid: number): Promise<NRStage[]> {
         console.log("CALLED deleteStage");
+
         const user = await this.servCont.user();
         const st = await this.wfServ.getStage(sid);
         const wf = await this.wfServ.getWorkflow(wid);

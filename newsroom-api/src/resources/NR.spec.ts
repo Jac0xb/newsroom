@@ -134,7 +134,7 @@ beforeEach(async (done) => {
 });
 
 // Workflow tests.
-describe("1. POST /api/workflows", () => {
+describe("01. POST /api/workflows", () => {
     it("Test creating a single workflow as an administrator.", async () => {
         await reqWFGetResp(adminUsr, 200, "WRITE", null);
     });
@@ -156,7 +156,7 @@ describe("1. POST /api/workflows", () => {
     });
 });
 
-describe("2. GET /api/workflows", () => {
+describe("02. GET /api/workflows", () => {
     it("Test getting workflows with no stages.", async () => {
         const wfNum = 5;
         const grpName = "g";
@@ -200,7 +200,7 @@ describe("2. GET /api/workflows", () => {
     });
 
     it("Test getting workflows with stages.", async () => {
-        const wfNum = 5;
+        const wfNum = 1;
         const stNum = 3;
         const grpName = "g";
 
@@ -247,7 +247,7 @@ describe("2. GET /api/workflows", () => {
     });
 });
 
-describe("3. GET /api/workflows/:wid", () => {
+describe("03. GET /api/workflows/:wid", () => {
     it("Test getting individual workflows with no stages.", async () => {
         const wfNum = 5;
         const grpName = "g";
@@ -356,7 +356,7 @@ describe("3. GET /api/workflows/:wid", () => {
     });
 });
 
-describe("4. PUT /api/workflows/:wid", () => {
+describe("04. PUT /api/workflows/:wid", () => {
     it("Test updating workflows with no stages.", async () => {
         const wfNum = 5;
         const grpName = "g";
@@ -493,7 +493,7 @@ describe("4. PUT /api/workflows/:wid", () => {
     });
 });
 
-describe("5. DELETE /api/workflows/:wid", () => {
+describe("05. DELETE /api/workflows/:wid", () => {
     it("Test deleting workflows, admin user.", async () => {
         const wfNum = 5;
         const grpName = "g";
@@ -633,7 +633,7 @@ describe("5. DELETE /api/workflows/:wid", () => {
     });
 });
 
-describe("6. POST /api/workflows/:wid/stages", () => {
+describe("06. POST /api/workflows/:wid/stages", () => {
    it("Test appending a stage to an empty workflow.", async () => {
        const wfNum = 10;
        const stNum = 1;
@@ -700,7 +700,7 @@ describe("6. POST /api/workflows/:wid/stages", () => {
    });
 });
 
-describe("7. GET /api/workflows/:wid/stages", () => {
+describe("07. GET /api/workflows/:wid/stages", () => {
     it("Test getting all stages for a specific workflow.", async () => {
         const wfNum = 5;
         const stNum = 5;
@@ -2820,8 +2820,8 @@ async function addStageToWF(us: NRUser, wf: NRWorkflow, status: number, perm: st
                     .set("User-Id", `${us.id}`);
 
         // Fix for splicing.
-        if (loc <= 0) {
-            loc = 1;
+        if (loc < 0) {
+            loc = 0;
         } else if (loc > wf.stages.length) {
             loc = wf.stages.length;
         }
@@ -2837,7 +2837,8 @@ async function addStageToWF(us: NRUser, wf: NRWorkflow, status: number, perm: st
             wf.stages.push(str);
         } else {
             // Fix sequence IDs manually.
-            const newLoc = loc - 1;
+            console.log('LOC=', loc);
+            const newLoc = loc;
             wf.stages.splice(newLoc, 0, str);
 
             for (const s of wf.stages) {
