@@ -23,6 +23,7 @@ export class TriggerResource {
 
     @GET
     public async getAllTriggers(): Promise<NRTrigger[]> {
+        console.log("CALLED getAllTriggers");
         return this.triggerRepository.find();
     }
 
@@ -39,6 +40,7 @@ export class TriggerResource {
     @POST
     @PreProcessor(createTriggerValidator)
     public async createNewTrigger(trigger: NRTrigger): Promise<NRTrigger> {
+        console.log("CALLED createNewTrigger");
         await this.validateTriggerDocumentsAndWorkflows(trigger);
 
         return await this.triggerRepository.save(trigger);
@@ -57,6 +59,7 @@ export class TriggerResource {
     @PUT
     @PreProcessor(updateTriggerValidator)
     public async updateTrigger(trigger: NRTrigger): Promise<NRTrigger> {
+        console.log("CALLED updateTrigger");
         await this.validateTriggerDocumentsAndWorkflows(trigger);
 
         const currentTrigger = await this.findTrigger(trigger.id);

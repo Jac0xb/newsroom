@@ -57,6 +57,7 @@ export class WorkflowResource {
     @POST
     @PreProcessor(createWorkflowValidator)
     public async createWorkflow(wf: NRWorkflow): Promise<NRWorkflow> {
+        console.log("CALLED createWorkflow");
         try {
             const user = await this.servCont.user();
             wf.creator = await this.usServ.getUser(user.id);
@@ -98,6 +99,7 @@ export class WorkflowResource {
      */
     @GET
     public async getWorkflows(): Promise<NRWorkflow[]> {
+        console.log("CALLED getWorkflows");
         try {
             const user = await this.servCont.user();
             const wfs = await this.wfRep.find({ relations: ["stages"]});
@@ -129,6 +131,7 @@ export class WorkflowResource {
     @GET
     @Path("/:wid")
     public async getWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRWorkflow> {
+        console.log("CALLED getWorkflow");
         const user = await this.servCont.user();
         let wf = await this.wfServ.getWorkflow(wid);
         wf = await this.wfServ.addStageRelationsToWF(wf);
@@ -168,6 +171,7 @@ export class WorkflowResource {
     @PreProcessor(updateWorkflowValidator)
     public async updateWorkflow(@IsInt @PathParam("wid") wid: number,
                                 workflow: NRWorkflow): Promise<NRWorkflow> {
+        console.log("CALLED updateWorkflow");
         const user = await this.servCont.user();
         let wf = await this.wfServ.getWorkflow(wid);
 
@@ -211,6 +215,7 @@ export class WorkflowResource {
     @DELETE
     @Path("/:wid")
     public async deleteWorkflow(@IsInt @PathParam("wid") wid: number): Promise<void> {
+        console.log("CALLED deleteWorkflow");
         const user = await this.servCont.user();
         const wf = await this.wfServ.getWorkflow(wid);
 
@@ -261,6 +266,7 @@ export class WorkflowResource {
     @PreProcessor(addStageValidator)
     public async appendStage(@IsInt @PathParam("wid") wid: number,
                              stage: NRStage): Promise<NRStage> {
+        console.log("CALLED appendStage");
         const user = await this.servCont.user();
         const wf = await this.wfServ.getWorkflow(wid);
 
@@ -281,11 +287,8 @@ export class WorkflowResource {
             await this.wfRep.save(wf);
             const st = await this.stRep.save(stage);
 
-            if (stage.permission !== undefined) {
-                st.permission = DBConstants.WRITE;
-            } else {
-                st.permission = DBConstants.READ;
-            }
+            // If the user was able to create, they have WRITE.
+            st.permission = DBConstants.WRITE;
 
             return st;
         } catch (err) {
@@ -315,6 +318,7 @@ export class WorkflowResource {
     @GET
     @Path("/:wid/stages")
     public async getStages(@IsInt @PathParam("wid") wid: number): Promise<NRStage[]> {
+        console.log("CALLED getStages");
         const user = await this.servCont.user();
         const wf = await this.wfServ.getWorkflow(wid);
 
@@ -354,6 +358,7 @@ export class WorkflowResource {
     @Path("/:wid/stages/:sid")
     public async getStage(@IsInt @PathParam("wid") wid: number,
                           @IsInt @PathParam("sid") sid: number): Promise<NRStage> {
+        console.log("CALLED getStage");
         const user = await this.servCont.user();
         await this.wfServ.getWorkflow(wid);
 
@@ -405,6 +410,7 @@ export class WorkflowResource {
     public async addStageAt(stage: NRStage,
                             @IsInt @PathParam("wid") wid: number,
                             @IsInt @PathParam("pos") position: number): Promise<NRStage> {
+        console.log("CALLED addStageAt");
         // Invalid position.
         if (position <= 0) {
             position = 1;
@@ -496,6 +502,7 @@ export class WorkflowResource {
     @Path("/:wid/stages/:sid")
     public async deleteStage(@IsInt @PathParam("wid") wid: number,
                              @PathParam("sid") sid: number): Promise<NRStage[]> {
+        console.log("CALLED deleteStage");
         const user = await this.servCont.user();
         const st = await this.wfServ.getStage(sid);
         const wf = await this.wfServ.getWorkflow(wid);
@@ -601,6 +608,7 @@ export class WorkflowResource {
     public async updateStage(@IsInt @PathParam("wid") wid: number,
                              @IsInt @PathParam("sid") sid: number,
                              stage: NRStage): Promise<NRStage> {
+        console.log("CALLED updateStage");
         const user = await this.servCont.user();
         const wf = await this.wfServ.getWorkflow(wid);
         let st = await this.wfServ.getStage(sid);

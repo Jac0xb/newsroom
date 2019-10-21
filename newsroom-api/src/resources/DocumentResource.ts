@@ -81,6 +81,8 @@ export class DocumentResource {
     @POST
     @PreProcessor(createDocumentValidator)
     public async createDocument(document: NRDocument): Promise<NRDocument> {
+        console.log("CALLED createDocument");
+
         const user = await this.serviceContext.user();
         const wf = await this.wfServ.getWorkflow(document.workflow.id);
 
@@ -133,6 +135,8 @@ export class DocumentResource {
      */
     @GET
     public async getDocuments(): Promise<NRDocument[]> {
+        console.log("CALLED getDocuments");
+        
         const user = await this.serviceContext.user();
         const dcs = await this.dcRep.find();
 
@@ -160,6 +164,8 @@ export class DocumentResource {
     @GET
     @Path("/:did")
     public async getDocument(@PathParam("did") did: number): Promise<NRDocument> {
+        console.log("CALLED getDocument");
+
         const user = await this.serviceContext.user();
         const dc = await this.dcServ.getDocument(did);
         const dcwst = await this.dcRep.findOne(dc.id, { relations: ["stage", "workflow", "workflow.stages"] });
@@ -186,6 +192,8 @@ export class DocumentResource {
     @GET
     @Path("/user/:uid")
     public async getUserDocuments(@PathParam("uid") uid: number): Promise<NRDocument[]> {
+        console.log("CALLED getUserDocuments");
+
         // const usr = await this.serviceContext.user();
         const usr = await this.usServ.getUser(uid);
         const docs = new Set<NRDocument>();
@@ -227,6 +235,8 @@ export class DocumentResource {
     @GET
     @Path("/author/:aid")
     public async getDocumentsForAuthor(@PathParam("aid") aid: number): Promise<NRDocument[]> {
+        console.log("CALLED getDocumentsForAuthor");
+
         const user = await this.serviceContext.user();
         const author = await this.usServ.getUser(aid);
         const udcs = await this.dcRep.find({ where: { creator: author } });
@@ -255,6 +265,8 @@ export class DocumentResource {
     @GET
     @Path("/stage/:sid")
     public async getAllDocumentsForStage(@IsInt @PathParam("sid") sid: number): Promise<NRDocument[]> {
+        console.log("CALLED getAllDocumentsForStage");
+
         const user = await this.serviceContext.user();
         const st = await this.wfServ.getStage(sid);
         const dcs = await this.dcRep.find({ where: { stage: st } });
@@ -283,6 +295,8 @@ export class DocumentResource {
     @GET
     @Path("/workflow/:wid")
     public async getAllDocumentsForWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRDocument[]> {
+        console.log("CALLED getAllDocumentsForWorkflow");
+
         const user = await this.serviceContext.user();
         const wf = await this.wfServ.getWorkflow(wid);
         const dcs = await this.dcRep.find({ where: { workflow: wf } });
@@ -311,6 +325,8 @@ export class DocumentResource {
     @GET
     @Path("/all/orphan/docs")
     public async getAllOrphanDocuments(): Promise<NRDocument[]> {
+        console.log("CALLED getAllOrphanDocuments");
+
         const user = await this.serviceContext.user();
         const dcs = await this.dcRep.find( { where: [ { stage: IsNull(),
                                                         workflow: IsNull() } ] });
@@ -350,6 +366,8 @@ export class DocumentResource {
     @PreProcessor(updateDocumentValidator)
     public async updateDocument(@IsInt @PathParam("did") did: number,
                                 document: NRDocument): Promise<NRDocument> {
+        console.log("CALLED updateDocument");
+
         const user = await this.serviceContext.user();
         const dc = await this.dcServ.getDocument(did);
         const dcwst = await this.dcRep.findOne(dc.id, { relations: ["stage"] });
@@ -393,6 +411,7 @@ export class DocumentResource {
     @DELETE
     @Path("/:did")
     public async deleteDocument(@IsInt @PathParam("did") did: number) {
+        console.log("CALLED deleteDocument");
         const user = await this.serviceContext.user();
         const dc = await this.dcServ.getDocument(did);
         const dcwst = await this.dcRep.findOne(dc.id, { relations: ["stage"] });
@@ -423,6 +442,7 @@ export class DocumentResource {
     @PUT
     @Path("/:did/next")
     public async moveNext(@IsInt @PathParam("did") did: number): Promise<NRDocument> {
+        console.log("CALLED moveNext");
         const user = await this.serviceContext.user();
         await this.dcServ.getDocument(did);
 
@@ -472,6 +492,7 @@ export class DocumentResource {
     @PUT
     @Path("/:did/prev")
     public async movePrev(@IsInt @PathParam("did") did: number): Promise<NRDocument> {
+        console.log("CALLED movePrev");
         const user = await this.serviceContext.user();
         await this.dcServ.getDocument(did);
 
@@ -519,6 +540,7 @@ export class DocumentResource {
     @Path("/:did/assignee/:uid")
     public async assignDocument(@IsInt @PathParam("did") did: number,
                                 @IsInt @PathParam("uid") uid: number): Promise<NRDocument> {
+        console.log("CALLED assignDocument");
         const user = await this.serviceContext.user();
         const dc = await this.dcServ.getDocument(did);
         const ass = await this.usServ.getUser(uid);

@@ -59,6 +59,7 @@ export class UserResource {
     private serviceContext: ServiceContext;
 
     public async configure() {
+        console.log("CALLED configure");
         const initAdmin = new NRUser();
 
         if (process.env.ADMIN_EMAIL) {
@@ -103,6 +104,7 @@ export class UserResource {
      */
     @GET
     public async getUsers(): Promise<NRUser[]> {
+        console.log("CALLED getUsers");
         try {
             return await this.usRep.find();
         } catch (err) {
@@ -130,6 +132,7 @@ export class UserResource {
     @GET
     @Path("/current")
     public async getCurrentUser(): Promise<NRUser> {
+        console.log("CALLED getCurrentUser");
         return this.serviceContext.user();
     }
 
@@ -153,6 +156,7 @@ export class UserResource {
     @GET
     @Path("/:uid")
     public async getUser(@PathParam("uid") uid: number): Promise<NRUser> {
+        console.log("CALLED getUser");
         return await this.usServ.getUser(uid);
     }
 
@@ -185,6 +189,7 @@ export class UserResource {
     @PreProcessor(updateUserValidator)
     public async updateUser(@IsInt @PathParam("uid") uid: number,
                             user: NRUser): Promise<NRUser> {
+        console.log("CALLED updateUser");
         const updUser = await this.usServ.getUser(uid);
 
         const usr = await this.serviceContext.user();
@@ -236,6 +241,7 @@ export class UserResource {
     @DELETE
     @Path("/:uid")
     public async deleteUser(@IsInt @PathParam("uid") uid: number): Promise<void> {
+        console.log("CALLED deleteUser");
         const delUsr = await this.usServ.getUser(uid);
         const usr = await this.serviceContext.user();
 
@@ -275,6 +281,7 @@ export class UserResource {
     @Path("/:uid/role/:rid")
     public async addRole(@IsInt @PathParam("uid") uid: number,
                          @IsInt @PathParam("rid") rid: number): Promise<NRUser> {
+        console.log("CALLED addRole");
         const user = await this.usServ.getUser(uid);
         const role = await this.rlServ.getRole(rid);
 
@@ -318,6 +325,7 @@ export class UserResource {
     @GET
     @Path("/:uid/roles")
     public async getRoles(@IsInt @PathParam("uid") uid: number): Promise<NRRole[]> {
+        console.log("CALLED getRoles");
         const user = await this.usServ.getUser(uid);
         const ur = await this.usRep.findOne(user.id, {relations: ["roles"]});
 
@@ -351,6 +359,7 @@ export class UserResource {
     @Path("/:uid/role/:rid")
     public async removeRole(@IsInt @PathParam("uid") uid: number,
                             @IsInt @PathParam("rid") rid: number): Promise<NRUser> {
+        console.log("CALLED removeRole");
         const user = await this.usServ.getUser(uid);
         const role = await this.rlServ.getRole(rid);
 
@@ -392,6 +401,7 @@ export class UserResource {
     @GET
     @Path("/:uid/summary")
     public async getUserSummary(@IsInt @PathParam("uid") uid: number): Promise<NRUser> {
+        console.log("CALLED getUserSummary");
         const usr = await this.usServ.getUser(uid);
 
         // Individual permissions.

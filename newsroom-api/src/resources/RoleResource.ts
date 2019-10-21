@@ -59,6 +59,7 @@ export class RoleResource {
     @POST
     @PreProcessor(createRoleValidator)
     public async createRole(role: NRRole): Promise<NRRole> {
+        console.log("CALLED createRole");
         const user = await this.serviceContext.user();
 
         const admin = await this.permServ.isUserAdmin(user);
@@ -121,6 +122,7 @@ export class RoleResource {
      */
     @GET
     public async getAllRoles(): Promise<NRRole[]> {
+        console.log("CALLED getAllRoles");
         try {
             return await this.rlRep.find({ relations: ["stpermissions", "stpermissions.stage",
                                                        "wfpermissions", "wfpermissions.workflow"] });
@@ -143,6 +145,7 @@ export class RoleResource {
     @GET
     @Path("/:rid")
     public async getRole(@IsInt @PathParam("rid") rid: number): Promise<NRRole> {
+        console.log("CALLED getRole");
         const role = await this.rlServ.getRole(rid);
         return await this.rlRep.findOne(role.id, { relations: ["stpermissions", "wfpermissions"] });
     }
@@ -162,6 +165,7 @@ export class RoleResource {
     @PreProcessor(updateRoleValidator)
     public async updateRole(@IsInt @PathParam("rid") rid: number,
                             role: NRRole): Promise<NRRole> {
+        console.log("CALLED updateRole");
         const currRole = await this.rlServ.getRole(rid);
         const user = await this.serviceContext.user();
 
@@ -199,6 +203,7 @@ export class RoleResource {
     @DELETE
     @Path("/:rid")
     public async deleteRole(@IsInt @PathParam("rid") rid: number) {
+        console.log("CALLED deleteRole");
         const currRole = await this.rlServ.getRole(rid);
         const user = await this.serviceContext.user();
 
@@ -232,6 +237,7 @@ export class RoleResource {
     public async addWFPermission(@IsInt @PathParam("rid") rid: number,
                                  @IsInt @PathParam("wid") wid: number,
                                  access: any): Promise<NRWFPermission> {
+        console.log("CALLED addWFPermission");
         let perm: NRWFPermission;
 
         const wf = await this.wfServ.getWorkflow(wid);
@@ -271,6 +277,7 @@ export class RoleResource {
     public async addSTPermission(@IsInt @PathParam("rid") rid: number,
                                  @IsInt @PathParam("sid") sid: number,
                                  access: any): Promise<NRSTPermission> {
+        console.log("CALLED addSTPermission");
         let perm: NRSTPermission;
 
         const st = await this.wfServ.getStage(sid);
