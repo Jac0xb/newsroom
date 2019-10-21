@@ -1,9 +1,10 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import express from "express";
 import "reflect-metadata";
 import { Container } from "typedi";
 import { Connection, createConnection, getConnection, useContainer } from "typeorm";
 import { Server } from "typescript-rest";
+import { GoogleOAuth2ServerCredentialsProvider } from "./configs/GoogleOAuth2ServerCredentialsProvider";
 import { SlackWebClientBeanProvider } from "./configs/SlackWebClientBeanProvider";
 import { AuthConfig } from "./middleware/AuthConfig";
 import { ErrorMapper } from "./middleware/ErrorMapper";
@@ -25,6 +26,8 @@ class App {
 
     constructor() {
         this.express = express();
+
+        dotenv.config();
     }
 
     /**
@@ -33,7 +36,7 @@ class App {
      * auth: Whether or not to do real user authentication.
      * docCreate: Whether or not to create actual Google Documents.
      */
-    public async configure(auth: boolean, doGoogleAPICalls: boolean): Promise<express.Express> {
+    public async configure(auth: boolean): Promise<express.Express> {
         Swagger.serve(this.express);
 
         SlackWebClientBeanProvider.configure();
@@ -49,13 +52,11 @@ class App {
                 Container.get(GoogleOAuth2Provider).configure(this.express);
 
                 // Setup admin based on ADMIN_EMAIL.
-                Container.get(UserResource).configure();
+                await Container.get(UserResource).configure();
+
+                await Container.get(GoogleOAuth2ServerCredentialsProvider).loadCredentialsFromDb();
             } else {
                 Container.get(FakeAuthConfig).configure(this.express);
-            }
-
-            if (!(doGoogleAPICalls)) {
-                process.env.DO_GOOGLE = "N";
             }
 
             // Make sure ServiceContext gets extended.
@@ -69,8 +70,6 @@ class App {
 
             // Add error handler to return JSON error.
             this.express.use(ErrorMapper.mapError);
-        }).catch((error) => {
-            console.error("Error creating DB connection.", error);
         });
 
         return this.express;

@@ -46,7 +46,7 @@ let permServ: PermissionService;
 // Setup.
 beforeAll(async (done) => {
     // Configure without oauth, and no actual Google Document creation.
-    app = await App.configure(false, false);
+    app = await App.configure(false);
 
     // Can't have two active connections, steal from app.
     conn = App.getDBConnection();

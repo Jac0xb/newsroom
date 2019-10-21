@@ -115,7 +115,7 @@ export class DocumentResource {
         }
 
         document.creator = await this.usServ.getUser(user.id);
-        document.googleDocId = await this.dcServ.createGoogleDocument(user, document);
+        await this.dcServ.createGoogleDocument(user, document);
 
         return await this.dcRep.save(document);
     }
@@ -465,6 +465,8 @@ export class DocumentResource {
             cd.stage = ns;
         }
 
+        await this.dcServ.syncGooglePermissionsForDocument(cd);
+
         await this.dcRep.save(cd);
         await this.dcServ.appendPermToDC(cd, cd.stage, user);
         return cd;
@@ -513,6 +515,8 @@ export class DocumentResource {
 
             cd.stage = ps;
         }
+
+        await this.dcServ.syncGooglePermissionsForDocument(cd);
 
         await this.dcRep.save(cd);
         await this.dcServ.appendPermToDC(cd, cd.stage, user);

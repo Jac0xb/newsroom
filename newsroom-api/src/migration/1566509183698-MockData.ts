@@ -48,16 +48,16 @@ export class MockData1566509183698 implements MigrationInterface {
 
         await stageRepository.save([stage1, stage2, stage3]);
 
-        let document = documentRepository.create();
-        document.name = this.DOCUMENT_NAME;
-        document.googleDocId = "1xVk90N6JoZxSCkzgFI4zRIdNCQVj_WRb3sxpV0cKj-8";
-        document.creator = user;
-        document.description = "An article on the ethics of the 404 page.";
-
-        document.stage = stage1;
-        document.workflow = workflow;
-
-        await documentRepository.save(document);
+        // let document = documentRepository.create();
+        // document.name = this.DOCUMENT_NAME;
+        // document.googleDocId = "1xVk90N6JoZxSCkzgFI4zRIdNCQVj_WRb3sxpV0cKj-8";
+        // document.creator = user;
+        // document.description = "An article on the ethics of the 404 page.";
+        //
+        // document.stage = stage1;
+        // document.workflow = workflow;
+        //
+        // await documentRepository.save(document);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {

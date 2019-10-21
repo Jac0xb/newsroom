@@ -37,6 +37,7 @@
     "googleapis": "^43.0.0",
     "guid-typescript": "^1.0.9",
     "nyc": "^14.1.1",
+    "open": "^7.0.0",
     "passport": "^0.4.0",
     "passport-google-oauth": "^2.0.0",
     "reflect-metadata": "^0.1.12",

@@ -1,6 +1,5 @@
 node_modules
 .editorconfig
-.env
 *.log
 dist
 .vscode

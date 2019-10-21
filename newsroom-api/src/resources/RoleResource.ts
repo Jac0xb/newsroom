@@ -1,6 +1,16 @@
 import { Repository } from "typeorm";
-import { Context, DELETE, Errors, GET, Path, PathParam, POST, PreProcessor,
-    PUT, ServiceContext } from "typescript-rest";
+import {
+    Context,
+    DELETE,
+    Errors,
+    GET,
+    Path,
+    PathParam,
+    POST,
+    PreProcessor,
+    PUT,
+    ServiceContext,
+} from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 
 import { Inject } from "typedi";
@@ -100,6 +110,8 @@ export class RoleResource {
                     await this.rlRep.save(newRole);
                     await this.stRep.save(stp.stage);
 
+                    await this.dcServ.syncGooglePermissionsForStage(stp);
+
                     // Prevent circular stringify problems.
                     stp.role = undefined;
                 }
@@ -124,8 +136,10 @@ export class RoleResource {
     public async getAllRoles(): Promise<NRRole[]> {
         console.log("CALLED getAllRoles");
         try {
-            return await this.rlRep.find({ relations: ["stpermissions", "stpermissions.stage",
-                                                       "wfpermissions", "wfpermissions.workflow"] });
+            return await this.rlRep.find({
+                relations: ["stpermissions", "stpermissions.stage",
+                    "wfpermissions", "wfpermissions.workflow"],
+            });
         } catch (err) {
             console.log(err);
 
@@ -147,7 +161,7 @@ export class RoleResource {
     public async getRole(@IsInt @PathParam("rid") rid: number): Promise<NRRole> {
         console.log("CALLED getRole");
         const role = await this.rlServ.getRole(rid);
-        return await this.rlRep.findOne(role.id, { relations: ["stpermissions", "wfpermissions"] });
+        return await this.rlRep.findOne(role.id, {relations: ["stpermissions", "wfpermissions"]});
     }
 
     /**
@@ -299,6 +313,8 @@ export class RoleResource {
         perm.access = access.access;
         perm.stage = st;
         perm.role = rl;
+
+        await this.dcServ.syncGooglePermissionsForStage(perm);
 
         await this.stRep.save(st);
         await this.rlRep.save(rl);

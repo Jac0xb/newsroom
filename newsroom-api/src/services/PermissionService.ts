@@ -1,14 +1,18 @@
-import { Recoverable } from "repl";
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Errors } from "typescript-rest";
-import { InternalServerError } from "typescript-rest/dist/server/model/errors";
-import { NRDocument, NRRole, NRStage,
-         NRSTPermission, NRUser, NRWFPermission, NRWorkflow } from "../entity";
-import { DBConstants } from "../entity";
+import {
+    DBConstants,
+    NRDocument,
+    NRRole,
+    NRStage,
+    NRSTPermission,
+    NRUser,
+    NRWFPermission,
+    NRWorkflow,
+} from "../entity";
 import { UserService } from "./UserService";
-import { WorkflowService } from "./WorkflowService";
 
 @Service()
 export class PermissionService {
@@ -56,8 +60,12 @@ export class PermissionService {
 
     public async getWFPermissionFromWFRL(wf: NRWorkflow, rl: NRRole): Promise<NRWFPermission> {
         try {
-            return await this.wfPRep.findOneOrFail({ where: { role: rl,
-                                                              workflow: wf } });
+            return await this.wfPRep.findOneOrFail({
+                where: {
+                    role: rl,
+                    workflow: wf,
+                },
+            });
         } catch (NotFoundError) {
             const errStr = `WF permission with role ${rl.id} and WF ${wf.id} was not found.`;
             throw new Errors.NotFoundError(errStr);
@@ -66,7 +74,7 @@ export class PermissionService {
 
     public async getAllWFPermissionsForRole(rl: NRRole): Promise<NRWFPermission[]> {
         try {
-            const res = await this.wfPRep.find({ where: { role: rl } });
+            const res = await this.wfPRep.find({where: {role: rl}});
 
             if ((res === undefined) || (res.length === 0)) {
                 throw new Errors.NotFoundError("Error getting WF permission.");
@@ -90,8 +98,12 @@ export class PermissionService {
 
     public async getSTPermissionFromSTRL(st: NRStage, rl: NRRole): Promise<NRSTPermission> {
         try {
-            return await this.stPRep.findOneOrFail({ where: { role: rl,
-                                                              stage: st } });
+            return await this.stPRep.findOneOrFail({
+                where: {
+                    role: rl,
+                    stage: st,
+                },
+            });
         } catch (err) {
             const errStr = `ST permission with role ${rl.id} and ST ${st.id} was not found.`;
             throw new Errors.NotFoundError(errStr);
@@ -100,7 +112,7 @@ export class PermissionService {
 
     public async getAllSTPermissionsForRole(rl: NRRole): Promise<NRSTPermission[]> {
         try {
-            const res = await this.stPRep.find({ where: { role: rl }});
+            const res = await this.stPRep.find({where: {role: rl}});
 
             if ((res === undefined) || (res.length === 0)) {
                 throw new Errors.NotFoundError("Error getting WF permission.");
@@ -164,11 +176,11 @@ export class PermissionService {
             // Get the 'highest' permissions over all roles the user is a part of.
             for (const role of allRoles) {
                 const roleRight = await this.stPRep
-                   .createQueryBuilder(DBConstants.STPERM_TABLE)
-                   .select(`MAX(${DBConstants.STPERM_TABLE}.access)`, "max")
-                   .where(`${DBConstants.STPERM_TABLE}.roleId = :id`, {id: role.id})
-                   .andWhere(`${DBConstants.STPERM_TABLE}.stageId = :stid`, {stid: st.id})
-                   .getRawOne();
+                    .createQueryBuilder(DBConstants.STPERM_TABLE)
+                    .select(`MAX(${DBConstants.STPERM_TABLE}.access)`, "max")
+                    .where(`${DBConstants.STPERM_TABLE}.roleId = :id`, {id: role.id})
+                    .andWhere(`${DBConstants.STPERM_TABLE}.stageId = :stid`, {stid: st.id})
+                    .getRawOne();
 
                 // Found one with WRITE, so just return now.
                 if (roleRight.max === DBConstants.WRITE) {
@@ -210,5 +222,9 @@ export class PermissionService {
             const errStr = `User with ID ${user.id} does not have ST write permissions.`;
             throw new Errors.ForbiddenError(errStr);
         }
+    }
+
+    public async getAllStagePermissionsForStage(stage: NRStage) {
+        return await this.stPRep.find({where: {stage}, relations: ["role"]});
     }
 }

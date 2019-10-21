@@ -1,24 +1,38 @@
-import { google } from "googleapis";
+import { drive_v3, google } from "googleapis";
 import { Guid } from "guid-typescript";
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Errors } from "typescript-rest";
-import { NRDocument, NRStage, NRUser } from "../entity";
+import { GoogleOAuth2ServerCredentialsProvider } from "../configs/GoogleOAuth2ServerCredentialsProvider";
+import { NRDocument, NRStage, NRSTPermission, NRUser } from "../entity";
+import { Access } from "../entity/DBConstants";
 import { PermissionService } from "./PermissionService";
+import { RoleService } from "./RoleService";
 
 @Service()
 export class DocumentService {
-    private static readonly OAUTH_CREDS = {
-        clientId: "153384745741-7h66ureoaag1j61ei5u6un0faeh4al5h.apps.googleusercontent.com",
-        clientSecret: "u5Q2m0D1MO4DeulU-hCCHG06",
-    };
-
     @InjectRepository(NRDocument)
     private dcRep: Repository<NRDocument>;
 
     @Inject()
     private permServ: PermissionService;
+
+    @Inject()
+    private roleService: RoleService;
+
+    private readonly serverCredentialProvider: GoogleOAuth2ServerCredentialsProvider;
+
+    private readonly drive: drive_v3.Drive;
+
+    constructor(serverCredentialProvider: GoogleOAuth2ServerCredentialsProvider) {
+        this.serverCredentialProvider = serverCredentialProvider;
+
+        this.drive = google.drive({
+            auth: this.serverCredentialProvider.getOAuth2Client(),
+            version: "v3",
+        });
+    }
 
     public async getDocument(did: number): Promise<NRDocument> {
         try {
@@ -37,20 +51,23 @@ export class DocumentService {
 
     public async appendPermsToDCS(dcs: NRDocument[], usr: NRUser) {
         for (const dc of dcs) {
-            const dcwst = await this.dcRep.findOne(dc.id, { relations: ["stage"] });
+            const dcwst = await this.dcRep.findOne(dc.id, {relations: ["stage"]});
             await this.appendPermToDC(dc, dcwst.stage, usr);
         }
     }
 
-    public async createGoogleDocument(user: NRUser, doc: NRDocument): Promise<string> {
+    /**
+     * Creates a new Google Doc and syncs current stage permissions with the doc.
+     * @param user The user who is creating the doc.
+     * @param doc The document model that is being created. Stage should already be set properly.
+     */
+    public async createGoogleDocument(user: NRUser, doc: NRDocument) {
         if (process.env.DO_GOOGLE === "N") {
             return Guid.create().toString();
         }
 
-        const oAuth2Client = this.createOAuth2Client(user);
-
         const docs = google.docs({
-            auth: oAuth2Client,
+            auth: this.serverCredentialProvider.getOAuth2Client(),
             version: "v1",
         });
 
@@ -60,7 +77,9 @@ export class DocumentService {
             },
         });
 
-        return result.data.documentId;
+        doc.googleDocId = result.data.documentId;
+
+        await this.syncGooglePermissionsForDocument(doc);
     }
 
     public async updateGoogleDocumentTitle(user: NRUser, doc: NRDocument) {
@@ -68,14 +87,7 @@ export class DocumentService {
             return;
         }
 
-        const oAuth2Client = this.createOAuth2Client(user);
-
-        const drive = google.drive({
-            auth: oAuth2Client,
-            version: "v3",
-        });
-
-        await drive.files.update({
+        await this.drive.files.update({
             fileId: doc.googleDocId,
             requestBody: {
                 name: doc.name,
@@ -84,20 +96,48 @@ export class DocumentService {
     }
 
     public async deleteGoogleDocument(user: NRUser, id: string) {
-        const oAuth2Client = this.createOAuth2Client(user);
+        if (process.env.DO_GOOGLE === "N") {
+            return;
+        }
 
-        const drive = google.drive({
-            auth: oAuth2Client,
-            version: "v3",
-        });
-
-        await drive.files.delete({
+        await this.drive.files.delete({
             fileId: id,
         });
     }
 
+    public async syncGooglePermissionsForDocument(document: NRDocument) {
+        if (process.env.DO_GOOGLE === "N") {
+            return;
+        }
+
+        console.log("Syncing permissions for document: " + document.name);
+
+        const usersWithAccess = await this.getAllUsersWithAccessToDocument(document);
+
+        await this.syncGooglePermissionsForUsers(document, usersWithAccess);
+    }
+
+    public async syncGooglePermissionsForStage(stagePermission: NRSTPermission) {
+        if (process.env.DO_GOOGLE === "N") {
+            return;
+        }
+
+        console.log("Syncing permissions for all documents in stage: " + stagePermission.stage.name);
+
+        const documents = await this.dcRep.find({
+            relations: ["stage"],
+            where: {stage: stagePermission.stage},
+        });
+
+        const usersWithAccess = await this.getAllUsersWithAccessForStage(stagePermission);
+
+        await documents.forEach(async (document) => {
+            await this.syncGooglePermissionsForUsers(document, usersWithAccess);
+        });
+    }
+
     public async appendAssigneeToDC(dc: NRDocument) {
-        const ass = await this.dcRep.findOne(dc.id, { relations: ["assignee"] });
+        const ass = await this.dcRep.findOne(dc.id, {relations: ["assignee"]});
         dc.assignee = ass.assignee;
     }
 
@@ -107,13 +147,145 @@ export class DocumentService {
         }
     }
 
-    private createOAuth2Client(user: NRUser) {
-        const oAuth2Client = new google.auth.OAuth2(DocumentService.OAUTH_CREDS);
-
-        oAuth2Client.setCredentials({
-            access_token: user.accessToken,
+    private async syncGooglePermissionsForUsers(document: NRDocument, usersWithAccess: UserWithAccess[]) {
+        const permissionsResponse = await this.drive.permissions.list({
+            fields: "permissions/id,permissions/role,permissions/emailAddress",
+            fileId: document.googleDocId,
         });
 
-        return oAuth2Client;
+        if (permissionsResponse.status !== 200) {
+            throw new Error("Error getting Google Doc permissions: " + permissionsResponse.data);
+        }
+
+        const permissions = permissionsResponse.data.permissions.filter((permission) => permission.role !== Role.OWNER);
+
+        this.updateOrDeleteExistingPermission(document, permissions, usersWithAccess);
+
+        this.createMissingPermissions(document, permissions, usersWithAccess);
+    }
+
+    private async updateOrDeleteExistingPermission(document: NRDocument,
+                                                   permissions: drive_v3.Schema$Permission[],
+                                                   usersWithAccess: UserWithAccess[]) {
+        const emailToUserMap = new Map(usersWithAccess.map((user) => [user.email, user]));
+
+        return await permissions
+            .map(async (permission) => {
+                const user = emailToUserMap.get(permission.emailAddress);
+
+                if (!user) {
+                    // User not in desired user list, delete permission
+                    return await this.deletePermission(document, permission.id);
+                }
+
+                if (user.access === Access.READ && permission.role === Role.READ ||
+                    user.access === Access.WRITE && permission.role === Role.WRITE) {
+                    // User is authorized correctly no changes needed
+                    return;
+                }
+
+                return await this.updatePermission(document, permission.id, user.access);
+            });
+    }
+
+    private async createMissingPermissions(document: NRDocument,
+                                           permissions: drive_v3.Schema$Permission[],
+                                           usersWithAccess: UserWithAccess[]) {
+        const permissionEmails = new Set(permissions.map((permission) => permission.emailAddress));
+
+        return usersWithAccess
+            .filter((user) => !permissionEmails.has(user.email))
+            .map((user) => {
+                return {
+                    emailAddress: user.email,
+                    role: Role.fromAccess(user.access),
+                    type: "user",
+                };
+            })
+            .map(async (permission) => {
+                try {
+                    return await this.drive.permissions.create({
+                        fileId: document.googleDocId,
+                        requestBody: permission,
+                        sendNotificationEmail: false,
+                    });
+                } catch (err) {
+                    console.log("Error creating Google Doc permissions:", err.message);
+                }
+            });
+    }
+
+    private async deletePermission(document: NRDocument,
+                                   permissionId: string) {
+        return await this.drive.permissions.delete({
+            fileId: document.googleDocId,
+            permissionId,
+        });
+    }
+
+    private async updatePermission(document: NRDocument,
+                                   permissionId: string,
+                                   access: Access) {
+        return await this.drive.permissions.update({
+            fileId: document.googleDocId,
+            permissionId,
+            requestBody: {
+                role: Role.fromAccess(access),
+            },
+        });
+    }
+
+    private async getAllUsersWithAccessToDocument(document: NRDocument) {
+        const allPermissions = await this.permServ.getAllStagePermissionsForStage(document.stage);
+
+        const emailToUserMap = new Map<string, UserWithAccess>();
+
+        await Promise.all(allPermissions.map(async (stagePermission) => {
+            const users = await this.roleService.getUsersInRole(stagePermission.role.id);
+
+            users.map((user) => {
+                const userWithAccess = user as UserWithAccess;
+                userWithAccess.access = stagePermission.access;
+
+                return userWithAccess;
+            }).forEach((userWithAccess) => {
+                const storedUser = emailToUserMap.get(userWithAccess.email);
+
+                if (!storedUser || storedUser.access < userWithAccess.access) {
+                    emailToUserMap.set(userWithAccess.email, userWithAccess);
+                }
+            });
+        }));
+
+        return new Array(...emailToUserMap.values());
+    }
+
+    private async getAllUsersWithAccessForStage(stagePermission: NRSTPermission) {
+        const users = await this.roleService.getUsersInRole(stagePermission.role.id);
+
+        return users.map((user) => {
+            const userWithAccess = user as UserWithAccess;
+            userWithAccess.access = stagePermission.access;
+
+            return userWithAccess;
+        });
+    }
+}
+
+interface UserWithAccess extends NRUser {
+    access: Access;
+}
+
+enum Role {
+    READ = "reader",
+    WRITE = "writer",
+    OWNER = "owner",
+}
+
+// tslint:disable-next-line:no-namespace
+namespace Role {
+    // Extend enum namespace with function
+    export function fromAccess(access: Access) {
+        return access === Access.WRITE ? Role.WRITE : Role.READ;
     }
 }

@@ -57,8 +57,7 @@ export class GoogleOAuth2Provider {
 
         use(strategy);
 
-        app.get("/auth/google",
-            (req, res, done) => {
+        app.get("/auth/google", (req, res, done) => {
                 req.session.returnTo = req.query.redirect ? req.query.redirect : "";
                 done();
             },
@@ -66,7 +65,6 @@ export class GoogleOAuth2Provider {
                 scope: [
                     "https://www.googleapis.com/auth/userinfo.profile",
                     "https://www.googleapis.com/auth/userinfo.email",
-                    "https://www.googleapis.com/auth/drive.file",
                 ],
             }));
 

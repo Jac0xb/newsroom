@@ -17,3 +17,8 @@ export class DBConstants {
     public static readonly DCCOMM_TABLE = "dccomment";
 
 }
+
+export enum Access {
+    READ = 0,
+    WRITE = 1,
+}
