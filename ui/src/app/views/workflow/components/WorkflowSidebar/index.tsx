@@ -11,6 +11,7 @@ export namespace WorkflowMenuBar {
         stage: NRStage
         onTextChange: Function
         onUpdateClick: Function
+        onDeleteClick: Function
     }
     export interface State {
 
@@ -23,10 +24,6 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
         this.state = {
             
         }
-    }
-
-    handleUpdateClick = () => {
-        this.props.onUpdateClick(this.props.stage)
     }
 
     render() {
@@ -65,15 +62,31 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                         // variant="outlined"
                     />
                 </FormControl>
-                <List>
-                {['Triggers', 'Due Date'].map((text, index) => (
-                    <ListItem button key={text}>
-                        <ListItemText primary={text} />
-                    </ListItem>
-                ))}
-                </List>
+                {/* <FormControl className={classes.formComp}>
+                    <FormLabel className={classes.formLabel}>Due Date</FormLabel>
+                    <TextField
+                        id="desc"
+                        className={classes.textField}
+                        value={stage.description}
+                        onChange={(event) => this.props.onTextChange(stage.id, 'description', event.target.value)}
+                        margin="normal"
+                        // variant="outlined"
+                    />
+                </FormControl> */}
+                {/* <FormControl className={classes.formComp}>
+                    <FormLabel className={classes.formLabel}>Notifications</FormLabel>
+                    <TextField
+                        id="desc"
+                        className={classes.textField}
+                        value={stage.description}
+                        onChange={(event) => this.props.onTextChange(stage.id, 'description', event.target.value)}
+                        margin="normal"
+                        // variant="outlined"
+                    />
+                </FormControl> */}
                 <FormControl className={classes.buttonGroup}>
-                    <Button variant="contained" className={classes.button} onClick={this.handleUpdateClick} >Update</Button>
+                    <Button variant="contained" className={classes.button} onClick={() => this.props.onUpdateClick(this.props.stage)}>Update</Button>
+                    <Button variant="contained" color="secondary" className={classes.button} onClick={() => this.props.onDeleteClick()}>Delete</Button>
                 </FormControl>
             </Drawer>
         </main>

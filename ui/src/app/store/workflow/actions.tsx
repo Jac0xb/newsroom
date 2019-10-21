@@ -12,25 +12,10 @@ export function dispatchSetPermissions(canEdit: boolean): any {
   };
 }
 
-export function dispatchAddStage(newStage: NRStage, index: number): any {
-  return {
-    type: ActionTypes.ADD_STAGE,
-    payload: newStage,
-    index: index
-  };
-}
-
 export function dispatchSetStages(stages: Array<NRStage>): any {
   return {
     type: ActionTypes.SET_STAGES,
     payload: stages
-  };
-}
-
-export function dispatchStageAddClick(seqID: number): any {
-  return {
-    type: ActionTypes.ADD_STAGE_CLICK,
-    seqID: seqID
   };
 }
 
@@ -58,21 +43,34 @@ export function dispatchStageChange(seqID: number) : any {
   };
 }
 
-export function dispactchUpdateStage(wfId: number, updatedStage: NRStage) : any {
+export function dispatchAddStage(wfId: number, newStage: NRStage, index: number) : any {
+
+  return async (dispatch: any) => {
+      try {
+          // Add a new stage
+          var { data: stage } = await axios.post(StagesAPI.addStage(wfId, index), newStage)
+
+          // dispatch updates
+          dispatch({
+              type: ActionTypes.ADD_STAGE, 
+              payload: stage 
+          });
+
+      }
+      catch(err) {
+        console.log(err)
+        dispatch({ type: ActionTypes.EDIT_FLASH, flash: "You lack permissions to add a stage in this workflow." });
+      }
+  };
+}
+
+export function dispatchUpdateStage(wfId: number, updatedStage: NRStage) : any {
 
   return async (dispatch: any) => {
 
       try {
           // updated a given stage
           await axios.put(StagesAPI.updateStage(wfId, updatedStage.id), updatedStage)
-            .then((response) => {
-            })
-            .catch((error) => {
-
-              if (error.response.status == 403) {
-                  // this.props.fetchEditFlash("You lack permissions to edit a stage in this workflow.")
-              }
-          });
 
           // Get updated stages
           var { data: stages } = await axios.get(StagesAPI.getWorkflowStages(wfId))
@@ -86,7 +84,33 @@ export function dispactchUpdateStage(wfId: number, updatedStage: NRStage) : any 
       }
       catch(err) {
         console.log(err)
-         //dispatch({ type: ActionTypes.FETCH_FAILURE });
+        dispatch({ type: ActionTypes.EDIT_FLASH, flash: "You lack permissions to edit a stage in this workflow." });
+      }
+  };
+}
+
+export function dispatchDeleteStage(wfId: number, stageID: number) : any {
+
+  return async (dispatch: any) => {
+
+      try {
+          // updated a given stage
+          await axios.delete(StagesAPI.deleteStage(wfId, stageID))
+
+          // Get updated stages
+          var { data: stages } = await axios.get(StagesAPI.getWorkflowStages(wfId))
+
+          // dispatch updates
+          dispatch({
+              type: ActionTypes.DELETE_STAGE, 
+              stages: stages,
+              currentStage: stages[0]
+          });
+
+      }
+      catch(err) {
+        console.log(err)
+        dispatch({ type: ActionTypes.EDIT_FLASH, flash: "You lack permissions to delete a stage in this workflow." });
       }
   };
 }
@@ -98,10 +122,10 @@ export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, any>, ow
     fetchSetPermissions: bindActionCreators(dispatchSetPermissions, dispatch),
     fetchSetStages: bindActionCreators(dispatchSetStages, dispatch),
     fetchAddStage: bindActionCreators(dispatchAddStage, dispatch),
-    fetchStageAddClick: bindActionCreators(dispatchStageAddClick, dispatch),
     fetchEditStage: bindActionCreators(dispatchStageEdit, dispatch),
     fetchEditFlash: bindActionCreators(dispatchEditFlash, dispatch),
     fetchStageChange: bindActionCreators(dispatchStageChange, dispatch),
-    fetchUpdateStage: bindActionCreators(dispactchUpdateStage, dispatch),
+    fetchUpdateStage: bindActionCreators(dispatchUpdateStage, dispatch),
+    fetchDeleteStage: bindActionCreators(dispatchDeleteStage, dispatch),
   }
 };
