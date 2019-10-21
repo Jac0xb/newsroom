@@ -65,7 +65,11 @@ export class UserResource {
             console.info("ADMIN_EMAIL=", process.env.ADMIN_EMAIL);
 
             const u = await this.usRep.findOne( { where: { email: process.env.ADMIN_EMAIL } });
-            console.log(u);
+
+            // Admin already setup.
+            if (u !== undefined) {
+                return;
+            }
 
             initAdmin.email = process.env.ADMIN_EMAIL;
 

@@ -33,9 +33,8 @@ export class GoogleOAuth2Provider {
                 }
 
                 let user = await this.userRepository.findOne({ where: { email } });
-                // let user = await this.userRepository.findOne({ where: { userName: un } });
 
-                if (user === null) {
+                if ((user === undefined) || (user === null)) {
                     console.log("USER WAS NULL.");
                     user = this.userRepository.create();
                     user.email = email;
