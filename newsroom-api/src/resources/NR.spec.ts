@@ -2840,12 +2840,18 @@ async function addStageToWF(us: NRUser, wf: NRWorkflow, status: number, perm: st
             console.log("LOC=", loc);
             const newLoc = loc;
             wf.stages.splice(newLoc, 0, str);
+            console.log('LOC=', loc);
+            console.log('BEFORE=', wf.stages);
 
+            wf.stages.splice(loc, 0, str);
+
+            console.log('AFTER=', wf.stages);
             for (const s of wf.stages) {
                 if ((s.id !== str.id) && (s.sequenceId >= loc)) {
                     s.sequenceId += 1;
                 }
             }
+            console.log('UPDATE=', wf.stages);
         }
 
         await verifySTResp(us, st, str, wf, verifyDocs, whichPerm);
@@ -3467,7 +3473,7 @@ async function verifySTDB(us: NRUser, st: NRStage, wf: NRWorkflow, seq: number, 
 async function verifySTSDB(us: NRUser, sts: NRStage[], wf: NRWorkflow, verifyDocuments: boolean) {
     expect(sts.length).toBeGreaterThanOrEqual(0);
 
-    let i = 1;
+    let i = 0;
 
     const stss = sts.sort((a: NRStage, b: NRStage) => a.sequenceId - b.sequenceId);
 

@@ -381,6 +381,7 @@ export class UserResource {
     @Path("/:uid/summary")
     public async getUserSummary(@IsInt @PathParam("uid") uid: number): Promise<NRUser> {
         console.log("CALLED getUserSummary");
+
         const usr = await this.usServ.getUser(uid);
 
         // Individual permissions.

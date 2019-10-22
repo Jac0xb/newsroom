@@ -278,6 +278,43 @@ export class RoleResource {
     }
 
     /**
+     * Remove permissions on a workflow for a role.
+     * 
+     * path:
+     *      - wid: The id of the workflow in question.
+     *      - rid: The id of the role in question.
+     * 
+     * request:
+     *      - None.
+     *
+     * response:
+     *      - None.
+     *      - NotFoundError (404)
+     *          - If role or stage not found.
+     */
+    @DELETE
+    @Path("/:rid/workflow/:wid")
+    public async removeWFPermission(@IsInt @PathParam("rid") rid: number,
+                                    @IsInt @PathParam("wid") wid: number): Promise<void> {
+        console.log("CALLED removeWFPermission");
+
+        const user = await this.serviceContext.user();
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can remove role permissions.";
+            throw new Errors.ForbiddenError(msg);
+        }
+
+        const wf = await this.wfServ.getWorkflow(wid);
+        const rl = await this.rlServ.getRole(rid);
+
+        const awfp = await this.wfPRep.find({ where: { workflow: wf, role: rl } });
+
+        await this.wfPRep.remove(awfp);
+        return;
+    }
+
+    /**
      * Add or switch permissions on a stage for a role.
      *
      * Returns:
@@ -319,5 +356,42 @@ export class RoleResource {
         await this.stRep.save(st);
         await this.rlRep.save(rl);
         return await this.stPRep.save(perm);
+    }
+
+    /**
+     * Remove permissions on a stage for a role.
+     * 
+     * path:
+     *      - sid: The id of the stage in question.
+     *      - rid: The id of the role in question.
+     * 
+     * request:
+     *      - None.
+     *
+     * response:
+     *      - None.
+     *      - NotFoundError (404)
+     *          - If role or stage not found.
+     */
+    @DELETE
+    @Path("/:rid/stage/:sid")
+    public async removeSTPermission(@IsInt @PathParam("rid") rid: number,
+                                    @IsInt @PathParam("sid") sid: number): Promise<void> {
+        console.log("CALLED removeSTPermission");
+
+        const user = await this.serviceContext.user();
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can remove role permissions.";
+            throw new Errors.ForbiddenError(msg);
+        }
+
+        const st = await this.wfServ.getStage(sid);
+        const rl = await this.rlServ.getRole(rid);
+
+        const astp = await this.stPRep.find({ where: { stage: st, role: rl } });
+
+        await this.stPRep.remove(astp);
+        return;
     }
 }
