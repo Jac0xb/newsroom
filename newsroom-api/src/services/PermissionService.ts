@@ -49,6 +49,10 @@ export class PermissionService {
         }
     }
 
+    public async getAllAdmins(): Promise<NRUser[]> {
+        return this.usRep.find({where: {admin: "Y"}});
+    }
+
     public async getWFPermission(pid: number): Promise<NRWFPermission> {
         try {
             return await this.wfPRep.findOneOrFail(pid);
