@@ -1,4 +1,5 @@
 import { StyleRules, Theme } from '@material-ui/core/styles';
+import { display } from '@material-ui/system';
 
 export function styles(theme: Theme)  {
     return (
@@ -35,6 +36,14 @@ export function styles(theme: Theme)  {
         },
         button: {
             margin: 8
+        },
+        stageButtonGroup:{
+            display: "flex",
+            alignSelf: "center",
+        },
+        stageButton:{
+            margin: 8,
+
         },
         deleteButton: {
             margin: 8,

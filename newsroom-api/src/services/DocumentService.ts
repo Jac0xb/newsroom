@@ -115,6 +115,8 @@ export class DocumentService {
 
         const usersWithAccess = await this.getAllUsersWithAccessToDocument(document);
 
+        console.log(usersWithAccess);
+
         await this.syncGooglePermissionsForUsers(document, usersWithAccess);
     }
 
@@ -239,37 +241,63 @@ export class DocumentService {
     private async getAllUsersWithAccessToDocument(document: NRDocument) {
         const allPermissions = await this.permServ.getAllStagePermissionsForStage(document.stage);
 
-        const emailToUserMap = new Map<string, UserWithAccess>();
-
-        await Promise.all(allPermissions.map(async (stagePermission) => {
+        const listsOfUsers = await Promise.all(allPermissions.map(async (stagePermission) => {
             const users = await this.roleService.getUsersInRole(stagePermission.role.id);
 
-            users.map((user) => {
+            return users.map((user) => {
                 const userWithAccess = user as UserWithAccess;
                 userWithAccess.access = stagePermission.access;
 
                 return userWithAccess;
-            }).forEach((userWithAccess) => {
-                const storedUser = emailToUserMap.get(userWithAccess.email);
-
-                if (!storedUser || storedUser.access < userWithAccess.access) {
-                    emailToUserMap.set(userWithAccess.email, userWithAccess);
-                }
             });
+
         }));
 
-        return new Array(...emailToUserMap.values());
+        const allUsers = ([] as UserWithAccess[])
+            .concat(...listsOfUsers)
+            .concat(await this.getAllAdmins());
+
+        return this.filterDuplicateUsers(allUsers);
     }
 
     private async getAllUsersWithAccessForStage(stagePermission: NRSTPermission) {
-        const users = await this.roleService.getUsersInRole(stagePermission.role.id);
+        const allUsers = (await this.roleService
+            .getUsersInRole(stagePermission.role.id))
+            .map((user) => {
+                const userWithAccess = user as UserWithAccess;
+                userWithAccess.access = stagePermission.access;
 
-        return users.map((user) => {
+                return userWithAccess;
+            })
+            .concat(await this.getAllAdmins());
+
+        return this.filterDuplicateUsers(allUsers);
+    }
+
+    private async getAllAdmins() {
+        const admins = await this.permServ.getAllAdmins();
+
+        const adminsWithAccess = admins.map((user) => {
             const userWithAccess = user as UserWithAccess;
-            userWithAccess.access = stagePermission.access;
-
+            userWithAccess.access = Access.WRITE;
             return userWithAccess;
         });
+
+        return adminsWithAccess;
+    }
+
+    private filterDuplicateUsers(users: UserWithAccess[]) {
+        const emailToUserMap = new Map<string, UserWithAccess>();
+
+        users.forEach((userWithAccess) => {
+            const storedUser = emailToUserMap.get(userWithAccess.email);
+
+            if (!storedUser || storedUser.access < userWithAccess.access) {
+                emailToUserMap.set(userWithAccess.email, userWithAccess);
+            }
+        });
+
+        return users;
     }
 }
 
