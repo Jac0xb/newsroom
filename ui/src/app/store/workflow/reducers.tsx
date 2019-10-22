@@ -15,7 +15,7 @@ export function workflowReducer( state = initialState, action: any): WorkflowSta
       return { ...state, canEdit: action.canEdit, };
     }
     case ActionTypes.ADD_STAGE: {
-      return { ...state, currentStage: action.payload, stages: [...state.stages, action.payload] };
+      return { ...state, stages: action.stages, currentStage: action.currentStage };
     }
     case ActionTypes.SET_STAGES: {
       return { ...state, stages: action.payload };

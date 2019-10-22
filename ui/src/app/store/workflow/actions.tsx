@@ -52,10 +52,13 @@ export function dispatchAddStage(wfId: number, newStage: NRStage, index: number)
           // Add a new stage
           var { data: stage } = await axios.post(StagesAPI.addStage(wfId, index), newStage)
 
+          var { data: stages } = await axios.get(StagesAPI.getWorkflowStages(wfId))
+
           // dispatch updates
           dispatch({
               type: ActionTypes.ADD_STAGE, 
-              payload: stage 
+              stages: stages,
+              currentStage: stage, 
           });
 
       }
@@ -76,7 +79,7 @@ export function dispatchUpdateStage(wfId: number, updatedStage: NRStage) : any {
 
           // Get updated stages
           var { data: stages } = await axios.get(StagesAPI.getWorkflowStages(wfId))
-
+        
           // dispatch updates
           dispatch({
               type: ActionTypes.SET_STAGES, 

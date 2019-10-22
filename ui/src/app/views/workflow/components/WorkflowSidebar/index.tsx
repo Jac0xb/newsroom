@@ -12,6 +12,7 @@ export namespace WorkflowMenuBar {
         onTextChange: Function
         onUpdateClick: Function
         onDeleteClick: Function
+        onAddStage: Function
     }
     export interface State {
 
@@ -85,6 +86,10 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                     />
                 </FormControl> */}
                 <FormControl className={classes.buttonGroup}>
+                    <div className={classes.stageButtonGroup}>
+                        <Button variant="contained" className={classes.stageButton} onClick={() => this.props.onAddStage(this.props.stage.sequenceId)}>{"<-"} Add</Button>
+                        <Button variant="contained" className={classes.stageButton} onClick={() => this.props.onAddStage(this.props.stage.sequenceId + 1)}>Add -></Button>
+                    </div>
                     <Button variant="contained" className={classes.button} onClick={() => this.props.onUpdateClick(this.props.stage)}>Update</Button>
                     <Button variant="contained" color="secondary" className={classes.deleteButton} onClick={() => this.props.onDeleteClick()}>Delete</Button>
                 </FormControl>
