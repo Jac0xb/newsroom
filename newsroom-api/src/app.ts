@@ -36,13 +36,17 @@ class App {
      * auth: Whether or not to do real user authentication.
      * docCreate: Whether or not to create actual Google Documents.
      */
-    public async configure(auth: boolean): Promise<express.Express> {
+    public async configure(auth: boolean, do_google: boolean): Promise<express.Express> {
         Swagger.serve(this.express);
 
         SlackWebClientBeanProvider.configure();
 
         // Register TypeDI Container with TypeORM, must be called before createConnection()
         useContainer(Container);
+
+        if (do_google === false) {
+            process.env.DO_GOOGLE = "N";
+        }
 
         // Start app server and listen for connections.
         await createConnection().then(async (connection) => {

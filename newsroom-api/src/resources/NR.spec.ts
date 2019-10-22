@@ -46,7 +46,7 @@ let permServ: PermissionService;
 // Setup.
 beforeAll(async (done) => {
     // Configure without oauth, and no actual Google Document creation.
-    app = await App.configure(false);
+    app = await App.configure(false, false);
 
     // Can't have two active connections, steal from app.
     conn = App.getDBConnection();
@@ -507,7 +507,7 @@ describe("05. DELETE /api/workflows/:wid", () => {
             const resp = await request(app)
                              .delete(`/api/workflows/${wf.id}`)
                              .set("User-Id", `${adminUsr.id}`);
-
+            
             expect(resp).not.toBeUndefined();
             expect(resp.status).toEqual(204);
 
@@ -744,7 +744,7 @@ describe("07. GET /api/workflows/:wid/stages", () => {
     });
 });
 
-describe("8. GET /api/workflows/:wid/stages/:sid", () => {
+describe("08. GET /api/workflows/:wid/stages/:sid", () => {
     it("Test getting specific stages for different workflows.", async () => {
         const wfNum = 5;
         const stNum = 5;
@@ -844,7 +844,7 @@ describe("8. GET /api/workflows/:wid/stages/:sid", () => {
     });
 });
 
-describe("9. POST /api/workflows/:wid/stages/:pos", () => {
+describe("09. POST /api/workflows/:wid/stages/:pos", () => {
     it("Test adding stages at specific positions in a workflow.", async () => {
         const wfNum = 5;
         const stNum = 5;
@@ -944,7 +944,7 @@ describe("10. DELETE /api/workflows/:wid/stages/:sid", () => {
 
                 // Fix sequence numbers.
                 for (let j = 0; j < sts.length; j++) {
-                    sts[j].sequenceId = j + 1;
+                    sts[j].sequenceId = j;
                 }
 
                 const resp = await request(app)
@@ -991,7 +991,7 @@ describe("10. DELETE /api/workflows/:wid/stages/:sid", () => {
 
                     // Fix sequence numbers.
                     for (let j = 0; j < sts.length; j++) {
-                        sts[j].sequenceId = j + 1;
+                        sts[j].sequenceId = j;
                     }
                 }
 
@@ -1070,7 +1070,7 @@ describe("10. DELETE /api/workflows/:wid/stages/:sid", () => {
                     if (sts.length > 1) {
                         // Fix sequence numbers.
                         for (let j = 0; j < sts.length; j++) {
-                            sts[j].sequenceId = j + 1;
+                            sts[j].sequenceId = j;
                         }
                     }
                 }
@@ -1327,7 +1327,7 @@ describe("12. POST /api/documents", () => {
             expect(resp.status).toEqual(200);
 
             const dcr = resp.body;
-            const st = wf.stages.find((x) => x.sequenceId === 1);
+            const st = wf.stages.find((x) => x.sequenceId === 0);
 
             dc.stage = st;
             await verifyDCResp(dc, dcr, st, wf);
@@ -1834,7 +1834,7 @@ describe("22. PUT /api/documents/:did/next", () => {
                     let nst;
 
                     // Update local copies if we expect it to actually be moved.
-                    if ((st.permission === DBConstants.WRITE) && (st.sequenceId !== stNum)) {
+                    if ((st.permission === DBConstants.WRITE) && (st.sequenceId !== stNum - 1)) {
                         nst = await stRep.findOne({ where: { sequenceId: st.sequenceId + 1,
                                                              workflow: wf } });
 
@@ -1861,7 +1861,7 @@ describe("22. PUT /api/documents/:did/next", () => {
                         const dcdb = await dcRep.findOne(dcr.id, { relations: ["stage"] });
 
                         // Can't move past last stage.
-                        if (st.sequenceId !== stNum) {
+                        if (st.sequenceId !== stNum - 1) {
                             expect(dcdb.stage.sequenceId).toEqual(nst.sequenceId);
                             await verifyDCResp(dc, dcr, nst, wf);
                         } else {
@@ -1901,7 +1901,7 @@ describe("23. PUT /api/documents/:did/prev", () => {
                     let nst;
 
                     // Update local copies if we expect it to actually be moved.
-                    if ((st.permission === DBConstants.WRITE) && (st.sequenceId !== 1)) {
+                    if ((st.permission === DBConstants.WRITE) && (st.sequenceId !== 0)) {
                         nst = await stRep.findOne({ where: { sequenceId: st.sequenceId - 1,
                                                              workflow: wf } });
 
@@ -1928,7 +1928,7 @@ describe("23. PUT /api/documents/:did/prev", () => {
                         const dcdb = await dcRep.findOne(dcr.id, { relations: ["stage"] });
 
                         // Can't move past last stage.
-                        if (st.sequenceId !== 1) {
+                        if (st.sequenceId !== 0) {
                             expect(dcdb.stage.sequenceId).toEqual(nst.sequenceId);
                             await verifyDCResp(dc, dcr, nst, wf);
                         } else {
@@ -2282,7 +2282,6 @@ describe("27. DELETE /api/users/:uid/role/:rid", () => {
                            .delete(`/api/users/${tstUsr.id}/role/${rl.id}`)
                            .set("User-Id", `${adminUsr.id}`);
 
-        console.log(resp.text);
         expect(resp).not.toBeUndefined();
         expect(resp.status).toEqual(200);
 
@@ -2553,7 +2552,62 @@ describe("31. PUT /api/roles/:rid/stage/:sid", () => {
     });
 });
 
-describe("32. PUT /api/roles/:rid/workflow/:wid", () => {
+describe("32. DELETE /api/roles/:rid/workflow/:wid", () => {
+    it("Test deleting workflow permissions from a role.", async () => {
+        const wfNum = 2;
+        const stNum = 3;
+        const dcNum = 2;
+        const grpName = "g";
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+        await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
+
+        const grp = await createGroup(adminUsr, grpName, 200);
+        await setWFPermForGroup(adminUsr, grpName, wfs[0], "WRITE", 200);
+        await setWFPermForGroup(adminUsr, grpName, wfs[1], "WRITE", 200);
+        await addUserToGroup(adminUsr, grpName, usr1, 200);
+
+        const resp = await request(app)
+                           .delete(`/api/roles/${grp.id}/workflow/${wfs[0].id}`)
+                           .set("User-Id", `${adminUsr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(204);
+
+        const wfpdb = await wfPRep.find({ where: { workflow: wfs[0].id } });
+        expect(wfpdb).toHaveLength(0);
+
+        // Try to add stages to both workflows to ensure permissions still work.
+        await addStageToWF(usr1, wfs[0], 403, "WRITE", "RAND", false, "ST");
+        await addStageToWF(usr1, wfs[1], 200, "WRITE", "RAND", false, "ST");
+    });
+
+    it("Test deleting workflow permissions without admin rights.", async () => {
+        const wfNum = 2;
+        const stNum = 3;
+        const dcNum = 2;
+        const grpName = "g";
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+        await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
+
+        const grp = await createGroup(adminUsr, grpName, 200);
+        await setWFPermForGroup(adminUsr, grpName, wfs[0], "WRITE", 200);
+        await setWFPermForGroup(adminUsr, grpName, wfs[1], "WRITE", 200);
+        await addUserToGroup(adminUsr, grpName, usr1, 200);
+
+        const resp = await request(app)
+                           .delete(`/api/roles/${grp.id}/workflow/${wfs[0].id}`)
+                           .set("User-Id", `${usr1.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(403);
+    });
+});
+
+describe("33. PUT /api/roles/:rid/workflow/:wid", () => {
     it("Test adding workflow permissions for a group as a non-admin.", async () => {
         const wfNum = 5;
         const stNum = 3;
@@ -2566,6 +2620,73 @@ describe("32. PUT /api/roles/:rid/workflow/:wid", () => {
 
         await createGroup(adminUsr, grpName, 200);
         await setWFPermForGroup(usr1, grpName, wfs[0], "WRITE", 403);
+    });
+});
+
+
+describe("34. DELETE /api/roles/:rid/stage/:sid", () => {
+    it("Test deleting stage permissions from a role.", async () => {
+        const wfNum = 1;
+        const stNum = 3;
+        const dcNum = 2;
+        const grpName = "g";
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+        await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
+
+        const grp = await createGroup(adminUsr, grpName, 200);
+        await setSTPermForGroup(adminUsr, grpName, wfs[0].stages[0], "WRITE", 200);
+        await setSTPermForGroup(adminUsr, grpName, wfs[0].stages[1], "WRITE", 200);
+        await addUserToGroup(adminUsr, grpName, usr1, 200);
+
+        let resp = await request(app)
+                           .delete(`/api/roles/${grp.id}/stage/${wfs[0].stages[0].id}`)
+                           .set("User-Id", `${adminUsr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(204);
+
+        const stpdb = await stPRep.find({ where: { stage: wfs[0].stages[0].id } });
+        expect(stpdb).toHaveLength(0);
+
+        // Try to move documents to the next stage to verify permissions work.
+        resp = await request(app)
+                           .put(`/api/documents/${wfs[0].stages[0].documents[0].id}/next`)
+                           .set("User-Id", `${usr1.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(403);
+
+        resp = await request(app)
+                           .put(`/api/documents/${wfs[0].stages[1].documents[0].id}/next`)
+                           .set("User-Id", `${usr1.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(200);
+    });
+
+    it("Test deleting stage permissions without admin rights.", async () => {
+        const wfNum = 1;
+        const stNum = 3;
+        const dcNum = 2;
+        const grpName = "g";
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+        await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
+
+        const grp = await createGroup(adminUsr, grpName, 200);
+        await setSTPermForGroup(adminUsr, grpName, wfs[0].stages[0], "WRITE", 200);
+        await setSTPermForGroup(adminUsr, grpName, wfs[0].stages[1], "WRITE", 200);
+        await addUserToGroup(adminUsr, grpName, usr1, 200);
+
+        let resp = await request(app)
+                           .delete(`/api/roles/${grp.id}/stage/${wfs[0].stages[0].id}`)
+                           .set("User-Id", `${usr1.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(403);
     });
 });
 
@@ -2837,21 +2958,13 @@ async function addStageToWF(us: NRUser, wf: NRWorkflow, status: number, perm: st
             wf.stages.push(str);
         } else {
             // Fix sequence IDs manually.
-            console.log("LOC=", loc);
-            const newLoc = loc;
-            wf.stages.splice(newLoc, 0, str);
-            console.log('LOC=', loc);
-            console.log('BEFORE=', wf.stages);
-
             wf.stages.splice(loc, 0, str);
 
-            console.log('AFTER=', wf.stages);
             for (const s of wf.stages) {
                 if ((s.id !== str.id) && (s.sequenceId >= loc)) {
                     s.sequenceId += 1;
                 }
             }
-            console.log('UPDATE=', wf.stages);
         }
 
         await verifySTResp(us, st, str, wf, verifyDocs, whichPerm);
@@ -2950,6 +3063,7 @@ async function addDocsToStage(us: NRUser, st: NRStage, numDoc: number, status: n
         const wfdb = stwf.workflow;
         dc.workflow = wfdb;
         dc.stage = st;
+        dc.googleDocId = Guid.create().toString();
 
         dc.creator = us;
 
@@ -3675,7 +3789,7 @@ async function verifySTDeleted(st: NRStage, sts: NRStage[], hadDocuments: boolea
         for (let i = 0; i < sts.length; i++) {
             const ostdb = await stRep.findOne(sts[i].id);
 
-            expect(ostdb.sequenceId).toEqual(i + 1);
+            expect(ostdb.sequenceId).toEqual(i);
         }
     }
 
