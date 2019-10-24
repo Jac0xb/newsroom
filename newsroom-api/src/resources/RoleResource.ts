@@ -279,11 +279,11 @@ export class RoleResource {
 
     /**
      * Remove permissions on a workflow for a role.
-     * 
+     *
      * path:
      *      - wid: The id of the workflow in question.
      *      - rid: The id of the role in question.
-     * 
+     *
      * request:
      *      - None.
      *
@@ -360,11 +360,11 @@ export class RoleResource {
 
     /**
      * Remove permissions on a stage for a role.
-     * 
+     *
      * path:
      *      - sid: The id of the stage in question.
      *      - rid: The id of the role in question.
-     * 
+     *
      * request:
      *      - None.
      *

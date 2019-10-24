@@ -64,7 +64,7 @@ export class DocumentService {
     public async createGoogleDocument(user: NRUser, doc: NRDocument) {
         if (process.env.DO_GOOGLE === "N") {
             doc.googleDocId = Guid.create().toString();
-            return; 
+            return;
         }
 
         const docs = google.docs({

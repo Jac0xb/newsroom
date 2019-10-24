@@ -1,7 +1,7 @@
 import { Inject } from "typedi";
 import { IsNull, Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { Context, DELETE, GET, Path, PathParam, POST,
+import { Context, DELETE, Errors, GET, Path, PathParam, POST,
          PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 import { BadRequestError } from "typescript-rest/dist/server/model/errors";
@@ -499,15 +499,20 @@ export class DocumentResource {
         await this.dcServ.getDocument(did);
 
         const cd = await this.dcRep.findOne(did, { relations: ["assignee", "stage", "workflow"] });
+
+        if ((cd.workflow === undefined) || (cd.stage === undefined)) {
+            throw new Errors.BadRequestError("Document is not a part of a stage or workflow.");
+        }
+
         const cs = cd.stage;
         const cw = cd.workflow;
 
         await this.permServ.checkSTWritePermissions(user, cs);
+        console.log("allowed");
 
-        // The first stage in any workflow is always sequence 1.
-        const minSeq = 1;
+        const minSeq = 0;
 
-        // The document can be moved forward.
+        // The document can be moved backwards.
         if ((cs.sequenceId - 1) >= minSeq) {
             // Get id of next stage in sequence.
             const ps = await this.stRep.findOne({ where: { sequenceId: cs.sequenceId - 1,

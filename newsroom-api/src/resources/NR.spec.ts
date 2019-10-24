@@ -507,7 +507,7 @@ describe("05. DELETE /api/workflows/:wid", () => {
             const resp = await request(app)
                              .delete(`/api/workflows/${wf.id}`)
                              .set("User-Id", `${adminUsr.id}`);
-            
+
             expect(resp).not.toBeUndefined();
             expect(resp.status).toEqual(204);
 
@@ -2623,7 +2623,6 @@ describe("33. PUT /api/roles/:rid/workflow/:wid", () => {
     });
 });
 
-
 describe("34. DELETE /api/roles/:rid/stage/:sid", () => {
     it("Test deleting stage permissions from a role.", async () => {
         const wfNum = 1;
@@ -2681,7 +2680,7 @@ describe("34. DELETE /api/roles/:rid/stage/:sid", () => {
         await setSTPermForGroup(adminUsr, grpName, wfs[0].stages[1], "WRITE", 200);
         await addUserToGroup(adminUsr, grpName, usr1, 200);
 
-        let resp = await request(app)
+        const resp = await request(app)
                            .delete(`/api/roles/${grp.id}/stage/${wfs[0].stages[0].id}`)
                            .set("User-Id", `${usr1.id}`);
 
