@@ -1,30 +1,14 @@
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import {
-    Context,
-    DELETE,
-    Errors,
-    GET,
-    Path,
-    PathParam,
-    POST,
-    PreProcessor,
-    PUT,
-    ServiceContext,
-} from "typescript-rest";
+import { Context, DELETE, Errors, GET, Path, PathParam, PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-import {
-    NRRole,
-    NRSTPermission,
-    NRUser,
-    NRWFPermission,
-} from "../entity";
+import { NRRole, NRSTPermission, NRUser, NRWFPermission } from "../entity";
 import { PermissionService } from "../services/PermissionService";
 import { RoleService } from "../services/RoleService";
 import { UserService } from "../services/UserService";
 import { WorkflowService } from "../services/WorkflowService";
-import { createUserValidator, updateUserValidator } from "../validators/UserValidators";
+import { updateUserValidator } from "../validators/UserValidators";
 
 // Provides API services for users.
 @Service()
@@ -65,7 +49,7 @@ export class UserResource {
         if (process.env.ADMIN_EMAIL) {
             console.info("ADMIN_EMAIL=", process.env.ADMIN_EMAIL);
 
-            const u = await this.usRep.findOne( { where: { email: process.env.ADMIN_EMAIL } });
+            const u = await this.usRep.findOne({where: {email: process.env.ADMIN_EMAIL}});
 
             // Admin already setup.
             if (u !== undefined) {
@@ -188,6 +172,14 @@ export class UserResource {
 
         if (user.lastName) {
             updUser.lastName = user.lastName;
+        }
+
+        if (user.admin) {
+            if (updUser.id === usr.id && user.admin === "N") {
+                throw new Errors.ForbiddenError("Cannot turn off your own admin access.");
+            }
+
+            updUser.admin = user.admin;
         }
 
         try {

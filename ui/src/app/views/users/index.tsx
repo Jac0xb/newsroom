@@ -1,11 +1,10 @@
 import * as React from 'react';
-import { Avatar, Button } from '@material-ui/core';
+import { Avatar, Switch } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { NRUser } from 'app/utils/models';
 import { styles } from './styles';
 import axios from 'axios';
 import MaterialTable from "material-table";
-import { Link } from 'react-router-dom';
 
 export namespace Users {
     export interface Props {
@@ -17,7 +16,8 @@ export namespace Users {
 
     export interface State {
         users: NRUser[],
-        filterInput: string
+        filterInput: string,
+        currentUser?: NRUser,
     }
 }
 
@@ -34,6 +34,10 @@ class Users extends React.Component<Users.Props, Users.State> {
         axios.get("/api/users").then((response) => {
             this.setState({users: response.data})
         });
+
+        axios.get("/api/currentUser").then((response) => {
+            this.setState({currentUser: response.data as NRUser});
+        })
     }
 
     render() {
@@ -49,7 +53,8 @@ class Users extends React.Component<Users.Props, Users.State> {
                         {title: "First Name", field: "firstName"},
                         {title: "Last Name", field: "lastName"},
                         {title: "Email", field: "email"},
-                        {title: "", render: (user: NRUser) => this.deleteUser.bind(this)(user)}
+                        {title: "Admin", render: (user: NRUser) => this.renderAdminSwitch(user)},
+                        // {title: "Delete", render: (user: NRUser) => this.deleteUser.bind(this)(user)}
                     ]}
                     data={users}
                 />
@@ -70,13 +75,13 @@ class Users extends React.Component<Users.Props, Users.State> {
 
     deleteUser(user: NRUser) {
         var onClick = async () => {
-            
+
             await axios.delete(`/api/users/${user.id}`);
 
             var response = await axios.get("/api/roles")
-                
+
             this.setState({users: response.data})
-        } 
+        }
 
         return (
             // <Button variant="contained" onClick={onClick}>
@@ -84,6 +89,45 @@ class Users extends React.Component<Users.Props, Users.State> {
             // </Button>
             <div></div>
         )
+    }
+
+    renderAdminSwitch(user: NRUser) {
+        const PrimarySwitch = withStyles((theme) => {
+            return {
+                switchBase: {
+                    '&$checked': {
+                        color: theme.palette.primary.main,
+                    },
+                    '&$checked + $track': {
+                        backgroundColor: theme.palette.primary.main,
+                    },
+                },
+                checked: {},
+                track: {},
+            }
+        })(Switch);
+
+        const {currentUser} = this.state;
+
+        return (<PrimarySwitch checked={user.admin === "Y"}
+                               disabled={!currentUser || currentUser.admin !== "Y" || currentUser.id == user.id}
+                               onChange={(event) => this.setUserAdmin(user, event.target.checked)}/>);
+    }
+
+    setUserAdmin(user: NRUser, admin: boolean) {
+        axios.put("/api/users/" + user.id, {admin: admin ? "Y" : "N"}).then((response) => {
+            user.admin = response.data.admin;
+
+            const users = this.state.users.map((prevUser) => {
+                if (prevUser.id === user.id) {
+                    return user;
+                } else {
+                    return prevUser;
+                }
+            });
+
+            this.setState({users: users});
+        });
     }
 }
 
