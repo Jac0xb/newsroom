@@ -6,6 +6,7 @@ import axios from 'axios';
 import { StagesAPI } from "app/api/stage";
 import { TriggersAPI } from "app/api/triggers";
 import { NRTriggerType } from "../../../../../interfaces";
+import { WorkflowsAPI } from "app/api/workflow";
 
 export function dispatchSetPermissions(canEdit: boolean): any {
   return {
@@ -121,6 +122,29 @@ export function dispatchDeleteStage(wfId: number, stageID: number) : any {
   };
 }
 
+export function fetchWorkflow(id: number) : any {
+
+    return async (dispatch: any) => {
+        
+        dispatch({ type: ActionTypes.FETCH_REQUEST })
+
+        try {
+            
+            var { data: workflow } = await axios.get<NRWorkflow>(WorkflowsAPI.getWorkflow(id));
+        
+            dispatch({
+                type: ActionTypes.WORKFLOW_SUCCESS,
+                payload: workflow
+            });
+
+        }
+        catch(err) {
+           dispatch({ type: ActionTypes.FETCH_FAILURE });
+        }
+    };
+}
+
+
 export function dispatchAddTrigger() : any {
 
   return async (dispatch: any) => {
@@ -167,5 +191,6 @@ export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, any>, ow
     fetchUpdateStage: bindActionCreators(dispatchUpdateStage, dispatch),
     fetchDeleteStage: bindActionCreators(dispatchDeleteStage, dispatch),
     fetchAddTrigger: bindActionCreators(dispatchAddTrigger, dispatch),
+    fetchWorkflow: bindActionCreators(fetchWorkflow, dispatch)
   }
 };

@@ -6,6 +6,7 @@ import { Divider, Paper, Typography, AppBar } from '@material-ui/core';
 import WorkflowTile from './components/WorkflowTile';
 import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
+import { NRWorkflow } from 'app/utils/models';
 
 export namespace Workflows{
     export interface Props {
@@ -15,7 +16,7 @@ export namespace Workflows{
         showDialog: boolean
         workFlowName: string
         workFlowDesc: string
-        workflows: any[]
+        workflows: NRWorkflow[]
         dialogBoxName: string
         dialogBoxDesc: string
         flash: string
@@ -37,15 +38,16 @@ class Workflows extends React.Component<Workflows.Props, Workflows.State> {
         };
     }
 
+    async getWorkflows() {
+        
+        var {data: workflows } = await axios.get<NRWorkflow[]>("/api/workflows")
+
+        this.setState({ workflows });
+    }
+
 
     componentDidMount() {
         this.getWorkflows()
-    }
-
-    getWorkflows = () => {
-        axios.get("/api/workflows").then((response) => {
-            this.setState({ workflows: response.data });
-        })
     }
 
     handleCreateNewOpen = (open: boolean) => () => {
@@ -102,6 +104,8 @@ class Workflows extends React.Component<Workflows.Props, Workflows.State> {
         const { workflows, dialogBoxName, dialogBoxDesc, flash } = this.state;
         const { classes } = this.props;
 
+        console.log(workflows)
+
         return (
             <main className={classes.main}>
                 <AppBar color="default" className={classes.appBar} style={{marginTop: "64px", padding: "16px"}}>
@@ -118,7 +122,7 @@ class Workflows extends React.Component<Workflows.Props, Workflows.State> {
                 <div></div>
                 }
                 <div className={classes.outerGrid} style={{marginTop: "132px"}}>
-                    {workflows.map(workflow => (
+                    {workflows.map((workflow: NRWorkflow) => (
                         <WorkflowTile key={workflow.id} workflow={workflow} onClick={(id: number) => this.handleDeleteClick(id)} />
                     ))
                     }

@@ -26,6 +26,7 @@ export const ActionTypes = {
     UPDATE_ITEMSELECTION: '@@group_create/UPDATE_ITEMSELECTION',
     UPDATE_NAME: '@@group_create/UPDATE_NAME',
     UPDATE_DESCRIPTION: '@@group_create/UPDATE_DESCRIPTION',
+    CLEARFORM: '@@group_create/CLEARFORM'
 }
 
 export interface GroupCreateDispatchers {
@@ -37,5 +38,6 @@ export interface GroupCreateDispatchers {
     updateUserSelection: (users: { name: string, id: number }[]) => any;
     updateItemSelection: (items: string[]) => any;
     updateName: (name: string) => any;
-    updateDescription: (description: string) => any;    
+    updateDescription: (description: string) => any;
+    clearForm: () => any;
 }

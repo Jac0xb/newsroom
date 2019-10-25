@@ -6,11 +6,15 @@ const initialState: WorkflowState = {
   stages: [],
   flash: "",
   canEdit: false,
+  workflow: undefined,
   currentStage: new NRStage({id: 0, name: "", description: ""}),
 };
 
 export function workflowReducer( state = initialState, action: any): WorkflowState {
   switch (action.type) {
+    case ActionTypes.WORKFLOW_SUCCESS: {
+        return { ...state, workflow: action.payload };
+      }
     case ActionTypes.SET_PERMISSIONS: {
       return { ...state, canEdit: action.canEdit, };
     }

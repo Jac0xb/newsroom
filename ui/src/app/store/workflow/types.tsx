@@ -1,4 +1,4 @@
-import { NRStage } from "app/utils/models";
+import { NRStage, NRWorkflow } from "app/utils/models";
 
 // Workflow state 
 export interface WorkflowState {
@@ -6,6 +6,7 @@ export interface WorkflowState {
   flash: string,
   canEdit: boolean
   currentStage: NRStage
+  workflow?: NRWorkflow
 }
   
 // Describing the different ACTION NAMES available
@@ -17,19 +18,23 @@ export const ActionTypes = {
   EDIT_FLASH: "@@workflow/EDIT_FLASH",
   STAGE_CHANGE: "@@workflow/STAGE_CHANGE",
   DELETE_STAGE: "@@workflow/DELETE_STAGE",
+  WORKFLOW_SUCCESS: "@@workflow/WORKFLOW_SUCCESS",
+  FETCH_REQUEST: "@@workflow/FETCH_REQUEST",
+  FETCH_FAILURE: "@@workflow/FETCH_FAILURE"
 }
 
 // Define Dispatchers
 export interface WorkflowDispatchers {
-  fetchSetPermissions: (canEdit: boolean) => any
-  fetchSetStages: (stages: Array<NRStage>) => any
-  fetchAddStage: (wfId: number, stage: NRStage, index: number) => any
-  fetchUpdateStage: (wfId: number, updatedStage: NRStage) => any
-  fetchEditStage: (stageID: number, name: string, newValue: string) => any
-  fetchEditFlash: (flash: string) => any
-  fetchStageChange: (seqID: number) => any
-  fetchDeleteStage: (wfId: number, stageID: number) => any
-  fetchAddTrigger: () => any
+  fetchSetPermissions: (canEdit: boolean) => any;
+  fetchSetStages: (stages: Array<NRStage>) => any;
+  fetchAddStage: (wfId: number, stage: NRStage, index: number) => any;
+  fetchUpdateStage: (wfId: number, updatedStage: NRStage) => any;
+  fetchEditStage: (stageID: number, name: string, newValue: string) => any;
+  fetchEditFlash: (flash: string) => any;
+  fetchStageChange: (seqID: number) => any;
+  fetchDeleteStage: (wfId: number, stageID: number) => any;
+  fetchAddTrigger: () => any;
+  fetchWorkflow: (id: number) => any;
 }
 
   

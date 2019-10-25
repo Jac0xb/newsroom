@@ -16,8 +16,6 @@ export function fetchDocuments() : any {
         try {
             
             var { data: documents } = await axios.get<NRDocument[]>(DocumentsAPI.getAllDocuments());
-            
-            var unauthorized: number[] = [];
 
             for (var i = 0; i < documents.length; i++) {
                 try {
@@ -26,20 +24,12 @@ export function fetchDocuments() : any {
                     documents[i].created = new Date(Date.parse(documents[i].created.toString()));
                     documents[i].lastUpdated = new Date(Date.parse(documents[i].lastUpdated.toString()));
                     documents[i] = new NRDocument({...document as Object, ...documents[i]})
-
+                    
                     var { data: stage } = await axios.get<NRStage>(`/api/documents/stage/${documents[i].stage.id}`);
 
                     var { data: workflow } = await axios.get<NRWorkflow>(WorkflowsAPI.getWorkflow(documents[i].workflow.id));
                     
                     documents[i].workflow = workflow;
-                    //if (stage.permission < 1  && documents[i].permission < 1) {
-                    //    unauthorized.push(stage.id);
-                    //}
-
-                    //if (!workflow)
-                    //        throw new Error("broke");
-
-                    //documents[i].workflow = workflow;
 
                 }
                 catch(err) {
@@ -48,8 +38,10 @@ export function fetchDocuments() : any {
             }
             
             documents = _.filter(documents, (document: NRDocument, index: number) => {
-                return !unauthorized.includes(index)
+                return !(document.permission == 0);
             })
+
+            console.log(documents);
 
             dispatch({
                 type: ActionTypes.DOCUMENTS_SUCCESS,

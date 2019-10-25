@@ -42,6 +42,8 @@ export function groupCreateReducer(state = initialState, action: any): GroupCrea
                 return { ...state, name: action.payload }
         case ActionTypes.UPDATE_DESCRIPTION:
             return { ...state, description: action.payload }
+        case ActionTypes.CLEARFORM:
+            return  {...initialState};
         default:
             return state;
     }

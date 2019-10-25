@@ -2,7 +2,7 @@ import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import { Drawer, List, ListItem, ListItemText, TextField, FormLabel, FormControl, Button } from '@material-ui/core';
-import { NRStage } from 'app/utils/models';
+import { NRStage, NRWorkflow } from 'app/utils/models';
 
 
 export namespace WorkflowMenuBar {
@@ -13,6 +13,7 @@ export namespace WorkflowMenuBar {
         onUpdateClick: Function
         onDeleteClick: Function
         onAddStage: Function
+        workflow?: NRWorkflow
     }
     export interface State {
 
@@ -29,8 +30,12 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
 
     render() {
 
-        const { classes, stage } = this.props;
+        const { classes, stage, workflow } = this.props;
         const {  } = this.state;
+
+        if (!workflow || (workflow && workflow.permission == 0)) {
+            return <div></div>
+        }
 
         return (
         <main className={classes.layout}>
@@ -87,7 +92,13 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                 </FormControl> */}
                 <FormControl className={classes.buttonGroup}>
                     <div className={classes.stageButtonGroup}>
-                        <Button variant="contained" className={classes.stageButton} onClick={() => this.props.onAddStage(this.props.stage.sequenceId)}>{"<-"} Add</Button>
+                        <Button 
+                            variant="contained" 
+                            className={classes.stageButton} 
+                            onClick={() => this.props.onAddStage(this.props.stage.sequenceId)}
+                        >
+                                {"<- Add"}
+                        </Button>
                         <Button variant="contained" className={classes.stageButton} onClick={() => this.props.onAddStage(this.props.stage.sequenceId + 1)}>Add -></Button>
                     </div>
                     <Button variant="contained" className={classes.button} onClick={() => this.props.onUpdateClick(this.props.stage)}>Update</Button>

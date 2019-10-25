@@ -47,6 +47,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
             const stages = response.data;
             this.props.fetchSetStages(stages);
             this.props.fetchStageChange(0)
+            this.props.fetchWorkflow(id);
         })
     }
 
@@ -108,6 +109,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
         const tabs = this.props.stages.sort((a, b) => a.sequenceId - b.sequenceId ).map((stage) => {
             return stage.name;
         });
+        
 
         return (
             <React.Fragment>
@@ -115,6 +117,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                     <Subheader tabs={tabs} selectedTab={currentStage ? currentStage.sequenceId : 0} onTabChange={((sequenceID: number) => this.props.fetchStageChange(sequenceID)).bind(this)}/>
                     <div className={classes.spacer} />
                     <WorkflowSidebar 
+                        workflow={this.props.workflow}
                         stage={currentStage ? currentStage : new NRStage} 
                         onTextChange={this.props.fetchEditStage}
                         onUpdateClick={(updatedStage: NRStage) => this.props.fetchUpdateStage(this.props.match.params.id, updatedStage)}
@@ -133,7 +136,14 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                     <div className={classes.content}>
                         <div className={classes.workflowContent}>
                             <div className={classes.buttonGroup}>
-                                <Button variant="contained" className={classes.button} onClick={() => this.props.fetchAddStage(this.props.match.params.id, new NRStage({name: "New Stage", description: ""}), this.props.stages.length)}>Add Stage</Button>
+                                <Button 
+                                    variant="contained" 
+                                    className={classes.button} 
+                                    onClick={() => this.props.fetchAddStage(this.props.match.params.id, new NRStage({name: "New Stage", description: ""}), this.props.stages.length)}
+                                    disabled={(this.props.workflow && this.props.workflow.permission == 1) ? false : true}
+                                    >
+                                    Add Stage
+                                </Button>
                             </div>
                             {this.props.stages.map((stage, index) => (
                                 <div className={classes.stage}>

@@ -98,6 +98,7 @@ export namespace GroupCreate {
             try {
 
                 var responseRole = await axios.post<NRRole>("/api/roles", newRole);
+                this.props.induceSubmission();
                 
             }
             catch (err) {
@@ -131,6 +132,8 @@ export namespace GroupCreate {
 
         render() {
             
+            var { classes } = this.props;
+
             var treeData = _.map(this.props.fetchedWorkflows, (workflow) => {
                 var newWorkflow = { title: workflow.name, value: `${workflow.id}`, children: new Array<{title: string, value: string}>() }
 
@@ -140,13 +143,12 @@ export namespace GroupCreate {
                 }
 
                 return newWorkflow;
-            })
+            });
 
-            // TODO: Add Clear State
             if (this.props.submitted) {
-                return <Redirect push to="/groups"/>;
+                this.props.clearForm();
+                return <Redirect push to="/groups" />;
             }
-            const {classes} = this.props;
 
             return (
                 <main className={classes.main}>

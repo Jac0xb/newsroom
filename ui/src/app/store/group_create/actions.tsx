@@ -113,6 +113,12 @@ export function updateDescription(description: string) {
     };   
 }
 
+export function clearForm() {
+    return {
+        type: ActionTypes.CLEARFORM
+    }
+}
+
 export function mapDispatchToProps<T>(dispatch: ThunkDispatch<GroupCreateReducerState, any, any>, ownProps: T) : GroupCreateDispatchers {
     return {
         ...ownProps,
@@ -124,6 +130,7 @@ export function mapDispatchToProps<T>(dispatch: ThunkDispatch<GroupCreateReducer
         updateUserSelection: bindActionCreators(updateUserSelection, dispatch),
         updateItemSelection: bindActionCreators(updateItemSelection, dispatch),
         updateName: bindActionCreators(updateName, dispatch),
-        updateDescription: bindActionCreators(updateDescription, dispatch)
+        updateDescription: bindActionCreators(updateDescription, dispatch),
+        clearForm: bindActionCreators(clearForm, dispatch)
     }
 };
