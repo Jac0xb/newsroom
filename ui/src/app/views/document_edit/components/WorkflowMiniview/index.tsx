@@ -9,7 +9,7 @@ import { styles } from './styles';
 export namespace WorkflowMiniView {
   export interface Props {
     classes?: any
-    workflow: NRWorkflow
+    workflow?: NRWorkflow
     currentStage: number
     onMove: (direction: string) => void
   }
@@ -26,6 +26,10 @@ class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, WorkflowM
   render() {
 
     const { classes, workflow, currentStage } = this.props;
+
+    if (!workflow) {
+        return <div></div>;
+    }
 
     const stages = workflow.stages.sort((a, b) => a.sequenceId - b.sequenceId);
     
@@ -56,10 +60,10 @@ class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, WorkflowM
           </ExpansionPanelDetails>
           <ExpansionPanelActions className={classes.actions}>
             <Button variant="contained" size="small"
-              disabled={currentStage == 0}
+              disabled={currentStage == 0 || !workflow || (workflow && workflow.stages && workflow.stages[currentStage] && workflow.stages[currentStage].permission == 0)}
               onClick={() => this.props.onMove("prev")}>Back</Button>
             <Button variant="contained" size="small"
-              disabled={currentStage == stages.length - 1}
+              disabled={currentStage == stages.length - 1 || !workflow || (workflow && workflow.stages && workflow.stages[currentStage] && workflow.stages[currentStage].permission == 0)} 
               onClick={() => this.props.onMove("next")}>Next</Button>
           </ExpansionPanelActions>
         </ExpansionPanel>

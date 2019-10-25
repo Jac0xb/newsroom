@@ -104,8 +104,6 @@ class Workflows extends React.Component<Workflows.Props, Workflows.State> {
         const { workflows, dialogBoxName, dialogBoxDesc, flash } = this.state;
         const { classes } = this.props;
 
-        console.log(workflows)
-
         return (
             <main className={classes.main}>
                 <AppBar color="default" className={classes.appBar} style={{marginTop: "64px", padding: "16px"}}>

@@ -1,4 +1,4 @@
-import { NRDocument } from 'app/utils/models';
+import { NRDocument, NRWorkflow } from 'app/utils/models';
 import WorkflowMiniView from 'app/views/document_edit/components/WorkflowMiniview';
 import axios from 'axios';
 import * as React from 'react';
@@ -21,7 +21,8 @@ export namespace EditorContainer {
         document?: NRDocument
         styleBarUpdateFormats?: (formats: string[]) => void
         errorText?: string
-        iFrameKey: number
+        iFrameKey: number;
+        workflow?: NRWorkflow;
     }
 }
 
@@ -37,9 +38,11 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
         const id = this.props.match.params.id;
 
         var task = async () => {
-            var {data: document} = await axios.get<NRDocument>("/api/documents/" + id)
 
-            this.setState({document: document});
+            var {data: document} = await axios.get<NRDocument>("/api/documents/" + id)
+            var {data: workflow} = await axios.get<NRWorkflow>("/api/workflows/" + document.workflow.id)
+            
+            this.setState({document, workflow});
 
             //var { data: workflow } = await axios.get<NRWorkflow>(WorkflowsAPI.getWorkflow(document.workflow.id));
 
@@ -51,7 +54,7 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
 
     render() {
         const {classes} = this.props;
-        const {document, iFrameKey} = this.state;
+        const {document, iFrameKey, workflow} = this.state;
 
         if (!document || !document.workflow || !document.stage) {
             return <div>Document did not exist, had no workflow, or had no stage</div>;
@@ -92,7 +95,7 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
                     </Grid>
                     <Grid item xs={3}>
                         <WorkflowMiniView
-                            workflow={document.workflow}
+                            workflow={workflow}
                             currentStage={document.stage.sequenceId!}
                             onMove={(direction: string) => this.handleMove(direction)}/>
                     </Grid>
