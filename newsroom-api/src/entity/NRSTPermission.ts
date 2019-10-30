@@ -1,12 +1,14 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 
+import { INRSTPermission } from "../../../interfaces";
+
 import { DBConstants } from "./DBConstants";
 import { NRRole } from "./NRRole";
 import { NRStage } from "./NRStage";
 
 // NRSTPermission objects track permissions between stages and roles.
 @Entity(DBConstants.STPERM_TABLE)
-export class NRSTPermission {
+export class NRSTPermission implements INRSTPermission {
     @PrimaryGeneratedColumn()
     public id: number;
 

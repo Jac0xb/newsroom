@@ -5,6 +5,9 @@ import { Router } from 'react-router-dom';
 import { Provider } from 'react-redux'
 import configureStore from "./app/store";
 import { createBrowserHistory } from 'history';
+import 'style-loader';
+import 'css-loader';
+import '../node_modules/antd/dist/antd.css';
 
 const history = createBrowserHistory();
 const store = configureStore();

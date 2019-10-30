@@ -1,10 +1,11 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne,
          OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
+import { INRStage } from "../../../interfaces";
+
 import { DBConstants } from "./DBConstants";
 import { NRDocument } from "./NRDocument";
 import { NRSTPermission } from "./NRSTPermission";
-import { NRSTUSPermission } from "./NRSTUSPermission";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
 
@@ -12,7 +13,8 @@ import { NRWorkflow } from "./NRWorkflow";
  * NRStage objects are pieced together to make a workflow.
  */
 @Entity(DBConstants.STGE_TABLE)
-export class NRStage {
+export class NRStage implements INRStage {
+
     @PrimaryGeneratedColumn()
     public id: number;
 
@@ -89,16 +91,4 @@ export class NRStage {
     )
     @JoinTable()
     public permissions: NRSTPermission[];
-
-    /**
-     * Relationship: NRSTUSPermission
-     *      - One: Each user permission is only associated with one stage.
-     *      - Many: Each stage can have many user permissions.
-     */
-    @OneToMany(
-        (type) => NRSTUSPermission,
-        (permission) => permission.stage,
-    )
-    @JoinTable()
-    public usrpermissions: NRSTUSPermission[];
 }

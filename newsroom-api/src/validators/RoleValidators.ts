@@ -22,6 +22,7 @@ export function createRoleValidator(req: express.Request): void {
             throw new Errors.BadRequestError("Role name was not a string.");
         }
     }
+
 }
 
 export function updateRoleValidator(req: express.Request): void {

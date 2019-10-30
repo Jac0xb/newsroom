@@ -1,99 +1,40 @@
-import { Stage } from "app/models";
+import { NRStage, NRWorkflow } from "app/utils/models";
 
 // Workflow state 
 export interface WorkflowState {
-  stages: Array<Stage>
+  stages: Array<NRStage>
   flash: string,
-  createDialogOpen: boolean,
-  editDialogOpen: boolean,
-  stageID: number,
-  seqID: number,
-  dialogTextName: string,
-  dialogTextDesc: string,
   canEdit: boolean
+  currentStage: NRStage
+  workflow?: NRWorkflow
 }
   
 // Describing the different ACTION NAMES available
-export const SET_PERMISSIONS = "SET_PERMISSIONS";
-export const ADD_STAGE = "ADD_STAGE";
-export const EDIT_STAGE = "EDIT_STAGE";
-export const SET_STAGES = "SET_STAGES";
-export const ADD_STAGE_CLICK = "ADD_STAGE_CLICK";
-export const EDIT_STAGE_CLICK = "EDIT_STAGE_CLICK";
-export const TEXT_CHANGE = "TEXT_CHANGE";
-export const CLOSE_DIALOG = "CLOSE_DIALOG";
-export const EDIT_FLASH = "EDIT_FLASH";
-  
-interface SetPermissionsAction {
-  type: typeof SET_PERMISSIONS;
-  canEdit: boolean;
-}
-
-interface AddStageAction {
-  type: typeof ADD_STAGE;
-  payload: Stage;
-  index: number;
-}
-
-interface EditStageAction {
-  type: typeof EDIT_STAGE;
-}
-
-interface CloseDialogAction {
-  type: typeof CLOSE_DIALOG;
-}
-
-interface SetStagesAction {
-  type: typeof SET_STAGES;
-  payload: Array<Stage>;
-}
-
-interface StageAddClickAction {
-  type: typeof ADD_STAGE_CLICK;
-  seqID: number;
-}
-
-interface StageEditClickAction {
-  type: typeof EDIT_STAGE_CLICK;
-  stageID: number;
-  seqID: number;
-  name: string;
-  desc: string;
-}
-
-interface StageTextChangeAction {
-  type: typeof TEXT_CHANGE;
-  fieldName: string;
-  newValue: string;
-}
-
-interface EditFlashAction {
-  type: typeof EDIT_FLASH;
-  flash: string;
+export const ActionTypes = {
+  SET_PERMISSIONS: "@@workflow/SET_PERMISSIONS",
+  ADD_STAGE: "@@workflow/ADD_STAGE",
+  EDIT_STAGE: "@@workflow/EDIT_STAGE",
+  SET_STAGES: "@@workflow/SET_STAGES",
+  EDIT_FLASH: "@@workflow/EDIT_FLASH",
+  STAGE_CHANGE: "@@workflow/STAGE_CHANGE",
+  DELETE_STAGE: "@@workflow/DELETE_STAGE",
+  WORKFLOW_SUCCESS: "@@workflow/WORKFLOW_SUCCESS",
+  FETCH_REQUEST: "@@workflow/FETCH_REQUEST",
+  FETCH_FAILURE: "@@workflow/FETCH_FAILURE"
 }
 
 // Define Dispatchers
 export interface WorkflowDispatchers {
-  fetchSetPermissions: (canEdit: boolean) => WorkflowActionTypes
-  fetchSetStages: (stages: Array<Stage>) => WorkflowActionTypes
-  fetchAddStage: (stage: Stage, index: number) => WorkflowActionTypes
-  fetchStageAddClick: (seqID: number) => WorkflowActionTypes
-  fetchTextBoxChange: (fieldName: string, newValue: string) => WorkflowActionTypes
-  fetchStageEditClick: (stageID: number, seqID: number, newName: string, newDesc: string) => WorkflowActionTypes
-  fetchEditStage: () => WorkflowActionTypes
-  fetchCloseDialog: () => WorkflowActionTypes
-  fetchEditFlash: (flash: string) => WorkflowActionTypes
+  fetchSetPermissions: (canEdit: boolean) => any;
+  fetchSetStages: (stages: Array<NRStage>) => any;
+  fetchAddStage: (wfId: number, stage: NRStage, index: number) => any;
+  fetchUpdateStage: (wfId: number, updatedStage: NRStage) => any;
+  fetchEditStage: (stageID: number, name: string, newValue: string) => any;
+  fetchEditFlash: (flash: string) => any;
+  fetchStageChange: (seqID: number) => any;
+  fetchDeleteStage: (wfId: number, stageID: number) => any;
+  fetchAddTrigger: () => any;
+  fetchWorkflow: (id: number) => any;
 }
-
-export type WorkflowActionTypes = 
-  AddStageAction 
-  | EditStageAction 
-  | SetStagesAction 
-  | StageAddClickAction 
-  | StageTextChangeAction 
-  | StageEditClickAction 
-  | CloseDialogAction 
-  | EditFlashAction
-  | SetPermissionsAction;
 
   

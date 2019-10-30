@@ -4,10 +4,10 @@ export function styles(theme: Theme)  {
     return (
     {
         layout: {
-            display: "flex",
+            width: "100%",
         },
         stage: {
-            padding: theme.spacing.unit * 2,
+            padding: theme.spacing(2),
             minWidth: "380px",
             background: "#f8efd6",
             boxShadow: 'none',

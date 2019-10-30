@@ -1,6 +1,5 @@
 node_modules
 .editorconfig
-.env
 *.log
 dist
 .vscode
@@ -8,3 +7,4 @@ dist
 *.iml
 *.sqlite
 .DS_STORE
+tags

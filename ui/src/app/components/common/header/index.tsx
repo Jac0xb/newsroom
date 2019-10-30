@@ -1,138 +1,145 @@
 import * as React from 'react';
 import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
-import IconButton from '@material-ui/core/IconButton';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import { withStyles } from '@material-ui/core/styles';
-import MenuIcon from '@material-ui/icons/Menu';
+import { withStyles, StyledProps, StyledComponentProps } from '@material-ui/core/styles';
 import MailIcon from '@material-ui/icons/Mail';
-import Drawer from '@material-ui/core/Drawer';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import { Link } from 'react-router-dom';
+import { Link, withRouter, RouteComponentProps } from 'react-router-dom';
 import { styles } from "./styles";
-import { compose } from 'recompose';
 import { Button, Grid } from "@material-ui/core";
+import { compose } from 'recompose';
+var image = require("./logo.png");
 
-export namespace HeaderComponent {
+
+export namespace Header {
     export interface Category {
         title: string,
         url: string
     }
 
+    
     export interface Props {
-        classes: Record<string, string>
-        loggedOut?: boolean
+        loggedIn?: boolean
+    }
+
+    export interface ComposedProps extends Header.Props, StyledComponentProps, RouteComponentProps {
+
     }
 
     export interface State {
-        sideMenuOpen: boolean
-        categories: Category[]
+        categories: Category[];
+        route: string;
     }
-}
 
-class HeaderComponent extends React.Component<HeaderComponent.Props, HeaderComponent.State> {
+    export class Component extends React.Component<Header.ComposedProps, Header.State> {
 
-    constructor(props: HeaderComponent.Props) {
-        super(props)
+        constructor(props: Header.ComposedProps) {
+            super(props)
+    
+            this.state = {
+                route: "/",
+                categories: [
+                    {title: 'Documents', url: "/"},
+                    {title: 'Workflows', url: "/workflow"},
+                    {title: 'Users', url: '/users'},
+                    {title: 'Groups', url: '/groups'}
+                ]
+            }
+        }
+    
+        componentDidMount() {
+            var route = window.location.pathname;
+            this.setState({route});
+        }
+    
+        /**
+         * TODO: Document
+         */
+        createCategories() {
+    
+            const {classes} = this.props;
 
-        this.state = {
-            sideMenuOpen: false,
-            categories: [
-                {title: 'Document', url: "/"},
-                {title: 'Workflow', url: "/workflow"},
-                {title: 'Users', url: '/users'},
-                {title: 'Groups', url: '/groups'}
-            ]
+            if (!classes)
+                return;
+
+            return <div className={classes.list}>
+                <List>
+                    {
+                        this.state.categories.map((category, index) => (
+                            <Link key={index} to={category.url} className={classes.itemLinks}>
+                                <ListItem button>
+                                    <ListItemIcon><MailIcon/></ListItemIcon>
+                                    <ListItemText primary={category.title}/>
+                                </ListItem>
+                            </Link>
+                        ))
+                    }
+                </List>
+            </div>
+        }
+    
+        /**
+         * TODO: Document
+         */
+        toggleDrawer(open: boolean) {
+        }
+    
+        logout() {
+            window.location.href = "/auth/logout";
+        }
+    
+        /**
+         * TODO: Document
+         */
+        render() {
+    
+            const {classes, loggedIn} = this.props;
+            
+            if (!classes)
+                return;
+
+            return (
+                <AppBar className={classes.header}>
+                    <div style={{display: "flex", margin: "auto 0px", "alignItems": "center"}}>
+                        <Link style={{textDecoration: "none", marginRight: "16px", padding: "0px 16px", display: "flex"}} to="/">
+                            <img src={String(image)} style={{height: "32px"}}  />
+                        </Link>
+                        <div style={{flexGrow: 1, display: "flex"}}>
+                            {
+                                this.state.categories.map((category) => {
+                                    
+                                    var highlight: "normal" | "lighter" | undefined = "lighter";
+                                    if(category.url == this.props.location.pathname) {
+                                        highlight = "normal";
+                                    }
+    
+                                    return <Link to={category.url} onClick={() => {this.setState({route: category.url})}}>
+                                        <Typography style={{fontWeight: highlight, color: "white", marginTop: "4px", marginRight: "16px", lineHeight: "1"}}>
+                                            {category.title}
+                                        </Typography>
+                                    </Link>;
+                                })
+                            }
+                        </div>
+                        <div style={{padding: "0px 16px", marginTop: "4px"}}>
+                            { (loggedIn) ?  (
+                            <Button style={{color: "white"}} onClick={() => this.logout()}>
+                                Sign Out
+                            </Button>
+                            ) : []}
+                        </div>
+                    </div>
+                </AppBar>
+            );
         }
     }
 
-    /**
-     * TODO: Document
-     */
-    createCategories() {
-
-        const {classes} = this.props;
-
-        return <div className={classes.list}>
-            <List>
-                {
-                    this.state.categories.map((category, index) => (
-                        <Link key={index} to={category.url} className={classes.itemLinks}>
-                            <ListItem button>
-                                <ListItemIcon><MailIcon/></ListItemIcon>
-                                <ListItemText primary={category.title}/>
-                            </ListItem>
-                        </Link>
-                    ))
-                }
-            </List>
-        </div>
-    }
-
-    /**
-     * TODO: Document
-     */
-    toggleDrawer(open: boolean) {
-        this.setState({sideMenuOpen: open});
-    }
-
-    handleSignOut() {
-        window.location.href = "/auth/logout"
-    }
-
-    /**
-     * TODO: Document
-     */
-    render() {
-        const {sideMenuOpen} = this.state;
-        const {classes, loggedOut} = this.props;
-
-        return (
-            <AppBar className={classes.header} style={{backgroundColor: "#222f3e", boxShadow: 'none'}}>
-                <Toolbar>
-                    <Grid container justify="space-between" alignItems="center">
-                        <Grid item>
-                        { (!loggedOut) ?  (
-                            <IconButton className={classes.menuButton} color="inherit" aria-label="Open Drawer"
-                                        onClick={() => this.toggleDrawer(true)}>
-                                <MenuIcon/>
-                            </IconButton>
-                        ): []
-                        }
-                        </Grid>
-                        <Grid item>
-                            <Link style={{textDecoration: "none"}} to="/">
-                                <Typography style={{textDecoration: "none", color: "white"}}
-                                            className={classes.title}
-                                            variant="title" color="inherit" noWrap>
-                                    Newsroom
-                                </Typography>
-                            </Link>
-                        </Grid>
-                        <Grid item>
-                            { (!loggedOut) ?  (<Button style={{color: "white"}} onClick={() => this.handleSignOut()}>Sign Out</Button>) : [] }
-                        </Grid>
-                    </Grid>
-
-                    <Drawer open={sideMenuOpen} onClose={() => this.toggleDrawer(false)}>
-                        <div
-                            tabIndex={0}
-                            role="button"
-                            onClick={() => this.toggleDrawer(false)}
-                            onKeyDown={() => this.toggleDrawer(false)}
-                        >
-                            <Typography variant="overline" className={classes.categoriesTitle}>Views</Typography>
-                            {this.createCategories()}
-                        </div>
-                    </Drawer>
-
-                </Toolbar>
-            </AppBar>
-        );
-    }
 }
 
-export default withStyles(styles)(HeaderComponent);
+export default compose<Header.ComposedProps, Header.Props>(
+    withRouter,
+    withStyles(styles, {withTheme: true})
+)(Header.Component);

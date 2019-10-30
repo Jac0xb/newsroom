@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import { Paper, Typography, Divider, Grid, Menu, MenuItem, IconButton } from '@material-ui/core';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
-import { DocumentTileComponent } from 'app/views/dashboard/components/DocumentTile';
+import {  } from '@material-ui/core';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
+import MaterialTable from 'material-table';
+import { NRDocument } from 'app/utils/models';
 
 export namespace WorkflowStage {
     export interface Props {
@@ -12,13 +13,13 @@ export namespace WorkflowStage {
         id: number
         name: string
         desc: string
-        onEditClick: Function
-        onDeleteClick: Function
         canEdit: boolean
+        show: number
+        index: number
     }
     export interface State {
       openMenu: boolean
-      stageDocuments: any[]
+      stageDocuments: Array<NRDocument>
       anchorEl?: any
     }
 }
@@ -39,22 +40,9 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
 
   // Get documents for this stage from database
   getDocuments() {
-    const stageDocuments: any[] = [] 
 
-		axios.get("/api/documents/").then((response) => {
-
-      const documents: any[] = response.data
-
-      // Get all documents for this stage
-      documents.forEach(document => {
-        if(document.stage != null){
-          if(document.stage.id == this.props.id){
-            stageDocuments.push(document)
-          }
-        }
-      });
-      
-			this.setState({ stageDocuments })
+		axios.get("/api/documents/stage/" + this.props.id).then((response) => {
+			this.setState({ stageDocuments: response.data })
 		});
   }
   
@@ -66,66 +54,34 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
     this.setState({ openMenu: false, anchorEl: null });
   }
 
+  static getStageDocs(doc: NRDocument) {
+    return (
+      <Link style={{ textDecoration: "none" }} to={`/document/${doc.id}/edit`}>
+        {doc.name}
+      </Link>
+    )
+}
+
   render() {
 
-    const { classes } = this.props;
-    const { openMenu, stageDocuments } = this.state;
-
-    // Get most up-to-date documents list
-    this.getDocuments();
-
-    const docList = stageDocuments.map((document, i) =>
-			<DocumentTileComponent key={i} document={document} compressed={true} onDelete={() => {}} />
-    );
+    const { classes, show, index } = this.props;
+    const { stageDocuments } = this.state;
 
     return (
       <main className={classes.layout}>
-        <Paper className={classes.stage} key={this.props.id}>
-          <div className={classes.headingDiv}>
-              <Typography className={classes.heading} variant="title">
-                {this.props.name}
-              </Typography>
-              { this.props.canEdit ? 
-                <div>
-                  <IconButton
-                    onClick={(event) => this.handleMenuClick(event)}
-                    aria-controls="simple-menu"
-                    aria-haspopup="true"
-                  >
-                    <MoreVertIcon />
-                  </IconButton>
-                    <Menu
-                      id="long-menu"
-                      anchorEl={this.state.anchorEl}
-                      open={openMenu}
-                      onClose={() => this.handleMenuClose()}
-                      PaperProps={{
-                        style: {
-                          maxHeight: 216,
-                          width: 200,
-                        },
-                      }}
-                    >
-                      <MenuItem key={0} onClick={() => {this.props.onEditClick(this.props.id); this.setState({openMenu: false})}}>
-                        Edit
-                      </MenuItem>
-                      <MenuItem key={1} onClick={() => {this.props.onDeleteClick(this.props.id); this.setState({openMenu: false})}}>
-                        Delete
-                      </MenuItem>
-                    </Menu>
-                </div>
-                : null
-              }
-          </div>
-
-          <Divider style={{marginBottom: "8px"}}/>
-          <Typography component="p">
-            {(this.props.desc) === "" ? "(No Description)" : this.props.desc}
-          </Typography>
-          <Grid className={classes.documentGrid} container spacing={16}>
-            {docList}
-          </Grid>
-        </Paper>
+        {
+          show == index ? 
+            <MaterialTable
+              title="Documents"
+              columns={[
+                  {title: "Aricle", render: WorkflowStage.getStageDocs},
+                  {title: "Assinged", field: "assinged"},
+                  {title: "Due", field: "due"},
+              ]}
+              data={stageDocuments}
+              />
+          : null
+        }
       </main>
     );
   }

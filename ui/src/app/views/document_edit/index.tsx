@@ -1,4 +1,4 @@
-import { Document } from 'app/models';
+import { NRDocument, NRWorkflow } from 'app/utils/models';
 import WorkflowMiniView from 'app/views/document_edit/components/WorkflowMiniview';
 import axios from 'axios';
 import * as React from 'react';
@@ -12,49 +12,65 @@ import Typography from '@material-ui/core/Typography';
 import { styles } from './styles';
 
 export namespace EditorContainer {
-	export interface Props {
-		classes: any
-		match: { params: { id: number } }
-	}
-	export interface State {
-		document?: Document
-		styleBarUpdateFormats?: (formats: string[]) => void
-		errorText?: string
-	}
+    export interface Props {
+        classes: any
+        match: { params: { id: number } }
+    }
+
+    export interface State {
+        document?: NRDocument
+        styleBarUpdateFormats?: (formats: string[]) => void
+        errorText?: string
+        iFrameKey: number;
+        workflow?: NRWorkflow;
+    }
 }
 
 class EditorContainer extends React.Component<EditorContainer.Props, EditorContainer.State> {
 
-	constructor(props: EditorContainer.Props) {
-		super(props)
-        this.state = { };
-	}
+    constructor(props: EditorContainer.Props) {
+        super(props)
+        this.state = {iFrameKey: Math.random()};
+    }
 
-	componentDidMount() {
-        
-		const id = this.props.match.params.id;
+    componentDidMount() {
 
-		axios.get("/api/documents/" + id).then((response) => {
-			console.log(response);
+        const id = this.props.match.params.id;
 
-            const document = response.data;
-			this.setState({
-				document: document
-			});
-		});
-	}
+        var task = async () => {
 
-	render() {
-		const { classes } = this.props;
-		const { document } = this.state;
+            var {data: document} = await axios.get<NRDocument>("/api/documents/" + id)
+            var {data: workflow} = await axios.get<NRWorkflow>("/api/workflows/" + document.workflow.id)
+            
+            this.setState({document, workflow});
 
-		if (!document || !document.workflow || !document.stage) {
-			return <div>Document did not exist, had no workflow, or had no stage</div>;
-		}
+            //var { data: workflow } = await axios.get<NRWorkflow>(WorkflowsAPI.getWorkflow(document.workflow.id));
+
+            //console.log("y")
+        };
+
+        task();
+    }
+
+    render() {
+        const {classes} = this.props;
+        const {document, iFrameKey, workflow} = this.state;
+
+        if (!document || !document.workflow || !document.stage) {
+            return <div>Document did not exist, had no workflow, or had no stage</div>;
+        }
+
+        if (document.stage.permission == 0) {
+            return <Paper className={classes.documentTitlePaper}>
+                <Typography variant="h5">
+                    You do not have permissions to editing this document.
+                </Typography>
+            </Paper>
+        }
 
         return (
             <main className={classes.main}>
-                <Grid container spacing={24}>
+                <Grid container spacing={4}>
                     <Grid item xs={9}>
                         <Paper className={classes.documentTitlePaper}>
                             <Typography variant="h5">
@@ -67,57 +83,65 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
                                     margin="normal"
                                     defaultValue={document.name}
                                     onChange={(event) => this.handleDocumentNameChange(event)}
-                                    error={!!this.state.errorText} />
+                                    error={!!this.state.errorText}/>
                             </Typography>
                         </Paper>
                         <Paper className={classes.editor}>
-                            <iframe style={{width: "100%", height: "900px"}} src={`https://docs.google.com/document/d/${document.googleDocId}/edit`}>
-
+                            <iframe style={{width: "100%", height: "900px"}}
+                                    key={iFrameKey}
+                                    src={`https://docs.google.com/document/d/${document.googleDocId}/edit`}>
                             </iframe>
                         </Paper>
                     </Grid>
                     <Grid item xs={3}>
                         <WorkflowMiniView
-                            workflow={document.workflow}
+                            workflow={workflow}
                             currentStage={document.stage.sequenceId!}
-                            onMove={(direction: string) => this.handleMove(direction)} />
+                            onMove={(direction: string) => this.handleMove(direction)}/>
                     </Grid>
                 </Grid>
             </main>
-		);
-	}
+        );
+    }
 
-	saveContent() {
-	}
+    saveContent() {
+    }
 
-	handleMove(direction: string) {
-		axios.put("/api/documents/" +  + "/" + direction).then((response) => {
-			console.log(response);
-			this.setState({ document: response.data })
-		});
-	}
+    async handleMove(direction: string) {
 
-	handleDocumentNameChange(event: React.ChangeEvent<any>) {
-		const name = event.target.value;
+        if (!this.state.document)
+            return;
+
+        var reponse = await axios.put("/api/documents/" + this.state.document.id + "/" + direction);
+
+        var {data: document} = await axios.get<NRDocument>("/api/documents/" + this.state.document.id);
+        this.setState({document: document, iFrameKey: Math.random()});
+
+    }
+
+    handleDocumentNameChange(event: React.ChangeEvent<any>) {
+        const name = event.target.value;
 
         const id = this.props.match.params.id;
 
-		if (name.trim().length === 0) {
-			this.setState({ errorText: "Name must not be empty" })
-		} else {
-			// this.setState({ errorText: null });
+        if (name.trim().length === 0) {
+            this.setState({errorText: "Name must not be empty"})
+        } else {
+            // this.setState({ errorText: null });
 
-			if (this.state.document) {
-				this.state.document.name = name
-			}
+            if (this.state.document) {
+                this.state.document.name = name
+            }
 
-			axios.put(`/api/documents/${id}`, {
-				name: name
-			}).then((response) => {
-				console.log(response);
-			});
-		}
-	}
+            axios.put(`/api/documents/${id}`, {
+                name: name
+            }).then((response) => {
+                console.log(response);
+
+                this.setState({iFrameKey: Math.random()})
+            });
+        }
+    }
 }
 
-export default withStyles(styles, { withTheme: true })(EditorContainer);
+export default withStyles(styles, {withTheme: true})(EditorContainer);

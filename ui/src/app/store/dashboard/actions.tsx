@@ -1,55 +1,85 @@
-import * as Types from "./types";
+import { ActionTypes, DashboardReducerState } from './types';
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
+import { DocumentsAPI } from 'app/api/document';
+import { NRDocument, NRWorkflow, NRStage, } from 'app/utils/models';
+import axios from 'axios';
+import { WorkflowsAPI } from 'app/api/workflow';
+import _ from 'lodash';
 
-import { Document } from "app/models";
+export function fetchDocuments() : any {
 
-export function dispatchFetchDocumentsPending(): Types.DashboardActionTypes {
-    return {
-        type: Types.FETCH_DOCUMENTS_PENDING
+    return async (dispatch: any) => {
+        
+        dispatch({ type: ActionTypes.DOCUMENTS_REQUEST })
+
+        try {
+            
+            var { data: documents } = await axios.get<NRDocument[]>(DocumentsAPI.getAllDocuments());
+
+            for (var i = 0; i < documents.length; i++) {
+                try {
+
+                    var { data: document } = await axios.get<NRDocument>(DocumentsAPI.getDocument(documents[i].id));
+                    documents[i].created = new Date(Date.parse(documents[i].created.toString()));
+                    documents[i].lastUpdated = new Date(Date.parse(documents[i].lastUpdated.toString()));
+                    documents[i] = new NRDocument({...document as Object, ...documents[i]})
+                    
+                    var { data: stage } = await axios.get<NRStage>(`/api/documents/stage/${documents[i].stage.id}`);
+
+                    var { data: workflow } = await axios.get<NRWorkflow>(WorkflowsAPI.getWorkflow(documents[i].workflow.id));
+                    
+                    documents[i].workflow = workflow;
+
+                }
+                catch(err) {
+                    documents[i].workflow = new NRWorkflow({name: "Undefined", id: -1})
+                 }
+            }
+            
+            documents = _.filter(documents, (document: NRDocument, index: number) => {
+                return !(document.permission == 0);
+            })
+
+            console.log(documents);
+
+            dispatch({
+                type: ActionTypes.DOCUMENTS_SUCCESS,
+                payload: documents
+            });
+
+        }
+        catch(err) {
+           dispatch({ type: ActionTypes.DOCUMENTS_FAILURE });
+        }
     };
 }
 
-export function dispatchFetchDocumentsSuccess(documents: Document[]): Types.DashboardActionTypes {
-    return {
-        type: Types.FETCH_DOCUMENTS_SUCCESS,
-        payload: documents
-    }
-}
+export function deleteDocument(id: number) : any {
 
-export function dispatchFetchDocumentsError(error: string): Types.DashboardActionTypes {
-    return {
-        type: Types.FETCH_DOCUMENTS_ERROR,
-        payload: error
+    return async (dispatch: any) => {
+        
+        dispatch({ type: ActionTypes.DELETE_REQUEST })
+
+        try {
+            
+            await axios.delete(DocumentsAPI.deleteDocument(id));
+        
+            dispatch({
+                type: ActionTypes.DELETE_SUCCESS,
+            });
+
+        }
+        catch(err) {
+           dispatch({ type: ActionTypes.DELETE_FAILURE });
+        }
     };
 }
 
-export function dispatchDeleteDocumentPending(): Types.DashboardActionTypes {
-    return {
-        type: Types.DELETE_DOCUMENT_PENDING
-    };
-}
-
-export function dispatchDeleteDocumentSuccess(): Types.DashboardActionTypes {
-    return {
-        type: Types.DELETE_DOCUMENT_SUCCESS
-    }
-}
-export function dispatchDeleteDocumentError(error: string): Types.DashboardActionTypes {
-    return {
-        type: Types.DELETE_DOCUMENT_ERROR,
-        payload: error
-    }
-}
-
-export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, Types.DashboardActionTypes>, ownProps: T) : Types.DashboardDispatchers {
+export function mapDispatchToProps<T>(dispatch: ThunkDispatch<DashboardReducerState, any, any>, ownProps: T) : any {
     return {
         ...ownProps,
-        fetchDocumentsPending: bindActionCreators(dispatchFetchDocumentsPending, dispatch),
-        fetchDocumentsSuccess: bindActionCreators(dispatchFetchDocumentsSuccess, dispatch),
-        fetchDocumentsError: bindActionCreators(dispatchFetchDocumentsError, dispatch),
-        deleteDocumentPending: bindActionCreators(dispatchDeleteDocumentPending, dispatch),
-        deleteDocumentSuccess: bindActionCreators(dispatchDeleteDocumentSuccess, dispatch),
-        deleteDocumentError: bindActionCreators(dispatchDeleteDocumentError, dispatch)
+        fetchDocuments: bindActionCreators(fetchDocuments, dispatch),
+        deleteDocument: bindActionCreators(deleteDocument, dispatch)
     }
 };

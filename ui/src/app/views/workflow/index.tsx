@@ -1,228 +1,171 @@
-import { Fab } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import AddIcon from '@material-ui/icons/Add';
 import WorkflowStage from 'app/views/workflow/components/WorkflowStage';
-import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
 import * as React from 'react';
 import { styles } from './styles';
-import { Paper, Typography } from '@material-ui/core';
-// Redux
-import { mapStateToProps  } from 'app/store/workflow/reducers';
+import { Paper, Typography, Button } from '@material-ui/core';
+import { mapStateToProps } from 'app/store/workflow/reducers';
 import { mapDispatchToProps } from "app/store/workflow/actions";
 import { connect } from "react-redux";
 import { WorkflowDispatchers, WorkflowState } from "app/store/workflow/types";
+import WorkflowSidebar from './components/WorkflowSidebar';
+import Subheader from 'app/components/common/subheader';
+import { values } from 'lodash-es';
+import { NRStage } from 'app/utils/models';
 
-  
 export namespace Workflow {
-  export interface Props extends WorkflowDispatchers, WorkflowState {
-    classes?: any
-    match: {
-      params: {
-        id: number
-      }
+    export interface Props extends WorkflowDispatchers, WorkflowState {
+        classes?: any
+        match: {
+            params: {
+                id: number
+            }
+        }
     }
-  }
-  export interface State { }
+    export interface State { }
 }
 
 class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
-  constructor(props: Workflow.Props) {
+    constructor(props: Workflow.Props) {
         super(props)
-        this.state = { }
-  }
+        this.state = {}
+    }
 
-  componentDidMount() {
-    this.getStages();
-    this.getRole();
-  }
+    componentDidMount() {
+        this.getStages();
+        this.getRole();
+        // this.props.fetchAddTrigger();
+    }
 
-  // Method to get stages of current workflow from database
-  getStages() {
-    const id = this.props.match.params.id;
+    // Method to get stages of current workflow from database
+    getStages() {
+        const id = this.props.match.params.id;
 
-    axios.get("/api/workflows/" + id + "/stages").then((response) => {
+        axios.get("/api/workflows/" + id + "/stages").then((response) => {
 
-      const stages = response.data;
-      this.props.fetchSetStages(stages);
-    })
-  }
+            const stages = response.data;
+            this.props.fetchSetStages(stages);
+            this.props.fetchStageChange(0)
+            this.props.fetchWorkflow(id);
+        })
+    }
 
-  // Method to get role of the user from database
-  getRole() {
-    // TODO: Set User edit permissions
-    const wfId = this.props.match.params.id;
-    var user = Number(localStorage.getItem("userID"))
+    // Method to get role of the user from database
+    getRole() {
+        // TODO: Set User edit permissions
+        const wfId = this.props.match.params.id;
 
-    //get users roles
-    axios.get("/api/users/" + user + "/roles").then((response) => {
-      var role = response.data[0].id
-      // get permissions for this role
-      axios.get("/api/roles/" + role ).then((res) => {
-        var wfpermissions = res.data.wfpermissions
-        wfpermissions.forEach((wf: any) => {
-          if(wf.id == wfId && wf.access == 1){
-            // set perm
-            this.props.fetchSetPermissions(true)
-          }
-        });
-      })
-    })
-  }
+        /*
+        //get users roles
+        axios.get("/api/users/" + user + "/roles").then((response) => {
+          var role = response.data[0].id
+          // get permissions for this role
+          axios.get("/api/roles/" + role ).then((res) => {
+            var wfpermissions = res.data.wfpermissions
+            wfpermissions.forEach((wf: any) => {
+              if(wf.id == wfId && wf.access == 1){
+                // set perm
+                this.props.fetchSetPermissions(true)
+              }
+            });
+          })
+        })
+        */
+        this.props.fetchSetPermissions(true)
+    }
 
-  // Change text dialog text boxes
-  handleDialogTextChange = (name: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.props.fetchTextBoxChange(name, event.target.value)
-  };
+    handleStageEdit = (textBoxName: string, textBoxDesc: string) => {
 
-  handleStageAddClick(open: boolean, seqID: number) {
-    // Need the ID of the stage so that we know which button is being pressed and where to add the stage.
-    this.props.fetchStageAddClick(seqID)
-  };
+        const { currentStage } = this.props;
+        // The ID of the current workflow, the sequence id of the stage, the id of the stage.
+        const wfId = this.props.match.params.id;
 
-  // Search and apply current stage info for dialog edit box
-  handleStageEditClick = (stageID: number) => {
+        axios.put("/api/workflows/" + wfId + "/stages/" + currentStage.id, {
+            sequenceId: currentStage.sequenceId,
+            name: textBoxName,
+            description: textBoxDesc,
+            creator: Number(localStorage.getItem("user-id")),
+        }).then((response) => {
+            // Render new stages edit
+            this.getStages()
 
-    const { stages } = this.props;
+            // close dialog
+            // this.props.fetchEditStage()
+        }).catch((error) => {
 
-    var dialogTextName = ""
-    var dialogTextDesc = ""
-    var seqID = 0;
-
-    stages.forEach( (stage, index) => {
-      if(stage.id === stageID){
-        dialogTextName = stage.name
-        dialogTextDesc = stage.description
-        seqID = index
-      }
-    });
-
-    // Show Dialog with current stage info
-    this.props.fetchStageEditClick(stageID, seqID, dialogTextName, dialogTextDesc)
-
-  };
-
-  handleStageAdd = (textBoxName: string, textBoxDesc: string) => {
-
-    // The ID of the current workflow, the sequence id of the stage.
-    const wfId = this.props.match.params.id;
-    const seqID = this.props.seqID;
-
-    // Post new stage req to backend
-    axios.post("/api/workflows/" + wfId + "/stages/" +  seqID, {
-      name: textBoxName,
-      description: textBoxDesc,
-      creator: Number(localStorage.getItem("userID")),
-    }).then((response) => {
-
-      // Stages have their own ID, but their position in the workflow is their 'sequenceId'.
-      const index = response.data.sequenceId;
-
-      // Add Stage to correct position in array
-      this.props.fetchAddStage(response.data, index)
-
-    }).catch((error) => {
-
-      if (error.response.status == 403){
-        this.props.fetchEditFlash("You lack permissions to add stages in this workflow.")
-        this.props.fetchCloseDialog()
-      }
-    });
-  };
-
-  handleStageEdit = (textBoxName: string, textBoxDesc: string) => {
-
-    const { seqID, stageID } = this.props;
-    // The ID of the current workflow, the sequence id of the stage, the id of the stage.
-    const wfId = this.props.match.params.id;
-
-    axios.put("/api/workflows/" + wfId + "/stages/" + stageID, {
-      sequenceId: seqID,
-      name: textBoxName,
-      description: textBoxDesc,
-      creator: Number(localStorage.getItem("userID")),
-    }).then((response) => {
-      // Render new stages edit
-      this.getStages()
-
-      // close dialog
-      this.props.fetchEditStage()
-    }).catch((error) => {
-
-        if (error.response.status == 403) {
-            this.props.fetchEditFlash("You lack permissions to edit a stage in this workflow.")
-            this.props.fetchCloseDialog()
-        }
-    });
-
-  };
-
-  handleStageDeleteClick = (stageID: number) => {
-    const wfId = this.props.match.params.id;
-
-    axios.delete("/api/workflows/" + wfId + "/stages/" + stageID, {
-    }).then((response) => {
-
-      // Render new stages edit
-      this.getStages();
-
-    }).catch((error) => {
-
-        if (error.response.status == 403)
-            this.props.fetchEditFlash("You lack permissions to delete a stage in this workflow.")
-    });
-
-  };
-
-  render() {
-
-    const { classes } = this.props;
-    const {} = this.state;
-
-    return (
-      <React.Fragment>
-        <main className={classes.main}>
-        {(this.props.flash != "") ?
-            <Paper className={classes.flashMessage}>
-                <Typography variant="caption">
-                    {this.props.flash}
-                </Typography>
-            </Paper> :
-            <div></div>
+            if (error.response.status == 403) {
+                this.props.fetchEditFlash("You lack permissions to edit a stage in this workflow.")
             }
-          <div className={classes.content}>
-            <div className={classes.workflowContent}>
-              <div className={classes.stage}>
-                { this.props.canEdit ? 
-                  <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, 0)} className={classes.addButton}>
-                    <AddIcon />
-                  </Fab> 
-                  : null 
-                }
-              </div>
-              {this.props.stages.map((stage, index) => (
-                <div className={classes.stage}>
-                  <WorkflowStage canEdit={this.props.canEdit} id={stage.id} name={stage.name} desc={stage.description} onEditClick={(stageID: number) => this.handleStageEditClick(stageID)} onDeleteClick={(stageID: number) => this.handleStageDeleteClick(stageID)}/>
-                  { this.props.canEdit ? 
-                    <Fab size="small" color="primary" aria-label="Add" onClick={() => this.handleStageAddClick(true, index+1)} className={classes.addButton}>
-                      <AddIcon />
-                    </Fab> 
-                    : null 
-                  }
-                </div>
-              ))}
-              <DialogItem textBoxName={this.props.dialogTextName} textBoxDesc={this.props.dialogTextDesc} title={"Create New Stage"} desc={"Enter new stage information"} show={this.props.createDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.props.fetchCloseDialog()} handleSave={this.handleStageAdd}/>
-              <DialogItem textBoxName={this.props.dialogTextName} textBoxDesc={this.props.dialogTextDesc} title={"Edit Stage"} desc={"Enter stage information"} show={this.props.editDialogOpen} handleTextBoxesChange={this.handleDialogTextChange} handleClose={() => this.props.fetchCloseDialog()} handleSave={this.handleStageEdit}/>
-            </div>
-           </div>
-          </main>
-      </React.Fragment>
-    );
-  }
+        });
+
+    };
+
+    render() {
+
+        const { classes, currentStage } = this.props;
+        const { } = this.state;
+        
+        const tabs = this.props.stages.sort((a, b) => a.sequenceId - b.sequenceId ).map((stage) => {
+            return stage.name;
+        });
+        
+
+        return (
+            <React.Fragment>
+                <main className={classes.main}>
+                    <Subheader tabs={tabs} selectedTab={currentStage ? currentStage.sequenceId : 0} onTabChange={((sequenceID: number) => this.props.fetchStageChange(sequenceID)).bind(this)}/>
+                    <div className={classes.spacer} />
+                    <WorkflowSidebar 
+                        workflow={this.props.workflow}
+                        stage={currentStage ? currentStage : new NRStage} 
+                        onTextChange={this.props.fetchEditStage}
+                        onUpdateClick={(updatedStage: NRStage) => this.props.fetchUpdateStage(this.props.match.params.id, updatedStage)}
+                        onDeleteClick={() => this.props.fetchDeleteStage(this.props.match.params.id, currentStage.id)}  
+                        onAddStage={(sequence: number) => this.props.fetchAddStage(this.props.match.params.id, new NRStage({name: "New Stage", description: ""}), sequence)}
+                    />
+
+                    {(this.props.flash != "") ?
+                        <Paper className={classes.flashMessage}>
+                            <Typography variant="caption">
+                                {this.props.flash}
+                            </Typography>
+                        </Paper> :
+                        <div></div>
+                    }
+                    <div className={classes.content}>
+                        <div className={classes.workflowContent}>
+                            <div className={classes.buttonGroup}>
+                                <Button 
+                                    variant="contained" 
+                                    className={classes.button} 
+                                    onClick={() => this.props.fetchAddStage(this.props.match.params.id, new NRStage({name: "New Stage", description: ""}), this.props.stages.length)}
+                                    disabled={(this.props.workflow && this.props.workflow.permission == 1) ? false : true}
+                                    >
+                                    Add Stage
+                                </Button>
+                            </div>
+                            {this.props.stages.map((stage, index) => (
+                                <div className={classes.stage}>
+                                    <WorkflowStage show={currentStage.sequenceId}
+                                        key={index}
+                                        index={stage.sequenceId} 
+                                        canEdit={this.props.canEdit} 
+                                        id={stage.id} 
+                                        name={stage.name} 
+                                        desc={stage.description} 
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </main>
+            </React.Fragment>
+        );
+    }
 }
 
 export default connect<Workflow.Props>(
-  mapStateToProps,
-  mapDispatchToProps
+    mapStateToProps,
+    mapDispatchToProps
 )(withStyles(styles, { withTheme: true })(Workflow));

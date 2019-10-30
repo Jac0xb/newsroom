@@ -4,7 +4,7 @@ import { InjectRepository } from "typeorm-typedi-extensions";
 import { Context, DELETE, Errors, GET, Path, PathParam,
          POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
-import { DBConstants, NRStage, NRWorkflow } from "../entity";
+import { DBConstants, NRDocument, NRStage, NRWorkflow } from "../entity";
 import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";
 import { WorkflowService } from "../services/WorkflowService";
@@ -24,6 +24,9 @@ export class WorkflowResource {
     @InjectRepository(NRWorkflow)
     private wfRep: Repository<NRWorkflow>;
 
+    @InjectRepository(NRDocument)
+    private dcRep: Repository<NRDocument>;
+
     @Inject()
     private usServ: UserService;
 
@@ -39,43 +42,45 @@ export class WorkflowResource {
      * path:
      *      - None.
      *
-     * request: A workflow object to create.
+     * request:
      *      {
      *          "name": <string>,
-     *          "description": <string>,
-     *          "permission": <number>
+     *          "description": <string>
      *      }
      *          - name: Must be unique versus other names.
-     *          - permission: 1 to create with WRITE, 0 to create with READ, or not passed at all.
+     *          - The logged in user must be an admin to create workflows.
      *
      * response:
-     *      - The created workflow object with the following relations:
-     *          - permission: The READ/WRITE permissions of the user for this workflow.
+     *      - NRWorkflow object with the following relations:
+     *          - None.
      */
     @POST
     @PreProcessor(createWorkflowValidator)
     public async createWorkflow(wf: NRWorkflow): Promise<NRWorkflow> {
+        console.log("CALLED createWorkflow");
+
         try {
             const user = await this.servCont.user();
             wf.creator = await this.usServ.getUser(user.id);
-            const wfdb = await this.wfRep.save(wf);
 
-            if (wf.permission !== undefined) {
-                const wfup = await this.wfServ.createWFUSPermission(wfdb.id,
-                                                                    user,
-                                                                    wf.permission);
+            // Only administrators can create workflows.
+            const allowed = await this.permServ.isUserAdmin(user);
 
-                // 'permission' is just for the response, so load it here.
-                wfdb.permission = wfup.access;
+            if (allowed) {
+                const wfdb = await this.wfRep.save(wf);
+                wfdb.permission = DBConstants.WRITE;
+
+                return wfdb;
             } else {
-                wf.permission = DBConstants.READ;
+                throw new Errors.ForbiddenError("Only administrators can create workflows.");
+            }
+        } catch (err) {
+            if (err instanceof Errors.ForbiddenError) {
+                throw err;
             }
 
-            return wfdb;
-        } catch (err) {
-            console.log(err);
-
-            const errStr = `Error creating workflow.`;
+            console.error(err);
+            const errStr = "Error creating workflow.";
             throw new Errors.InternalServerError(errStr);
         }
     }
@@ -90,16 +95,17 @@ export class WorkflowResource {
      *      - None.
      *
      * response:
-     *      - All existing objects with the following relations:
+     *      - NRWorkflow[] each with the following relations:
      *          - permission: The READ/WRITE permissions of the user for this workflow
      */
     @GET
     public async getWorkflows(): Promise<NRWorkflow[]> {
+        console.log("CALLED getWorkflows");
+
         try {
             const user = await this.servCont.user();
-            const wfs = await this.wfRep.find();
+            const wfs = await this.wfRep.find({ relations: ["stages"]});
 
-            // Append the 'permission' to each workflow.
             return await this.wfServ.appendPermToWFS(wfs, user);
         } catch (err) {
             console.log(err);
@@ -119,7 +125,7 @@ export class WorkflowResource {
      *      - None.
      *
      * response:
-     *      - The requested workflow with the following relations:
+     *      - NRWorkflow with the following relations:
      *          - stages: All stages that exist in this workflow.
      *              - permission: This will match the users permissions over the workflow.
      *          - permission: The READ/WRITE permissions of the user for this workflow
@@ -127,14 +133,18 @@ export class WorkflowResource {
     @GET
     @Path("/:wid")
     public async getWorkflow(@IsInt @PathParam("wid") wid: number): Promise<NRWorkflow> {
+        console.log("CALLED getWorkflow");
+
         const user = await this.servCont.user();
         let wf = await this.wfServ.getWorkflow(wid);
         wf = await this.wfServ.addStageRelationsToWF(wf);
 
-        // User can edit any stage based on permissions to the workflow itself.
-        const wfr = await this.wfServ.appendPermToWF(wf, user);
-        this.wfServ.matchSTPermToWF(wfr);
-        return wfr;
+        // Only admins can edit the workflows, so match the stage permissions to the workflow
+        // permissions.
+        await this.wfServ.appendPermToWF(wf, user);
+        await this.wfServ.appendPermToSTS(wf.stages, user);
+
+        return wf;
     }
 
     /**
@@ -151,7 +161,7 @@ export class WorkflowResource {
      *          - name: Must be unique with regards to other existing workflows.
      *
      * response:
-     *      - The updated workflow with the following relations:
+     *      - NRWorkflow with the following relations:
      *          - permission: The READ/WRITE permissions of the user for this workflow
      */
     @PUT
@@ -159,6 +169,8 @@ export class WorkflowResource {
     @PreProcessor(updateWorkflowValidator)
     public async updateWorkflow(@IsInt @PathParam("wid") wid: number,
                                 workflow: NRWorkflow): Promise<NRWorkflow> {
+        console.log("CALLED updateWorkflow");
+
         const user = await this.servCont.user();
         let wf = await this.wfServ.getWorkflow(wid);
 
@@ -185,7 +197,9 @@ export class WorkflowResource {
     }
 
     /**
-     * Delete a workflow and all associated stages.
+     * Delete a workflow and all associated stages and permissions for each.
+     * Document are left with relationships of 'null' to both, see orhpans
+     * endpoint for how to get orphan documents.
      *
      * path:
      *      - wid: The primary key of the workflow to delete.
@@ -194,11 +208,14 @@ export class WorkflowResource {
      *      - None.
      *
      * returns:
-     *      - None.
+     *      - NoContent (204)
+     *          - On success.
      */
     @DELETE
     @Path("/:wid")
-    public async deleteWorkflow(@IsInt @PathParam("wid") wid: number): Promise<string> {
+    public async deleteWorkflow(@IsInt @PathParam("wid") wid: number): Promise<void> {
+        console.log("CALLED deleteWorkflow");
+
         const user = await this.servCont.user();
         const wf = await this.wfServ.getWorkflow(wid);
 
@@ -208,8 +225,7 @@ export class WorkflowResource {
             // Remove stages, but leave documents with relationships as NULL.
             await this.wfRep.remove(wf);
 
-            // TODO: There has to be a better way to make this return a 200 OK.
-            return "";
+            return;
         } catch (err) {
             console.log(err);
 
@@ -227,13 +243,12 @@ export class WorkflowResource {
      * request:
      *      {
      *          "name": <string>,
-     *          "description": <string>,
-     *          "permission": <number>
+     *          "description": <string>
      *      }
-     *          - permission: 1 to create with WRITE, 0 to create with READ, or not passed at all.
      *
      * response:
-     *      - NRStage that was created.
+     *      - NRStage that was created with the following relations:
+     *          - permission: The permissions for the user who created the stage.
      *      - BadRequestError (400)
      *          - If workflow properties are missing.
      *          - If workflow properties are wrong type.
@@ -249,6 +264,8 @@ export class WorkflowResource {
     @PreProcessor(addStageValidator)
     public async appendStage(@IsInt @PathParam("wid") wid: number,
                              stage: NRStage): Promise<NRStage> {
+        console.log("CALLED appendStage");
+
         const user = await this.servCont.user();
         const wf = await this.wfServ.getWorkflow(wid);
 
@@ -257,7 +274,7 @@ export class WorkflowResource {
         const maxSeqId = await this.wfServ.getMaxStageSequenceId(wf);
 
         if (maxSeqId == null) {
-            stage.sequenceId = 1;
+            stage.sequenceId = 0;
         } else {
             stage.sequenceId = maxSeqId + 1;
         }
@@ -269,16 +286,8 @@ export class WorkflowResource {
             await this.wfRep.save(wf);
             const st = await this.stRep.save(stage);
 
-            if (stage.permission !== undefined) {
-                const stup = await this.wfServ.createSTUSPermission(st.id,
-                                                                    user,
-                                                                    stage.permission);
-
-                // 'permission' is just for the response, so load it here.
-                st.permission = stup.access;
-            } else {
-                st.permission = DBConstants.READ;
-            }
+            // If the user was able to create, they have WRITE.
+            st.permission = DBConstants.WRITE;
 
             return st;
         } catch (err) {
@@ -298,7 +307,8 @@ export class WorkflowResource {
      * request: None.
      *
      * response:
-     *      - NRStage[]
+     *      - NRStage[] with the following relations:
+     *          - permission: The permissions to the stage for the currently logged in user.
      *      - NotFoundError (404)
      *          - If workflow not found.
      *      - InternalServerError (500)
@@ -307,6 +317,7 @@ export class WorkflowResource {
     @GET
     @Path("/:wid/stages")
     public async getStages(@IsInt @PathParam("wid") wid: number): Promise<NRStage[]> {
+        console.log("CALLED getStages");
         const user = await this.servCont.user();
         const wf = await this.wfServ.getWorkflow(wid);
 
@@ -331,10 +342,12 @@ export class WorkflowResource {
      *      - wid: The primary key of the workflow in question.
      *      - sid: The primary key of the stage in question.
      *
-     * request: None.
+     * request:
+     *      - None.
      *
      * response:
-     *      - NRStage
+     *      - NRStage with the following relations:
+     *          - permission: The permissions to the stage for the currently logged in user.
      *      - NotFoundError (404)
      *          - If workflow not found.
      *      - InternalServerError (500)
@@ -344,12 +357,18 @@ export class WorkflowResource {
     @Path("/:wid/stages/:sid")
     public async getStage(@IsInt @PathParam("wid") wid: number,
                           @IsInt @PathParam("sid") sid: number): Promise<NRStage> {
+        console.log("CALLED getStage");
+
         const user = await this.servCont.user();
-        const wf = await this.wfServ.getWorkflow(wid);
+        await this.wfServ.getWorkflow(wid);
 
         try {
             // Grab the specified stage for the right workflow.
-            const stage = await this.stRep.findOne({ where: { workflowId: wid, id: sid}});
+            const stage = await this.stRep.findOne(sid, { relations: ["documents"] });
+
+            if (stage.documents.length === 0) {
+                stage.documents = undefined;
+            }
 
             return await this.wfServ.appendPermToST(stage, user);
         } catch (err) {
@@ -370,13 +389,12 @@ export class WorkflowResource {
      * request:
      *      {
      *          "name": <string>,
-     *          "description": <string>,
-     *          "permission": <number>
+     *          "description": <string>
      *      }
-     *          - permission: 1 to create with WRITE, 0 to create with READ, or not passed at all.
      *
      * response:
-     *      - NRStage
+     *      - NRStage with the following relations:
+     *          - permission: The permissions to the stage for the currently logged in user.
      *      - ForbiddenError (403)
      *          - If request user is not allowed to update workflows.
      *      - NotFoundError (404)
@@ -390,9 +408,11 @@ export class WorkflowResource {
     public async addStageAt(stage: NRStage,
                             @IsInt @PathParam("wid") wid: number,
                             @IsInt @PathParam("pos") position: number): Promise<NRStage> {
+        console.log("CALLED addStageAt");
+
         // Invalid position.
-        if (position <= 0) {
-            position = 1;
+        if (position < 0) {
+            position = 0;
         }
 
         const user = await this.servCont.user();
@@ -406,16 +426,16 @@ export class WorkflowResource {
             const maxSeqId = await this.wfServ.getMaxStageSequenceId(wf);
 
             // Add if no stages yet.
-            if (maxSeqId == null) {
-                stage.sequenceId = 1;
+            if (maxSeqId === null) {
+                stage.sequenceId = 0;
             } else if (position > maxSeqId + 1) {
-                position = maxSeqId + 1;
+                stage.sequenceId = maxSeqId + 1;
             } else {
                 // Insert normally.
                 let currSeq = maxSeqId;
 
                 // Update sequences.
-                while (currSeq > 0) {
+                while (currSeq > -1) {
                     if (currSeq === (position - 1)) {
                         break;
                     }
@@ -439,16 +459,7 @@ export class WorkflowResource {
             await this.wfRep.save(wf);
             stage = await this.stRep.save(stage);
 
-            if (stage.permission !== undefined) {
-                const stup = await this.wfServ.createSTUSPermission(stage.id,
-                                                                             user,
-                                                                             stage.permission);
-
-                // 'permission' is just for the response, so load it here.
-                stage.permission = stup.access;
-            } else {
-                stage.permission = DBConstants.READ;
-            }
+            stage.permission = DBConstants.WRITE;
 
             return stage;
         } catch (err) {
@@ -466,9 +477,12 @@ export class WorkflowResource {
      *      - wid: The primary key of the workflow in question.
      *      - sid: The primary key of the stage in question.
      *
-     * request: None.
+     * request:
+     *      - None.
      *
      * response:
+     *      - NoContent (204)
+     *          - On success.
      *      - BadRequestError (400)
      *          - If the position is out of bounds or negative.
      *      - ForbiddenError (403)
@@ -482,7 +496,9 @@ export class WorkflowResource {
     @DELETE
     @Path("/:wid/stages/:sid")
     public async deleteStage(@IsInt @PathParam("wid") wid: number,
-                             @PathParam("sid") sid: number): Promise<any> {
+                             @PathParam("sid") sid: number): Promise<NRStage[]> {
+        console.log("CALLED deleteStage");
+
         const user = await this.servCont.user();
         const st = await this.wfServ.getStage(sid);
         const wf = await this.wfServ.getWorkflow(wid);
@@ -491,7 +507,30 @@ export class WorkflowResource {
 
         try {
             const maxSeqId = await this.wfServ.getMaxStageSequenceId(wf);
+            const minSeqId = await this.wfServ.getMinStageSequenceId(wf);
+            const asts = await this.stRep.find({ order: { sequenceId: "ASC" },
+                                                 where: { workflow: wf } });
+            const docs = await this.dcRep.find({ where: { stage: st } });
 
+            // No stages in the workflow, documents become orphans because we have
+            // no where to move them to.
+            if ((asts === undefined) || (asts.length === 0) || (asts[0].id === st.id)) {
+                for (const dc of docs) {
+                    dc.stage = null;
+                    dc.workflow = null;
+                    await this.dcRep.save(dc);
+                }
+            } else {
+                const fst = await this.stRep.findOne({ where: { sequenceId: minSeqId,
+                                                                workflow: wf } });
+                // Documents go to first stage in workflow.
+                for (const dc of docs) {
+                    dc.stage = fst;
+                    await this.dcRep.save(dc);
+                }
+            }
+
+            // Now actually delete the stage and adjust the others.
             await this.stRep
                 .createQueryBuilder(DBConstants.STGE_TABLE)
                 .delete()
@@ -503,8 +542,9 @@ export class WorkflowResource {
 
             // Nothing to update.
             if (currSeq === maxSeqId) {
-                // TODO: Has to be a better way to make this return a 200 OK.
-                return "";
+                const strss = await this.stRep.find({ relations: ["documents"],
+                                                     where: { workflow: wf } });
+                return await this.wfServ.appendPermToSTS(strss, user);
             }
 
             // Update sequences.
@@ -520,8 +560,10 @@ export class WorkflowResource {
                     .execute();
             }
 
-            // TODO: Has to be a better way to make this return a 200 OK.
-            return "";
+            const strs = await this.stRep.find({ relations: ["documents"],
+                                                 where: { workflow: wf } });
+
+            return await this.wfServ.appendPermToSTS(strs, user);
         } catch (err) {
             console.log(err);
 
@@ -544,7 +586,8 @@ export class WorkflowResource {
      *      }
      *
      * response:
-     *      - The updated NRStage.
+     *      - NRStage with the following relations:
+     *          - permission: The permissions to the stage for the currently logged in user.
      *      - BadRequestError (400)
      *          - If the position is out of bounds or negative.
      *      - ForbiddenError (403)
@@ -561,6 +604,7 @@ export class WorkflowResource {
     public async updateStage(@IsInt @PathParam("wid") wid: number,
                              @IsInt @PathParam("sid") sid: number,
                              stage: NRStage): Promise<NRStage> {
+        console.log("CALLED updateStage");
         const user = await this.servCont.user();
         const wf = await this.wfServ.getWorkflow(wid);
         let st = await this.wfServ.getStage(sid);

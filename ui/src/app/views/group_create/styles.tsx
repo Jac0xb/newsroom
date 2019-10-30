@@ -10,13 +10,14 @@ export function styles(theme: Theme)  {
 			padding: "24px"
 		},
 		formGroup: {
-			padding: "16px"
+            padding: "32px"
 		},
 		flashMessage: {
 			textAlign: "center",
 			padding: "8px",
-			backgroundColor: "#dcd3cf",
-			color: 'white',
+			backgroundColor: "#1890ff",
+            color: 'white',
+            marginBottom: "16px",
 			"& span": {
 				fontSize: "16px",
 				lineHeight: "16px",

@@ -15,7 +15,7 @@ const SectionItem = (props: any) => {
 
         return (
         <div className={classes.item}>
-            <Typography variant="h6">
+            <Typography>
                 {heading}
             </Typography>
             <Typography component="p">

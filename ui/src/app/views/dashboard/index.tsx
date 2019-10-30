@@ -1,6 +1,5 @@
-import { DocumentsAPI } from 'app/api/document';
 import { LoadingComponent } from 'app/components/common/loading';
-import { Document } from 'app/models';
+import { NRDocument } from 'app/utils/models';
 import { mapDispatchToProps } from 'app/store/dashboard/actions';
 import { mapStateToProps } from 'app/store/dashboard/reducers';
 import { DashboardDispatchers, DashboardReducerState } from 'app/store/dashboard/types';
@@ -9,22 +8,24 @@ import _ from 'lodash-es';
 import * as React from 'react';
 import { connect } from 'react-redux';
 
-import { Divider } from '@material-ui/core';
+import { Divider, AppBar } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 
 import { LinkedButton } from './components/LinkedButton';
 import { styles } from './styles';
+import MaterialTable from 'material-table';
+import { Link } from 'react-router-dom';
 
 export namespace Dashboard {
 
     export interface Props extends DashboardDispatchers, DashboardReducerState {
-        classes?: any
-        history: any
-        match?: { params: any }
-        location: any,
+        classes?: any;
+        history: any;
+        match?: { params: any };
+        location: any;
     }
     export interface State {
-        documents: Document[]
+        submitted: boolean;
     }
 }
 
@@ -32,35 +33,21 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 
     constructor(props: Dashboard.Props, context?: any) {
         super(props, context);
-        this.state = { documents: [] };
+        this.state = { submitted: false };
     }
 
     async componentDidMount() {
-        this.props.fetchDocumentsPending();
-        var response = await DocumentsAPI.getAllDocuments();
-        this.props.fetchDocumentsSuccess(response.data);
+        this.props.fetchDocuments();
     }
 
     async handleDelete(id: number) {
 
         try {
-            this.props.deleteDocumentPending();
-            await DocumentsAPI.deleteDocument(id);
-            this.props.deleteDocumentSuccess();
+            await this.props.deleteDocument(id);
+            this.props.fetchDocuments();
         }
         catch (err) {
-            console.log(err)
-            // TODO: Catch error and report to user.
-        }
-
-        try {
-            this.props.fetchDocumentsPending();
-            var response = await DocumentsAPI.getAllDocuments();
-            this.props.fetchDocumentsSuccess(response.data);
-        }
-        catch (err) {
-            console.log(err)
-            // TODO: Catch error and report to user.
+            //this.props.induceFlash(err);
         }
 
     }
@@ -73,20 +60,45 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
     }
 
     render() {
-
-        const { classes, pending } = this.props;
-
+        console.log(this.props.location)
+        const { classes, pending, documents } = this.props;
         return (
             <main className={classes.main}>
-                <div className={classes.buttonGroup}>
+                <AppBar color="default" className={classes.appBar} style={{marginTop: "64px", padding: "16px"}}>
                     <LinkedButton />
-                </div>
-                <Divider className={classes.topDivider} />
+                </AppBar>
+                
                 {(pending) ?
                     <LoadingComponent />
                 :
-                <div className={classes.documentGrid}>
-                    {this.renderDocuments()}
+                <div style={{width: "100%", padding: "24px 24px", marginTop: "132px"}}>
+                    { <MaterialTable 
+                        columns={[
+                            {title: "Headline", field:"name", render: (document: NRDocument) => {
+                                return <Link to={`/document/${document.id}/edit`}>
+                                    {document.name}
+                                </Link>
+                            }},
+                            {title: "Workflow", field:"workflow.name", render: (document: NRDocument) => { 
+                                return <Link to={`/workflow/${document.workflow.id}/edit`}>
+                                    {document.workflow.name}
+                                </Link>
+                            }},
+                            {title: "Created", field:"created", searchable: true, render: (document: NRDocument) => { 
+                                return <div>{`${document.created.getDay()}/${document.created.getMonth()}/${document.created.getFullYear()}`}</div>;
+                            }},
+                            {title: "Last Modified", field:"lastUpdated", render: (document: NRDocument) => { 
+                                return <div>{`${document.lastUpdated.getDay()}/${document.lastUpdated.getMonth()}/${document.lastUpdated.getFullYear()}`}</div>;
+                            }},
+                            {title: "", render: (group: any) => {
+                                
+                            }}
+                        ]}
+                        options={{
+                            search: false
+                        }}
+                        data={documents}
+                        title="Documents"/>}
                 </div>
                 }
             </main>

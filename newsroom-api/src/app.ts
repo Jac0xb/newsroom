@@ -1,15 +1,17 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import express from "express";
 import "reflect-metadata";
 import { Container } from "typedi";
 import { Connection, createConnection, getConnection, useContainer } from "typeorm";
 import { Server } from "typescript-rest";
+import { GoogleOAuth2ServerCredentialsProvider } from "./configs/GoogleOAuth2ServerCredentialsProvider";
 import { SlackWebClientBeanProvider } from "./configs/SlackWebClientBeanProvider";
 import { AuthConfig } from "./middleware/AuthConfig";
 import { ErrorMapper } from "./middleware/ErrorMapper";
 import { FakeAuthConfig } from "./middleware/FakeAuthConfig";
 import { GoogleOAuth2Provider } from "./middleware/GoogleOAuth2Provider";
 import { Swagger } from "./middleware/Swagger";
+import { CurrentUserResource } from "./resources/CurrentUserResource";
 import { DocumentResource } from "./resources/DocumentResource";
 import { RoleResource } from "./resources/RoleResource";
 import { TriggerResource } from "./resources/TriggerResource";
@@ -24,6 +26,8 @@ class App {
 
     constructor() {
         this.express = express();
+
+        dotenv.config();
     }
 
     /**
@@ -32,7 +36,7 @@ class App {
      * auth: Whether or not to do real user authentication.
      * docCreate: Whether or not to create actual Google Documents.
      */
-    public async configure(auth: boolean, docCreate: boolean): Promise<express.Express> {
+    public async configure(auth: boolean, doGoogle: boolean): Promise<express.Express> {
         Swagger.serve(this.express);
 
         SlackWebClientBeanProvider.configure();
@@ -40,18 +44,23 @@ class App {
         // Register TypeDI Container with TypeORM, must be called before createConnection()
         useContainer(Container);
 
+        if (doGoogle === false) {
+            process.env.DO_GOOGLE = "N";
+        }
+
         // Start app server and listen for connections.
         await createConnection().then(async (connection) => {
             if (auth) {
                 Container.get(AuthConfig).configure(this.express);
 
                 Container.get(GoogleOAuth2Provider).configure(this.express);
+
+                // Setup admin based on ADMIN_EMAIL.
+                await Container.get(UserResource).configure();
+
+                await Container.get(GoogleOAuth2ServerCredentialsProvider).loadCredentialsFromDb();
             } else {
                 Container.get(FakeAuthConfig).configure(this.express);
-            }
-
-            if (!(docCreate)) {
-                process.env.DOC_SKIP = "Y";
             }
 
             // Make sure ServiceContext gets extended.
@@ -61,12 +70,10 @@ class App {
             Server.registerServiceFactory(new TypeDIServiceFactory());
 
             Server.buildServices(this.express,
-                UserResource, RoleResource, DocumentResource, WorkflowResource, TriggerResource);
+                UserResource, CurrentUserResource, RoleResource, DocumentResource, WorkflowResource, TriggerResource);
 
             // Add error handler to return JSON error.
             this.express.use(ErrorMapper.mapError);
-        }).catch((error) => {
-            console.error("Error creating DB connection.", error);
         });
 
         return this.express;

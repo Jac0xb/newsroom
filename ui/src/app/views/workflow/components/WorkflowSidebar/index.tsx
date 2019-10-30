@@ -1,14 +1,19 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import { Drawer, List, ListItem, Divider, ListItemText, ListItemIcon } from '@material-ui/core';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import MailIcon from '@material-ui/icons/Mail';
+import { Drawer, List, ListItem, ListItemText, TextField, FormLabel, FormControl, Button } from '@material-ui/core';
+import { NRStage, NRWorkflow } from 'app/utils/models';
 
 
 export namespace WorkflowMenuBar {
     export interface Props {
-        classes?: any 
+        classes?: any
+        stage: NRStage
+        onTextChange: Function
+        onUpdateClick: Function
+        onDeleteClick: Function
+        onAddStage: Function
+        workflow?: NRWorkflow
     }
     export interface State {
 
@@ -22,37 +27,83 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
             
         }
     }
+
     render() {
 
-        const { classes } = this.props;
+        const { classes, stage, workflow } = this.props;
         const {  } = this.state;
+
+        if (!workflow || (workflow && workflow.permission == 0)) {
+            return <div></div>
+        }
 
         return (
         <main className={classes.layout}>
              <Drawer
+                anchor="right"
                 className={classes.drawer}
                 variant="permanent"
                 classes={{
                 paper: classes.drawerPaper,
                 }}
             >
-                <List>
-                {['Tool 1', 'Tool 2'].map((text, index) => (
-                    <ListItem button key={text}>
-                    <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-                    <ListItemText primary={text} />
-                    </ListItem>
-                ))}
-                </List>
-                <Divider />
-                <List>
-                {['Help'].map((text, index) => (
-                    <ListItem button key={text}>
-                    {/* <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon> */}
-                    <ListItemText primary={text} />
-                    </ListItem>
-                ))}
-                </List>
+                <FormControl className={classes.formComp}>
+                    <FormLabel className={classes.formLabel}>Stage Name</FormLabel>
+                    <TextField
+                        id="name"
+                        className={classes.textField}
+                        value={stage.name}
+                        onChange={(event) => this.props.onTextChange(stage.id, 'name', event.target.value)}
+                        margin="normal"
+                    />
+                </FormControl>
+                <FormControl className={classes.formComp}>
+                    <FormLabel className={classes.formLabel}>Stage Description</FormLabel>
+                    <TextField
+                        id="desc"
+                        className={classes.textField}
+                        value={stage.description}
+                        onChange={(event) => this.props.onTextChange(stage.id, 'description', event.target.value)}
+                        margin="normal"
+                        // variant="outlined"
+                    />
+                </FormControl>
+                {/* <FormControl className={classes.formComp}>
+                    <FormLabel className={classes.formLabel}>Due Date</FormLabel>
+                    <TextField
+                        id="desc"
+                        className={classes.textField}
+                        value={stage.description}
+                        onChange={(event) => this.props.onTextChange(stage.id, 'description', event.target.value)}
+                        margin="normal"
+                        // variant="outlined"
+                    />
+                </FormControl> */}
+                {/* <FormControl className={classes.formComp}>
+                    <FormLabel className={classes.formLabel}>Notifications</FormLabel>
+                    <TextField
+                        id="desc"
+                        className={classes.textField}
+                        value={stage.description}
+                        onChange={(event) => this.props.onTextChange(stage.id, 'description', event.target.value)}
+                        margin="normal"
+                        // variant="outlined"
+                    />
+                </FormControl> */}
+                <FormControl className={classes.buttonGroup}>
+                    <div className={classes.stageButtonGroup}>
+                        <Button 
+                            variant="contained" 
+                            className={classes.stageButton} 
+                            onClick={() => this.props.onAddStage(this.props.stage.sequenceId)}
+                        >
+                                {"<- Add"}
+                        </Button>
+                        <Button variant="contained" className={classes.stageButton} onClick={() => this.props.onAddStage(this.props.stage.sequenceId + 1)}>Add -></Button>
+                    </div>
+                    <Button variant="contained" className={classes.button} onClick={() => this.props.onUpdateClick(this.props.stage)}>Update</Button>
+                    <Button variant="contained" color="secondary" className={classes.deleteButton} onClick={() => this.props.onDeleteClick()}>Delete</Button>
+                </FormControl>
             </Drawer>
         </main>
         );

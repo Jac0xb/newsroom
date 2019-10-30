@@ -1,41 +1,36 @@
-import { Permissions } from "app/models/permissions";
-import { Group } from "app/models";
+import { NRRole as NRGroup, NRWorkflow, NRRole } from "app/utils/models";
 
 // State 
 export interface UserState {
-  permissions: Array<Permissions>
+  permissions: Array<NRWorkflow>
   flash: string,
-  groups: Array<Group>
+  groups: Array<NRRole>
+  selectedGroups: Array<NRRole>
+  selectedPermissions: Array<NRWorkflow>
+  userName: string
+  firstName: string
+  lastName: string
+
 }
   
 // Describing the different ACTION NAMES available
-export const SET_PERMISSIONS = "SET_PERMISSIONS";
-export const EDIT_FLASH = "EDIT_FLASH";
-export const SET_GROUPS = "SET_GROUPS";
-  
-interface SetPermissionsAction {
-  type: typeof SET_PERMISSIONS;
-  permissions: Array<Permissions>;
-}
-interface EditFlashAction {
-  type: typeof EDIT_FLASH;
-  flash: string;
-}
-interface SetGroupsAction {
-  type: typeof SET_GROUPS;
-  groups: Array<Group>;
+export const ActionTypes = {
+  SET_PERMISSIONS: "@@user/SET_PERMISSIONS", 
+  EDIT_FLASH: "@@user/EDIT_FLASH",
+  SET_GROUPS:"@@user/SET_GROUPS",
+  SET_SELECT:"@@user/SET_SELECT",
+  UPDATE_USER: "@@user/UPDATE_USER",
+  TEXT_CHANGE: "@@user/TEXT_CHANGE",
 }
 
 // Define Dispatchers
 export interface UserDispatchers {
-  fetchSetPermissions: (permissions: Array<Permissions>) => UserActionTypes
-  fetchEditFlash: (flash: string) => UserActionTypes
-  fetchSetGroups: (groups: Array<Group>) => UserActionTypes
+  fetchSetPermissions: (permissions: Array<NRWorkflow>) => any
+  fetchEditFlash: (flash: string) => any
+  fetchSetGroups: (groups: Array<NRRole>) => any
+  fetchSelectChange: (name: string, payload: Array<NRRole>) => any
+  fetchUpdateUser: (id: number, payload: any) => any
+  fetchHandleTextChange: (name: string, payload: string) => any
 }
-
-export type UserActionTypes = 
-  SetPermissionsAction 
-  | EditFlashAction
-  | SetGroupsAction;
 
   

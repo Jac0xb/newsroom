@@ -64,6 +64,7 @@ module.exports = {
 		// (jsnext:main directs not usually distributable es6 format, but es6 sources)
 		mainFields: ['module', 'browser', 'main'],
 		alias: {
+            interfaces: path.resolve(__dirname, "../interfaces"),
 			app: path.resolve(__dirname, 'src/app/')
 		}
 	},
@@ -73,51 +74,40 @@ module.exports = {
 			{
 				test: /\.tsx?$/,
 				use: [
-					!isProduction && {
+					//!isProduction && {
+					//	loader: 'babel-loader',
+					//	options: { plugins: ['react-hot-loader/babel'] }
+                    //},
+                    {
 						loader: 'babel-loader',
-						options: { plugins: ['react-hot-loader/babel'] }
+						options: { 
+                            plugins: [
+                                ...((!isProduction) ? ['react-hot-loader/babel'] : []), 
+                                //['import', { libraryName: 'antd', style: "css" }]
+                            ] 
+                        }
 					},
 					'ts-loader'
 				].filter(Boolean)
 			},
 			{
 				test: /\.less$/,
-				use: ['css-loader', 'less-loader']
+                use: [
+                    'css-loader',
+                    'style-loader',
+                    {
+                        loader: 'less-loader',
+                        options: {
+                            javascriptEnabled: true
+                        }
+                    }
+                ]
 			},
-			// css
-			{
-				test: /\.css$/,
-				use: [
-					isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
-					{
-						loader: 'css-loader',
-						query: {
-							modules: true,
-							sourceMap: !isProduction,
-							importLoaders: 1,
-							localIdentName: isProduction ? '[hash:base64:5]' : '[local]__[hash:base64:5]'
-						}
-					},
-					{
-						loader: 'postcss-loader',
-						options: {
-							ident: 'postcss',
-							plugins: [
-								require('postcss-import')({ addDependencyTo: webpack }),
-								require('postcss-url')(),
-								require('postcss-preset-env')({
-									/* use stage 2 features (defaults) */
-									stage: 2
-								}),
-								require('postcss-reporter')(),
-								require('postcss-browser-reporter')({
-									disabled: isProduction
-								})
-							]
-						}
-					}
-				]
-			},
+            // css
+            { 
+                test: /\.css$/,
+                use: ['style-loader', 'css-loader']
+            },
 			// static assets
 			{ test: /\.html$/, use: 'html-loader' },
 			{ test: /\.(png|svg)$/, use: 'url-loader?limit=10000' },
@@ -153,7 +143,7 @@ module.exports = {
 		new WebpackCleanupPlugin(),
 		new MiniCssExtractPlugin({
 			filename: '[hash].css',
-			disable: !isProduction
+			disable: true
 		}),
 		new HtmlWebpackPlugin({
 			template: 'assets/index.html',

@@ -21,14 +21,14 @@ class DetailLine extends React.Component<DetailLine.Props> {
 
 		return (
 			<React.Fragment>
-				<Typography className={classNames(classes.detailLine, classes.noWrap)} variant={"subtitle1"}> 
+				<Typography className={classNames(classes.detailLine, classes.noWrap)}> 
 					<span className={classes.noWrap} style={{fontWeight: "bold"}}>{title}:</span>
 				</Typography>
 
-				<Typography className={classes.detailLine} variant={"subtitle1"}> 
+				<Typography className={classes.detailLine}> 
 					{(link) &&
 					<a className={classes.detailLine} href={link}>
-						<div className={classNames(classes.noWrap, classes.flexGrow)}>&nbsp;{data}</div>
+						<span className={classNames(classes.noWrap, classes.flexGrow)}>&nbsp;{data}</span>
 						<Link className={classes.linkIcon}/>
 					</a>
 					}

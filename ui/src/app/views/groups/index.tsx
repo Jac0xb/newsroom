@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { Avatar, Button } from '@material-ui/core';
+import { Avatar, Button, AppBar } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import { Group } from 'app/models';
+import { NRRole as NRGroup } from 'app/utils/models';
 import { styles } from './styles';
 import axios from 'axios';
 import MaterialTable from "material-table";
@@ -16,7 +16,7 @@ export namespace Groups {
     }
 
     export interface State {
-        groups: Group[],
+        groups: NRGroup[],
         filterInput: string
     }
 }
@@ -41,12 +41,14 @@ class Groups extends React.Component<Groups.Props, Groups.State> {
         const {groups} = this.state;
 
         return (
-            <main className={classes.main}>
-                <Link style={{ textDecoration: "none" }} to={"/groups/create"}>
-                    <Button variant="contained" className={classes.buttonGroup} >
-                        Create Group
-                    </Button>
-                </Link>
+            <main className={classes.main} style={{marginTop: "132px"}}>
+                <AppBar color="default" style={{marginTop: "64px", padding: "16px"}}>
+                    <Link style={{ textDecoration: "none" }} to={"/groups/create"}>
+                        <Button variant="contained" >
+                            Create Group
+                        </Button>
+                    </Link>
+                </AppBar>
                 <div className={classes.table}>
                     <MaterialTable
                         columns={[

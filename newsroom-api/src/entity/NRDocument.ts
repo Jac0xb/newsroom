@@ -12,15 +12,16 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import { INRDocument } from "../../../interfaces";
+
 import { DBConstants } from "./DBConstants";
-import { NRDCPermission } from "./NRDCPermission";
-import { NRDCUSPermission } from "./NRDCUSPermission";
+import { NRDocComment } from "./NRDocComment";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
 
 @Entity(DBConstants.DOCU_TABLE)
-export class NRDocument {
+export class NRDocument implements INRDocument {
     @PrimaryGeneratedColumn()
     @PrimaryColumn()
     public id: number;
@@ -64,6 +65,17 @@ export class NRDocument {
     public creator: NRUser;
 
     /**
+     * Relationship: NRUser
+     *      - Many: Users can be assigned many documents.
+     *      - One: Each document only has a single assignee.
+     */
+    @ManyToOne(
+        (type) => NRUser,
+    )
+    @JoinColumn({name: "assignee"})
+    public assignee: NRUser;
+
+    /**
      * Relationship: NRWorkflow
      *      - Many: Workflows can have many documents.
      *      - One: Each document is a part of only one workflow.
@@ -88,26 +100,13 @@ export class NRDocument {
     public stage: NRStage;
 
     /**
-     * Relationship: NRDCPermission
-     *      - One: Each permission is only associated with one document.
-     *      - Many: Each document can have many permissions.
+     * Relationship: NRDocComment
+     *      - One: Each comment is only associated with a single document.
+     *      - Many: Each document can have many comments.
      */
     @OneToMany(
-        (type) => NRDCPermission,
-        (permission) => permission.document,
+        (type) => NRDocComment,
+        (comments) => comments.document,
     )
-    @JoinTable()
-    public permissions: NRDCPermission[];
-
-    /**
-     * Relationship: NRDCUSPermission
-     *      - One: Each user permission is only associated with one document.
-     *      - Many: Each document can have many user permissions.
-     */
-    @OneToMany(
-        (type) => NRDCUSPermission,
-        (permission) => permission.document,
-    )
-    @JoinTable()
-    public usrpermissions: NRDCUSPermission[];
+    public comments: NRDocComment[];
 }

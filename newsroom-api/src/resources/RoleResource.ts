@@ -15,14 +15,13 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 
 import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { NRDCPermission, NRDocument, NRRole, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
+import { NRDocument, NRRole, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { RoleService } from "../services/RoleService";
 import { WorkflowService } from "../services/WorkflowService";
 import { createRoleValidator, updateRoleValidator } from "../validators/RoleValidators";
 
-// Provides API services for roles.
 @Path("/api/roles")
 @Tags("Roles")
 export class RoleResource {
@@ -30,37 +29,34 @@ export class RoleResource {
     private serviceContext: ServiceContext;
 
     @InjectRepository(NRRole)
-    private roleRepository: Repository<NRRole>;
+    private rlRep: Repository<NRRole>;
 
     @InjectRepository(NRStage)
-    private stageRepository: Repository<NRStage>;
+    private stRep: Repository<NRStage>;
 
     @InjectRepository(NRWorkflow)
-    private workflowRepository: Repository<NRWorkflow>;
+    private wfRep: Repository<NRWorkflow>;
 
     @InjectRepository(NRDocument)
-    private documentRepository: Repository<NRDocument>;
+    private dcRep: Repository<NRDocument>;
 
     @InjectRepository(NRWFPermission)
-    private permWFRepository: Repository<NRWFPermission>;
+    private wfPRep: Repository<NRWFPermission>;
 
     @InjectRepository(NRSTPermission)
-    private permSTRepository: Repository<NRSTPermission>;
-
-    @InjectRepository(NRDCPermission)
-    private permDCRepository: Repository<NRDCPermission>;
+    private stPRep: Repository<NRSTPermission>;
 
     @Inject()
-    private workflowService: WorkflowService;
+    private wfServ: WorkflowService;
 
     @Inject()
-    private documentService: DocumentService;
+    private dcServ: DocumentService;
 
     @Inject()
-    private roleService: RoleService;
+    private rlServ: RoleService;
 
     @Inject()
-    private permissionService: PermissionService;
+    private permServ: PermissionService;
 
     /**
      * Create a new role.
@@ -73,17 +69,53 @@ export class RoleResource {
     @POST
     @PreProcessor(createRoleValidator)
     public async createRole(role: NRRole): Promise<NRRole> {
+        console.log("CALLED createRole");
+        const user = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can create roles.";
+            throw new Errors.ForbiddenError(msg);
+        }
+
         try {
             // Form data already validated.
-            const newRole = await this.roleRepository.save(role);
+            const newRole = await this.rlRep.save(role);
 
-            // for (const wfPerm of newRole.wfpermissions) {
-            //     await this.permWFRepository.save(wfPerm);
-            // }
+            if (role.wfpermissions !== undefined) {
+                for (let i = 0; i < role.wfpermissions.length; i++) {
+                    const wfp = role.wfpermissions[i];
 
-            // for (const stPerm of newRole.stpermissions) {
-            //     await this.permSTRepository.save(stPerm);
-            // }
+                    wfp.workflow = await this.wfRep.findOne(wfp.workflow.id);
+                    wfp.role = newRole;
+
+                    await this.wfPRep.save(wfp);
+                    await this.rlRep.save(newRole);
+                    await this.wfRep.save(wfp.workflow);
+
+                    // Prevent circular stringify problems.
+                    wfp.role = undefined;
+                }
+            }
+
+            if (role.stpermissions !== undefined) {
+                for (let i = 0; i < role.stpermissions.length; i++) {
+                    const stp = role.stpermissions[i];
+
+                    stp.stage = await this.stRep.findOne(stp.stage.id);
+                    stp.role = newRole;
+                    stp.access = stp.access;
+
+                    await this.stPRep.save(stp);
+                    await this.rlRep.save(newRole);
+                    await this.stRep.save(stp.stage);
+
+                    await this.dcServ.syncGooglePermissionsForStage(stp);
+
+                    // Prevent circular stringify problems.
+                    stp.role = undefined;
+                }
+            }
 
             return newRole;
         } catch (err) {
@@ -102,8 +134,12 @@ export class RoleResource {
      */
     @GET
     public async getAllRoles(): Promise<NRRole[]> {
+        console.log("CALLED getAllRoles");
         try {
-            return await this.roleRepository.find();
+            return await this.rlRep.find({
+                relations: ["stpermissions", "stpermissions.stage",
+                    "wfpermissions", "wfpermissions.workflow"],
+            });
         } catch (err) {
             console.log(err);
 
@@ -123,12 +159,9 @@ export class RoleResource {
     @GET
     @Path("/:rid")
     public async getRole(@IsInt @PathParam("rid") rid: number): Promise<NRRole> {
-        const role = await this.roleService.getRole(rid);
-
-        role.stpermissions = await this.permissionService.getAllSTPermissionsForRole(rid);
-        role.wfpermissions = await this.permissionService.getAllWFPermissionsForRole(rid);
-
-        return role;
+        console.log("CALLED getRole");
+        const role = await this.rlServ.getRole(rid);
+        return await this.rlRep.findOne(role.id, {relations: ["stpermissions", "wfpermissions"]});
     }
 
     /**
@@ -146,7 +179,15 @@ export class RoleResource {
     @PreProcessor(updateRoleValidator)
     public async updateRole(@IsInt @PathParam("rid") rid: number,
                             role: NRRole): Promise<NRRole> {
-        const currRole = await this.roleService.getRole(rid);
+        console.log("CALLED updateRole");
+        const currRole = await this.rlServ.getRole(rid);
+        const user = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can update roles.";
+            throw new Errors.ForbiddenError(msg);
+        }
 
         if (role.name) {
             currRole.name = role.name;
@@ -157,7 +198,7 @@ export class RoleResource {
         }
 
         try {
-            return await this.roleRepository.save(currRole);
+            return await this.rlRep.save(currRole);
         } catch (err) {
             console.log(err);
 
@@ -176,10 +217,18 @@ export class RoleResource {
     @DELETE
     @Path("/:rid")
     public async deleteRole(@IsInt @PathParam("rid") rid: number) {
-        const currRole = await this.roleService.getRole(rid);
+        console.log("CALLED deleteRole");
+        const currRole = await this.rlServ.getRole(rid);
+        const user = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can delete roles.";
+            throw new Errors.ForbiddenError(msg);
+        }
 
         try {
-            await this.roleRepository.remove(currRole);
+            await this.rlRep.remove(currRole);
         } catch (err) {
             console.log(err);
 
@@ -201,28 +250,68 @@ export class RoleResource {
     @Path("/:rid/workflow/:wid")
     public async addWFPermission(@IsInt @PathParam("rid") rid: number,
                                  @IsInt @PathParam("wid") wid: number,
-                                 access: any): Promise<NRRole> {
+                                 access: any): Promise<NRWFPermission> {
+        console.log("CALLED addWFPermission");
         let perm: NRWFPermission;
-        let wf: NRWorkflow;
-        let rl: NRRole;
+
+        const wf = await this.wfServ.getWorkflow(wid);
+        const rl = await this.rlServ.getRole(rid);
+        const user = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can assign role permissions.";
+            throw new Errors.ForbiddenError(msg);
+        }
 
         try {
-            perm = await this.permissionService.getWFPermissionFromWFRL(wid, rid);
-            wf = perm.workflow;
-            rl = perm.role;
+            perm = await this.permServ.getWFPermissionFromWFRL(wf, rl);
         } catch (NotFoundError) {
             perm = new NRWFPermission();
-            rl = await this.roleService.getRole(rid);
-            wf = await this.workflowService.getWorkflow(wid);
         }
 
         perm.workflow = wf;
         perm.role = rl;
         perm.access = access.access;
 
-        await this.permWFRepository.save(perm);
-        await this.workflowRepository.save(wf);
-        return await this.roleRepository.save(rl);
+        return await this.wfPRep.save(perm);
+    }
+
+    /**
+     * Remove permissions on a workflow for a role.
+     *
+     * path:
+     *      - wid: The id of the workflow in question.
+     *      - rid: The id of the role in question.
+     *
+     * request:
+     *      - None.
+     *
+     * response:
+     *      - None.
+     *      - NotFoundError (404)
+     *          - If role or stage not found.
+     */
+    @DELETE
+    @Path("/:rid/workflow/:wid")
+    public async removeWFPermission(@IsInt @PathParam("rid") rid: number,
+                                    @IsInt @PathParam("wid") wid: number): Promise<void> {
+        console.log("CALLED removeWFPermission");
+
+        const user = await this.serviceContext.user();
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can remove role permissions.";
+            throw new Errors.ForbiddenError(msg);
+        }
+
+        const wf = await this.wfServ.getWorkflow(wid);
+        const rl = await this.rlServ.getRole(rid);
+
+        const awfp = await this.wfPRep.find({ where: { workflow: wf, role: rl } });
+
+        await this.wfPRep.remove(awfp);
+        return;
     }
 
     /**
@@ -238,73 +327,71 @@ export class RoleResource {
     @Path("/:rid/stage/:sid")
     public async addSTPermission(@IsInt @PathParam("rid") rid: number,
                                  @IsInt @PathParam("sid") sid: number,
-                                 access: any): Promise<NRRole> {
+                                 access: any): Promise<NRSTPermission> {
+        console.log("CALLED addSTPermission");
         let perm: NRSTPermission;
-        let st: NRStage;
-        let rl: NRRole;
 
-        try {
-            perm = await this.permissionService.getSTPermissionFromSTRL(sid, rid);
-            st = perm.stage;
-            rl = perm.role;
-        } catch (NotFoundError) {
-            perm = new NRSTPermission();
-            rl = await this.roleService.getRole(rid);
-            st = await this.workflowService.getStage(sid);
+        const st = await this.wfServ.getStage(sid);
+        const rl = await this.rlServ.getRole(rid);
+        const user = await this.serviceContext.user();
+
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can assign role permissions.";
+            throw new Errors.ForbiddenError(msg);
         }
 
+        try {
+            perm = await this.permServ.getSTPermissionFromSTRL(st, rl);
+        } catch (NotFoundError) {
+            perm = new NRSTPermission();
+        }
+
+        perm.access = access.access;
         perm.stage = st;
         perm.role = rl;
-        perm.access = access.access;
 
-        await this.permSTRepository.save(perm);
-        await this.stageRepository.save(st);
-        return await this.roleRepository.save(rl);
+        await this.dcServ.syncGooglePermissionsForStage(perm);
+
+        await this.stRep.save(st);
+        await this.rlRep.save(rl);
+        return await this.stPRep.save(perm);
     }
 
     /**
-     * Add or switch permissions on a document for a role.
+     * Remove permissions on a stage for a role.
      *
-     * Returns:
-     *      - NRRole
+     * path:
+     *      - sid: The id of the stage in question.
+     *      - rid: The id of the role in question.
+     *
+     * request:
+     *      - None.
+     *
+     * response:
+     *      - None.
      *      - NotFoundError (404)
-     *          - If role not found.
-     *          - If workflow not found.
+     *          - If role or stage not found.
      */
-    @PUT
-    @Path("/:rid/document")
-    public async addDCPermission(@IsInt @PathParam("rid") rid: number,
-                                 permission: NRDCPermission): Promise<NRRole> {
-        let newPerm: NRDCPermission;
+    @DELETE
+    @Path("/:rid/stage/:sid")
+    public async removeSTPermission(@IsInt @PathParam("rid") rid: number,
+                                    @IsInt @PathParam("sid") sid: number): Promise<void> {
+        console.log("CALLED removeSTPermission");
 
-        try {
-            newPerm = await this.permissionService.getDCPermission(permission.id);
-            newPerm.id = permission.id;
-            newPerm.access = permission.access;
-            newPerm.role = permission.role;
-            newPerm.document = permission.document;
-        } catch (NotFoundError) {
-            newPerm = new NRDCPermission();
-            newPerm.access = permission.access;
-            newPerm.role = permission.role;
-            newPerm.document = permission.document;
+        const user = await this.serviceContext.user();
+        const admin = await this.permServ.isUserAdmin(user);
+        if (!(admin)) {
+            const msg = "Only admins can remove role permissions.";
+            throw new Errors.ForbiddenError(msg);
         }
 
-        const doc = await this.documentService.getDocument(newPerm.document.id);
-        const role = await this.roleService.getRole(rid);
+        const st = await this.wfServ.getStage(sid);
+        const rl = await this.rlServ.getRole(rid);
 
-        try {
-            newPerm.document = doc;
-            newPerm.role = role;
+        const astp = await this.stPRep.find({ where: { stage: st, role: rl } });
 
-            await this.permWFRepository.save(newPerm);
-            await this.documentRepository.save(doc);
-            return await this.roleRepository.save(role);
-        } catch (err) {
-            console.log(err);
-
-            const errStr = `Error adding DC permission.`;
-            throw new Errors.InternalServerError(errStr);
-        }
+        await this.stPRep.remove(astp);
+        return;
     }
 }

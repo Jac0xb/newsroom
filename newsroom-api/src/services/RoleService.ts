@@ -20,4 +20,8 @@ export class RoleService {
             throw new Errors.NotFoundError(errStr);
         }
     }
+
+    public async getUsersInRole(roleId: number) {
+        return (await this.repository.findOne(roleId, {relations: ["users"]})).users;
+    }
 }

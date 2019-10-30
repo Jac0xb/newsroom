@@ -26,16 +26,26 @@ export class GoogleOAuth2Provider {
             async (accessToken, refreshToken, profile, done) => {
                 const email = profile.emails[0].value;
 
-                const userName = email.split("@")[0];
+                const un = email.split("@")[0];
 
-                let user = await this.userRepository.findOne({userName});
+                if (!email) {
+                    console.log("Email could not be found.");
+                }
 
-                if (user == null) {
+                let user = await this.userRepository.findOne({ where: { email } });
+
+                if ((user === undefined) || (user === null)) {
+                    console.log("USER WAS NULL.");
                     user = this.userRepository.create();
                     user.email = email;
-                    user.userName = userName;
+                    user.userName = un;
                     user.firstName = profile.name.givenName;
                     user.lastName = profile.name.familyName;
+                } else if (user.email === email) {
+                    console.log("USER WAS NOT NULL.");
+                    user.firstName = profile.name.givenName;
+                    user.lastName = profile.name.familyName;
+                    console.info(user);
                 }
 
                 user.accessToken = accessToken;
@@ -47,8 +57,7 @@ export class GoogleOAuth2Provider {
 
         use(strategy);
 
-        app.get("/auth/google",
-            (req, res, done) => {
+        app.get("/auth/google", (req, res, done) => {
                 req.session.returnTo = req.query.redirect ? req.query.redirect : "";
                 done();
             },
@@ -56,7 +65,6 @@ export class GoogleOAuth2Provider {
                 scope: [
                     "https://www.googleapis.com/auth/userinfo.profile",
                     "https://www.googleapis.com/auth/userinfo.email",
-                    "https://www.googleapis.com/auth/drive.file",
                 ],
             }));
 

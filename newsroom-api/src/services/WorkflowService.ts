@@ -2,11 +2,9 @@ import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { Errors } from "typescript-rest";
-
-import { DBConstants, NRDocument, NRStage, NRSTPermission, NRSTUSPermission,
-         NRUser, NRWFPermission, NRWFUSPermission, NRWorkflow } from "../entity";
+import { DBConstants, NRDocument, NRStage, NRSTPermission,
+         NRUser, NRWorkflow } from "../entity";
 import { PermissionService } from "./PermissionService";
-import { UserService } from "./UserService";
 
 @Service()
 export class WorkflowService {
@@ -15,15 +13,6 @@ export class WorkflowService {
 
     @InjectRepository(NRStage)
     private stageRepository: Repository<NRStage>;
-
-    @InjectRepository(NRWFPermission)
-    private permWFRepository: Repository<NRWFPermission>;
-
-    @InjectRepository(NRWFUSPermission)
-    private wfUSRepository: Repository<NRWFUSPermission>;
-
-    @InjectRepository(NRSTUSPermission)
-    private stUSRepository: Repository<NRSTUSPermission>;
 
     @InjectRepository(NRSTPermission)
     private permSTRepository: Repository<NRSTPermission>;
@@ -34,7 +23,6 @@ export class WorkflowService {
     @Inject()
     private permissionService: PermissionService;
 
-    // DONE.
     public async getWorkflow(wid: number): Promise<NRWorkflow> {
         try {
             return await this.workflowRepository.findOneOrFail(wid);
@@ -46,7 +34,6 @@ export class WorkflowService {
         }
     }
 
-    // DONE.
     public async addStageRelationsToWF(wf: NRWorkflow): Promise<NRWorkflow> {
         try {
             return await this.workflowRepository.findOne(wf.id, { relations: ["stages"] });
@@ -58,7 +45,6 @@ export class WorkflowService {
         }
     }
 
-    // DONE.
     public async addStageRelationsToWFS(wfs: NRWorkflow[]): Promise<NRWorkflow[]> {
         try {
             for (let i = 0; i < wfs.length; i++) {
@@ -74,68 +60,37 @@ export class WorkflowService {
         }
     }
 
-    // DONE.
     public async appendPermToWF(wf: NRWorkflow, user: NRUser): Promise<NRWorkflow> {
         wf.permission = await this.permissionService.getWFPermForUser(wf, user);
 
         return wf;
     }
 
-    // DONE.
     public async appendPermToWFS(wfs: NRWorkflow[], user: NRUser): Promise<NRWorkflow[]> {
         for (let wf of wfs) {
+            if (wf.stages === undefined) {
+                wf.stages = [];
+            }
+
             wf = await this.appendPermToWF(wf, user);
+            await this.appendPermToSTS(wf.stages, user);
         }
 
         return wfs;
     }
 
-    // DONE.
     public async appendPermToST(st: NRStage, user: NRUser): Promise<NRStage> {
         st.permission = await this.permissionService.getSTPermForUser(st, user);
 
         return st;
     }
 
-    // DONE.
     public async appendPermToSTS(stgs: NRStage[], user: NRUser): Promise<NRStage[]> {
         for (let st of stgs) {
             st = await this.appendPermToST(st, user);
         }
 
         return stgs;
-    }
-
-    // DONE.
-    public async createWFUSPermission(wid: number,
-                                      user: NRUser,
-                                      perm: number): Promise<NRWFUSPermission> {
-        const wf = await this.getWorkflow(wid);
-
-        const wfup = new NRWFUSPermission();
-        wfup.workflow = wf;
-        wfup.user = user;
-        wfup.access = perm;
-
-        await this.userRepository.save(user);
-        await this.workflowRepository.save(wf);
-        return await this.wfUSRepository.save(wfup);
-    }
-
-    // DONE.
-    public async createSTUSPermission(sid: number,
-                                      user: NRUser,
-                                      perm: number): Promise<NRSTUSPermission> {
-        const st = await this.getStage(sid);
-
-        const stup = new NRSTUSPermission();
-        stup.stage = st;
-        stup.user = user;
-        stup.access = perm;
-
-        await this.userRepository.save(user);
-        await this.stageRepository.save(st);
-        return await this.stUSRepository.save(stup);
     }
 
    public async getStage(sid: number): Promise<NRStage> {
@@ -179,13 +134,16 @@ export class WorkflowService {
         return maxSeq.max;
     }
 
-    /**
-     * For some views, the users permissions on each stage is dependent on
-     * the associated workflow. This function will change the permission on
-     * each of the workflows stages to match the workflow itself.
-     *
-     * wf: The workflow in question.
-     */
+    public async getMinStageSequenceId(wf: NRWorkflow): Promise<number> {
+        const minSeq = await this.stageRepository
+            .createQueryBuilder(DBConstants.STGE_TABLE)
+            .select("MIN(stage.sequenceId)", "min")
+            .where("stage.workflowId = :id", {id: wf.id})
+            .getRawOne();
+
+        return minSeq.min;
+    }
+
     public matchSTPermToWF(wf: NRWorkflow): void {
         if ((wf.stages === undefined) || (wf.stages.length === 0)) {
             return;

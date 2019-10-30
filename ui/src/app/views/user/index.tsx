@@ -1,13 +1,13 @@
 import * as React from 'react';
-import { Avatar, FormControl } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import { Grid, FormLabel, Select, MenuItem, OutlinedInput } from '@material-ui/core';
+import { Grid, Select, MenuItem, OutlinedInput, FormControl, Paper, Typography, Chip, Button, FormLabel, TextField } from '@material-ui/core';
 import { styles } from './styles';
 import axios from 'axios';
 import { mapStateToProps  } from 'app/store/user/reducers';
 import { mapDispatchToProps } from "app/store/user/actions";
 import { connect } from "react-redux";
 import { UserDispatchers, UserState } from "app/store/user/types";
+import {  NRRole } from 'app/utils/models';
 
 export namespace EditUser {
     export interface Props extends UserDispatchers, UserState {
@@ -18,78 +18,95 @@ export namespace EditUser {
             }
         }
     }
-    export interface State { }
+    export interface State { masterList: Array<NRRole>; }
 }
 
 class EditUser extends React.Component<EditUser.Props, EditUser.State> {
     constructor(props: EditUser.Props) {
         super(props);
-        this.state = { }
+        this.state = { masterList: [] }
     }
 
-    componentDidMount() {
-        // TODO: permissions: have backend add GET api/roles/{uid} 
-        this.getPermissions()
+    async componentDidMount() {
         this.getGroups()
-        
+        this.getUserSummary()
+
+        axios
     }
 
     getGroups = () => {
-        var userId = this.props.match.params.id
-        axios.get("/api/users/" + userId + "/roles").then((response) => {
-            this.props.fetchSetGroups(response.data)
+        axios.get("/api/roles/").then((response) => {
+            this.props.fetchSetGroups(response.data as Array<NRRole>)
+            this.props.fetchSelectChange("selectedGroups", response.data as Array<NRRole>)
         });
     }
 
-    getPermissions = () => {
-        // TODO
-        //this.props.fetchSetPermissions()
+    getUserSummary = () => {
+        var selectedGroups = Array<NRRole>()
+        const userId = this.props.match.params.id
+
+        axios.get("/api/users/" + userId + "/summary").then((response) => {
+            console.log(response)
+
+            // Need to add roles from the master group list
+            response.data.roles.forEach((role: NRRole)=> {
+                // If role matches group, add to list
+                this.props.groups.find(function(element) {
+                    if(element.id == role.id){
+                        selectedGroups.push(element);
+                    }
+                });
+            });
+
+            // Update selected list with current roles
+            this.setState({ masterList: selectedGroups })
+            this.props.fetchSelectChange("selectedGroups", selectedGroups)
+            this.props.fetchSetPermissions(response.data.wfpermissions)
+        });
+    }
+
+    // TODO: be better to have a call api/users/updaterole
+    handleSubmit = () => {
+        const userId = this.props.match.params.id
+
+        // Add all selected groups on backend
+        this.props.selectedGroups.forEach(group => {
+            var rid = group.id;
+            axios.put("/api/users/" + userId + " /role/" + rid).then((response) => {
+                // console.log(response.data)
+            })
+
+            // if no longer selected role, delete
+            console.log(this.state.masterList.find(x => x.id != rid))
+            this.state.masterList.find(function(element) {
+                // TODO: backend error. 
+                if(element.id != rid){
+                    axios.delete("/api/users/" + userId + " /role/" + element.id).then((response) => {
+                        console.log(response.data)
+                    })
+                }
+            });
+        });
+
+        // this.props.fetchUpdateUser(,this.props.selectedGroups)
     }
 
     render() {
-        const { classes, permissions, groups } = this.props;
-        console.log(groups)
+        const { classes, flash, permissions, groups, selectedGroups, firstName} = this.props;
 
         return (
             <React.Fragment>
-                <Grid className={classes.outerGrid} alignContent={"center"} container spacing={24} direction="row" justify="center" alignItems="center">
-                    {/* <FormLabel style={{ marginTop: "16px" }}>Edit Permissions</FormLabel>
-                    {permissions.map((permission, index: number) => {
-                        <TextField
-                        select
-                        // key={index}
-                        label="Type"
-                        margin="normal"
-                        variant="filled"
-                        value={permission.type}
-                        // onChange={changeType}
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                    >
-                        <MenuItem key="Workflows" value="Workflows">Workflows</MenuItem>
-                        <MenuItem key="Stages" value="Stages">Stages</MenuItem>
-                    </TextField>
-                    })} */}
-                    <FormControl>
-                        <FormLabel style={{ marginTop: "16px" }}>Edit Groups</FormLabel>
-                        {groups.map((group, index: number) => {
-                            <Select
-                                value={group.name}
-                                // onChange={this.handleChange}
-                                input={<OutlinedInput 
-                                    labelWidth={1}
-                                    name="age"
-                                    id="outlined-age-simple" 
-                                />}
-                            >
-                                <MenuItem value=""><em>None</em></MenuItem>
-                                <MenuItem key={group.name} value={group.id}>
-                                    {group.name}
-                                </MenuItem>
-                            </Select>
-                        })}
-                    </FormControl>
+                <Grid className={classes.grid} container spacing={4} justify="center">
+                    <Paper className={classes.formGroup}>
+                        {(flash != "") ?
+                            <Paper className={classes.flashMessage}>
+                                <Typography variant="caption">
+                                    {flash}
+                                </Typography>
+                            </Paper> :
+                            <div></div>
+                        }
+                    </Paper>
                 </Grid>
                 
             </React.Fragment>

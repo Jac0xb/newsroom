@@ -4,14 +4,14 @@ import DetailRow from 'app/views/dashboard/components/DetailLine';
 import { Link } from 'react-router-dom';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles';
-import { Document } from 'app/models';
+import { NRDocument } from 'app/utils/models';
 import classNames from 'classnames';
 
 namespace DocumentTile {
     export interface Props {
         classes?: any,
         match?: { params: any },
-        document: Document,
+        document: NRDocument,
         compressed?: Boolean
         onDelete: (id: number) => void;
     }
@@ -26,18 +26,16 @@ class DocumentTile extends React.Component<DocumentTile.Props> {
     render() {
 
         const {classes, document, onDelete} = this.props;
-
+        
         if (!this.props.compressed) {
             return (
                 <Paper className={classNames(classes.documentItem, classes.flexAutosize)}>
-                    <Typography variant={"title"} className={classes.noWrap}>
+                    <Typography className={classes.noWrap}>
                         {document.name}
                     </Typography>
                     <Divider/>
-                    <DetailRow title="Author" data={document.creator.userName}
-                               link={"/users/" + document.creator.id}/>
-                    <DetailRow title="Workflow Type" data={document.workflow.name}
-                               link={"/workflow/" + document.workflow.id + "/edit"}/>
+                    <DetailRow title="Workflow Type" data={""}
+                               link={"/workflow/" + 1 + "/edit"}/>
                     <DetailRow title="Due Date" data={"duedate"}/>
                     <div className={classes.buttonGroup}>
                         <Link to={"/document/" + document.id + "/edit"}>
@@ -52,7 +50,7 @@ class DocumentTile extends React.Component<DocumentTile.Props> {
             return (
                 <Paper className={classNames(classes.documentItem, classes.flexAutosize)}>
                     <Link to={"/document/" + document.id + "/edit"}>
-                        <Typography variant={"body1"} className={classes.noWrap}>
+                        <Typography className={classes.noWrap}>
                             {document.name}
                         </Typography>
                     </Link>

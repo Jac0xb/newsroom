@@ -6,7 +6,10 @@
     "rules": {
         "no-console": false,
         "only-arrow-functions": false,
-        "interface-name": false
+        "interface-name": false,
+        "prefer-for-of": false,
+        "max-line-length": false,
+        "no-string-literal": false
     },
     "linterOptions": {
         "exclude": [
