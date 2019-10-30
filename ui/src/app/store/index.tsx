@@ -9,6 +9,7 @@ import { groupCreateReducer } from './group_create/reducers';
 import { documentCreateReducer } from './document_create/reducers';
 import { metaReducer } from './meta/reducers';
 import { apiMiddleware } from 'redux-api-middleware';
+import { groupReducer } from './group/reducers';
 
 // Combine all reducers
 const rootReducer = combineReducers({
@@ -16,6 +17,7 @@ const rootReducer = combineReducers({
     dashboard: dashboardReducer,
     user: userReducer,
     groupCreate: groupCreateReducer,
+    group: groupReducer,
     documentCreate: documentCreateReducer,
     meta: metaReducer
 });

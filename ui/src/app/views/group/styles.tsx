@@ -3,6 +3,9 @@ import { StyleRules, Theme } from '@material-ui/core/styles';
 export function styles(theme: Theme)  {
     return (
     {
+		main:{
+			paddingTop: 4,
+		},
 		outerGrid: {
 			padding: "32px"
 		},

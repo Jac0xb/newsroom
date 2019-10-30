@@ -1,284 +1,220 @@
 import * as React from 'react';
-import { Divider, Grid, Paper, FormGroup, FormLabel, TextField, MenuItem, Button, Typography } from '@material-ui/core';
+import { Grid, Paper, FormGroup, Button, Typography } from '@material-ui/core';
 import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import { Redirect, Link } from 'react-router-dom';
-import { withCookies, Cookies } from 'react-cookie';
 import { compose } from 'recompose';
+import { Typography as AntTypography } from 'antd';
+import { Input, TreeSelect, Select } from 'antd';
+const { Option } = Select;
+const { TextArea } = Input;
+import _ from 'lodash';
 
-export namespace GroupCreate {
-    export interface Props {
-        classes: Record<string, string>
-        match?: { params: any }
-        cookies: Cookies
+import { connect } from 'react-redux';
+import { mapDispatchToProps } from 'app/store/group/actions';
+import { mapStateToProps } from 'app/store/group/reducers';
+import { GroupReducerState, GroupDispatchers } from 'app/store/group/types';
+import { NRUser, NRRole, NRWFPermission, NRWorkflow, NRSTPermission, NRStage } from 'app/utils/models';
+
+export namespace Group {
+    export interface Props extends GroupDispatchers, GroupReducerState {
+        classes: Record<string, string>;
+        match: { params: { id: number} }
     }
-    export interface State {
-        submitted: boolean
-        availableWorkflows: { name: string, id: number }[]
-        availableStages: { name: string, id: number }[]
-        flash?: string
-        name?: string
-        group?: any
-        permissions: SimplePermission[]
-    }
+
     export interface SimplePermission {
         id: number
         access: number
-        type?: string
     }
 }
 
 // Add refresh button to workflows.
-class GroupCreate extends React.Component<GroupCreate.Props, GroupCreate.State> {
+class Group extends React.Component<Group.Props> {
 
-    constructor(props: GroupCreate.Props, context?: any) {
+    constructor(props: Group.Props, context?: any) {
         super(props, context);
-        this.state = { 
-            permissions: [], 
-            name: "", 
-            submitted: false, 
-            availableStages: [], 
-            availableWorkflows: [], 
-            flash: "",
-            group: {name: ""}
-        }
+        this.state = { }
     }
 
     componentDidMount() {
-        
-        var { match } = this.props;
+        this.props.fetchCurrentGroup(this.props.match.params.id);
+        this.props.fetchWorkflows();
+        this.props.fetchUsers();
+     }
 
-        if (match) {
-            axios.get(`/api/roles/${match.params.id}`).then((response) => {
-                console.log(response.data)
-                this.setState({group: response.data})
-            })
-        }
+     async onSubmit() {
 
-        axios.get("/api/workflows").then((response) => {
+        this.props.induceFlash();
 
-            var availableWorkflows = response.data;
-            var availableStages = []
+        var wfpermissions: NRWFPermission[] = [];
+        var stpermissions: NRSTPermission[] = [];
 
-            for (var i = 0; i < availableWorkflows.length; i++) {
-                for (var j = 0; j < availableWorkflows[i].stages.length; j++) {
-                    availableStages.push(availableWorkflows[i].stages[j]);
-                }
-            }
-
-            this.setState({ availableWorkflows, availableStages })
-
-        }).catch((error) => {
-            console.log(error)
-        });
-    }
-
-    onSubmit() {
-
-        this.setState({ flash: "" })
-
-        var wfpermissions: GroupCreate.SimplePermission[] = [];
-        var stpermissions: GroupCreate.SimplePermission[] = [];
-
-        for (var i = 0; i < this.state.permissions.length; i++) {
-            if (this.state.permissions[i].id === -1) {
-                this.setState({ flash: "No type/item was designated for one of your permissions." });
-                return;
-            }
-        }
-
-        if (this.state.permissions.length === 0) {
-            this.setState({ flash: "You have not given this group any permissions." });
+        if (this.props.selectedItems.length == 0) {
+            this.props.induceFlash("You have not given this group any permissions.");
             return;
         }
 
-        // get role id from url, not ideal, not a fan
-        var getUrl = (window.location.href).split('/')
-        var roleID = getUrl[getUrl.length-1]
+        if (this.props.name == "") {
+            this.props.induceFlash("No group name was given.");
+            return;
+        }
 
-        // quick fix, real bad, not a fan
-        var url = "/api/roles/" + roleID + "/";
-        var access = 0;
+        this.props.selectedItems.map((item) => {
+            
+            var regex = /^([0-9]{1,})-{0,1}([0-9]{1,}){0,1}$/
+            var match = regex.exec(item);
+            
+            if (match && match[1] != undefined && match[2] == undefined) {
+                wfpermissions.push(new NRWFPermission({
+                    workflow: new NRWorkflow({id: parseInt(match[1])}), 
+                    access: 1
+                }));
 
-        this.state.permissions.map((permission) => {
-
-            access = permission.access
-
-            if (permission.type === "Stages") {
-                // /api/roles/rid/stage/sid
-                url += "stage/"+ permission.id
-                // stpermissions.push({ id: permission.id, access: permission.access })
-            }
-            else {
-                // /api/roles/rid/workflow/wid
-                url += "workflow/"+ permission.id
-                // wfpermissions.push({ id: permission.id, access: permission.access })
+            } 
+            else if (match && match[2] != undefined) {
+                stpermissions.push(new NRSTPermission({ 
+                    stage: new NRStage({id: parseInt(match[2])}), 
+                    access: 1
+                }));
             }
         })
 
-        console.log({ name: this.state.name, wfpermissions, stpermissions })
+        var users = this.props.selectedUsers.map((users) => {
+            return {id: users.id} as NRUser;
+        })
 
-        axios.put(url, { access }).then((response: any) => {
-
-            if (response) {
-                console.log(response)
-                this.setState({ submitted: true })
-            }
-
-        }).catch((error) => {
-            this.setState({ flash: error.response.data.message || "Something has gone terribly wrong. We don't even know." });
+        var newRole = new NRRole({
+            name: this.props.name || "",
+            description: this.props.description || "",
+            users,
+            wfpermissions,
+            stpermissions
         });
+        
+        try {
+
+            var responseRole = await axios.post<NRRole>("/api/roles", newRole);
+            this.props.induceSubmission();
+            
+        }
+        catch (err) {
+            this.props.induceFlash(err.response.data.message || "Something has gone terribly wrong. We don't even know.");
+        }
     }
 
-    addNewPermission() {
-        var newPermissions = [...this.state.permissions]
-        newPermissions.push({ id: -1, type: "", access: 0 })
-        this.setState({ permissions: newPermissions })
-    }
+    renderUsers() {
 
-    modifyPermission(index: number, permission: GroupCreate.SimplePermission) {
-        var newPermissions = [...this.state.permissions]
-        newPermissions[index] = permission;
-        this.setState({ permissions: newPermissions })
-    }
-
-    renderPermission(index: number, permission: GroupCreate.SimplePermission) {
-
-        var changeType = (c: any) => {
-            var newPermission = Object.assign({}, permission);
-            newPermission.type = c.target.value;
-            newPermission.id = -1;
-            this.modifyPermission(index, newPermission)
+        const children = [];
+        for (let i = 0; i < this.props.fetchedUsers.length; i++) {
+          children.push(<Option key={this.props.fetchedUsers[i].id}>{this.props.fetchedUsers[i].userName}</Option>);
         }
 
-        var changeID = (c: any) => {
-            var newPermission = Object.assign({}, permission);
-            newPermission.id = parseInt(c.target.value);
-            this.modifyPermission(index, newPermission)
-        }
-
-        var changeAccess = (c: any) => {
-            var newPermission = Object.assign({}, permission);
-            newPermission.access = parseInt(c.target.value);
-            this.modifyPermission(index, newPermission)
-        }
-
-
-
-        var renderItems = (permission.type === "Stages") ? this.state.availableStages : this.state.availableWorkflows;
-        var itemsElement = undefined;
-
-        if (permission.type !== "") {
-            itemsElement = (<React.Fragment>
-                <TextField
-                    select
-                    label={permission.type}
-                    margin="normal"
-                    variant="filled"
-                    value={permission.id}
-                    onChange={changeID}
-                    InputLabelProps={{
-                        shrink: true,
-                    }}
-                >
-                    <MenuItem key={-1} disabled value="-1"><em>None</em></MenuItem>
-                    {renderItems.map(item => (
-                        <MenuItem key={item.name} value={item.id}>
-                            {item.name}
-                        </MenuItem>
-                    ))}
-                </TextField>
-                <TextField
-                    select
-                    label="Access Type"
-                    margin="normal"
-                    variant="filled"
-                    value={permission.access}
-                    onChange={changeAccess}
-                    InputLabelProps={{
-                        shrink: true,
-                    }}
-                >
-                    <MenuItem key={0} value="0">Read</MenuItem>
-                    <MenuItem key={1} value="1">Write</MenuItem>
-                </TextField>
-            </React.Fragment>)
-        }
-
-        return <React.Fragment key={index}>
-            <FormLabel style={{ marginTop: "16px" }}>New Permission</FormLabel>
-            <TextField
-                select
-                key={index}
-                label="Type"
-                margin="normal"
-                variant="filled"
-                value={permission.type}
-                onChange={changeType}
-                InputLabelProps={{
-                    shrink: true,
+        return (<React.Fragment>
+            <Select
+                mode="multiple"
+                style={{ width: '100%', marginBottom: '16px' }}
+                placeholder="Please select"
+                defaultValue={_.map(this.props.selectedUsers, (user) => user.id.toString())}
+                onChange={(users: string[]) => {
+                    var selectedUsers = _.filter(this.props.fetchedUsers, (user) => _.includes(users, user.id.toString()));
+                    this.props.updateUserSelection(_.map(selectedUsers, (user) => {return {id: user.id, name: user.userName}}));
                 }}
             >
-                <MenuItem key="Workflows" value="Workflows">Workflows</MenuItem>
-                <MenuItem key="Stages" value="Stages">Stages</MenuItem>
-            </TextField>
-            {itemsElement}
-        </React.Fragment>
+                {children}
+            </Select>
+            
+        </React.Fragment>)
     }
 
     render() {
 
-        if (this.state.submitted) {
-            return <Redirect push to="/" />;
+        if (this.props.submitted) {
+            this.props.clearForm();
+            return <Redirect push to="/groups" />;
         }
 
         const { classes } = this.props;
 
+        var treeData = _.map(this.props.fetchedWorkflows, (workflow) => {
+            var newWorkflow = { title: workflow.name, value: `${workflow.id}`, children: new Array<{title: string, value: string}>() }
+
+            for (var i = 0; i < workflow.stages.length; i++) {
+                let stage = workflow.stages[i] 
+                newWorkflow.children.push({ title : stage.name, value: `${workflow.id}-${stage.id}` })
+            }
+
+            return newWorkflow;
+        });
+
         return (
-            <React.Fragment>
+            <main className={classes.main}>
                 <div className={classes.buttonGroup}>
-                    <Link style={{ textDecoration: "none" }} to="/groups">
-                        <Button style={{ width: "calc(4*52px)" }} variant={"contained"}>
+                    <Link style={{textDecoration: "none"}} to="/groups">
+                        <Button style={{width: "calc(100px)"}} variant={"contained"}>
                             Back
-						</Button>
+                        </Button>
                     </Link>
                 </div>
-                <Grid className={classes.outerGrid} alignContent={"center"} container spacing={4} direction="row" justify="center" alignItems="center">
-                    <Grid item xs={8} md={6}>
-                        <Paper className={classes.formGroup}>
-                            {(this.state.flash != "") ?
-                                <Paper className={classes.flashMessage}>
+                <Grid className={classes.outerGrid} alignContent={"center"} container spacing={4} direction="row"
+                    justify="center" alignItems="center">
+                    <Grid item xs={7} md={6} lg={5} xl={4}>
+                        <Paper className={classes.formGroup} elevation={6}>
+                            {(this.props.flash != "") ?
+                                <Paper className={classes.flashMessage} elevation={2}>
                                     <Typography variant="caption">
-                                        {this.state.flash}
+                                        {this.props.flash}
                                     </Typography>
                                 </Paper> :
                                 <div></div>
                             }
-                            <Typography variant="h3">
-                                {this.state.group.name}
-                            </Typography>
-                            <Divider style={{margin: "16px"}}/>
-                            <FormGroup style={{marginTop: "16px"}}>
-                                <FormLabel>Add Permission</FormLabel>
-                                <Button style={{}} variant={"contained"} onClick={this.addNewPermission.bind(this)}>
-                                    Add New Permission
-                                </Button>
-                                {this.state.permissions.map((permission, index: number) => {
-                                    return this.renderPermission(index, permission)
-                                })}
+                            <FormGroup>
+                                <AntTypography.Title level={3}>Edit Group</AntTypography.Title>
+                                <AntTypography.Text strong={true}>Group Name</AntTypography.Text>
+                                <Input
+                                    placeholder="Ex. Sports Editor Group"
+                                    style={{marginBottom: "16px"}}
+                                    value={this.props.name}
+                                    onChange={(c) => this.props.updateName(c.target.value)}
+                                />
+                                <AntTypography.Text strong={true}>Group Description</AntTypography.Text>
+                                <TextArea
+                                    placeholder="Ex. A group for sports editors."
+                                    style={{marginBottom: "16px"}}
+                                    autosize={{ minRows: 2, maxRows: 6 }}
+                                    value={this.props.description}
+                                    onChange={({ target: { value } }) => this.props.updateDescription(value)}
+                                />
+                                <AntTypography.Text strong={true}>Group Permissions</AntTypography.Text>
+                                <TreeSelect
+                                    showSearch
+                                    treeData={treeData}
+                                    value={this.props.selectedItems}
+                                    style={{marginBottom: "16px"}}
+                                    placeholder="Type to filter.."
+                                    allowClear
+                                    multiple
+                                    treeDefaultExpandAll
+                                    onChange={(value: string[]) => this.props.updateItemSelection(value)}
+                                />
+                                <AntTypography.Text strong={true}>Group Users</AntTypography.Text>
+                                {this.renderUsers()}
                             </FormGroup>
-                            <Button style={{marginTop: "16px"}} variant="contained" onClick={this.onSubmit.bind(this)} className={classes.button}>Create</Button>
-
+                            <div style={{display: "flex", flexDirection: "row-reverse"}}>
+                                <Button variant="contained" onClick={this.onSubmit.bind(this)}
+                                        className={classes.button}>Update</Button>
+                            </div>
                         </Paper>
                     </Grid>
                 </Grid>
-            </React.Fragment>
+            </main>
         );
     }
 }
 
-export default compose<GroupCreate.Props, {}>(
-    withStyles(styles, { withTheme: true }),
-    withCookies
-)(GroupCreate);
+export default compose<Group.Props, {}>(
+    withStyles(styles, {withTheme: true}),
+)(connect<Group.Props>(
+    mapStateToProps,
+    mapDispatchToProps
+)(Group));
