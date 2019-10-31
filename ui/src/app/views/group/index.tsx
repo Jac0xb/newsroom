@@ -94,7 +94,7 @@ class Group extends React.Component<Group.Props> {
         
         try {
 
-            var responseRole = await axios.post<NRRole>("/api/roles", newRole);
+            // var responseRole = await axios.post<NRRole>("/api/roles", newRole);
             this.props.induceSubmission();
             
         }
@@ -201,8 +201,9 @@ class Group extends React.Component<Group.Props> {
                                 {this.renderUsers()}
                             </FormGroup>
                             <div style={{display: "flex", flexDirection: "row-reverse"}}>
-                                <Button variant="contained" onClick={this.onSubmit.bind(this)}
-                                        className={classes.button}>Update</Button>
+                                <Button variant="contained" onClick={this.onSubmit.bind(this)} className={classes.button}>
+                                    Update
+                                </Button>
                             </div>
                         </Paper>
                     </Grid>

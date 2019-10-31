@@ -17,6 +17,7 @@ export interface GroupReducerState {
 export const ActionTypes = {
     FETCH_REQUEST: '@@group/FETCH_REQUEST',
     FETCH_FAILURE: '@@group/FETCH_FAILURE',
+    SET_GROUP: '@@group/SET_GROUP',
     WORKFLOWS_SUCCESS: '@@group/WORKFLOWS_SUCCESS',
     STAGES_SUCCESS: '@@group/STAGES_SUCCESS',
     USERS_SUCCESS: '@@group/DOCUMENTS_SUCCESS',
