@@ -15,7 +15,7 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 
 import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { NRDocument, NRRole, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
+import { DBConstants, NRDocument, NRRole, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { RoleService } from "../services/RoleService";
@@ -166,8 +166,23 @@ export class RoleResource {
 
         // Load stage with each stage permission.
         if (allRoles.stpermissions !== undefined) {
-            for (let stp of allRoles.stpermissions) {
-                stp = await this.stPRep.findOne(stp.id, {relations: ["stage"]});
+            for (const stp of allRoles.stpermissions) {
+                const stpdb = await this.stPRep.findOne(stp.id, {relations: ["stage"]});
+                const st = stpdb.stage;
+                
+                if (st !== undefined) {
+                    const wfid = await this.stRep
+                                           .createQueryBuilder(DBConstants.STGE_TABLE)
+                                           .select("stage.workflowId", "val")
+                                           .where("stage.id = :sid", {sid: st.id})
+                                           .getRawOne();
+
+                    stp.stage = st;
+                    stp.stage.workflow = new NRWorkflow();
+                    stp.stage.workflow.id = wfid.val;
+
+                    console.log(stp);
+                }
             }
         }
 
