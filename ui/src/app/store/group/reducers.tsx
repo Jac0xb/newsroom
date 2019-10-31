@@ -24,6 +24,9 @@ export function groupReducer(state = initialState, action: any): GroupReducerSta
             return { ...state, pending: true };
         case ActionTypes.FETCH_FAILURE:
             return { ...state, flash: action.payload, pending: false };
+        case ActionTypes.SET_GROUP:
+             console.log(action.selectedUsers)
+            return { ...state, name: action.name, description: action.description, selectedItems: action.selectedPermissions || [], selectedUsers: action.selectedUsers || [], pending: false };
         case ActionTypes.WORKFLOWS_SUCCESS:
             return { ...state, fetchedWorkflows: action.payload || [], pending: false };
         case ActionTypes.STAGES_SUCCESS:
@@ -35,6 +38,8 @@ export function groupReducer(state = initialState, action: any): GroupReducerSta
         case ActionTypes.INDUCE_SUBMISSION:
             return { ...state, submitted: true }
         case ActionTypes.UPDATE_USERSELECTION:
+            console.log(state.selectedUsers)
+            console.log(action.payload)
             return { ...state, selectedUsers: action.payload }
         case ActionTypes.UPDATE_ITEMSELECTION:
             return { ...state, selectedItems: action.payload }
