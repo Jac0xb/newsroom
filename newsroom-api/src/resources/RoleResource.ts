@@ -161,7 +161,17 @@ export class RoleResource {
     public async getRole(@IsInt @PathParam("rid") rid: number): Promise<NRRole> {
         console.log("CALLED getRole");
         const role = await this.rlServ.getRole(rid);
-        return await this.rlRep.findOne(role.id, {relations: ["stpermissions", "wfpermissions"]});
+
+        const allRoles = await this.rlRep.findOne(role.id, {relations: ["users", "stpermissions", "wfpermissions"]});
+
+        // Load stage with each stage permission.
+        if (allRoles.stpermissions !== undefined) {
+            for (let stp of allRoles.stpermissions) {
+                stp = await this.stPRep.findOne(stp.id, {relations: ["stage"]});
+            }
+        }
+
+        return allRoles;
     }
 
     /**

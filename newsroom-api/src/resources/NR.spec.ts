@@ -2689,6 +2689,33 @@ describe("34. DELETE /api/roles/:rid/stage/:sid", () => {
     });
 });
 
+
+describe("35. GET /api/roles/:rid", () => {
+    it("Test getting a role returns it with the right fields.", async () => {
+        const wfNum = 1;
+        const stNum = 3;
+        const grpName = "g";
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+
+        const grp = await createGroup(adminUsr, grpName, 200);
+        await setSTPermForGroup(adminUsr, grpName, wfs[0].stages[0], "WRITE", 200);
+        await setSTPermForGroup(adminUsr, grpName, wfs[0].stages[1], "WRITE", 200);
+        const role = await addUserToGroup(adminUsr, grpName, usr1, 200);
+        await addUserToGroup(adminUsr, grpName, usr2, 200);
+        await addUserToGroup(adminUsr, grpName, usr3, 200);
+
+        let resp = await request(app)
+                           .get(`/api/roles/${role.id}`)
+                           .set("User-Id", `${adminUsr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(200);
+        console.log(resp.body);
+    });
+});
+
 //// ----------------------------------------------------------------------------------
 //// |--------------------------------------------------------------------------------|
 //// |--------------------------------------------------------------------------------|
