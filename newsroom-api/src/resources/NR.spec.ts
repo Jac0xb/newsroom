@@ -1,7 +1,7 @@
 import express from "express";
 import { Guid } from "guid-typescript";
 import request from "supertest";
-import { Connection, getRepository, Repository } from "typeorm";
+import { Connection, getRepository, IsNull, Repository } from "typeorm";
 
 import App from "../app";
 import { DBConstants, NRDocument, NRRole,
@@ -2359,7 +2359,9 @@ describe("28. POST /api/roles", () => {
 
         nrl.wfpermissions = [];
         nrl.stpermissions = [];
-
+        nrl.users = [];
+        nrl.users.push(usr2);
+        nrl.users.push(usr3);
         for (const wf of wfs) {
             const wfp = new NRWFPermission();
             wfp.id = wfPSeq;
@@ -2423,44 +2425,98 @@ describe("28. POST /api/roles", () => {
 });
 
 describe("29. PUT /api/roles/:rid", () => {
-    it("Test updating role as an admin.", async () => {
-        const grp = await createGroup(adminUsr, "g", 200);
+//    it("Test updating role as an admin.", async () => {
+//        const grp = await createGroup(adminUsr, "g", 200);
+//
+//        grp.name = "DSFSFSD";
+//        grp.description = "SDFSdfsfasdfaf";
+//
+//        const resp = await request(app)
+//                           .put(`/api/roles/${grp.id}`)
+//                           .send(grp)
+//                           .set("User-Id", `${adminUsr.id}`);
+//
+//        expect(resp).not.toBeUndefined();
+//        expect(resp.status).toEqual(200);
+//
+//        const rldb = await rlRep.findOne(grp.id);
+//        expect(rldb.name).toEqual(grp.name);
+//        expect(rldb.description).toEqual(grp.description);
+//    });
+//
+//    it("Test updating role as a non-admin.", async () => {
+//        const grp = await createGroup(adminUsr, "g", 200);
+//
+//        const grpbk = JSON.parse(JSON.stringify(grp));
+//
+//        grp.name = "DSFSFSD";
+//        grp.description = "SDFSdfsfasdfaf";
+//
+//        const resp = await request(app)
+//                           .put(`/api/roles/${grp.id}`)
+//                           .send(grp)
+//                           .set("User-Id", `${usr1.id}`);
+//
+//        expect(resp).not.toBeUndefined();
+//        expect(resp.status).toEqual(403);
+//
+//        const rldb = await rlRep.findOne(grp.id);
+//        expect(rldb.name).toEqual(grpbk.name);
+//        expect(rldb.description).toEqual(grpbk.description);
+//    });
 
-        grp.name = "DSFSFSD";
-        grp.description = "SDFSdfsfasdfaf";
+    it("Test updating roles users and permissions.", async () => {
+        const wfNum = 3;
+        const stNum = 2;
+        const grpName = "g";
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+
+        const grp = await createGroup(adminUsr, grpName, 200);
+        await setWFPermForGroup(adminUsr, grpName, wfs[0], "WRITE", 200);
+        await setSTPermForGroup(adminUsr, grpName, wfs[0].stages[0], "WRITE", 200);
+        await setSTPermForGroup(adminUsr, grpName, wfs[0].stages[1], "WRITE", 200);
+        await addUserToGroup(adminUsr, grpName, usr1, 200);
+
+        const grpdb = await rlRep.findOne(grp.id, { relations: ["users", "stpermissions", "wfpermissions"] });
+        console.log(grpdb);
+
+//        const grpbk = JSON.parse(JSON.stringify(grp));
+
+        // Add and remove some wfpermissions.
+        console.log("removing wf", grpdb.wfpermissions[0].id);
+        grpdb.wfpermissions.splice(0, 1);
+        const nwfp = new NRWFPermission();
+        nwfp.workflow = wfs[1];
+        nwfp.role = grp;
+        nwfp.access = 1;
+        grpdb.wfpermissions.push(nwfp);
+
+        // Add and remove some stpermissions.
+        console.log("removing sts", grpdb.stpermissions[0].id);
+        grpdb.stpermissions.splice(0, 1);
+        const nstp = new NRSTPermission();
+        nstp.stage = wfs[1].stages[0];
+        nstp.role = grp;
+        nstp.access = 0;
+        grpdb.stpermissions.push(nstp);
+
+        // Add and remove users from the group.
+        grpdb.users.splice(0, 1);
+        grpdb.users.push(usr2);
+
+        console.log("Expect users", grpdb.users[0].id, "workflow", grpdb.wfpermissions[0].id, "stages", grpdb.stpermissions[0].id, ",", grpdb.stpermissions[1].id);
+        console.log(grpdb);
 
         const resp = await request(app)
-                           .put(`/api/roles/${grp.id}`)
-                           .send(grp)
+                           .put(`/api/roles/${grpdb.id}`)
+                           .send(grpdb)
                            .set("User-Id", `${adminUsr.id}`);
 
         expect(resp).not.toBeUndefined();
         expect(resp.status).toEqual(200);
-
-        const rldb = await rlRep.findOne(grp.id);
-        expect(rldb.name).toEqual(grp.name);
-        expect(rldb.description).toEqual(grp.description);
-    });
-
-    it("Test updating role as a non-admin.", async () => {
-        const grp = await createGroup(adminUsr, "g", 200);
-
-        const grpbk = JSON.parse(JSON.stringify(grp));
-
-        grp.name = "DSFSFSD";
-        grp.description = "SDFSdfsfasdfaf";
-
-        const resp = await request(app)
-                           .put(`/api/roles/${grp.id}`)
-                           .send(grp)
-                           .set("User-Id", `${usr1.id}`);
-
-        expect(resp).not.toBeUndefined();
-        expect(resp.status).toEqual(403);
-
-        const rldb = await rlRep.findOne(grp.id);
-        expect(rldb.name).toEqual(grpbk.name);
-        expect(rldb.description).toEqual(grpbk.description);
+        console.log(resp.body);
     });
 });
 
@@ -2689,7 +2745,6 @@ describe("34. DELETE /api/roles/:rid/stage/:sid", () => {
     });
 });
 
-
 describe("35. GET /api/roles/:rid", () => {
     it("Test getting a role returns it with the right fields.", async () => {
         const wfNum = 1;
@@ -2706,7 +2761,7 @@ describe("35. GET /api/roles/:rid", () => {
         await addUserToGroup(adminUsr, grpName, usr2, 200);
         await addUserToGroup(adminUsr, grpName, usr3, 200);
 
-        let resp = await request(app)
+        const resp = await request(app)
                            .get(`/api/roles/${role.id}`)
                            .set("User-Id", `${adminUsr.id}`);
 

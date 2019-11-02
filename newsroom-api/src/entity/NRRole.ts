@@ -60,6 +60,7 @@ export class NRRole implements INRRole {
     @OneToMany(
         (type) => NRWFPermission,
         (permissions) => permissions.role,
+        { cascade: true },
     )
     public wfpermissions: NRWFPermission[];
 
@@ -71,6 +72,7 @@ export class NRRole implements INRRole {
     @OneToMany(
         (type) => NRSTPermission,
         (permissions) => permissions.role,
+        { cascade: true },
     )
     public stpermissions: NRSTPermission[];
 }
