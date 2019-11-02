@@ -84,7 +84,9 @@ class Group extends React.Component<Group.Props> {
             return {id: users.id} as NRUser;
         })
 
+        var rid = this.props.match.params.id;
         var newRole = new NRRole({
+            id: rid,
             name: this.props.name || "",
             description: this.props.description || "",
             users,
@@ -93,7 +95,6 @@ class Group extends React.Component<Group.Props> {
         });
         
         try {
-            var rid = this.props.match.params.id;
             console.log(newRole)
             var responseRole = await axios.put<NRRole>(`/api/roles/${rid}`, newRole);
             console.log(responseRole.data)
