@@ -223,6 +223,29 @@ export class RoleResource {
             currRole.description = role.description;
         }
 
+        // Do stages first so Google syncing can happen.
+        if (role.stpermissions !== undefined) {
+            currRole.stpermissions = role.stpermissions;
+            
+            // Filter items that exist in the DB, but not in the list.
+            const stpdb = await this.stPRep.find({ where: { role: currRole } });
+            const missing = stpdb.filter(item => currRole.stpermissions.indexOf(item) < 0);
+
+            // Now revoke GD permissions because we are going to delete this permission.
+            for (const stp of missing) {
+                stp.access = DBConstants.READ;
+                await this.stPRep.save(stp);
+                await this.dcServ.syncGooglePermissionsForStage(stp);
+            }
+
+            // This causes the stpermission.roleId to be NULL.
+            await this.rlRep.save(currRole);
+
+            // Now remove them.
+            const stptd = await this.stPRep.find({ where: { role: IsNull() } });
+            await this.stPRep.remove(stptd);
+        }
+
         if (role.users !== undefined) {
             currRole.users = role.users;
         }
@@ -235,20 +258,6 @@ export class RoleResource {
             await this.wfPRep.remove(wfptd);
         }
 
-        if (role.stpermissions !== undefined) {
-            currRole.stpermissions = role.stpermissions;
-            await this.rlRep.save(currRole);
-
-            const stptd = await this.stPRep.find({ where: { role: IsNull() } });
-
-            for (const stp of stptd) {
-                stp.access = DBConstants.READ;
-                await this.stPRep.save(stp);
-                await this.dcServ.syncGooglePermissionsForStage(stp);
-            }
-
-            await this.stPRep.remove(stptd);
-        }
 
         try {
             return await this.rlRep.findOne(rid, { relations: ["users", "stpermissions", "wfpermissions"] });
