@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { IsNull, Repository } from "typeorm";
 import {
     Context,
     DELETE,
@@ -15,7 +15,7 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 
 import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { DBConstants, NRDocument, NRRole, NRStage, NRSTPermission, NRWFPermission, NRWorkflow } from "../entity";
+import { DBConstants, NRDocument, NRRole, NRStage, NRSTPermission, NRUser, NRWFPermission, NRWorkflow } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { PermissionService } from "../services/PermissionService";
 import { RoleService } from "../services/RoleService";
@@ -45,6 +45,9 @@ export class RoleResource {
 
     @InjectRepository(NRSTPermission)
     private stPRep: Repository<NRSTPermission>;
+
+    @InjectRepository(NRUser)
+    private usrRep: Repository<NRUser>;
 
     @Inject()
     private wfServ: WorkflowService;
@@ -169,7 +172,7 @@ export class RoleResource {
             for (const stp of allRoles.stpermissions) {
                 const stpdb = await this.stPRep.findOne(stp.id, {relations: ["stage"]});
                 const st = stpdb.stage;
-                
+
                 if (st !== undefined) {
                     const wfid = await this.stRep
                                            .createQueryBuilder(DBConstants.STGE_TABLE)
@@ -180,8 +183,6 @@ export class RoleResource {
                     stp.stage = st;
                     stp.stage.workflow = new NRWorkflow();
                     stp.stage.workflow.id = wfid.val;
-
-                    console.log(stp);
                 }
             }
         }
@@ -205,8 +206,8 @@ export class RoleResource {
     public async updateRole(@IsInt @PathParam("rid") rid: number,
                             role: NRRole): Promise<NRRole> {
         console.log("CALLED updateRole");
-        const currRole = await this.rlServ.getRole(rid);
         const user = await this.serviceContext.user();
+        const currRole = await this.rlServ.getRole(rid);
 
         const admin = await this.permServ.isUserAdmin(user);
         if (!(admin)) {
@@ -222,8 +223,35 @@ export class RoleResource {
             currRole.description = role.description;
         }
 
+        if (role.users !== undefined) {
+            currRole.users = role.users;
+        }
+
+        if (role.wfpermissions !== undefined) {
+            currRole.wfpermissions = role.wfpermissions;
+            await this.rlRep.save(currRole);
+
+            const wfptd = await this.wfPRep.find({ where: { role: IsNull() } });
+            await this.wfPRep.remove(wfptd);
+        }
+
+        if (role.stpermissions !== undefined) {
+            currRole.stpermissions = role.stpermissions;
+            await this.rlRep.save(currRole);
+
+            const stptd = await this.stPRep.find({ where: { role: IsNull() } });
+
+            for (const stp of stptd) {
+                stp.access = DBConstants.READ;
+                await this.stPRep.save(stp);
+                await this.dcServ.syncGooglePermissionsForStage(stp);
+            }
+
+            await this.stPRep.remove(stptd);
+        }
+
         try {
-            return await this.rlRep.save(currRole);
+            return await this.rlRep.findOne(rid, { relations: ["users", "stpermissions", "wfpermissions"] });
         } catch (err) {
             console.log(err);
 

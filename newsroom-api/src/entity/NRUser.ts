@@ -69,6 +69,7 @@ export class NRUser implements INRUser {
     @ManyToMany(
         (type) => NRRole,
         (role) => role.users,
+        { cascade: ["update"] },
     )
     @JoinTable()
     public roles: NRRole[];
