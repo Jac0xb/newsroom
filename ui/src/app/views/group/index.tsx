@@ -38,9 +38,9 @@ class Group extends React.Component<Group.Props> {
     }
 
     componentDidMount() {
-        this.props.fetchCurrentGroup(this.props.match.params.id);
         this.props.fetchWorkflows();
         this.props.fetchUsers();
+        this.props.fetchCurrentGroup(this.props.match.params.id);
      }
 
      async onSubmit() {
@@ -93,8 +93,10 @@ class Group extends React.Component<Group.Props> {
         });
         
         try {
-
-            // var responseRole = await axios.post<NRRole>("/api/roles", newRole);
+            var rid = this.props.match.params.id;
+            console.log(newRole)
+            var responseRole = await axios.put<NRRole>(`/api/roles/${rid}`, newRole);
+            console.log(responseRole.data)
             this.props.induceSubmission();
             
         }
@@ -115,7 +117,7 @@ class Group extends React.Component<Group.Props> {
                 mode="multiple"
                 style={{ width: '100%', marginBottom: '16px' }}
                 placeholder="Please select"
-                defaultValue={_.map(this.props.selectedUsers, (user) => user.id.toString())}
+                value={_.map(this.props.selectedUsers, (user) => user.id.toString())}
                 onChange={(users: string[]) => {
                     var selectedUsers = _.filter(this.props.fetchedUsers, (user) => _.includes(users, user.id.toString()));
                     this.props.updateUserSelection(_.map(selectedUsers, (user) => {return {id: user.id, name: user.userName}}));

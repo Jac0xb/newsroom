@@ -17,16 +17,16 @@ export function fetchCurrentGroup(id: number) : any {
         try {
             
             var group = await axios.get<NRRole>(GroupsAPI.getCurrentGroup(id));
-            console.log(group.data)
+            
             //
             var selected:Array<string> = [];
             group.data.wfpermissions.forEach(permission => {
                 selected.push(`${permission.workflow.id}`)
             });
 
-            // group.data.stpermissions.forEach(permission => {
-            //     selected.push(`${permission.stage.id}-${permission.stage.id}`)
-            // });
+            group.data.stpermissions.forEach(permission => {
+                selected.push(`${permission.stage.workflow.id}-${permission.stage.id}`)
+            });
 
             var userSelected:Array<any> = [];
             group.data.users.forEach(user => {
@@ -141,7 +141,6 @@ export function updateItemSelection(items: string[]) {
 }
 
 export function updateName(name: string) {
-    console.log(name)
     return {
         type: ActionTypes.UPDATE_NAME,
         payload: name
