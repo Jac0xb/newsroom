@@ -26,7 +26,15 @@ export namespace Subheader {
 
         render() {
             const { classes } = this.props;
-    
+            
+            var tabs = this.props.tabs.map((tabName: string, index: number) => {
+                
+                return <Tab key={index} label={tabName} value={index}/>
+            
+            });
+
+            //var tabs = [...tabs, <Tab key={tabs.length} label={<div>+</div>} value={-1} />]
+
             return (                    
             <AppBar color="default" className={classes.appBar}>
                 <Tabs
@@ -38,9 +46,7 @@ export namespace Subheader {
                     scrollButtons="auto"
                     aria-label="scrollable auto tabs example"
                 >
-                    {
-                        this.props.tabs.map((tabName: string, index: number) => <Tab key={index} label={tabName} />)
-                    }
+                    {tabs}
                 </Tabs>
             </AppBar>);
         }

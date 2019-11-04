@@ -194,6 +194,7 @@ class Group extends React.Component<Group.Props> {
                                     treeData={treeData}
                                     value={this.props.selectedItems}
                                     style={{marginBottom: "16px"}}
+                                    dropdownStyle={{zIndex: 10000, maxHeight: "30vh"}}
                                     placeholder="Type to filter.."
                                     allowClear
                                     multiple

@@ -10,7 +10,6 @@ import { connect } from "react-redux";
 import { WorkflowDispatchers, WorkflowState } from "app/store/workflow/types";
 import WorkflowSidebar from './components/WorkflowSidebar';
 import Subheader from 'app/components/common/subheader';
-import { values } from 'lodash-es';
 import { NRStage } from 'app/utils/models';
 
 export namespace Workflow {
@@ -53,25 +52,6 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
     // Method to get role of the user from database
     getRole() {
-        // TODO: Set User edit permissions
-        const wfId = this.props.match.params.id;
-
-        /*
-        //get users roles
-        axios.get("/api/users/" + user + "/roles").then((response) => {
-          var role = response.data[0].id
-          // get permissions for this role
-          axios.get("/api/roles/" + role ).then((res) => {
-            var wfpermissions = res.data.wfpermissions
-            wfpermissions.forEach((wf: any) => {
-              if(wf.id == wfId && wf.access == 1){
-                // set perm
-                this.props.fetchSetPermissions(true)
-              }
-            });
-          })
-        })
-        */
         this.props.fetchSetPermissions(true)
     }
 
@@ -114,7 +94,24 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
         return (
             <React.Fragment>
                 <main className={classes.main}>
-                    <Subheader tabs={tabs} selectedTab={currentStage ? currentStage.sequenceId : 0} onTabChange={((sequenceID: number) => this.props.fetchStageChange(sequenceID)).bind(this)}/>
+                    <Subheader tabs={tabs} selectedTab={currentStage ? currentStage.sequenceId : 0} onTabChange={((sequenceID: number) => {
+                        
+                        console.log(sequenceID)
+
+                        if (sequenceID == -1) {
+                            //this.props.fetchAddStage(
+                            //    this.props.match.params.id, 
+                            //    new NRStage({name: "New Stage", description: ""}), 
+                            //    this.props.stages.length
+                            //);
+
+                            return;
+                        }
+
+                        this.props.fetchStageChange(sequenceID);
+                    
+                    }).bind(this)
+                    }/>
                     <div className={classes.spacer} />
                     <WorkflowSidebar 
                         workflow={this.props.workflow}

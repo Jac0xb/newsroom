@@ -46,7 +46,7 @@ export namespace WorkflowTile {
                         {workflow.name}
                     </Typography>
                     <Divider />
-                    <Typography component="p">
+                    <Typography style={{overflowWrap: "break-word"}} component="p">
                         {(workflow.description === "" ? "(No Description)" : workflow.description)}
                     </Typography>
                     <div className={classes.buttonGroup}>

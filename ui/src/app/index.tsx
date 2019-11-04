@@ -61,10 +61,10 @@ export namespace App {
     
         render() {
     
-            const { userid } = this.props;
+            const { user } = this.props;
             const headerMargin = { marginTop: "64px" };
     
-            if (!userid) {
+            if (!user) {
                 return (
                     
                     <React.Fragment>
@@ -86,17 +86,17 @@ export namespace App {
         
                         <div style={headerMargin}>
                                 <Switch >
-                                    <Route exact path="/" component={Dashboard} userid={userid}/>
-                                    <Route exact path="/document" component={Dashboard} userid={userid}/>
-                                    <Route exact path="/document/create" component={DocumentCreator} userid={userid}/>
-                                    <Route exact path="/workflow" component={Workflows} userid={userid}/>
-                                    <Route path="/document/:id/edit" component={DocumentEditor} userid={userid}/>
-                                    <Route path="/workflow/:id/edit" component={Workflow} userid={userid}/>
-                                    <Route exact path="/groups" component={Groups} userid={userid}/>
-                                    <Route exact path="/groups/create" component={GroupCreate} userid={userid}/>
-                                    <Route path="/groups/:id" component={Group} userid={userid}/>
-                                    <Route exact path="/users" component={Users} userid={userid}/>
-                                    <Route path="/users/:id" component={EditUser} userid={userid}/>
+                                    <Route exact path="/" component={Dashboard} user={user}/>
+                                    <Route exact path="/document" component={Dashboard} user={user}/>
+                                    <Route exact path="/document/create" component={DocumentCreator} user={user}/>
+                                    <Route exact path="/workflow" component={Workflows} user={user}/>
+                                    <Route path="/document/:id/edit" component={DocumentEditor} user={user}/>
+                                    <Route path="/workflow/:id/edit" component={Workflow} user={user}/>
+                                    <Route exact path="/groups" component={Groups} user={user}/>
+                                    <Route exact path="/groups/create" component={GroupCreate} user={user}/>
+                                    <Route path="/groups/:id" component={Group} user={user}/>
+                                    <Route exact path="/users" component={Users} user={user}/>
+                                    <Route path="/users/:id" component={EditUser} user={user}/>
                                 </Switch>
                         </div>
                     </MuiThemeProvider>

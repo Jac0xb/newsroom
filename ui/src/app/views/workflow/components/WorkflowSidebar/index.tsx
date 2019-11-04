@@ -3,7 +3,7 @@ import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import { Drawer, List, ListItem, ListItemText, TextField, FormLabel, FormControl, Button } from '@material-ui/core';
 import { NRStage, NRWorkflow } from 'app/utils/models';
-
+import { Link } from '@material-ui/icons';
 
 export namespace WorkflowMenuBar {
     export interface Props {
@@ -97,9 +97,14 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                             className={classes.stageButton} 
                             onClick={() => this.props.onAddStage(this.props.stage.sequenceId)}
                         >
-                                {"<- Add"}
+                            <span>{"<- Add"}</span>
                         </Button>
-                        <Button variant="contained" className={classes.stageButton} onClick={() => this.props.onAddStage(this.props.stage.sequenceId + 1)}>Add -></Button>
+                        <Button 
+                            variant="contained" 
+                            className={classes.stageButton} 
+                            onClick={() => this.props.onAddStage(this.props.stage.sequenceId + 1)}>
+                                <span>{"Add ->"}</span>
+                        </Button>
                     </div>
                     <Button variant="contained" className={classes.button} onClick={() => this.props.onUpdateClick(this.props.stage)}>Update</Button>
                     <Button variant="contained" color="secondary" className={classes.deleteButton} onClick={() => this.props.onDeleteClick()}>Delete</Button>

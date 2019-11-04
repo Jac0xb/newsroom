@@ -1,5 +1,7 @@
+import { NRUser } from "app/utils/models";
+
 export interface MetaReducerState {
-    userid?: number;
+    user?: NRUser;
 }
 
 export const ActionTypes = {

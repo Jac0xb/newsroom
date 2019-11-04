@@ -7,7 +7,8 @@ export function styles(theme: Theme)  {
             position: "fixed",
             top:"64px",
             maxHeight: 48,
-            minHeight: 48
+            minHeight: 48,
+            display: "flex"
         }
     } as StyleRules);
 }

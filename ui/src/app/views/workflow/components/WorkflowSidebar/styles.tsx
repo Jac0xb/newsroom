@@ -38,11 +38,13 @@ export function styles(theme: Theme)  {
             margin: 8
         },
         stageButtonGroup:{
+            width: "100%",
             display: "flex",
             alignSelf: "center",
         },
         stageButton:{
             margin: 8,
+            flexGrow: 1
 
         },
         deleteButton: {

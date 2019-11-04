@@ -5,16 +5,16 @@ import {
 } from "./types";
 
 const initialState: MetaReducerState = {
-    userid: undefined
+    user: undefined
 };
 
 export function metaReducer(state = initialState, action: any): MetaReducerState {
 
     switch (action.type) {
         case ActionTypes.AUTH_LOGIN:
-            return { ...state, userid: action.payload };
+            return { ...state, user: action.payload };
         case ActionTypes.AUTH_LOGOUT:
-            return { userid: undefined };
+            return { user: undefined };
         default:
             return state;
     }

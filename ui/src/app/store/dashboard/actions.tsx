@@ -2,9 +2,8 @@ import { ActionTypes, DashboardReducerState } from './types';
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 import { DocumentsAPI } from 'app/api/document';
-import { NRDocument, NRWorkflow, NRStage, } from 'app/utils/models';
+import { NRDocument, NRWorkflow } from 'app/utils/models';
 import axios from 'axios';
-import { WorkflowsAPI } from 'app/api/workflow';
 import _ from 'lodash';
 
 export function fetchDocuments() : any {
@@ -20,16 +19,8 @@ export function fetchDocuments() : any {
             for (var i = 0; i < documents.length; i++) {
                 try {
 
-                    var { data: document } = await axios.get<NRDocument>(DocumentsAPI.getDocument(documents[i].id));
                     documents[i].created = new Date(Date.parse(documents[i].created.toString()));
                     documents[i].lastUpdated = new Date(Date.parse(documents[i].lastUpdated.toString()));
-                    documents[i] = new NRDocument({...document as Object, ...documents[i]})
-                    
-                    var { data: stage } = await axios.get<NRStage>(`/api/documents/stage/${documents[i].stage.id}`);
-
-                    var { data: workflow } = await axios.get<NRWorkflow>(WorkflowsAPI.getWorkflow(documents[i].workflow.id));
-                    
-                    documents[i].workflow = workflow;
 
                 }
                 catch(err) {
@@ -40,8 +31,6 @@ export function fetchDocuments() : any {
             documents = _.filter(documents, (document: NRDocument, index: number) => {
                 return !(document.permission == 0);
             })
-
-            console.log(documents);
 
             dispatch({
                 type: ActionTypes.DOCUMENTS_SUCCESS,

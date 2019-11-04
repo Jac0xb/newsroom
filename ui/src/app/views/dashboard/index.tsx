@@ -8,7 +8,7 @@ import _ from 'lodash-es';
 import * as React from 'react';
 import { connect } from 'react-redux';
 
-import { Divider, AppBar } from '@material-ui/core';
+import { AppBar } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 
 import { LinkedButton } from './components/LinkedButton';
@@ -42,26 +42,15 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 
     async handleDelete(id: number) {
 
-        try {
-            await this.props.deleteDocument(id);
-            this.props.fetchDocuments();
-        }
-        catch (err) {
-            //this.props.induceFlash(err);
-        }
+        await this.props.deleteDocument(id);
+        this.props.fetchDocuments();
 
-    }
-
-    renderDocuments() {
-        return _.map(this.props.documents, (document) =>
-            <DocumentTileComponent key={document.id} document={document} onDelete={() => this.handleDelete(document.id) } />
-        )
-        
     }
 
     render() {
-        console.log(this.props.location)
+
         const { classes, pending, documents } = this.props;
+        
         return (
             <main className={classes.main}>
                 <AppBar color="default" className={classes.appBar} style={{marginTop: "64px", padding: "16px"}}>
@@ -79,16 +68,21 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
                                     {document.name}
                                 </Link>
                             }},
+                            
                             {title: "Workflow", field:"workflow.name", render: (document: NRDocument) => { 
+                                if (!document.workflow)
+                                    return <div>Undefined</div>
+
                                 return <Link to={`/workflow/${document.workflow.id}/edit`}>
                                     {document.workflow.name}
                                 </Link>
+
                             }},
                             {title: "Created", field:"created", searchable: true, render: (document: NRDocument) => { 
                                 return <div>{`${document.created.getDay()}/${document.created.getMonth()}/${document.created.getFullYear()}`}</div>;
                             }},
                             {title: "Last Modified", field:"lastUpdated", render: (document: NRDocument) => { 
-                                return <div>{`${document.lastUpdated.getDay()}/${document.lastUpdated.getMonth()}/${document.lastUpdated.getFullYear()}`}</div>;
+                                return <div>{`${document.lastUpdated.getMonth()}/${document.lastUpdated.getUTCDay()}/${document.lastUpdated.getFullYear()}`}</div>;
                             }},
                             {title: "", render: (group: any) => {
                                 

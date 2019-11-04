@@ -196,6 +196,7 @@ export namespace GroupCreate {
                                         style={{marginBottom: "16px"}}
                                         placeholder="Type to filter.."
                                         allowClear
+                                        dropdownStyle={{zIndex: 10000, maxHeight: "30vh"}}
                                         multiple
                                         treeDefaultExpandAll
                                         onChange={(value: string[]) => this.props.updateItemSelection(value)}

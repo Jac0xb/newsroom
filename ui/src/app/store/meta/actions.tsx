@@ -7,15 +7,16 @@ import axios from 'axios';
 function login() {
     return async (dispatch: any) => {
         try {
-            var response = await axios.get<NRUser>(`/api/currentUser`);
+            
+            var { status, data: user } = await axios.get<NRUser>(`/api/currentUser`);
 
-            if (response.status != 401) {
+            if (status != 401) {
                 dispatch({
                     type: ActionTypes.AUTH_LOGIN,
-                    payload: response.data.id
+                    payload: user
                 })
             } else {
-                throw response.status;
+                throw status;
             }
         } catch (err) {
             dispatch({
