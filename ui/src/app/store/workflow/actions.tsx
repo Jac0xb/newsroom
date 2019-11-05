@@ -145,16 +145,16 @@ export function fetchWorkflow(id: number) : any {
 }
 
 
-export function dispatchAddTrigger() : any {
+export function dispatchAddTrigger(stageID: number) : any {
 
   return async (dispatch: any) => {
 
       try {
 
           // const t = new NRTrigger({ name: "trigger", workflows: [1] })
-          // updated a given stage
+          // 
           var { data: t } = await axios.post(TriggersAPI.postNewTrigger(), {
-            name: "nam",
+            name: "name",
             type: NRTriggerType.SLACK,
             channelName: "random",
             // documents: NRDocument[],
@@ -165,9 +165,6 @@ export function dispatchAddTrigger() : any {
 
           // dispatch updates
           // dispatch({
-          //     type: ActionTypes.DELETE_STAGE, 
-          //     stages: stages,
-          //     currentStage: stages[0]
           // });
 
       }

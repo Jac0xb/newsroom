@@ -226,10 +226,10 @@ export class RoleResource {
         // Do stages first so Google syncing can happen.
         if (role.stpermissions !== undefined) {
             currRole.stpermissions = role.stpermissions;
-            
+
             // Filter items that exist in the DB, but not in the list.
             const stpdb = await this.stPRep.find({ where: { role: currRole } });
-            const missing = stpdb.filter(item => currRole.stpermissions.indexOf(item) < 0);
+            const missing = stpdb.filter((item) => currRole.stpermissions.indexOf(item) < 0);
 
             // Now revoke GD permissions because we are going to delete this permission.
             for (const stp of missing) {
@@ -257,7 +257,6 @@ export class RoleResource {
             const wfptd = await this.wfPRep.find({ where: { role: IsNull() } });
             await this.wfPRep.remove(wfptd);
         }
-
 
         try {
             return await this.rlRep.findOne(rid, { relations: ["users", "stpermissions", "wfpermissions"] });

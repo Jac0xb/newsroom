@@ -13,6 +13,7 @@ export namespace WorkflowMenuBar {
         onUpdateClick: Function
         onDeleteClick: Function
         onAddStage: Function
+        onAddTriggerClick: Function
         workflow?: NRWorkflow
     }
     export interface State {
@@ -79,17 +80,10 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                         // variant="outlined"
                     />
                 </FormControl> */}
-                {/* <FormControl className={classes.formComp}>
-                    <FormLabel className={classes.formLabel}>Notifications</FormLabel>
-                    <TextField
-                        id="desc"
-                        className={classes.textField}
-                        value={stage.description}
-                        onChange={(event) => this.props.onTextChange(stage.id, 'description', event.target.value)}
-                        margin="normal"
-                        // variant="outlined"
-                    />
-                </FormControl> */}
+                <FormControl className={classes.formComp}>
+                    <FormLabel className={classes.formLabel}>Notification</FormLabel>
+                    <Button variant="contained" className={classes.button} onClick={() => this.props.onAddTriggerClick(this.props.stage.id)}>Add Notification</Button>
+                </FormControl>
                 <FormControl className={classes.buttonGroup}>
                     <div className={classes.stageButtonGroup}>
                         <Button 
