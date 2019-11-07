@@ -44,7 +44,7 @@ export class DocumentResource {
     private usServ: UserService;
 
     @Inject()
-    private notificationService: NotificationService;
+    private notifServ: NotificationService;
 
     /**
      * Create a new document based on passed information.
@@ -116,6 +116,8 @@ export class DocumentResource {
 
         document.creator = await this.usServ.getUser(user.id);
         await this.dcServ.createGoogleDocument(user, document);
+
+        await this.notifServ.sendDocumentCreatedOnWorkflowNotifications(document, wf);
 
         return await this.dcRep.save(document);
     }
