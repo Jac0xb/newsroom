@@ -15,10 +15,18 @@ export function dispatchSetPermissions(canEdit: boolean): any {
   };
 }
 
-export function dispatchSetStages(stages: Array<NRStage>): any {
-  return {
-    type: ActionTypes.SET_STAGES,
-    payload: stages
+export function dispatchSetStages(wfId: number): any {
+  return async (dispatch: any) => {
+
+    var { data: stages } = await axios.get(WorkflowsAPI.getWorkflowStages(wfId));
+    var { data: triggers } = await axios.get(TriggersAPI.getTriggers());
+    console.log(triggers) // TODO
+
+    dispatch({
+      type: ActionTypes.SET_STAGES,
+      stages: stages,
+      trigger: triggers ? triggers[0] : undefined,
+    });
   };
 }
 
@@ -145,7 +153,7 @@ export function fetchWorkflow(id: number) : any {
 }
 
 
-export function dispatchAddTrigger(stageID: number) : any {
+export function dispatchAddTrigger(stage: NRStage, channel: string) : any {
 
   return async (dispatch: any) => {
 
@@ -154,9 +162,8 @@ export function dispatchAddTrigger(stageID: number) : any {
           // const t = new NRTrigger({ name: "trigger", workflows: [1] })
           // 
           var { data: t } = await axios.post(TriggersAPI.postNewTrigger(), {
-            name: "name",
             type: NRTriggerType.SLACK,
-            channelName: "random",
+            channelName: channel,
             // documents: NRDocument[],
             workflows: new Array<NRWorkflow>(new NRWorkflow({id: 1}))
 

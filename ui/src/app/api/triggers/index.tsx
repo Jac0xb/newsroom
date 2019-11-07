@@ -3,4 +3,8 @@ export namespace TriggersAPI {
     export function postNewTrigger() {
         return '/api/triggers';
     }
+
+    export function getTriggers() {
+        return '/api/triggers';
+    }
 }

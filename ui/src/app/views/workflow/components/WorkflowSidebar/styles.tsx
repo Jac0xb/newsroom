@@ -56,6 +56,9 @@ export function styles(theme: Theme)  {
             // }
         },
         toolbar: theme.mixins.toolbar,
+        triggerCont: {
+            paddingLeft: 40,
+        },
 
     } as StyleRules);
 }

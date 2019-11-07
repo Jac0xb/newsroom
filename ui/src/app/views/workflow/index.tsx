@@ -34,20 +34,14 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
     componentDidMount() {
         this.getStages();
         this.getRole();
-        // this.props.fetchAddTrigger();
     }
 
     // Method to get stages of current workflow from database
     getStages() {
         const id = this.props.match.params.id;
-
-        axios.get("/api/workflows/" + id + "/stages").then((response) => {
-
-            const stages = response.data;
-            this.props.fetchSetStages(stages);
-            this.props.fetchStageChange(0)
-            this.props.fetchWorkflow(id);
-        })
+        this.props.fetchSetStages(id);
+        this.props.fetchStageChange(0)
+        this.props.fetchWorkflow(id);
     }
 
     // Method to get role of the user from database
@@ -70,8 +64,6 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
             // Render new stages edit
             this.getStages()
 
-            // close dialog
-            // this.props.fetchEditStage()
         }).catch((error) => {
 
             if (error.response.status == 403) {
@@ -95,16 +87,8 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
             <React.Fragment>
                 <main className={classes.main}>
                     <Subheader tabs={tabs} selectedTab={currentStage ? currentStage.sequenceId : 0} onTabChange={((sequenceID: number) => {
-                        
-                        console.log(sequenceID)
 
                         if (sequenceID == -1) {
-                            //this.props.fetchAddStage(
-                            //    this.props.match.params.id, 
-                            //    new NRStage({name: "New Stage", description: ""}), 
-                            //    this.props.stages.length
-                            //);
-
                             return;
                         }
 
@@ -121,6 +105,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                         onDeleteClick={() => this.props.fetchDeleteStage(this.props.match.params.id, currentStage.id)}  
                         onAddStage={(sequence: number) => this.props.fetchAddStage(this.props.match.params.id, new NRStage({name: "New Stage", description: ""}), sequence)}
                         onAddTriggerClick={this.props.fetchAddTrigger}
+                        trigger={this.props.trigger}
                     />
 
                     {(this.props.flash != "") ?

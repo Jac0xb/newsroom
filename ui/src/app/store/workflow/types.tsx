@@ -1,4 +1,4 @@
-import { NRStage, NRWorkflow } from "app/utils/models";
+import { NRStage, NRWorkflow, NRTrigger } from "app/utils/models";
 
 // Workflow state 
 export interface WorkflowState {
@@ -7,6 +7,7 @@ export interface WorkflowState {
   canEdit: boolean
   currentStage: NRStage
   workflow?: NRWorkflow
+  trigger?: NRTrigger
 }
   
 // Describing the different ACTION NAMES available
@@ -26,14 +27,14 @@ export const ActionTypes = {
 // Define Dispatchers
 export interface WorkflowDispatchers {
   fetchSetPermissions: (canEdit: boolean) => any;
-  fetchSetStages: (stages: Array<NRStage>) => any;
+  fetchSetStages: (wfId: number) => any;
   fetchAddStage: (wfId: number, stage: NRStage, index: number) => any;
   fetchUpdateStage: (wfId: number, updatedStage: NRStage) => any;
   fetchEditStage: (stageID: number, name: string, newValue: string) => any;
   fetchEditFlash: (flash: string) => any;
   fetchStageChange: (seqID: number) => any;
   fetchDeleteStage: (wfId: number, stageID: number) => any;
-  fetchAddTrigger: (stageID: number) => any;
+  fetchAddTrigger: (stage: NRStage, channel: string) => any;
   fetchWorkflow: (id: number) => any;
 }
 

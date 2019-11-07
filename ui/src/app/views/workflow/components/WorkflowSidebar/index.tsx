@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import { Drawer, List, ListItem, ListItemText, TextField, FormLabel, FormControl, Button } from '@material-ui/core';
-import { NRStage, NRWorkflow } from 'app/utils/models';
+import { Drawer, List, ListItem, ListItemText, TextField, FormLabel, FormControl, Button, FormControlLabel, Checkbox } from '@material-ui/core';
+import { NRStage, NRWorkflow, NRTrigger } from 'app/utils/models';
 import { Link } from '@material-ui/icons';
 
 export namespace WorkflowMenuBar {
@@ -15,6 +15,7 @@ export namespace WorkflowMenuBar {
         onAddStage: Function
         onAddTriggerClick: Function
         workflow?: NRWorkflow
+        trigger?: NRTrigger
     }
     export interface State {
 
@@ -31,7 +32,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
 
     render() {
 
-        const { classes, stage, workflow } = this.props;
+        const { classes, stage, workflow, trigger } = this.props;
         const {  } = this.state;
 
         if (!workflow || (workflow && workflow.permission == 0)) {
@@ -69,20 +70,29 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                         // variant="outlined"
                     />
                 </FormControl>
-                {/* <FormControl className={classes.formComp}>
-                    <FormLabel className={classes.formLabel}>Due Date</FormLabel>
+                <FormControl className={classes.triggerCont}>
+                <FormControlLabel
+                    control={
+                    <Checkbox
+                        checked={trigger ? true: false}
+                        onChange={() => this.props.onAddTriggerClick(this.props.stage, "general")}
+                        value="trigger"
+                        color="primary"
+                    />
+                    }
+                    label="Stage Trigger"
+                />
+                </FormControl>
+                <FormControl className={classes.formComp}>
+                    <FormLabel className={classes.formLabel}>Slack Channel</FormLabel>
                     <TextField
                         id="desc"
                         className={classes.textField}
-                        value={stage.description}
-                        onChange={(event) => this.props.onTextChange(stage.id, 'description', event.target.value)}
+                        value={trigger ? trigger.channelName : ""}
+                        onChange={(event) => this.props.onTextChange(stage.id, 'trigger', event.target.value)}
                         margin="normal"
-                        // variant="outlined"
+                        variant="outlined"
                     />
-                </FormControl> */}
-                <FormControl className={classes.formComp}>
-                    <FormLabel className={classes.formLabel}>Notification</FormLabel>
-                    <Button variant="contained" className={classes.button} onClick={() => this.props.onAddTriggerClick(this.props.stage.id)}>Add Notification</Button>
                 </FormControl>
                 <FormControl className={classes.buttonGroup}>
                     <div className={classes.stageButtonGroup}>
