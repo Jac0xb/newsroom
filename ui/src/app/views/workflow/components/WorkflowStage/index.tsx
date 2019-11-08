@@ -39,11 +39,13 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
   }
 
   // Get documents for this stage from database
-  getDocuments() {
-
-		axios.get("/api/documents/stage/" + this.props.id).then((response) => {
-			this.setState({ stageDocuments: response.data })
-		});
+  async getDocuments() {
+    console.log("get " + this.props.id)
+		await axios.get("/api/documents/stage/" + this.props.id).then((response) => {
+      this.setState({ stageDocuments: response.data })
+      console.log(response.data)
+    });
+    console.log("get end")
   }
   
   handleMenuClick = (event: any) => {

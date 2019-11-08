@@ -42,6 +42,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
         this.props.fetchSetStages(id);
         this.props.fetchStageChange(0)
         this.props.fetchWorkflow(id);
+
     }
 
     // Method to get role of the user from database
@@ -130,13 +131,15 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                             </div>
                             {this.props.stages.map((stage, index) => (
                                 <div className={classes.stage}>
-                                    <WorkflowStage show={currentStage.sequenceId}
+                                    <WorkflowStage 
+                                        show={currentStage.sequenceId}
                                         key={index}
                                         index={stage.sequenceId} 
                                         canEdit={this.props.canEdit} 
                                         id={stage.id} 
                                         name={stage.name} 
                                         desc={stage.description} 
+                                        // documents={} TODO
                                     />
                                 </div>
                             ))}

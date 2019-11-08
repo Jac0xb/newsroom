@@ -20,7 +20,6 @@ export function dispatchSetStages(wfId: number): any {
 
     var { data: stages } = await axios.get(WorkflowsAPI.getWorkflowStages(wfId));
     var { data: triggers } = await axios.get(TriggersAPI.getTriggers());
-    console.log(triggers) // TODO
 
     dispatch({
       type: ActionTypes.SET_STAGES,
@@ -88,11 +87,11 @@ export function dispatchUpdateStage(wfId: number, updatedStage: NRStage) : any {
 
           // Get updated stages
           var { data: stages } = await axios.get(StagesAPI.getWorkflowStages(wfId))
-        
+
           // dispatch updates
           dispatch({
               type: ActionTypes.SET_STAGES, 
-              payload: stages 
+              stages: stages 
           });
 
       }
@@ -164,9 +163,7 @@ export function dispatchAddTrigger(stage: NRStage, channel: string) : any {
           var { data: t } = await axios.post(TriggersAPI.postNewTrigger(), {
             type: NRTriggerType.SLACK,
             channelName: channel,
-            // documents: NRDocument[],
-            workflows: new Array<NRWorkflow>(new NRWorkflow({id: 1}))
-
+            stage: stage
           })
           console.log(t)
 

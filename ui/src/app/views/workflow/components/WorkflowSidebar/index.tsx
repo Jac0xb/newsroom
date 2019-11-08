@@ -75,7 +75,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                     control={
                     <Checkbox
                         checked={trigger ? true: false}
-                        onChange={() => this.props.onAddTriggerClick(this.props.stage, "general")}
+                        onChange={() => this.props.onAddTriggerClick(this.props.stage, this.props.trigger ? this.props.trigger.channelName : "general")}
                         value="trigger"
                         color="primary"
                     />
