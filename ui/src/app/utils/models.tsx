@@ -7,13 +7,14 @@ import {
     INRWorkflow,
     INRWFPermission, 
     INRSTPermission,
+    INRTrigger,
     NRTriggerType,
-    INRTrigger, 
     INRDocComment
 } from "../../../../interfaces/index";
 
 
 export class NRRole implements INRRole {
+
     id: number;
     name: string;
     description: string;
@@ -22,7 +23,6 @@ export class NRRole implements INRRole {
     users: INRUser[];
     wfpermissions: INRWFPermission[];
     stpermissions: INRSTPermission[];
-    dcpermissions: any[];
 
     constructor(init?: Partial<NRRole>) {
         Object.assign(this, init);
@@ -30,6 +30,7 @@ export class NRRole implements INRRole {
 }
 
 export class NRUser implements INRUser {
+
     id: number;
     userName: string;
     email: string;
@@ -47,6 +48,7 @@ export class NRUser implements INRUser {
 }
 
 export class NRStage implements INRStage {
+
     id: number;
     sequenceId: number;
     name: string;
@@ -54,11 +56,10 @@ export class NRStage implements INRStage {
     created: Date;
     lastUpdated: Date;
     permission: number;
-    creator: NRUser;
-    workflow: NRWorkflow;
-    documents: NRDocument[];
-    permissions: NRSTPermission[];
-
+    creator: INRUser;
+    workflow: INRWorkflow;
+    documents: INRDocument[];
+    permissions: INRSTPermission[];
 
     constructor(init?: Partial<NRStage>) {
         Object.assign(this, init);
@@ -66,28 +67,18 @@ export class NRStage implements INRStage {
 }
 
 export class NRDocument implements INRDocument {
-    
+
     id: number;
-
     googleDocId: string;
-
     name: string;
-
     description: string;
-
     created: Date;
-
     lastUpdated: Date;
-
     permission: number;
-
-    creator: NRUser;
-
-    workflow: NRWorkflow;
-
-    stage: NRStage;
-
-    comments: NRDocComment[];
+    creator: INRUser;
+    workflow: INRWorkflow;
+    stage: INRStage;
+    comments: INRDocComment[];
 
     constructor(init?: Partial<NRDocument>) {
         Object.assign(this, init);
@@ -95,7 +86,8 @@ export class NRDocument implements INRDocument {
 }
 
 export class NRDocComment implements INRDocComment {
-    id: number;    
+
+    id: number;
     text: string;
     created: Date;
     lastUpdated: Date;
@@ -107,7 +99,8 @@ export class NRDocComment implements INRDocComment {
 }
 
 export class NRWorkflow implements INRWorkflow {
-    id: number;    
+
+    id: number;
     name: string;
     description: string;
     created: Date;
@@ -124,7 +117,8 @@ export class NRWorkflow implements INRWorkflow {
 }
 
 export class NRWFPermission implements INRWFPermission {
-    id: number;    
+
+    id: number;
     access: number;
     workflow: INRWorkflow;
     role: INRRole;
@@ -135,7 +129,8 @@ export class NRWFPermission implements INRWFPermission {
 }
 
 export class NRSTPermission implements INRSTPermission {
-    id: number;    
+
+    id: number;
     access: number;
     stage: INRStage;
     role: INRRole;
@@ -146,11 +141,13 @@ export class NRSTPermission implements INRSTPermission {
 }
  
 export class NRTrigger implements INRTrigger {
-    id: number;    name: string;
+
+    id: number;
     type: NRTriggerType;
     channelName: string;
-    documents: INRDocument[];
-    workflows: INRWorkflow[];
+    stage: INRStage;
+    document: INRDocument;
+    workflow: INRWorkflow;
 
     public constructor(init?: Partial<NRTrigger>) {
         Object.assign(this, init);

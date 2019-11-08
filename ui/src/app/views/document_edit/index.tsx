@@ -10,6 +10,7 @@ import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 
 import { styles } from './styles';
+import Sidebar from './components/Sidebar';
 
 export namespace EditorContainer {
     export interface Props {
@@ -69,38 +70,21 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
         }
 
         return (
-            <main className={classes.main}>
-                <Grid container spacing={4}>
-                    <Grid item xs={9}>
-                        <Paper className={classes.documentTitlePaper}>
-                            <Typography variant="h5">
-                                <TextField
-                                    fullWidth
-                                    id="document-name"
-                                    label="Document Name"
-                                    placeholder="Document Name"
-                                    className={classes.documentTitleTextField}
-                                    margin="normal"
-                                    defaultValue={document.name}
-                                    onChange={(event) => this.handleDocumentNameChange(event)}
-                                    error={!!this.state.errorText}/>
-                            </Typography>
-                        </Paper>
-                        <Paper className={classes.editor}>
-                            <iframe style={{width: "100%", height: "900px"}}
-                                    key={iFrameKey}
-                                    src={`https://docs.google.com/document/d/${document.googleDocId}/edit`}>
-                            </iframe>
-                        </Paper>
-                    </Grid>
-                    <Grid item xs={3}>
-                        <WorkflowMiniView
-                            workflow={workflow}
-                            currentStage={document.stage.sequenceId!}
-                            onMove={(direction: string) => this.handleMove(direction)}/>
-                    </Grid>
-                </Grid>
-            </main>
+            <React.Fragment>    
+                <Sidebar
+                    workflow={workflow}
+                    currentStage={document.stage.sequenceId!}
+                    onMove={(direction: string) => this.handleMove(direction)}>
+                </Sidebar>
+                <div style={{padding: "8px"}}>
+                    <Paper style={{display:"flex", margin: "16px", marginRight: "calc(167px + 32px + 16px + 64px)", height: "calc(100vh - 64px - 64px + 16px)", padding: "16px"}}>
+                        <iframe style={{width: "100%"}}
+                                key={iFrameKey}
+                                src={`https://docs.google.com/document/d/${document.googleDocId}/edit`}>
+                        </iframe>
+                    </Paper>
+                </div>
+            </React.Fragment>
         );
     }
 

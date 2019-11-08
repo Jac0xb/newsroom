@@ -6,8 +6,8 @@ import {
     JoinColumn,
     JoinTable,
     ManyToOne,
-    OneToOne,
     OneToMany,
+    OneToOne,
     PrimaryColumn,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
@@ -18,9 +18,9 @@ import { INRDocument } from "../../../interfaces";
 import { DBConstants } from "./DBConstants";
 import { NRDocComment } from "./NRDocComment";
 import { NRStage } from "./NRStage";
+import { NRTrigger } from "./NRTrigger";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
-import { NRTrigger } from "./NRTrigger";
 
 @Entity(DBConstants.DOCU_TABLE)
 export class NRDocument implements INRDocument {
@@ -114,7 +114,7 @@ export class NRDocument implements INRDocument {
 
     @OneToOne(
         (type) => NRTrigger,
-        (trigger) => trigger.document
+        (trigger) => trigger.document,
     )
     @JoinColumn()
     public trigger: NRTrigger;

@@ -3,12 +3,12 @@ import { Guid } from "guid-typescript";
 import request from "supertest";
 import { Connection, getRepository, IsNull, Repository } from "typeorm";
 
+import { NRTriggerType } from "../../../interfaces/INRTrigger";
 import App from "../app";
 import { DBConstants, NRDocument, NRRole,
-         NRStage, NRSTPermission, NRUser,
-         NRTrigger, NRWFPermission, NRWorkflow } from "../entity";
+         NRStage, NRSTPermission, NRTrigger,
+         NRUser, NRWFPermission, NRWorkflow } from "../entity";
 import { PermissionService } from "../services/PermissionService";
-import { NRTriggerType } from "../../../interfaces/INRTrigger";
 
 // TODO:
 //   - Test validators.
@@ -2772,7 +2772,6 @@ describe("35. GET /api/roles/:rid", () => {
     });
 });
 
-
 describe("37. Triggers", () => {
     it("I'm triggered", async () => {
         const wfNum = 1;
@@ -2784,7 +2783,7 @@ describe("37. Triggers", () => {
         await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
         await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
 
-        let triggers = [];
+        const triggers = [];
         let trid = 1;
 
         // Add a trigger to all of the stages.
@@ -2799,6 +2798,7 @@ describe("37. Triggers", () => {
 
             triggers.push(tr);
 
+            // tslint:disable-next-line: no-shadowed-variable
             const resp = await request(app)
                                 .post(`/api/triggers`)
                                 .send(tr)

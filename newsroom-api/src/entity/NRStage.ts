@@ -1,14 +1,14 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne,
-         OneToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+         OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 import { INRStage } from "../../../interfaces";
 
 import { DBConstants } from "./DBConstants";
 import { NRDocument } from "./NRDocument";
 import { NRSTPermission } from "./NRSTPermission";
+import { NRTrigger } from "./NRTrigger";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
-import { NRTrigger } from "./NRTrigger";
 
 /**
  * NRStage objects are pieced together to make a workflow.
@@ -95,7 +95,7 @@ export class NRStage implements INRStage {
     @OneToOne(
         (type) => NRTrigger,
         (trigger) => trigger.stage,
-        { onDelete: "SET NULL" }
+        { onDelete: "SET NULL" },
     )
     @JoinColumn()
     public trigger: NRTrigger;

@@ -1,19 +1,21 @@
 import { INRDocument } from "./INRDocument";
+import { INRStage } from "./INRStage";
 import { INRWorkflow } from "./INRWorkflow";
 
 export interface INRTrigger {
 
     id: number;
 
-    name: string;
-
     type: NRTriggerType;
 
     channelName: string;
 
-    documents: INRDocument[];
+    stage: INRStage;
 
-    workflows: INRWorkflow[];
+    document: INRDocument;
+
+    workflow: INRWorkflow;
+
 }
 
 export enum NRTriggerType {

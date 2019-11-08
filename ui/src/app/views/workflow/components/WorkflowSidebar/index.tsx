@@ -49,7 +49,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                 paper: classes.drawerPaper,
                 }}
             >
-                <FormControl className={classes.formComp}>
+                <FormControl className={classes.formComp} style={{marginTop: "32px"}}>
                     <FormLabel className={classes.formLabel}>Stage Name</FormLabel>
                     <TextField
                         id="name"

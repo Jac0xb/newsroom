@@ -40,9 +40,12 @@ class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, WorkflowM
         <ExpansionPanel>
           <ExpansionPanelSummary expandIcon={<ExpandMore />}>
             <Typography variant="subtitle1">
-              <Link component={workflowRouterLink}>
-                Workflow: <span style={{ fontWeight: "bold" }}>{workflow.name}</span>
-              </Link>
+                <div>Workflow:</div>
+            </Typography>      
+            <Typography variant="subtitle1">
+                <Link component={workflowRouterLink}>
+                    <div style={{ fontWeight: "bold" }}>{workflow.name}</div>
+                </Link>
             </Typography>
           </ExpansionPanelSummary>
           <ExpansionPanelDetails className={classes.details}>

@@ -2,7 +2,7 @@ import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { NRTriggerType } from "../../../../interfaces/INRTrigger";
-import { NRStage, NRDocument, NRTrigger, NRWorkflow } from "../../entity";
+import { NRDocument, NRStage, NRTrigger, NRWorkflow } from "../../entity";
 import { SlackNotificationService } from "./slack/SlackNotificationService";
 
 @Service()
@@ -21,18 +21,18 @@ export class NotificationService {
     }
 
     public sendDocumentMovedToStage(document: NRDocument, stage: NRStage) {
-        console.log('dc.id', document.id, 'st.id', stage.id);
+        console.log("dc.id", document.id, "st.id", stage.id);
         this.sendNotificationsAttachedToStage(stage, `Document "${document.name}" was moved to stage "${stage.name}".`);
     }
 
     private async sendNotificationsAttachedToWorkflow(workflow: NRWorkflow, message: string) {
-        const triggers = await this.triggerRepository.find({ where: { workflow: workflow } });
+        const triggers = await this.triggerRepository.find({ where: { workflow } });
 
         this.sendNotifications(triggers, message);
     }
 
     private async sendNotificationsAttachedToDocument(document: NRDocument, message: string) {
-        const triggers = await this.triggerRepository.find({ where: { document: document } });
+        const triggers = await this.triggerRepository.find({ where: { document } });
 
         this.sendNotifications(triggers, message);
     }

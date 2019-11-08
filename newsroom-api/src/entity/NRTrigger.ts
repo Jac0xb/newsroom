@@ -1,7 +1,7 @@
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { NRDocument } from "./NRDocument";
-import { NRWorkflow } from "./NRWorkflow";
 import { NRStage } from "./NRStage";
+import { NRWorkflow } from "./NRWorkflow";
 
 import { INRTrigger, NRTriggerType } from "../../../interfaces";
 
@@ -20,19 +20,19 @@ export class NRTrigger implements INRTrigger {
 
     @OneToOne(
         () => NRStage,
-        (stage) => stage.trigger
+        (stage) => stage.trigger,
     )
     public stage: NRStage;
 
     @OneToOne(
         () => NRDocument,
-        (document) => document.trigger
+        (document) => document.trigger,
     )
     public document: NRDocument;
 
     @OneToOne(
         () => NRWorkflow,
-        (workflow) => workflow.trigger
+        (workflow) => workflow.trigger,
     )
     public workflow: NRWorkflow;
 }
