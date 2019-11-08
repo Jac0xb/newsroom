@@ -3,7 +3,6 @@ import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import {  } from '@material-ui/core';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 import MaterialTable from 'material-table';
 import { NRDocument } from 'app/utils/models';
 
@@ -16,6 +15,7 @@ export namespace WorkflowStage {
         canEdit: boolean
         show: number
         index: number
+        documents: Array<NRDocument>
     }
     export interface State {
       openMenu: boolean
@@ -32,20 +32,6 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
         stageDocuments: [],
         anchorEl: null,
       }
-  }
-
-  componentDidMount() {
-    this.getDocuments();
-  }
-
-  // Get documents for this stage from database
-  async getDocuments() {
-    console.log("get " + this.props.id)
-		await axios.get("/api/documents/stage/" + this.props.id).then((response) => {
-      this.setState({ stageDocuments: response.data })
-      console.log(response.data)
-    });
-    console.log("get end")
   }
   
   handleMenuClick = (event: any) => {
@@ -66,8 +52,8 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
 
   render() {
 
-    const { classes, show, index } = this.props;
-    const { stageDocuments } = this.state;
+    const { classes, show, index, documents } = this.props;
+    const { } = this.state;
 
     return (
       <main className={classes.layout}>
@@ -80,7 +66,7 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
                   {title: "Assinged", field: "assinged"},
                   {title: "Due", field: "due"},
               ]}
-              data={stageDocuments}
+              data={documents}
               />
           : null
         }

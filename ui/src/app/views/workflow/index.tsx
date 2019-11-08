@@ -37,12 +37,11 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
     }
 
     // Method to get stages of current workflow from database
-    getStages() {
+    async getStages() {
         const id = this.props.match.params.id;
-        this.props.fetchSetStages(id);
-        this.props.fetchStageChange(0)
-        this.props.fetchWorkflow(id);
-
+        await this.props.fetchSetStages(id);
+        await this.props.fetchStageChange(0);
+        await this.props.fetchWorkflow(id);
     }
 
     // Method to get role of the user from database
@@ -139,7 +138,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                                         id={stage.id} 
                                         name={stage.name} 
                                         desc={stage.description} 
-                                        // documents={} TODO
+                                        documents={stage.documents}
                                     />
                                 </div>
                             ))}

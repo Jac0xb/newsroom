@@ -12,4 +12,7 @@ export namespace DocumentsAPI {
         return `/api/documents/${id}`;
     }
 
+    export function getStageDocuments(sid: number) {
+        return `/api/documents/stage/${sid}`;
+    }
 }

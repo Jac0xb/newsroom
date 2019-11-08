@@ -7,6 +7,7 @@ import { StagesAPI } from "app/api/stage";
 import { TriggersAPI } from "app/api/triggers";
 import { NRTriggerType } from "../../../../../interfaces";
 import { WorkflowsAPI } from "app/api/workflow";
+import { DocumentsAPI } from "app/api/document";
 
 export function dispatchSetPermissions(canEdit: boolean): any {
   return {
@@ -20,6 +21,12 @@ export function dispatchSetStages(wfId: number): any {
 
     var { data: stages } = await axios.get(WorkflowsAPI.getWorkflowStages(wfId));
     var { data: triggers } = await axios.get(TriggersAPI.getTriggers());
+
+    // Get all documents for a stage
+    await stages.forEach( async (stage: NRStage) => {
+      var { data: docs }  = await axios.get(DocumentsAPI.getStageDocuments(stage.id));
+      stage.documents = docs
+    });
 
     dispatch({
       type: ActionTypes.SET_STAGES,
@@ -112,7 +119,6 @@ export function dispatchDeleteStage(wfId: number, stageID: number) : any {
 
           // Get updated stages
           var { data: stages } = await axios.get(StagesAPI.getWorkflowStages(wfId))
-          console.log(stages)
 
           // dispatch updates
           dispatch({
@@ -157,15 +163,12 @@ export function dispatchAddTrigger(stage: NRStage, channel: string) : any {
   return async (dispatch: any) => {
 
       try {
-
-          // const t = new NRTrigger({ name: "trigger", workflows: [1] })
           // 
           var { data: t } = await axios.post(TriggersAPI.postNewTrigger(), {
             type: NRTriggerType.SLACK,
             channelName: channel,
             stage: stage
           })
-          console.log(t)
 
           // dispatch updates
           // dispatch({
@@ -192,6 +195,6 @@ export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, any>, ow
     fetchUpdateStage: bindActionCreators(dispatchUpdateStage, dispatch),
     fetchDeleteStage: bindActionCreators(dispatchDeleteStage, dispatch),
     fetchAddTrigger: bindActionCreators(dispatchAddTrigger, dispatch),
-    fetchWorkflow: bindActionCreators(fetchWorkflow, dispatch)
+    fetchWorkflow: bindActionCreators(fetchWorkflow, dispatch),
   }
 };

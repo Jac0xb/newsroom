@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import { Drawer, List, ListItem, ListItemText, TextField, FormLabel, FormControl, Button, FormControlLabel, Checkbox } from '@material-ui/core';
+import { Drawer, TextField, FormLabel, FormControl, Button, FormControlLabel, Checkbox } from '@material-ui/core';
 import { NRStage, NRWorkflow, NRTrigger } from 'app/utils/models';
-import { Link } from '@material-ui/icons';
 
 export namespace WorkflowMenuBar {
     export interface Props {
