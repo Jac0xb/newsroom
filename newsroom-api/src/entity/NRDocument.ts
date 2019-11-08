@@ -6,6 +6,7 @@ import {
     JoinColumn,
     JoinTable,
     ManyToOne,
+    OneToOne,
     OneToMany,
     PrimaryColumn,
     PrimaryGeneratedColumn,
@@ -19,6 +20,7 @@ import { NRDocComment } from "./NRDocComment";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
 import { NRWorkflow } from "./NRWorkflow";
+import { NRTrigger } from "./NRTrigger";
 
 @Entity(DBConstants.DOCU_TABLE)
 export class NRDocument implements INRDocument {
@@ -109,4 +111,11 @@ export class NRDocument implements INRDocument {
         (comments) => comments.document,
     )
     public comments: NRDocComment[];
+
+    @OneToOne(
+        (type) => NRTrigger,
+        (trigger) => trigger.document
+    )
+    @JoinColumn()
+    public trigger: NRTrigger;
 }

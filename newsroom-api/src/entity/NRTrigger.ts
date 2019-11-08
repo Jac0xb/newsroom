@@ -1,6 +1,7 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { NRDocument } from "./NRDocument";
 import { NRWorkflow } from "./NRWorkflow";
+import { NRStage } from "./NRStage";
 
 import { INRTrigger, NRTriggerType } from "../../../interfaces";
 
@@ -10,25 +11,28 @@ export class NRTrigger implements INRTrigger {
     public id: number;
 
     @Column()
-    public name: string;
-
-    @Column()
     public type: NRTriggerType;
 
     @Column({
-        nullable: true,
+        nullable: false,
     })
     public channelName: string;
 
-    @OneToMany(
-        () => NRDocument,
-        (document) => document.id,
+    @OneToOne(
+        () => NRStage,
+        (stage) => stage.trigger
     )
-    public documents: NRDocument[];
+    public stage: NRStage;
 
-    @OneToMany(
-        () => NRWorkflow,
-        (workflow) => workflow.id,
+    @OneToOne(
+        () => NRDocument,
+        (document) => document.trigger
     )
-    public workflows: NRWorkflow[];
+    public document: NRDocument;
+
+    @OneToOne(
+        () => NRWorkflow,
+        (workflow) => workflow.trigger
+    )
+    public workflow: NRWorkflow;
 }

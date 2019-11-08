@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable,
-         ManyToOne, OneToMany, PrimaryGeneratedColumn,
+         OneToOne, ManyToOne, OneToMany, PrimaryGeneratedColumn,
          UpdateDateColumn } from "typeorm";
 
 import { DBConstants } from "./DBConstants";
@@ -7,6 +7,7 @@ import { NRDocument } from "./NRDocument";
 import { NRStage } from "./NRStage";
 import { NRUser } from "./NRUser";
 import { NRWFPermission } from "./NRWFPermission";
+import { NRTrigger } from "./NRTrigger";
 
 import { INRWorkflow } from "../../../interfaces";
 
@@ -86,4 +87,11 @@ export class NRWorkflow implements INRWorkflow {
     )
     @JoinTable()
     public permissions: NRWFPermission[];
+
+    @OneToOne(
+        (type) => NRTrigger,
+        (trigger) => trigger.workflow
+    )
+    @JoinColumn()
+    public trigger: NRTrigger;
 }

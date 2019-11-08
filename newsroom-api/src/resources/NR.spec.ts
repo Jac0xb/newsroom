@@ -6,8 +6,9 @@ import { Connection, getRepository, IsNull, Repository } from "typeorm";
 import App from "../app";
 import { DBConstants, NRDocument, NRRole,
          NRStage, NRSTPermission, NRUser,
-         NRWFPermission, NRWorkflow } from "../entity";
+         NRTrigger, NRWFPermission, NRWorkflow } from "../entity";
 import { PermissionService } from "../services/PermissionService";
+import { NRTriggerType } from "../../../interfaces/INRTrigger";
 
 // TODO:
 //   - Test validators.
@@ -2768,6 +2769,77 @@ describe("35. GET /api/roles/:rid", () => {
         expect(resp).not.toBeUndefined();
         expect(resp.status).toEqual(200);
         console.log(resp.body);
+    });
+});
+
+
+describe("37. Triggers", () => {
+    it("I'm triggered", async () => {
+        const wfNum = 1;
+        const stNum = 3;
+        const dcNum = 1;
+        const grpName = "g";
+
+        const wfs = await reqWFSGetResps(adminUsr, 200, wfNum, "WRITE", null);
+        await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
+        await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
+
+        let triggers = [];
+        let trid = 1;
+
+        // Add a trigger to all of the stages.
+        const sts = wfs[0].stages.sort((a: NRStage, b: NRStage) => a.id - b.id);
+        for (const st of wfs[0].stages) {
+            const tr = new NRTrigger();
+            tr.id = trid;
+            trid++;
+            tr.channelName = "general";
+            tr.type = NRTriggerType.SLACK;
+            tr.stage = st;
+
+            triggers.push(tr);
+
+            const resp = await request(app)
+                                .post(`/api/triggers`)
+                                .send(tr)
+                                .set("User-Id", `${usr1.id}`);
+
+            expect(resp).not.toBeUndefined();
+            expect(resp.status).toEqual(200);
+        }
+
+        console.log("1 SENDING STAGE=", triggers[0].stage.id, "TID", triggers[0].id);
+
+        let resp = await request(app)
+                            .put(`/api/documents/${wfs[0].stages[0].documents[0].id}/next`)
+                            .set("User-Id", `${adminUsr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(200);
+
+        triggers[0].channelName = "test";
+
+        resp = await request(app)
+                     .put(`/api/triggers`)
+                     .send(triggers[0])
+                     .set("User-Id", `${usr1.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(200);
+
+        console.log("SENDING STAGE=", triggers[0].stage.id, "TID", triggers[0].id);
+
+        resp = await request(app)
+                     .put(`/api/documents/${triggers[0].stage.documents[0].id}/next`)
+                     .set("User-Id", `${adminUsr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(200);
+
+        resp = await request(app)
+                     .delete(`/api/triggers`)
+                     .send(triggers[0])
+                     .set("User-Id", `${usr1.id}`);
     });
 });
 

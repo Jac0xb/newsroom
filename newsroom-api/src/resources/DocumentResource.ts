@@ -471,6 +471,9 @@ export class DocumentResource {
 
         await this.dcRep.save(cd);
         await this.dcServ.appendPermToDC(cd, cd.stage, user);
+
+        await this.notifServ.sendDocumentMovedToStage(cd, cd.stage);
+
         return cd;
     }
 

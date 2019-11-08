@@ -6,14 +6,6 @@ import { NRTrigger } from "../entity";
 export function createTriggerValidator(req: express.Request): void {
     const trigger = req.body as NRTrigger;
 
-    if (!trigger.name) {
-        throw new Errors.BadRequestError("Trigger name not present.");
-    }
-
-    if (trigger.name.length > 256) {
-        throw new Errors.BadRequestError("Trigger name length is too long, max 256.");
-    }
-
     if (trigger.type === NRTriggerType.SLACK) {
         if (!trigger.channelName) {
             throw new Errors.BadRequestError("Channel name is required for Slack Trigger.");
@@ -30,12 +22,6 @@ export function createTriggerValidator(req: express.Request): void {
 
 export function updateTriggerValidator(req: express.Request): void {
     const trigger = req.body as NRTrigger;
-
-    if (trigger.name) {
-        if (trigger.name.length > 256) {
-            throw new Errors.BadRequestError("Trigger name length is too long, max 256.");
-        }
-    }
 
     if (trigger.type === NRTriggerType.SLACK) {
         if (trigger.channelName) {
