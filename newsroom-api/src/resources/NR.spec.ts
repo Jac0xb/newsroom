@@ -2794,21 +2794,17 @@ describe("37. Triggers", () => {
             trid++;
             tr.channelName = "general";
             tr.type = NRTriggerType.SLACK;
-            tr.stage = st;
 
             triggers.push(tr);
 
-            // tslint:disable-next-line: no-shadowed-variable
-            const resp = await request(app)
-                                .post(`/api/triggers`)
+            const asdf = await request(app)
+                                .post(`/api/triggers/${st.id}`)
                                 .send(tr)
-                                .set("User-Id", `${usr1.id}`);
+                                .set("User-Id", `${adminUsr.id}`);
 
-            expect(resp).not.toBeUndefined();
-            expect(resp.status).toEqual(200);
+            expect(asdf).not.toBeUndefined();
+            expect(asdf.status).toEqual(200);
         }
-
-        console.log("1 SENDING STAGE=", triggers[0].stage.id, "TID", triggers[0].id);
 
         let resp = await request(app)
                             .put(`/api/documents/${wfs[0].stages[0].documents[0].id}/next`)
@@ -2820,26 +2816,35 @@ describe("37. Triggers", () => {
         triggers[0].channelName = "test";
 
         resp = await request(app)
-                     .put(`/api/triggers`)
+                     .put(`/api/triggers/${wfs[0].stages[0].id}`)
                      .send(triggers[0])
-                     .set("User-Id", `${usr1.id}`);
-
-        expect(resp).not.toBeUndefined();
-        expect(resp.status).toEqual(200);
-
-        console.log("SENDING STAGE=", triggers[0].stage.id, "TID", triggers[0].id);
-
-        resp = await request(app)
-                     .put(`/api/documents/${triggers[0].stage.documents[0].id}/next`)
                      .set("User-Id", `${adminUsr.id}`);
 
         expect(resp).not.toBeUndefined();
         expect(resp.status).toEqual(200);
 
         resp = await request(app)
-                     .delete(`/api/triggers`)
+                     .put(`/api/documents/${wfs[0].stages[0].documents[0].id}/next`)
+                     .set("User-Id", `${adminUsr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(200);
+
+        resp = await request(app)
+                     .delete(`/api/triggers/${wfs[0].stages[0].id}`)
                      .send(triggers[0])
                      .set("User-Id", `${usr1.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(403);
+
+        resp = await request(app)
+                     .delete(`/api/triggers/${wfs[0].stages[0].id}`)
+                     .send(triggers[0])
+                     .set("User-Id", `${adminUsr.id}`);
+
+        expect(resp).not.toBeUndefined();
+        expect(resp.status).toEqual(204);
     });
 });
 

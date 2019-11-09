@@ -117,8 +117,6 @@ export class DocumentResource {
         document.creator = await this.usServ.getUser(user.id);
         await this.dcServ.createGoogleDocument(user, document);
 
-        await this.notifServ.sendDocumentCreatedOnWorkflowNotifications(document, wf);
-
         return await this.dcRep.save(document);
     }
 
@@ -530,6 +528,9 @@ export class DocumentResource {
 
         await this.dcRep.save(cd);
         await this.dcServ.appendPermToDC(cd, cd.stage, user);
+
+        await this.notifServ.sendDocumentMovedToStage(cd, cd.stage);
+
         return cd;
     }
 

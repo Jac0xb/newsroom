@@ -84,6 +84,7 @@
     },
     "testMatch": [
       "**/?(*.)(spec|test).ts?(x)"
-    ]
+    ],
+    "testEnvironment": "node"
   }
 }

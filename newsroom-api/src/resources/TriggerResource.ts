@@ -1,25 +1,35 @@
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { DELETE, Errors, GET, Path, POST, PreProcessor, PUT } from "typescript-rest";
+import { PathParam, Context, ServiceContext, DELETE, Errors, GET, Path, POST, PreProcessor, PUT } from "typescript-rest";
 import { Tags } from "typescript-rest-swagger";
-import { NRTrigger } from "../entity";
+import { NRStage, NRTrigger } from "../entity";
 import { DocumentService } from "../services/DocumentService";
 import { WorkflowService } from "../services/WorkflowService";
+import { PermissionService } from "../services/PermissionService";
 import { createTriggerValidator, updateTriggerValidator } from "../validators/TriggerValidators";
 
 @Service()
 @Path("/api/triggers")
 @Tags("Triggers")
 export class TriggerResource {
+    @Context
+    private servCont: ServiceContext;
+
     @InjectRepository(NRTrigger)
     private triggerRepository: Repository<NRTrigger>;
+
+    @InjectRepository(NRStage)
+    private stRep: Repository<NRStage>;
 
     @Inject()
     private documentService: DocumentService;
 
     @Inject()
-    private workflowService: WorkflowService;
+    private wfServ: WorkflowService;
+
+    @Inject()
+    private permServ: PermissionService;
 
     @GET
     public async getAllTriggers(): Promise<NRTrigger[]> {
@@ -28,20 +38,38 @@ export class TriggerResource {
         return this.triggerRepository.find();
     }
 
+    @GET
+    @Path('/:sid')
+    public async getTrigger(@PathParam('sid') sid: number): Promise<NRTrigger> {
+        console.log("CALLED getTrigger");
+
+        // Verify stage exists.
+        await this.wfServ.getStage(sid);
+
+        const st = await this.stRep.findOne(sid, { relations: ['trigger'] });
+
+        return st.trigger;
+    }
+
     /**
      *  Required params: trigger.type: string ("NRSlackTrigger"), channelName: string
-     *
-     *  Optional params: trigger.workflows: [{id: number}], trigger.documents: [{id: number}]
-     *                   trigger.stages: [{id: number}]
+     *                   trigger.stage: NRStage
      *
      * @param trigger The new trigger.
      */
     @POST
+    @Path('/:sid')
     @PreProcessor(createTriggerValidator)
-    public async createNewTrigger(trigger: NRTrigger): Promise<NRTrigger> {
+    public async createNewTrigger(@PathParam('sid') sid: number, trigger: NRTrigger): Promise<NRTrigger> {
         console.log("CALLED createNewTrigger");
 
-        await this.validateTriggerWFSTDC(trigger);
+        const user = await this.servCont.user();
+        await this.wfServ.getStage(sid);
+
+        const st = await this.stRep.findOne(sid, { relations: ['workflow'] });
+        await this.permServ.checkWFWritePermissions(user, st.workflow);
+
+        trigger.stage = st;
 
         return await this.triggerRepository.save(trigger);
     }
@@ -55,11 +83,16 @@ export class TriggerResource {
      * @param trigger The new trigger.
      */
     @PUT
+    @Path('/:sid')
     @PreProcessor(updateTriggerValidator)
-    public async updateTrigger(trigger: NRTrigger): Promise<NRTrigger> {
+    public async updateTrigger(@PathParam('sid') sid: number, trigger: NRTrigger): Promise<NRTrigger> {
         console.log("CALLED updateTrigger");
 
-        await this.validateTriggerWFSTDC(trigger);
+        const user = await this.servCont.user();
+        await this.wfServ.getStage(sid);
+
+        const st = await this.stRep.findOne(sid, { relations: ['workflow'] });
+        await this.permServ.checkWFWritePermissions(user, st.workflow);
 
         const currentTrigger = await this.findTrigger(trigger.id);
 
@@ -67,26 +100,20 @@ export class TriggerResource {
             currentTrigger.channelName = trigger.channelName;
         }
 
-//        if (trigger.document) {
-//            currentTrigger.document = trigger.document;
-//        }
-//
-//        if (trigger.workflow) {
-//            currentTrigger.workflow = trigger.workflow;
-//        }
-//
-//        if (trigger.stage) {
-//            currentTrigger.stage = trigger.stage;
-//        }
-
         return await this.triggerRepository.save(trigger);
     }
 
     @DELETE
-    public async deleteTrigger(trigger: NRTrigger) {
+    @Path('/:sid')
+    public async deleteTrigger(@PathParam('sid') sid: number) {
         console.log("CALLED deleteTrigger");
 
-        await this.triggerRepository.remove(trigger);
+        const user = await this.servCont.user();
+        await this.wfServ.getStage(sid);
+
+        const st = await this.stRep.findOne(sid, { relations: ['workflow', 'trigger'] });
+        await this.permServ.checkWFWritePermissions(user, st.workflow);
+        await this.triggerRepository.remove(st.trigger);
     }
 
     private async findTrigger(id: number): Promise<NRTrigger> {
@@ -114,13 +141,13 @@ export class TriggerResource {
 
     private async validateTriggerWorkflowIfPresent(trigger: NRTrigger) {
         if (trigger.workflow) {
-            trigger.workflow = await this.workflowService.getWorkflow(trigger.workflow.id);
+            trigger.workflow = await this.wfServ.getWorkflow(trigger.workflow.id);
         }
     }
 
     private async validateTriggerStageIfPresent(trigger: NRTrigger) {
         if (trigger.stage) {
-            trigger.stage = await this.workflowService.getStage(trigger.stage.id);
+            trigger.stage = await this.wfServ.getStage(trigger.stage.id);
         }
     }
 }
