@@ -2783,11 +2783,19 @@ describe("37. Triggers", () => {
         await addStagesToWFS(adminUsr, wfs, stNum, 200, "WRITE", "RAND", false, "ST");
         await addDocsToWFSStages(adminUsr, wfs, dcNum, 200);
 
+        const sts = wfs[0].stages.sort((a: NRStage, b: NRStage) => a.id - b.id);
+        const rp = await request(app)
+                            .get(`/api/triggers/${wfs[0].stages[0].id}`)
+                            .set("User-Id", `${adminUsr.id}`);
+
+        console.log('BODY IS', rp.body);
+        console.log('TEXT IS', rp.text);
+        console.log('STATUS IS', rp.status);
+
         const triggers = [];
         let trid = 1;
 
         // Add a trigger to all of the stages.
-        const sts = wfs[0].stages.sort((a: NRStage, b: NRStage) => a.id - b.id);
         for (const st of wfs[0].stages) {
             const tr = new NRTrigger();
             tr.id = trid;

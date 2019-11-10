@@ -48,6 +48,10 @@ export class TriggerResource {
 
         const st = await this.stRep.findOne(sid, { relations: ["trigger"] });
 
+        if (st.trigger === null) {
+            return undefined;
+        }
+
         return st.trigger;
     }
 
