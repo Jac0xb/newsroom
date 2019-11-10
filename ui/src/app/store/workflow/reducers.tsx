@@ -8,7 +8,6 @@ const initialState: WorkflowState = {
   canEdit: false,
   workflow: undefined,
   currentStage: new NRStage({id: 0, name: "", description: ""}),
-  trigger: new NRTrigger({channelName: ''}),
 };
 
 export function workflowReducer( state = initialState, action: any): WorkflowState {
@@ -23,15 +22,12 @@ export function workflowReducer( state = initialState, action: any): WorkflowSta
       return { ...state, stages: action.stages, currentStage: action.currentStage };
     }
     case ActionTypes.SET_STAGES: {
-      return { ...state, stages: action.stages, trigger: action.trigger };
+      return { ...state, stages: action.stages };
     }
     case ActionTypes.DELETE_STAGE: {
       return { ...state, stages: action.stages, currentStage:  action.currentStage };
     }
     case ActionTypes.EDIT_STAGE: {
-      if(action.name === "trigger")
-        return { ...state, trigger: new NRTrigger({...state.trigger, channelName: action.newValue}) }
-      // else
       return { ...state, currentStage: {...state.currentStage, [action.name]: action.newValue} };
     }
     case ActionTypes.EDIT_FLASH: {

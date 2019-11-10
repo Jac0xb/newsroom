@@ -2,7 +2,7 @@ import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import { Drawer, TextField, FormLabel, FormControl, Button, FormControlLabel, Checkbox } from '@material-ui/core';
-import { NRStage, NRWorkflow, NRTrigger } from 'app/utils/models';
+import { NRStage, NRWorkflow } from 'app/utils/models';
 
 export namespace WorkflowMenuBar {
     export interface Props {
@@ -14,7 +14,6 @@ export namespace WorkflowMenuBar {
         onAddStage: Function
         onAddTriggerClick: Function
         workflow?: NRWorkflow
-        trigger?: NRTrigger
     }
     export interface State {
 
@@ -31,7 +30,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
 
     render() {
 
-        const { classes, stage, workflow, trigger } = this.props;
+        const { classes, stage, workflow } = this.props;
         const {  } = this.state;
 
         if (!workflow || (workflow && workflow.permission == 0)) {
@@ -73,8 +72,8 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                 <FormControlLabel
                     control={
                     <Checkbox
-                        checked={trigger ? true: false}
-                        onChange={() => this.props.onAddTriggerClick(this.props.stage, this.props.trigger ? this.props.trigger.channelName : "general")}
+                        checked={stage.trigger ? true: false}
+                        onChange={() => this.props.onAddTriggerClick(this.props.stage, this.props.stage.trigger ? this.props.stage.trigger.channelName : "general")}
                         value="trigger"
                         color="primary"
                     />
@@ -87,7 +86,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                     <TextField
                         id="desc"
                         className={classes.textField}
-                        value={trigger ? trigger.channelName : ""}
+                        value={stage.trigger ? stage.trigger.channelName : ""}
                         onChange={(event) => this.props.onTextChange(stage.id, 'trigger', event.target.value)}
                         margin="normal"
                         variant="outlined"

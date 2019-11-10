@@ -1,10 +1,11 @@
 export namespace TriggersAPI {
 
-    export function postNewTrigger() {
-        return '/api/triggers';
+    // This applies to post/get/put/delete
+    export function triggerAPI(sid: number) {
+        return `/api/triggers/${sid}`;
     }
 
-    export function getTriggers() {
+    export function getAllTriggers() {
         return '/api/triggers';
     }
 }

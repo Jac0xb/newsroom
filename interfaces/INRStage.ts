@@ -1,5 +1,6 @@
 import { INRDocument } from "./INRDocument";
 import { INRSTPermission } from "./INRSTPermission";
+import { INRTrigger } from "./INRTrigger";
 import { INRUser } from "./INRUser";
 import { INRWorkflow } from "./INRWorkflow";
 
@@ -26,4 +27,6 @@ export interface INRStage {
     documents: INRDocument[];
 
     permissions: INRSTPermission[];
+
+    trigger: INRTrigger;
 }

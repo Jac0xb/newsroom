@@ -7,7 +7,6 @@ export interface WorkflowState {
   canEdit: boolean
   currentStage: NRStage
   workflow?: NRWorkflow
-  trigger?: NRTrigger
 }
   
 // Describing the different ACTION NAMES available

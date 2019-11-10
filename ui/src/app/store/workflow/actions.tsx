@@ -1,7 +1,7 @@
 import { ActionTypes, WorkflowDispatchers } from "./types";
 import { bindActionCreators } from "redux";
 import { ThunkDispatch } from "redux-thunk";
-import { NRStage, NRTrigger, NRWorkflow } from "app/utils/models";
+import { NRStage, NRWorkflow } from "app/utils/models";
 import axios from 'axios';
 import { StagesAPI } from "app/api/stage";
 import { TriggersAPI } from "app/api/triggers";
@@ -20,18 +20,27 @@ export function dispatchSetStages(wfId: number): any {
   return async (dispatch: any) => {
 
     var { data: stages } = await axios.get(WorkflowsAPI.getWorkflowStages(wfId));
-    var { data: triggers } = await axios.get(TriggersAPI.getTriggers());
 
-    // Get all documents for a stage
-    await stages.forEach( async (stage: NRStage) => {
-      var { data: docs }  = await axios.get(DocumentsAPI.getStageDocuments(stage.id));
-      stage.documents = docs
-    });
+    // Get all documents/triggers for a stage
+    for (var i = 0; i < stages.length; i++){
+      // Docs
+      var { data: docs }  = await axios.get(DocumentsAPI.getStageDocuments(stages[i].id));
+      stages[i].documents = docs
 
+      // Triggers
+      try {
+        var { data: trigger } = await axios.get(TriggersAPI.triggerAPI(stages[i].id));
+        stages[i].trigger = trigger;
+      } catch (error) {
+        // todo: backend should not return error on non-existing triggers for a stage
+        console.log(error)
+      }
+    }
+
+    //console.log(stages)
     dispatch({
       type: ActionTypes.SET_STAGES,
       stages: stages,
-      trigger: triggers ? triggers[0] : undefined,
     });
   };
 }
@@ -164,12 +173,12 @@ export function dispatchAddTrigger(stage: NRStage, channel: string) : any {
 
       try {
           // 
-          var { data: t } = await axios.post(TriggersAPI.postNewTrigger(), {
+          var { data: t } = await axios.post(TriggersAPI.triggerAPI(stage.id), {
             type: NRTriggerType.SLACK,
             channelName: channel,
             stage: stage
           })
-
+          console.log(t)
           // dispatch updates
           // dispatch({
           // });
