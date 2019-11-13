@@ -2788,9 +2788,9 @@ describe("37. Triggers", () => {
                             .get(`/api/triggers/${wfs[0].stages[0].id}`)
                             .set("User-Id", `${adminUsr.id}`);
 
-        console.log('BODY IS', rp.body);
-        console.log('TEXT IS', rp.text);
-        console.log('STATUS IS', rp.status);
+        console.log("BODY IS", rp.body);
+        console.log("TEXT IS", rp.text);
+        console.log("STATUS IS", rp.status);
 
         const triggers = [];
         let trid = 1;

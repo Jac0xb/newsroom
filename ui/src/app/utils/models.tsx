@@ -60,7 +60,7 @@ export class NRStage implements INRStage {
     workflow: INRWorkflow;
     documents: INRDocument[];
     permissions: INRSTPermission[];
-    trigger: NRTrigger;
+    trigger: INRTrigger;
 
     constructor(init?: Partial<NRStage>) {
         Object.assign(this, init);

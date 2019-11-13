@@ -104,6 +104,22 @@ export function dispatchUpdateStage(wfId: number, updatedStage: NRStage) : any {
           // Get updated stages
           var { data: stages } = await axios.get(StagesAPI.getWorkflowStages(wfId))
 
+          // Get all documents/triggers for a stage
+          for (var i = 0; i < stages.length; i++){
+            // Docs
+            var { data: docs }  = await axios.get(DocumentsAPI.getStageDocuments(stages[i].id));
+            stages[i].documents = docs
+
+            // Triggers
+            try {
+              var { data: trigger } = await axios.get(TriggersAPI.triggerAPI(stages[i].id));
+              stages[i].trigger = trigger;
+            } catch (error) {
+              // todo: backend should not return error on non-existing triggers for a stage
+              console.log(error)
+            }
+          }
+
           // dispatch updates
           dispatch({
               type: ActionTypes.SET_STAGES, 
@@ -171,16 +187,39 @@ export function dispatchAddTrigger(stage: NRStage, channel: string) : any {
 
   return async (dispatch: any) => {
 
+      console.log(stage)
       try {
-          // 
-          var { data: t } = await axios.post(TriggersAPI.triggerAPI(stage.id), {
+          // Add new trigger for stage
+          await axios.post(TriggersAPI.triggerAPI(stage.id), {
             type: NRTriggerType.SLACK,
             channelName: channel,
             stage: stage
           })
-          console.log(t)
-          // dispatch updates
+
+          // // Get updated stages
+          // var { data: stages } = await axios.get(StagesAPI.getWorkflowStages(stage.workflow.id))
+
+          // // Get all documents/triggers for a stage
+          // for (var i = 0; i < stages.length; i++){
+          //   // Docs
+          //   var { data: docs }  = await axios.get(DocumentsAPI.getStageDocuments(stages[i].id));
+          //   stages[i].documents = docs
+
+          //   // Triggers
+          //   try {
+          //     var { data: trigger } = await axios.get(TriggersAPI.triggerAPI(stages[i].id));
+          //     stages[i].trigger = trigger;
+          //   } catch (error) {
+          //     // todo: backend should not return error on non-existing triggers for a stage
+          //     console.log(error)
+          //   }
+          // }
+
+          // console.log(stages)
+          // // dispatch updates
           // dispatch({
+          //     type: ActionTypes.SET_STAGES, 
+          //     stages: stages 
           // });
 
       }

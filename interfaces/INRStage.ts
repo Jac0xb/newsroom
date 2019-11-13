@@ -2,7 +2,7 @@ import { INRDocument } from "./INRDocument";
 import { INRSTPermission } from "./INRSTPermission";
 import { INRUser } from "./INRUser";
 import { INRWorkflow } from "./INRWorkflow";
-// import { INRTrigger } from "./INRTrigger";
+import { INRTrigger } from "./INRTrigger";
 
 export interface INRStage {
 
@@ -28,5 +28,5 @@ export interface INRStage {
 
     permissions: INRSTPermission[];
 
-    //trigger: INRTrigger;
+    trigger: INRTrigger;
 }

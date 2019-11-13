@@ -37,6 +37,9 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
             return <div></div>
         }
 
+        //
+        stage.workflow = workflow;
+        
         return (
         <main className={classes.layout}>
              <Drawer
