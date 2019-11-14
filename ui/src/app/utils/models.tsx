@@ -21,8 +21,8 @@ export class NRRole implements INRRole {
     created: Date;
     lastUpdated: Date;
     users: INRUser[];
-    wfpermissions: INRWFPermission[];
-    stpermissions: INRSTPermission[];
+    wfpermissions: NRWFPermission[];
+    stpermissions: NRSTPermission[];
 
     constructor(init?: Partial<NRRole>) {
         Object.assign(this, init);
@@ -39,7 +39,7 @@ export class NRUser implements INRUser {
     accessToken: string;
     created: Date;
     lastUpdated: Date;
-    roles: INRRole[];
+    roles: NRRole[];
     admin: string;
 
     constructor(init?: Partial<NRUser>) {
@@ -56,11 +56,11 @@ export class NRStage implements INRStage {
     created: Date;
     lastUpdated: Date;
     permission: number;
-    creator: INRUser;
-    workflow: INRWorkflow;
-    documents: INRDocument[];
-    permissions: INRSTPermission[];
-    trigger: INRTrigger;
+    creator: NRUser;
+    workflow: NRWorkflow;
+    documents: NRDocument[];
+    permissions: NRSTPermission[];
+    trigger: NRTrigger;
 
     constructor(init?: Partial<NRStage>) {
         Object.assign(this, init);
@@ -77,9 +77,9 @@ export class NRDocument implements INRDocument {
     lastUpdated: Date;
     permission: number;
     creator: INRUser;
-    workflow: INRWorkflow;
-    stage: INRStage;
-    comments: INRDocComment[];
+    workflow: NRWorkflow;
+    stage: NRStage;
+    comments: NRDocComment[];
 
     constructor(init?: Partial<NRDocument>) {
         Object.assign(this, init);
@@ -92,7 +92,7 @@ export class NRDocComment implements INRDocComment {
     text: string;
     created: Date;
     lastUpdated: Date;
-    document: INRDocument;
+    document: NRDocument;
 
     constructor(init?: Partial<NRDocComment>) {
         Object.assign(this, init);
@@ -108,9 +108,9 @@ export class NRWorkflow implements INRWorkflow {
     lastUpdated: Date;
     permission: number;
     creator: INRUser;
-    documents: INRDocument[];
-    stages: INRStage[];
-    permissions: INRWFPermission[];
+    documents: NRDocument[];
+    stages: NRStage[];
+    permissions: NRWFPermission[];
 
     constructor(init?: Partial<NRWorkflow>) {
         Object.assign(this, init);
@@ -121,8 +121,8 @@ export class NRWFPermission implements INRWFPermission {
 
     id: number;
     access: number;
-    workflow: INRWorkflow;
-    role: INRRole;
+    workflow: NRWorkflow;
+    role: NRRole;
 
     public constructor (init?: Partial<NRWFPermission>) {
         Object.assign(this, init);
@@ -133,8 +133,8 @@ export class NRSTPermission implements INRSTPermission {
 
     id: number;
     access: number;
-    stage: INRStage;
-    role: INRRole;
+    stage: NRStage;
+    role: NRRole;
 
     public constructor(init?: Partial<NRSTPermission>) {
         Object.assign(this, init);
@@ -146,9 +146,9 @@ export class NRTrigger implements INRTrigger {
     id: number;
     type: NRTriggerType;
     channelName: string;
-    stage: INRStage;
-    document: INRDocument;
-    workflow: INRWorkflow;
+    stage: NRStage;
+    document: NRDocument;
+    workflow: NRWorkflow;
 
     public constructor(init?: Partial<NRTrigger>) {
         Object.assign(this, init);
