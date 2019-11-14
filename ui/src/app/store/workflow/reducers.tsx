@@ -28,6 +28,10 @@ export function workflowReducer( state = initialState, action: any): WorkflowSta
       return { ...state, stages: action.stages, currentStage:  action.currentStage };
     }
     case ActionTypes.EDIT_STAGE: {
+      if (action.name === "trigger"){
+        return { ...state, currentStage: {...state.currentStage, trigger: { ...state.currentStage.trigger, channelName: action.newValue}} };
+      }
+
       return { ...state, currentStage: {...state.currentStage, [action.name]: action.newValue} };
     }
     case ActionTypes.EDIT_FLASH: {

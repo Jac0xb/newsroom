@@ -322,7 +322,8 @@ export class WorkflowResource {
         const wf = await this.wfServ.getWorkflow(wid);
 
         try {
-            const stages = await this.stRep.find({ where: { workflow: wf }});
+            const stages = await this.stRep.find({ relations: ["trigger"],
+                                                   where: { workflow: wf }});
 
             // Return them in ascending sequence order.
             stages.sort((a: NRStage, b: NRStage) => a.sequenceId - b.sequenceId);

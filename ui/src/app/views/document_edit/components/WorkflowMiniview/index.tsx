@@ -51,7 +51,6 @@ class WorkflowMiniView extends React.Component<WorkflowMiniView.Props, WorkflowM
           <ExpansionPanelDetails className={classes.details}>
             <Stepper orientation="vertical" className={classes.stepper} activeStep={currentStage}>
               {stages.map((stage: NRStage) => {
-                  console.log(stage)
                 return (
                   <Step key={stage.id}>
                     <StepLabel>

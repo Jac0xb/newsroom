@@ -15,6 +15,7 @@ export const ActionTypes = {
   ADD_STAGE: "@@workflow/ADD_STAGE",
   EDIT_STAGE: "@@workflow/EDIT_STAGE",
   SET_STAGES: "@@workflow/SET_STAGES",
+  SET_STAGE: "@@workflow/SET_STAGE",
   EDIT_FLASH: "@@workflow/EDIT_FLASH",
   STAGE_CHANGE: "@@workflow/STAGE_CHANGE",
   DELETE_STAGE: "@@workflow/DELETE_STAGE",
@@ -34,6 +35,7 @@ export interface WorkflowDispatchers {
   fetchStageChange: (seqID: number) => any;
   fetchDeleteStage: (wfId: number, stageID: number) => any;
   fetchAddTrigger: (stage: NRStage, channel: string) => any;
+  fetchDeleteTrigger: (stage: NRStage) => any;
   fetchWorkflow: (id: number) => any;
 }
 

@@ -26,18 +26,8 @@ export function dispatchSetStages(wfId: number): any {
       // Docs
       var { data: docs }  = await axios.get(DocumentsAPI.getStageDocuments(stages[i].id));
       stages[i].documents = docs
-
-      // Triggers
-      try {
-        var { data: trigger } = await axios.get(TriggersAPI.triggerAPI(stages[i].id));
-        stages[i].trigger = trigger;
-      } catch (error) {
-        // todo: backend should not return error on non-existing triggers for a stage
-        console.log(error)
-      }
     }
 
-    //console.log(stages)
     dispatch({
       type: ActionTypes.SET_STAGES,
       stages: stages,
@@ -99,31 +89,22 @@ export function dispatchUpdateStage(wfId: number, updatedStage: NRStage) : any {
 
       try {
           // updated a given stage
-          await axios.put(StagesAPI.updateStage(wfId, updatedStage.id), updatedStage)
+          await axios.put(StagesAPI.updateStage(wfId, updatedStage.id), updatedStage);
+
+          // Update trigger
+          await axios.put(TriggersAPI.triggerAPI(updatedStage.id), {
+            type: NRTriggerType.SLACK,
+            channelName: updatedStage.trigger.channelName,
+            stage: updatedStage
+          });
 
           // Get updated stages
           var { data: stages } = await axios.get(StagesAPI.getWorkflowStages(wfId))
 
-          // Get all documents/triggers for a stage
-          for (var i = 0; i < stages.length; i++){
-            // Docs
-            var { data: docs }  = await axios.get(DocumentsAPI.getStageDocuments(stages[i].id));
-            stages[i].documents = docs
-
-            // Triggers
-            try {
-              var { data: trigger } = await axios.get(TriggersAPI.triggerAPI(stages[i].id));
-              stages[i].trigger = trigger;
-            } catch (error) {
-              // todo: backend should not return error on non-existing triggers for a stage
-              console.log(error)
-            }
-          }
-
           // dispatch updates
           dispatch({
               type: ActionTypes.SET_STAGES, 
-              stages: stages 
+              stages: stages,
           });
 
       }
@@ -160,34 +141,10 @@ export function dispatchDeleteStage(wfId: number, stageID: number) : any {
   };
 }
 
-export function fetchWorkflow(id: number) : any {
-
-    return async (dispatch: any) => {
-        
-        dispatch({ type: ActionTypes.FETCH_REQUEST })
-
-        try {
-            
-            var { data: workflow } = await axios.get<NRWorkflow>(WorkflowsAPI.getWorkflow(id));
-        
-            dispatch({
-                type: ActionTypes.WORKFLOW_SUCCESS,
-                payload: workflow
-            });
-
-        }
-        catch(err) {
-           dispatch({ type: ActionTypes.FETCH_FAILURE });
-        }
-    };
-}
-
-
 export function dispatchAddTrigger(stage: NRStage, channel: string) : any {
 
   return async (dispatch: any) => {
 
-      console.log(stage)
       try {
           // Add new trigger for stage
           await axios.post(TriggersAPI.triggerAPI(stage.id), {
@@ -196,36 +153,71 @@ export function dispatchAddTrigger(stage: NRStage, channel: string) : any {
             stage: stage
           })
 
-          // // Get updated stages
-          // var { data: stages } = await axios.get(StagesAPI.getWorkflowStages(stage.workflow.id))
+          // Get updated stages
+          var { data: stages } = await axios.get(StagesAPI.getWorkflowStages(stage.workflow.id))
 
-          // // Get all documents/triggers for a stage
-          // for (var i = 0; i < stages.length; i++){
-          //   // Docs
-          //   var { data: docs }  = await axios.get(DocumentsAPI.getStageDocuments(stages[i].id));
-          //   stages[i].documents = docs
+          // dispatch updates
+          await dispatch({
+              type: ActionTypes.SET_STAGES, 
+              stages: stages,
+          });
 
-          //   // Triggers
-          //   try {
-          //     var { data: trigger } = await axios.get(TriggersAPI.triggerAPI(stages[i].id));
-          //     stages[i].trigger = trigger;
-          //   } catch (error) {
-          //     // todo: backend should not return error on non-existing triggers for a stage
-          //     console.log(error)
-          //   }
-          // }
-
-          // console.log(stages)
-          // // dispatch updates
-          // dispatch({
-          //     type: ActionTypes.SET_STAGES, 
-          //     stages: stages 
-          // });
+          dispatch({
+            type: ActionTypes.STAGE_CHANGE, 
+            seqID: stage.sequenceId,
+        });
 
       }
       catch(err) {
         console.log(err)
         dispatch({ type: ActionTypes.EDIT_FLASH, flash: "You lack permissions to add triggers to this stage." });
+      }
+  };
+}
+
+export function dispatchDeleteTrigger(stage: NRStage) : any {
+
+  return async (dispatch: any) => {
+
+      try {
+          // Delete trigger for stage
+          await axios.delete(TriggersAPI.triggerAPI(stage.id))
+
+          // Get updated stages
+          var { data: stages } = await axios.get(StagesAPI.getWorkflowStages(stage.workflow.id))
+
+          // dispatch updates
+          await dispatch({
+              type: ActionTypes.SET_STAGES, 
+              stages: stages,
+          });
+
+          dispatch({
+            type: ActionTypes.STAGE_CHANGE, 
+            seqID: stage.sequenceId,
+        });
+
+      }
+      catch(err) {
+        console.log(err)
+        dispatch({ type: ActionTypes.EDIT_FLASH, flash: "You lack permissions to delete triggers to this stage." });
+      }
+  };
+}
+
+export function fetchWorkflow(id: number) : any {
+
+  return async (dispatch: any) => {
+      dispatch({ type: ActionTypes.FETCH_REQUEST })
+      try {
+          var { data: workflow } = await axios.get<NRWorkflow>(WorkflowsAPI.getWorkflow(id));
+          dispatch({
+              type: ActionTypes.WORKFLOW_SUCCESS,
+              payload: workflow
+          });
+      }
+      catch(err) {
+         dispatch({ type: ActionTypes.FETCH_FAILURE });
       }
   };
 }
@@ -243,6 +235,7 @@ export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, any>, ow
     fetchUpdateStage: bindActionCreators(dispatchUpdateStage, dispatch),
     fetchDeleteStage: bindActionCreators(dispatchDeleteStage, dispatch),
     fetchAddTrigger: bindActionCreators(dispatchAddTrigger, dispatch),
+    fetchDeleteTrigger: bindActionCreators(dispatchDeleteTrigger, dispatch),
     fetchWorkflow: bindActionCreators(fetchWorkflow, dispatch),
   }
 };
