@@ -13,6 +13,7 @@ export namespace WorkflowMenuBar {
         onDeleteClick: Function
         onAddStage: Function
         onAddTriggerClick: Function
+        onDeleteTriggerClick: Function
         workflow?: NRWorkflow
     }
     export interface State {
@@ -37,7 +38,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
             return <div></div>
         }
 
-        //
+        // TODO: workaround, stage needs a workflow
         stage.workflow = workflow;
         
         return (
@@ -76,7 +77,12 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                     control={
                     <Checkbox
                         checked={stage.trigger ? true: false}
-                        onChange={() => this.props.onAddTriggerClick(this.props.stage, this.props.stage.trigger ? this.props.stage.trigger.channelName : "general")}
+                        onChange={
+                            stage.trigger ? 
+                                () => this.props.onDeleteTriggerClick(this.props.stage)
+                            :
+                                () => this.props.onAddTriggerClick(this.props.stage, this.props.stage.trigger ? this.props.stage.trigger.channelName : "general")
+                        }
                         value="trigger"
                         color="primary"
                     />

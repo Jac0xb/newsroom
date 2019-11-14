@@ -105,7 +105,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                         onDeleteClick={() => this.props.fetchDeleteStage(this.props.match.params.id, currentStage.id)}  
                         onAddStage={(sequence: number) => this.props.fetchAddStage(this.props.match.params.id, new NRStage({name: "New Stage", description: ""}), sequence)}
                         onAddTriggerClick={this.props.fetchAddTrigger}
-                        // trigger={this.props.triggers.find(trigger => trigger.stage.id === currentStage.id)}
+                        onDeleteTriggerClick={this.props.fetchDeleteTrigger}
                     />
 
                     {(this.props.flash != "") ?
