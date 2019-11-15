@@ -122,8 +122,11 @@ module.exports = {
 			name: true,
 			cacheGroups: {
 				commons: {
-					chunks: 'initial',
-					minChunks: 2
+					test: /[\\/]node_modules[\\/]/,
+					name: 'vendors',
+					chunks: 'all',
+					//chunks: 'initial',
+					//minChunks: 2
 				},
 				vendors: {
 					test: /[\\/]node_modules[\\/]/,
@@ -167,7 +170,8 @@ module.exports = {
 	],
 	devServer: {
 		contentBase: sourcePath,
-		hot: true,
+        hot: true,
+        compress: true,
 		inline: true,
 		historyApiFallback: {
 			disableDotRule: true
