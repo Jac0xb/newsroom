@@ -15,8 +15,18 @@ import { IsInt, Tags } from "typescript-rest-swagger";
 
 import { Inject } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { DBConstants, NRDocument, NRRole, NRStage, NRSTPermission, NRUser, NRWFPermission, NRWorkflow } from "../entity";
+import {
+    DBConstants,
+    NRDocument,
+    NRRole,
+    NRStage,
+    NRSTPermission,
+    NRUser,
+    NRWFPermission,
+    NRWorkflow,
+} from "../entity";
 import { DocumentService } from "../services/DocumentService";
+import { DriveService } from "../services/DriveService";
 import { PermissionService } from "../services/PermissionService";
 import { RoleService } from "../services/RoleService";
 import { WorkflowService } from "../services/WorkflowService";
@@ -60,6 +70,9 @@ export class RoleResource {
 
     @Inject()
     private permServ: PermissionService;
+
+    @Inject()
+    private driveService: DriveService;
 
     /**
      * Create a new role.
@@ -107,13 +120,12 @@ export class RoleResource {
 
                     stp.stage = await this.stRep.findOne(stp.stage.id);
                     stp.role = newRole;
-                    stp.access = stp.access;
 
                     await this.stPRep.save(stp);
                     await this.rlRep.save(newRole);
                     await this.stRep.save(stp.stage);
 
-                    await this.dcServ.syncGooglePermissionsForStage(stp);
+                    await this.driveService.syncGooglePermissionsForStage(stp);
 
                     // Prevent circular stringify problems.
                     stp.role = undefined;
@@ -175,10 +187,10 @@ export class RoleResource {
 
                 if (st !== undefined) {
                     const wfid = await this.stRep
-                                           .createQueryBuilder(DBConstants.STGE_TABLE)
-                                           .select("stage.workflowId", "val")
-                                           .where("stage.id = :sid", {sid: st.id})
-                                           .getRawOne();
+                        .createQueryBuilder(DBConstants.STGE_TABLE)
+                        .select("stage.workflowId", "val")
+                        .where("stage.id = :sid", {sid: st.id})
+                        .getRawOne();
 
                     stp.stage = st;
                     stp.stage.workflow = new NRWorkflow();
@@ -228,21 +240,21 @@ export class RoleResource {
             currRole.stpermissions = role.stpermissions;
 
             // Filter items that exist in the DB, but not in the list.
-            const stpdb = await this.stPRep.find({ where: { role: currRole } });
+            const stpdb = await this.stPRep.find({where: {role: currRole}});
             const missing = stpdb.filter((item) => currRole.stpermissions.indexOf(item) < 0);
 
             // Now revoke GD permissions because we are going to delete this permission.
             for (const stp of missing) {
                 stp.access = DBConstants.READ;
                 await this.stPRep.save(stp);
-                await this.dcServ.syncGooglePermissionsForStage(stp);
+                await this.driveService.syncGooglePermissionsForStage(stp);
             }
 
             // This causes the stpermission.roleId to be NULL.
             await this.rlRep.save(currRole);
 
             // Now remove them.
-            const stptd = await this.stPRep.find({ where: { role: IsNull() } });
+            const stptd = await this.stPRep.find({where: {role: IsNull()}});
             await this.stPRep.remove(stptd);
         }
 
@@ -254,12 +266,12 @@ export class RoleResource {
             currRole.wfpermissions = role.wfpermissions;
             await this.rlRep.save(currRole);
 
-            const wfptd = await this.wfPRep.find({ where: { role: IsNull() } });
+            const wfptd = await this.wfPRep.find({where: {role: IsNull()}});
             await this.wfPRep.remove(wfptd);
         }
 
         try {
-            return await this.rlRep.findOne(rid, { relations: ["users", "stpermissions", "wfpermissions"] });
+            return await this.rlRep.findOne(rid, {relations: ["users", "stpermissions", "wfpermissions"]});
         } catch (err) {
             console.log(err);
 
@@ -369,7 +381,7 @@ export class RoleResource {
         const wf = await this.wfServ.getWorkflow(wid);
         const rl = await this.rlServ.getRole(rid);
 
-        const awfp = await this.wfPRep.find({ where: { workflow: wf, role: rl } });
+        const awfp = await this.wfPRep.find({where: {workflow: wf, role: rl}});
 
         await this.wfPRep.remove(awfp);
         return;
@@ -412,7 +424,7 @@ export class RoleResource {
         perm.stage = st;
         perm.role = rl;
 
-        await this.dcServ.syncGooglePermissionsForStage(perm);
+        await this.driveService.syncGooglePermissionsForStage(perm);
 
         await this.stRep.save(st);
         await this.rlRep.save(rl);
@@ -450,7 +462,7 @@ export class RoleResource {
         const st = await this.wfServ.getStage(sid);
         const rl = await this.rlServ.getRole(rid);
 
-        const astp = await this.stPRep.find({ where: { stage: st, role: rl } });
+        const astp = await this.stPRep.find({where: {stage: st, role: rl}});
 
         await this.stPRep.remove(astp);
         return;

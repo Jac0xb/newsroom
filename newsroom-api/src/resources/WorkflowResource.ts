@@ -1,16 +1,26 @@
 import { Inject } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { Context, DELETE, Errors, GET, Path, PathParam,
-         POST, PreProcessor, PUT, ServiceContext } from "typescript-rest";
+import {
+    Context,
+    DELETE,
+    Errors,
+    GET,
+    Path,
+    PathParam,
+    POST,
+    PreProcessor,
+    PUT,
+    ServiceContext,
+} from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 import { DBConstants, NRDocument, NRStage, NRWorkflow } from "../entity";
+import { DriveService } from "../services/DriveService";
 import { PermissionService } from "../services/PermissionService";
 import { UserService } from "../services/UserService";
 import { WorkflowService } from "../services/WorkflowService";
 import { addStageValidator, updateStageValidator } from "../validators/StageValidators";
-import { createWorkflowValidator,
-         updateWorkflowValidator } from "../validators/WorkflowValidators";
+import { createWorkflowValidator, updateWorkflowValidator } from "../validators/WorkflowValidators";
 
 @Path("/api/workflows")
 @Tags("Workflows")
@@ -35,6 +45,9 @@ export class WorkflowResource {
 
     @Inject()
     private permServ: PermissionService;
+
+    @Inject()
+    private driveService: DriveService;
 
     /**
      * Create a new workflow based on the passed information.
@@ -104,7 +117,7 @@ export class WorkflowResource {
 
         try {
             const user = await this.servCont.user();
-            const wfs = await this.wfRep.find({ relations: ["stages"]});
+            const wfs = await this.wfRep.find({relations: ["stages"]});
 
             return await this.wfServ.appendPermToWFS(wfs, user);
         } catch (err) {
@@ -179,6 +192,15 @@ export class WorkflowResource {
         // Update current stored information if passed..
         if (workflow.name) {
             wf.name = workflow.name;
+
+            const wfWithStages = await this.wfServ.addStageRelationsToWF(wf);
+
+            if (wfWithStages.stages) {
+                wfWithStages.stages.forEach((stage) => {
+                    stage.workflow = wf;
+                    this.driveService.updateStageDriveFolderName(stage);
+                });
+            }
         }
 
         if (workflow.description) {
@@ -283,7 +305,10 @@ export class WorkflowResource {
             stage.workflow = wf;
             stage.creator = user;
 
+            await this.driveService.createStageDriveFolder(stage);
+
             await this.wfRep.save(wf);
+
             const st = await this.stRep.save(stage);
 
             // If the user was able to create, they have WRITE.
@@ -322,8 +347,10 @@ export class WorkflowResource {
         const wf = await this.wfServ.getWorkflow(wid);
 
         try {
-            const stages = await this.stRep.find({ relations: ["trigger"],
-                                                   where: { workflow: wf }});
+            const stages = await this.stRep.find({
+                relations: ["trigger"],
+                where: {workflow: wf},
+            });
 
             // Return them in ascending sequence order.
             stages.sort((a: NRStage, b: NRStage) => a.sequenceId - b.sequenceId);
@@ -365,7 +392,7 @@ export class WorkflowResource {
 
         try {
             // Grab the specified stage for the right workflow.
-            const stage = await this.stRep.findOne(sid, { relations: ["documents"] });
+            const stage = await this.stRep.findOne(sid, {relations: ["documents"]});
 
             if (stage.documents.length === 0) {
                 stage.documents = undefined;
@@ -457,7 +484,11 @@ export class WorkflowResource {
 
             // Establish the relationship and save it.
             stage.workflow = wf;
+
+            await this.driveService.createStageDriveFolder(stage);
+
             await this.wfRep.save(wf);
+
             stage = await this.stRep.save(stage);
 
             stage.permission = DBConstants.WRITE;
@@ -509,9 +540,11 @@ export class WorkflowResource {
         try {
             const maxSeqId = await this.wfServ.getMaxStageSequenceId(wf);
             const minSeqId = await this.wfServ.getMinStageSequenceId(wf);
-            const asts = await this.stRep.find({ order: { sequenceId: "ASC" },
-                                                 where: { workflow: wf } });
-            const docs = await this.dcRep.find({ where: { stage: st } });
+            const asts = await this.stRep.find({
+                order: {sequenceId: "ASC"},
+                where: {workflow: wf},
+            });
+            const docs = await this.dcRep.find({where: {stage: st}});
 
             // No stages in the workflow, documents become orphans because we have
             // no where to move them to.
@@ -522,8 +555,12 @@ export class WorkflowResource {
                     await this.dcRep.save(dc);
                 }
             } else {
-                const fst = await this.stRep.findOne({ where: { sequenceId: minSeqId,
-                                                                workflow: wf } });
+                const fst = await this.stRep.findOne({
+                    where: {
+                        sequenceId: minSeqId,
+                        workflow: wf,
+                    },
+                });
                 // Documents go to first stage in workflow.
                 for (const dc of docs) {
                     dc.stage = fst;
@@ -543,8 +580,10 @@ export class WorkflowResource {
 
             // Nothing to update.
             if (currSeq === maxSeqId) {
-                const strss = await this.stRep.find({ relations: ["documents"],
-                                                     where: { workflow: wf } });
+                const strss = await this.stRep.find({
+                    relations: ["documents"],
+                    where: {workflow: wf},
+                });
                 return await this.wfServ.appendPermToSTS(strss, user);
             }
 
@@ -561,8 +600,10 @@ export class WorkflowResource {
                     .execute();
             }
 
-            const strs = await this.stRep.find({ relations: ["documents"],
-                                                 where: { workflow: wf } });
+            const strs = await this.stRep.find({
+                relations: ["documents"],
+                where: {workflow: wf},
+            });
 
             return await this.wfServ.appendPermToSTS(strs, user);
         } catch (err) {
@@ -615,6 +656,9 @@ export class WorkflowResource {
         try {
             if (stage.name) {
                 st.name = stage.name;
+                st.workflow = wf;
+
+                this.driveService.updateStageDriveFolderName(stage);
             }
 
             if (stage.description) {

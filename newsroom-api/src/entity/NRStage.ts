@@ -1,5 +1,14 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne,
-         OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    JoinColumn,
+    ManyToOne,
+    OneToMany,
+    OneToOne,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from "typeorm";
 
 import { INRStage } from "../../../interfaces";
 
@@ -37,6 +46,9 @@ export class NRStage implements INRStage {
     })
     public description: string;
 
+    @Column()
+    public googleDriveFolderId: string;
+
     @CreateDateColumn()
     public created: Date;
 
@@ -54,7 +66,7 @@ export class NRStage implements INRStage {
     @ManyToOne(
         (type) => NRUser,
     )
-    @JoinColumn({ name: "creator" })
+    @JoinColumn({name: "creator"})
     public creator: NRUser;
 
     /**
@@ -65,7 +77,7 @@ export class NRStage implements INRStage {
     @ManyToOne(
         (type) => NRWorkflow,
         (workflow) => workflow.stages,
-        { onDelete: "CASCADE" },
+        {onDelete: "CASCADE"},
     )
     public workflow: NRWorkflow;
 
@@ -77,7 +89,7 @@ export class NRStage implements INRStage {
     @OneToMany(
         (type) => NRDocument,
         (document) => document.stage,
-        { onDelete: "CASCADE"},
+        {onDelete: "CASCADE"},
     )
     public documents: NRDocument[];
 
@@ -95,7 +107,7 @@ export class NRStage implements INRStage {
     @OneToOne(
         (type) => NRTrigger,
         (trigger) => trigger.stage,
-        { onDelete: "SET NULL" },
+        {onDelete: "SET NULL"},
     )
     @JoinColumn()
     public trigger: NRTrigger;

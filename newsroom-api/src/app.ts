@@ -4,7 +4,6 @@ import "reflect-metadata";
 import { Container } from "typedi";
 import { Connection, createConnection, getConnection, useContainer } from "typeorm";
 import { Server } from "typescript-rest";
-import { GoogleOAuth2ServerCredentialsProvider } from "./configs/GoogleOAuth2ServerCredentialsProvider";
 import { SlackWebClientBeanProvider } from "./configs/SlackWebClientBeanProvider";
 import { AuthConfig } from "./middleware/AuthConfig";
 import { ErrorMapper } from "./middleware/ErrorMapper";
@@ -57,8 +56,6 @@ class App {
 
                 // Setup admin based on ADMIN_EMAIL.
                 await Container.get(UserResource).configure();
-
-                await Container.get(GoogleOAuth2ServerCredentialsProvider).loadCredentialsFromDb();
             } else {
                 Container.get(FakeAuthConfig).configure(this.express);
             }

@@ -1,12 +1,23 @@
 import { Inject } from "typedi";
 import { IsNull, Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { Context, DELETE, Errors, GET, Path, PathParam, POST,
-         PreProcessor, PUT, ServiceContext } from "typescript-rest";
+import {
+    Context,
+    DELETE,
+    Errors,
+    GET,
+    Path,
+    PathParam,
+    POST,
+    PreProcessor,
+    PUT,
+    ServiceContext,
+} from "typescript-rest";
 import { IsInt, Tags } from "typescript-rest-swagger";
 import { BadRequestError } from "typescript-rest/dist/server/model/errors";
-import { DBConstants, NRDocument, NRStage, NRSTPermission, NRUser} from "../entity";
+import { DBConstants, NRDocument, NRStage, NRSTPermission, NRUser } from "../entity";
 import { DocumentService } from "../services/DocumentService";
+import { DriveService } from "../services/DriveService";
 import { PermissionService } from "../services/PermissionService";
 import { NotificationService } from "../services/triggers/NotificationService";
 import { UserService } from "../services/UserService";
@@ -45,6 +56,9 @@ export class DocumentResource {
 
     @Inject()
     private notifServ: NotificationService;
+
+    @Inject()
+    private driveService: DriveService;
 
     /**
      * Create a new document based on passed information.
@@ -97,11 +111,9 @@ export class DocumentResource {
                 throw new BadRequestError(errStr);
             }
 
-            document.stage = await this.stRep.findOne({ where: { workflow: wf, sequenceId: minSeq } });
+            document.stage = await this.stRep.findOne({where: {workflow: wf, sequenceId: minSeq}});
         } else {
-            const st = await this.wfServ.getStage(document.stage.id);
-
-            document.stage = st;
+            document.stage = await this.wfServ.getStage(document.stage.id);
         }
 
         // Check permissions to stage.
@@ -115,7 +127,7 @@ export class DocumentResource {
         }
 
         document.creator = await this.usServ.getUser(user.id);
-        await this.dcServ.createGoogleDocument(user, document);
+        await this.driveService.createGoogleDocument(user, document);
 
         return await this.dcRep.save(document);
     }
@@ -168,7 +180,7 @@ export class DocumentResource {
 
         const user = await this.serviceContext.user();
         const dc = await this.dcServ.getDocument(did);
-        const dcwst = await this.dcRep.findOne(dc.id, { relations: ["stage", "workflow", "workflow.stages"] });
+        const dcwst = await this.dcRep.findOne(dc.id, {relations: ["stage", "workflow", "workflow.stages"]});
 
         await this.dcServ.appendPermToDC(dcwst, dcwst.stage, user);
         await this.dcServ.appendAssigneeToDC(dcwst);
@@ -201,12 +213,16 @@ export class DocumentResource {
         // Group permissions.
         const ar = await this.usServ.getUserRoles(usr.id);
         for (const rl of ar) {
-            const stp = await this.stPRep.find({ relations: ["stage"],
-                                                 where: { access: DBConstants.WRITE,
-                                                          role: rl } });
+            const stp = await this.stPRep.find({
+                relations: ["stage"],
+                where: {
+                    access: DBConstants.WRITE,
+                    role: rl,
+                },
+            });
 
             for (const st of stp) {
-                const stdocs = await this.dcRep.find({ where: { stage: st.stage }});
+                const stdocs = await this.dcRep.find({where: {stage: st.stage}});
                 for (const dc of stdocs) {
                     docs.add(dc);
                 }
@@ -239,7 +255,7 @@ export class DocumentResource {
 
         const user = await this.serviceContext.user();
         const author = await this.usServ.getUser(aid);
-        const udcs = await this.dcRep.find({ where: { creator: author } });
+        const udcs = await this.dcRep.find({where: {creator: author}});
 
         await this.dcServ.appendPermsToDCS(udcs, user);
         await this.dcServ.appendAssigneeToDCS(udcs);
@@ -269,7 +285,7 @@ export class DocumentResource {
 
         const user = await this.serviceContext.user();
         const st = await this.wfServ.getStage(sid);
-        const dcs = await this.dcRep.find({ where: { stage: st } });
+        const dcs = await this.dcRep.find({where: {stage: st}});
 
         await this.dcServ.appendPermsToDCS(dcs, user);
         await this.dcServ.appendAssigneeToDCS(dcs);
@@ -299,7 +315,7 @@ export class DocumentResource {
 
         const user = await this.serviceContext.user();
         const wf = await this.wfServ.getWorkflow(wid);
-        const dcs = await this.dcRep.find({ where: { workflow: wf } });
+        const dcs = await this.dcRep.find({where: {workflow: wf}});
 
         await this.dcServ.appendPermsToDCS(dcs, user);
         await this.dcServ.appendAssigneeToDCS(dcs);
@@ -328,8 +344,12 @@ export class DocumentResource {
         console.log("CALLED getAllOrphanDocuments");
 
         const user = await this.serviceContext.user();
-        const dcs = await this.dcRep.find( { where: [ { stage: IsNull(),
-                                                        workflow: IsNull() } ] });
+        const dcs = await this.dcRep.find({
+            where: [{
+                stage: IsNull(),
+                workflow: IsNull(),
+            }],
+        });
 
         await this.dcServ.appendPermsToDCS(dcs, user);
         await this.dcServ.appendAssigneeToDCS(dcs);
@@ -370,14 +390,14 @@ export class DocumentResource {
 
         const user = await this.serviceContext.user();
         const dc = await this.dcServ.getDocument(did);
-        const dcwst = await this.dcRep.findOne(dc.id, { relations: ["stage"] });
+        const dcwst = await this.dcRep.findOne(dc.id, {relations: ["stage"]});
 
         await this.permServ.checkSTWritePermissions(user, dcwst.stage);
 
         if (document.name) {
             dc.name = document.name;
 
-            await this.dcServ.updateGoogleDocumentTitle(user, dc);
+            await this.driveService.updateGoogleDocumentTitle(user, dc);
         }
 
         if (document.description) {
@@ -414,7 +434,7 @@ export class DocumentResource {
         console.log("CALLED deleteDocument");
         const user = await this.serviceContext.user();
         const dc = await this.dcServ.getDocument(did);
-        const dcwst = await this.dcRep.findOne(dc.id, { relations: ["stage"] });
+        const dcwst = await this.dcRep.findOne(dc.id, {relations: ["stage"]});
 
         await this.permServ.checkSTWritePermissions(user, dcwst.stage);
 
@@ -446,26 +466,28 @@ export class DocumentResource {
         const user = await this.serviceContext.user();
         await this.dcServ.getDocument(did);
 
-        const cd = await this.dcRep.findOne(did, { relations: ["assignee", "stage", "workflow"] });
-        const cs = cd.stage;
+        const cd = await this.dcRep.findOne(did, {relations: ["assignee", "stage", "workflow"]});
+        const oldStage = cd.stage;
         const cw = cd.workflow;
 
         // Must have WRITE on current stage to move forward.
-        await this.permServ.checkSTWritePermissions(user, cs);
+        await this.permServ.checkSTWritePermissions(user, oldStage);
 
         // Used to determine if the document is done in its workflow.
         const maxSeq = await this.wfServ.getMaxStageSequenceId(cw);
 
         // The document can be moved forward.
-        if ((cs.sequenceId + 1) <= maxSeq) {
+        if ((oldStage.sequenceId + 1) <= maxSeq) {
             // Get id of next stage in sequence.
-            const ns = await this.stRep.findOne({ where: { sequenceId: cs.sequenceId + 1,
-                                                           workflow: cw } });
-
-            cd.stage = ns;
+            cd.stage = await this.stRep.findOne({
+                where: {
+                    sequenceId: oldStage.sequenceId + 1,
+                    workflow: cw,
+                },
+            });
         }
 
-        await this.dcServ.syncGooglePermissionsForDocument(cd);
+        await this.driveService.syncGoogleDocStageFolder(cd, oldStage);
 
         await this.dcRep.save(cd);
         await this.dcServ.appendPermToDC(cd, cd.stage, user);
@@ -501,30 +523,32 @@ export class DocumentResource {
         const user = await this.serviceContext.user();
         await this.dcServ.getDocument(did);
 
-        const cd = await this.dcRep.findOne(did, { relations: ["assignee", "stage", "workflow"] });
+        const cd = await this.dcRep.findOne(did, {relations: ["assignee", "stage", "workflow"]});
 
         if ((cd.workflow === undefined) || (cd.stage === undefined)) {
             throw new Errors.BadRequestError("Document is not a part of a stage or workflow.");
         }
 
-        const cs = cd.stage;
+        const oldStage = cd.stage;
         const cw = cd.workflow;
 
-        await this.permServ.checkSTWritePermissions(user, cs);
+        await this.permServ.checkSTWritePermissions(user, oldStage);
         console.log("allowed");
 
         const minSeq = 0;
 
         // The document can be moved backwards.
-        if ((cs.sequenceId - 1) >= minSeq) {
+        if ((oldStage.sequenceId - 1) >= minSeq) {
             // Get id of next stage in sequence.
-            const ps = await this.stRep.findOne({ where: { sequenceId: cs.sequenceId - 1,
-                                                           workflow: cw } });
-
-            cd.stage = ps;
+            cd.stage = await this.stRep.findOne({
+                where: {
+                    sequenceId: oldStage.sequenceId - 1,
+                    workflow: cw,
+                },
+            });
         }
 
-        await this.dcServ.syncGooglePermissionsForDocument(cd);
+        await this.driveService.syncGoogleDocStageFolder(cd, oldStage);
 
         await this.dcRep.save(cd);
         await this.dcServ.appendPermToDC(cd, cd.stage, user);
@@ -558,14 +582,11 @@ export class DocumentResource {
         console.log("CALLED assignDocument");
         const user = await this.serviceContext.user();
         const dc = await this.dcServ.getDocument(did);
-        const ass = await this.usServ.getUser(uid);
-
-        dc.assignee = ass;
+        dc.assignee = await this.usServ.getUser(uid);
 
         await this.dcRep.save(dc);
         await this.dcServ.appendPermToDC(dc, dc.stage, user);
 
         return dc;
     }
-
 }
