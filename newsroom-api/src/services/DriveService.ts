@@ -198,7 +198,6 @@ export class DriveService {
                         fileId: stage.googleDriveFolderId,
                         requestBody: permission,
                         sendNotificationEmail: false,
-                        useDomainAdminAccess: true,
                     }, {
                         retry: true,
                         retryConfig: {
@@ -208,11 +207,11 @@ export class DriveService {
                             },
                             retry: 50,
                             retryDelay: 5000,
-                            statusCodesToRetry: [[403, 429]],
+                            statusCodesToRetry: [[403], [429]],
                         },
                     });
                 } catch (err) {
-                    console.log("Error creating Google Doc permissions:", err.message);
+                    console.log("Error creating Google Doc permissions: " + err.message, err);
                 }
             });
     }
