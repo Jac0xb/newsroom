@@ -19,6 +19,7 @@ import { WorkflowResource } from "./resources/WorkflowResource";
 import { extendServiceContext } from "./ServiceContextExtension";
 import { PermissionService } from "./services/PermissionService";
 import { TypeDIServiceFactory } from "./TypeDIServiceFactory";
+import { UIConfig } from "./middleware/UIConfig";
 
 class App {
     private express: express.Express;
@@ -36,6 +37,7 @@ class App {
      * docCreate: Whether or not to create actual Google Documents.
      */
     public async configure(auth: boolean, doGoogle: boolean): Promise<express.Express> {
+
         Swagger.serve(this.express);
 
         SlackWebClientBeanProvider.configure();
@@ -68,6 +70,8 @@ class App {
 
             Server.buildServices(this.express,
                 UserResource, CurrentUserResource, RoleResource, DocumentResource, WorkflowResource, TriggerResource);
+
+            UIConfig.serve(this.express);
 
             // Add error handler to return JSON error.
             this.express.use(ErrorMapper.mapError);
