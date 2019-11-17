@@ -17,11 +17,10 @@ export class GoogleOAuth2Provider {
     private userRepository: Repository<NRUser>;
 
     public configure(app: Express) {
-        // TODO: Put keys in config.
         const strategy = new OAuth2Strategy({
                 callbackURL: GoogleOAuth2Provider.CALLBACK_URL,
-                clientID: "153384745741-7h66ureoaag1j61ei5u6un0faeh4al5h.apps.googleusercontent.com",
-                clientSecret: "u5Q2m0D1MO4DeulU-hCCHG06",
+                clientID: process.env.GOOGLE_CLIENT_ID,
+                clientSecret: process.env.GOOGLE_CLIENT_SECRET,
             },
             async (accessToken, refreshToken, profile, done) => {
                 const email = profile.emails[0].value;
@@ -32,7 +31,7 @@ export class GoogleOAuth2Provider {
                     console.log("Email could not be found.");
                 }
 
-                let user = await this.userRepository.findOne({ where: { email } });
+                let user = await this.userRepository.findOne({where: {email}});
 
                 if ((user === undefined) || (user === null)) {
                     console.log("USER WAS NULL.");
