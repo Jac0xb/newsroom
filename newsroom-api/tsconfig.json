@@ -1,30 +1,30 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "esModuleInterop": true,
-        "target": "es6",
-        "noImplicitAny": true,
-        "moduleResolution": "node",
-        "sourceMap": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "resolveJsonModule": true,
-        "outDir": "dist",
-        "baseUrl": ".",
-        "skipLibCheck": true,
-        "paths": {
-            "*": [
-                "node_modules/*"
-            ]
-        },
-        "lib": [
-            "dom",
-            "es2015",
-            "es5",
-            "es6"
-        ]
+  "compilerOptions": {
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "target": "es6",
+    "noImplicitAny": true,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "resolveJsonModule": true,
+    "outDir": "dist",
+    "baseUrl": ".",
+    "skipLibCheck": true,
+    "paths": {
+      "*": [
+        "node_modules/*"
+      ]
     },
-    "include": [
-        "src/**/*", "../.vscode/interfaces"
+    "lib": [
+      "dom",
+      "es2015",
+      "es5",
+      "es6"
     ]
+  },
+  "include": [
+    "src/**/*"
+  ]
 }
