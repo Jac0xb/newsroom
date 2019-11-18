@@ -18,9 +18,6 @@ export function styles(theme: Theme) {
         spacer: {
             height: 48,
         },
-        content: {
-            marginRight: 250
-        },
         stage: {
             width: "100%",
         },

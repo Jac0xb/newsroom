@@ -2,11 +2,12 @@ import { NRStage, NRWorkflow, NRTrigger } from "app/utils/models";
 
 // Workflow state 
 export interface WorkflowState {
-  stages: Array<NRStage>
-  flash: string,
-  canEdit: boolean
-  currentStage: NRStage
-  workflow?: NRWorkflow
+  stages: Array<NRStage>;
+  flash?: string;
+  canEdit: boolean;
+  currentStage?: NRStage;
+  workflow?: NRWorkflow;
+  sidebarClosed : Boolean;
 }
   
 // Describing the different ACTION NAMES available
@@ -21,7 +22,9 @@ export const ActionTypes = {
   DELETE_STAGE: "@@workflow/DELETE_STAGE",
   WORKFLOW_SUCCESS: "@@workflow/WORKFLOW_SUCCESS",
   FETCH_REQUEST: "@@workflow/FETCH_REQUEST",
-  FETCH_FAILURE: "@@workflow/FETCH_FAILURE"
+  FETCH_FAILURE: "@@workflow/FETCH_FAILURE",
+  TOGGLE_SIDEBAR: "@@workflow/TOGGLE_SIDEBAR",
+  CLEAR_FLASH: "@@workflow/CLEAR_FLASH"
 }
 
 // Define Dispatchers
@@ -37,6 +40,8 @@ export interface WorkflowDispatchers {
   fetchAddTrigger: (stage: NRStage, channel: string) => any;
   fetchDeleteTrigger: (stage: NRStage) => any;
   fetchWorkflow: (id: number) => any;
+  toggleSidebar: () => any;
+  clearFlash: () => any;
 }
 
   

@@ -7,7 +7,7 @@ const initialState: WorkflowState = {
   flash: "",
   canEdit: false,
   workflow: undefined,
-  currentStage: new NRStage({id: 0, name: "", description: ""}),
+  sidebarClosed: false
 };
 
 export function workflowReducer( state = initialState, action: any): WorkflowState {
@@ -28,17 +28,28 @@ export function workflowReducer( state = initialState, action: any): WorkflowSta
       return { ...state, stages: action.stages, currentStage:  action.currentStage };
     }
     case ActionTypes.EDIT_STAGE: {
-      if (action.name === "trigger"){
-        return { ...state, currentStage: {...state.currentStage, trigger: { ...state.currentStage.trigger, channelName: action.newValue}} };
-      }
 
-      return { ...state, currentStage: {...state.currentStage, [action.name]: action.newValue} };
+        if (state.currentStage == undefined) 
+            return {...state};
+
+        if (action.name === "trigger"){
+
+            return { ...state, currentStage: new NRStage({...state.currentStage, trigger: { ...state.currentStage.trigger, channelName: action.newValue}}) };
+        }
+
+        return { ...state, currentStage: new NRStage({...state.currentStage, [action.name]: action.newValue}) };
     }
     case ActionTypes.EDIT_FLASH: {
-      return { ...state, flash: action.flash, };
+        return { ...state, flash: action.flash, };
     }
     case ActionTypes.STAGE_CHANGE: {
-      return { ...state, currentStage: state.stages.find(x => x.sequenceId == action.seqID) || new NRStage};
+        return { ...state, currentStage: state.stages.find(x => x.sequenceId == action.seqID)};
+    }
+    case ActionTypes.TOGGLE_SIDEBAR: {
+        return {...state, sidebarClosed: !state.sidebarClosed};
+    }
+    case ActionTypes.CLEAR_FLASH: {
+        return {...state, flash: ""};
     }
     default:
       return state;

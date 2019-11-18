@@ -222,6 +222,18 @@ export function fetchWorkflow(id: number) : any {
   };
 }
 
+function toggleSidebar() {
+    return {
+        type: ActionTypes.TOGGLE_SIDEBAR
+    };
+}
+
+function clearFlash() {
+    return {
+        type: ActionTypes.CLEAR_FLASH
+    };
+}
+
 // Map Dispatch
 export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, any>, ownProps: T) : WorkflowDispatchers {
   return {
@@ -237,5 +249,7 @@ export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, any>, ow
     fetchAddTrigger: bindActionCreators(dispatchAddTrigger, dispatch),
     fetchDeleteTrigger: bindActionCreators(dispatchDeleteTrigger, dispatch),
     fetchWorkflow: bindActionCreators(fetchWorkflow, dispatch),
+    toggleSidebar: bindActionCreators(toggleSidebar, dispatch),
+    clearFlash: bindActionCreators(clearFlash, dispatch)
   }
-};
+}

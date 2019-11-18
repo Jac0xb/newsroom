@@ -21,14 +21,17 @@ export namespace Workflow {
             }
         }
     }
-    export interface State { }
+    export interface State { 
+    }
 }
 
 class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
     constructor(props: Workflow.Props) {
-        super(props)
-        this.state = {}
+        super(props);
+        this.state = { }; 
+
+        this.props.clearFlash();
     }
 
     componentDidMount() {
@@ -55,6 +58,13 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
         // The ID of the current workflow, the sequence id of the stage, the id of the stage.
         const wfId = this.props.match.params.id;
 
+        this.props.clearFlash();
+
+        if (currentStage == undefined) {
+            this.props.fetchEditFlash("No stage exists!");
+            return;
+        }
+
         axios.put("/api/workflows/" + wfId + "/stages/" + currentStage.id, {
             sequenceId: currentStage.sequenceId,
             name: textBoxName,
@@ -73,6 +83,40 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
 
     };
 
+    switchToStage(sequenceId: number) {
+
+        if (sequenceId == -1) { return; }
+
+        this.props.clearFlash();
+        this.props.fetchStageChange(sequenceId);
+        
+    }
+
+    addStage(sequence: number) {
+        this.props.clearFlash();
+        this.props.fetchAddStage(this.props.match.params.id, new NRStage({name: "New Stage", description: ""}), sequence)
+    }
+
+    updateStage(updatedStage: NRStage) {
+        this.props.clearFlash();
+        this.props.fetchUpdateStage(this.props.match.params.id, updatedStage)
+    }
+
+    addTrigger(stage: NRStage, channel: string) {
+        this.props.clearFlash();
+        this.props.fetchAddTrigger(stage, channel);
+    }
+
+    deleteTrigger(stage: NRStage) {
+        this.props.clearFlash();
+        this.props.fetchDeleteTrigger(stage);
+    }
+
+    deleteStage(workflowId: number, stageId: number) {
+        this.props.clearFlash();
+        this.props.fetchDeleteStage(workflowId, stageId);
+    } 
+
     render() {
 
         const { classes, currentStage } = this.props;
@@ -86,52 +130,46 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
         return (
             <React.Fragment>
                 <main className={classes.main}>
-                    <Subheader tabs={tabs} selectedTab={currentStage ? currentStage.sequenceId : 0} onTabChange={((sequenceID: number) => {
-
-                        if (sequenceID == -1) {
-                            return;
-                        }
-
-                        this.props.fetchStageChange(sequenceID);
-                    
-                    }).bind(this)
-                    }/>
+                    <Subheader 
+                        tabs={tabs} 
+                        selectedTab={currentStage ? currentStage.sequenceId : 0} 
+                        onTabChange={(sequenceId: number) => this.switchToStage(sequenceId)}
+                    />
                     <div className={classes.spacer} />
                     <WorkflowSidebar 
+                        closed={this.props.sidebarClosed}
+                        onToggle={() => this.props.toggleSidebar()}
                         workflow={this.props.workflow}
-                        stage={currentStage ? currentStage : new NRStage} 
+                        stage={currentStage} 
                         onTextChange={this.props.fetchEditStage}
-                        onUpdateClick={(updatedStage: NRStage) => this.props.fetchUpdateStage(this.props.match.params.id, updatedStage)}
-                        onDeleteClick={() => this.props.fetchDeleteStage(this.props.match.params.id, currentStage.id)}  
-                        onAddStage={(sequence: number) => this.props.fetchAddStage(this.props.match.params.id, new NRStage({name: "New Stage", description: ""}), sequence)}
-                        onAddTriggerClick={this.props.fetchAddTrigger}
-                        onDeleteTriggerClick={this.props.fetchDeleteTrigger}
+                        onUpdateClick={(stage) => this.updateStage(stage)}
+                        onDeleteClick={() => {
+
+                            if (currentStage == undefined) {
+                                return;
+                            }
+
+                            this.deleteStage(this.props.match.params.id, currentStage.id)}  
+                        }
+                        onAddStage={(sequenceId) => this.addStage(sequenceId)}
+                        onAddTriggerClick={(stage, channel) => this.addTrigger(stage, channel)}
+                        onDeleteTriggerClick={(stage) => this.deleteTrigger(stage)}
                     />
 
-                    {(this.props.flash != "") ?
-                        <Paper className={classes.flashMessage}>
-                            <Typography variant="caption">
-                                {this.props.flash}
-                            </Typography>
-                        </Paper> :
-                        <div></div>
-                    }
-                    <div className={classes.content}>
+                    <div style={(this.props.sidebarClosed) ? {marginRight: 64} : {marginRight: 250}}>
+                        {(this.props.flash != "") ?
+                            <Paper className={classes.flashMessage}>
+                                <Typography variant="caption">
+                                    {this.props.flash}
+                                </Typography>
+                            </Paper> :
+                            <div></div>
+                        }
                         <div className={classes.workflowContent}>
-                            <div className={classes.buttonGroup}>
-                                <Button 
-                                    variant="contained" 
-                                    className={classes.button} 
-                                    onClick={() => this.props.fetchAddStage(this.props.match.params.id, new NRStage({name: "New Stage", description: ""}), this.props.stages.length)}
-                                    disabled={(this.props.workflow && this.props.workflow.permission == 1) ? false : true}
-                                    >
-                                    Add Stage
-                                </Button>
-                            </div>
                             {this.props.stages.map((stage, index) => (
                                 <div className={classes.stage}>
                                     <WorkflowStage 
-                                        show={currentStage.sequenceId}
+                                        show={(currentStage) ? currentStage.sequenceId : 0}
                                         key={index}
                                         index={stage.sequenceId} 
                                         canEdit={this.props.canEdit} 
