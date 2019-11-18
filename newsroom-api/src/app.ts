@@ -10,6 +10,7 @@ import { ErrorMapper } from "./middleware/ErrorMapper";
 import { FakeAuthConfig } from "./middleware/FakeAuthConfig";
 import { GoogleOAuth2Provider } from "./middleware/GoogleOAuth2Provider";
 import { Swagger } from "./middleware/Swagger";
+import { UIConfig } from "./middleware/UIConfig";
 import { CurrentUserResource } from "./resources/CurrentUserResource";
 import { DocumentResource } from "./resources/DocumentResource";
 import { RoleResource } from "./resources/RoleResource";
@@ -19,7 +20,6 @@ import { WorkflowResource } from "./resources/WorkflowResource";
 import { extendServiceContext } from "./ServiceContextExtension";
 import { PermissionService } from "./services/PermissionService";
 import { TypeDIServiceFactory } from "./TypeDIServiceFactory";
-import { UIConfig } from "./middleware/UIConfig";
 
 class App {
     private express: express.Express;

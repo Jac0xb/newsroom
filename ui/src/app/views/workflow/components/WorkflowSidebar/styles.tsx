@@ -11,6 +11,11 @@ export function styles(theme: Theme)  {
             width: 240,
             flexShrink: 0,
         },
+        closedDrawer: {
+            zIndex: 1,
+            minWidth: 64,
+            top: 'auto',
+        },
         formComp:{
             margin: 10,
         },

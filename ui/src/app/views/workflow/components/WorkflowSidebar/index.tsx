@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import { Drawer, TextField, FormLabel, FormControl, Button, FormControlLabel, Checkbox } from '@material-ui/core';
+import { Drawer, TextField, FormLabel, FormControl, Button, FormControlLabel, Checkbox, IconButton } from '@material-ui/core';
 import { NRStage, NRWorkflow } from 'app/utils/models';
+import Input from 'antd/lib/input';
 
 export namespace WorkflowMenuBar {
     export interface Props {
@@ -15,6 +16,7 @@ export namespace WorkflowMenuBar {
         onAddTriggerClick: Function
         onDeleteTriggerClick: Function
         workflow?: NRWorkflow
+        closed?: Boolean
     }
     export interface State {
 
@@ -42,6 +44,19 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
         stage.workflow = workflow;
         
         return (
+            <main className={classes.layout}>
+                <Drawer
+                    anchor="right"
+                    variant="permanent"
+                    classes={{
+                    paper: classes.closedDrawer,
+                    }}
+                >
+                </Drawer>
+            </main>
+        );
+
+        return (
         <main className={classes.layout}>
              <Drawer
                 anchor="right"
@@ -53,12 +68,13 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
             >
                 <FormControl className={classes.formComp} style={{marginTop: "32px"}}>
                     <FormLabel className={classes.formLabel}>Stage Name</FormLabel>
-                    <TextField
+                    <Input
                         id="name"
-                        className={classes.textField}
+                        style={{marginBottom: "16px"}}
                         value={stage.name}
-                        onChange={(event) => this.props.onTextChange(stage.id, 'name', event.target.value)}
-                        margin="normal"
+                        onChange={(event) => {
+                            return this.props.onTextChange(stage.id, 'name', event.target.value);
+                        }}
                     />
                 </FormControl>
                 <FormControl className={classes.formComp}>
