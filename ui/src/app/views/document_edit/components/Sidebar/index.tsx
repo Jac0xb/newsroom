@@ -2,6 +2,7 @@ import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
 import { Button, Drawer } from '@material-ui/core';
+import { Button as AntButton } from 'antd';
 import { NRWorkflow, NRTrigger, NRStage } from 'app/utils/models';
 import { Link as RouterLink } from 'react-router-dom';
 import { Typography as AntTypography, Divider, Steps } from 'antd';
@@ -18,6 +19,7 @@ export namespace WorkflowMenuBar {
         onMove: (direction: string) => void;
         onToggle: () => void;
         closed: boolean;
+        googleID: string;
     }
     export interface State {
     }
@@ -65,6 +67,30 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
             return <Step key={stage.id} title={stage.name} description={(currentStage == stage.sequenceId) ? stage.description : ""}/>
         });
 
+        var nextButton: any;
+
+        if (currentStage == stages.length - 1 || !workflow || (workflow && workflow.stages && workflow.stages[currentStage] && workflow.stages[currentStage].permission == 0))
+            nextButton = (<a href={`https://docs.google.com/document/u/0/export?format=pdf&id=${this.props.googleID}`}>
+            <AntButton type="primary" className={classes.stageButton} size="small"
+            onClick={() => {
+
+                
+            }}
+        >
+            Export
+        </AntButton>
+        </a>);
+        else {
+            nextButton = (<AntButton type="primary" className={classes.stageButton} size="small"
+            disabled={currentStage == stages.length - 1 || !workflow || (workflow && workflow.stages && workflow.stages[currentStage] && workflow.stages[currentStage].permission == 0)} 
+            onClick={() => {
+                    this.props.onMove("next")
+            }}
+            >
+                Next
+            </AntButton>);
+        }
+
         return (        
             <main className={classes.layout}>
                 <Drawer
@@ -85,18 +111,13 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                         {stageComponents}
                     </Steps>
                     <div className={classes.stageButtonGroup} style={{display: "flex", width:"100%", }}>
-                        <Button className={classes.stageButton} variant="contained" size="small"
+                        <AntButton type="primary" className={classes.stageButton} size="small"
                             disabled={currentStage == 0 || !workflow || (workflow && workflow.stages && workflow.stages[currentStage] && workflow.stages[currentStage].permission == 0)}
                             onClick={() => this.props.onMove("prev")}
                         >
                                 Back
-                        </Button>
-                        <Button className={classes.stageButton} variant="contained" size="small"
-                            disabled={currentStage == stages.length - 1 || !workflow || (workflow && workflow.stages && workflow.stages[currentStage] && workflow.stages[currentStage].permission == 0)} 
-                            onClick={() => this.props.onMove("next")}
-                        >
-                            Next
-                        </Button>
+                        </AntButton>
+                        {nextButton}
                     </div>
                 </Drawer>
             </main>);

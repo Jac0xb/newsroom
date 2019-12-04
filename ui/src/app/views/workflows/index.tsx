@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
-import Button from '@material-ui/core/Button';
-import { Divider, Paper, Typography, AppBar } from '@material-ui/core';
+import { Paper, Typography, AppBar } from '@material-ui/core';
+import { Button} from 'antd'
 import WorkflowTile from './components/WorkflowTile';
 import DialogItem from 'app/components/common/dialog';
 import axios from 'axios';
@@ -108,7 +108,7 @@ class Workflows extends React.Component<Workflows.Props, Workflows.State> {
             <main className={classes.main}>
                 <AppBar color="default" className={classes.appBar} style={{marginTop: "64px", padding: "16px"}}>
                     <div className={classes.buttonGroup}>
-                        <Button variant="contained" onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create Workflow</Button>
+                        <Button onClick={this.handleCreateNewOpen(true)} className={classes.button}>Create Workflow</Button>
                     </div>
                 </AppBar>
                 {(flash != "") ?

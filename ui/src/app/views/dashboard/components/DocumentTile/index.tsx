@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Button, Divider, Paper, Typography } from '@material-ui/core';
+import { Divider, Paper, Typography } from '@material-ui/core';
+import { Button} from 'antd'
 import DetailRow from 'app/views/dashboard/components/DetailLine';
 import { Link } from 'react-router-dom';
 import { withStyles } from '@material-ui/core/styles';
@@ -39,9 +40,9 @@ class DocumentTile extends React.Component<DocumentTile.Props> {
                     <DetailRow title="Due Date" data={"duedate"}/>
                     <div className={classes.buttonGroup}>
                         <Link to={"/document/" + document.id + "/edit"}>
-                            <Button style={{marginRight: "16px"}} variant="contained" className={classes.button}>Edit</Button>
+                            <Button style={{marginRight: "16px"}} className={classes.button}>Edit</Button>
                         </Link>
-                        <Button variant="contained" className={classes.button}
+                        <Button className={classes.button}
                                 onClick={() => onDelete(document.id)}>Delete</Button>
                     </div>
                 </Paper>

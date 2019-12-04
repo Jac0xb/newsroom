@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Avatar, Button, AppBar } from '@material-ui/core';
+import { Avatar, AppBar } from '@material-ui/core';
+import { Button } from 'antd';
 import { withStyles } from '@material-ui/core/styles';
 import { NRRole as NRGroup } from 'app/utils/models';
 import { styles } from './styles';
@@ -44,7 +45,7 @@ class Groups extends React.Component<Groups.Props, Groups.State> {
             <main className={classes.main} style={{marginTop: "132px"}}>
                 <AppBar color="default" style={{marginTop: "64px", padding: "16px"}}>
                     <Link style={{ textDecoration: "none" }} to={"/groups/create"}>
-                        <Button variant="contained" >
+                        <Button >
                             Create Group
                         </Button>
                     </Link>
@@ -94,7 +95,7 @@ class Groups extends React.Component<Groups.Props, Groups.State> {
             this.setState({groups: response.data})
         } 
 
-        return (<Button style={{transform: "scale(0.75)"}} variant="contained" onClick={onClick}>
+        return (<Button type="danger" onClick={onClick}>
             Remove
         </Button>)
     }

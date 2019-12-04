@@ -5,7 +5,8 @@ import { Drawer, FormControl, Button } from '@material-ui/core';
 import MenuIcon from '@material-ui/icons/Menu';
 import { NRStage, NRWorkflow } from 'app/utils/models';
 import Input from 'antd/lib/input';
-import { Typography as AntTypography, Checkbox, Divider, Select } from 'antd';
+import { Typography as AntTypography, Checkbox, Divider, Select, Button as AntButton } from 'antd';
+import DeleteIcon from '@material-ui/icons/Delete';
 const { Option } = Select;
 import TextArea from 'antd/lib/input/TextArea';
 
@@ -192,9 +193,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                 {slackElement}
                 <FormControl className={classes.buttonGroup}>
                     <div className={classes.stageButtonGroup}>
-                        <Button 
-                            variant="contained" 
-                            className={classes.stageButton} 
+                        <AntButton className={classes.stageButton} style={{marginBottom: 16, marginRight: 4}}
                             onClick={() => {
                                 if (this.props.stage == undefined)
                                     return;
@@ -203,12 +202,10 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                             }
                         >
                             <span>{"<- Add"}</span>
-                        </Button>
-                        <Button 
-                            variant="contained" 
-                            className={classes.stageButton} 
+                        </AntButton>
+                        <AntButton className={classes.stageButton} style={{marginBottom: 16, marginLeft: 4}}
                             onClick={() => {
-                                
+    
                                 if (this.props.stage == undefined)
                                     return;
                                 
@@ -216,11 +213,9 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
 
                             }}>
                                 <span>{"Add ->"}</span>
-                        </Button>
+                        </AntButton>
                     </div>
-                    <Button 
-                        variant="contained" 
-                        className={classes.button} 
+                    <AntButton style={{marginBottom: 16}}
                         onClick={() => {
                             if (this.props.stage == undefined)
                                 return;
@@ -229,15 +224,13 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                         }}
                     >
                         Update
-                    </Button>
-                    <Button 
-                        variant="contained" 
-                        color="secondary" 
-                        className={classes.deleteButton} 
+                    </AntButton>
+                    <AntButton
                         onClick={() => this.props.onDeleteClick()}
+                         type="danger"
                     >
                         Delete
-                    </Button>
+                    </AntButton>
                 </FormControl>
             </Drawer>
         </main>

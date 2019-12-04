@@ -2,7 +2,8 @@ import * as React from 'react';
 import Paper from '@material-ui/core/Paper';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles';
-import { Typography, Divider, Button } from '@material-ui/core';
+import { Typography, Divider } from '@material-ui/core';
+import { Button} from 'antd'
 import { Link } from 'react-router-dom';
 import classNames from 'classnames';
 import { NRWorkflow } from 'app/utils/models';
@@ -30,7 +31,8 @@ export namespace WorkflowTile {
             if (workflow && workflow.permission != 0) {
                 deleteButton = (
                 <Button 
-                    variant="contained"    
+                    style={{width: 100}}
+                    type="danger"    
                     className={classes.button} 
                     onClick={() => this.props.onClick(workflow.id)}
                     >
@@ -51,7 +53,7 @@ export namespace WorkflowTile {
                     </Typography>
                     <div className={classes.buttonGroup}>
                         <Link to={"/workflow/" + workflow.id + "/edit"}>
-                            <Button variant="contained" className={classes.button}>
+                            <Button style={{width: 100}} type="primary" className={classes.button}>
                                 {viewButtonText}
                             </Button>
                         </Link>

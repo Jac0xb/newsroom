@@ -48,12 +48,17 @@ export function styles(theme: Theme)  {
             alignSelf: "center",
         },
         stageButton:{
-            margin: 8,
             flexGrow: 1
 
         },
+        focusedDeleteButton: {
+            background:"rgb(220, 0, 78)",
+            backgroundColor:"rgb(220, 0, 78)"
+        },
         deleteButton: {
             margin: 8,
+            background:"rgb(220, 0, 78)",
+            backgroundColor:"rgb(220, 0, 78)"
             // backgroundColor: "red",
             // color: "white",
             // "& > *": {

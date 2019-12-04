@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Grid, Paper, FormGroup, Button, Typography, AppBar } from '@material-ui/core';
+import { Grid, Paper, FormGroup, Typography, AppBar } from '@material-ui/core';
+import { Button} from 'antd'
 import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
 import { styles } from './styles'
@@ -95,7 +96,7 @@ export namespace DocumentCreate {
                 <main className={classes.main}>
                     <AppBar color="default" className={classes.appBar} style={{marginTop: "64px", padding: "16px"}}>
                         <Link style={{ textDecoration: "none" }} to="/">
-                            <Button style={{ width: "calc(4*52px)" }} variant={"contained"}>
+                            <Button type="primary" style={{ width: "calc(4*52px)" }}>
                                 Back to Dashboard
                             </Button>
                         </Link>
@@ -124,7 +125,7 @@ export namespace DocumentCreate {
                                     {this.renderWorkflows()}
                                 </FormGroup>
                                 <div className={classes.formButtonGroup}>
-                                    <Button variant="contained" disabled={this.props.pending} onClick={this.onSubmit.bind(this)} className={classes.button}>Create</Button>
+                                    <Button type="primary" disabled={this.props.pending} onClick={this.onSubmit.bind(this)} className={classes.button}>Create</Button>
                                 </div>
                             </Paper>
                         </Grid>

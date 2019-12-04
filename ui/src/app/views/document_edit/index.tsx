@@ -74,7 +74,9 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
                     onToggle={() => this.setState({sidebarToggled: !this.state.sidebarToggled})}
                     workflow={workflow}
                     currentStage={document.stage.sequenceId!}
-                    onMove={(direction: string) => this.handleMove(direction)}>
+                    onMove={(direction: string) => this.handleMove(direction)}
+                    googleID={document.googleDocId}
+                >
                 </Sidebar>
                 <div style={{padding: "8px"}}>
                     <Paper style={{display:"flex", margin: "16px", marginRight: (this.state.sidebarToggled)? "calc(64px + 16px)" : "calc(167px + 32px + 16px + 64px)", height: "calc(100vh - 64px - 64px + 16px)", padding: "16px"}}>

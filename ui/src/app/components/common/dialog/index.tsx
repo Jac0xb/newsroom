@@ -1,7 +1,8 @@
 import React from 'react';
 import { styles } from './styles'
 import {withStyles} from '@material-ui/core/styles';
-import { Dialog, DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Button } from '@material-ui/core';
+import { Dialog, DialogTitle, DialogContent, DialogContentText, TextField, DialogActions } from '@material-ui/core';
+import { Button } from 'antd';
 
 export namespace DialogItem {
     export interface Props {
@@ -63,8 +64,8 @@ class DialogItem extends React.Component<DialogItem.Props, DialogItem.State, any
               </form>
             </DialogContent>
             <DialogActions>
-				<Button variant="contained" onClick={() => handleClose(false)} className={classes.button}>Cancel</Button>
-              	<Button variant="contained" onClick={() => handleSave(textBoxName, textBoxDesc)} className={classes.button}>Save</Button>
+				<Button onClick={() => handleClose(false)} className={classes.button}>Cancel</Button>
+              	<Button onClick={() => handleSave(textBoxName, textBoxDesc)} className={classes.button}>Save</Button>
             </DialogActions>
           </Dialog>
         </div>
