@@ -5,6 +5,7 @@ import { DocumentsAPI } from 'app/api/document';
 import { NRDocument, NRWorkflow } from 'app/utils/models';
 import axios from 'axios';
 import _ from 'lodash';
+import { WorkflowsAPI } from 'app/api/workflow';
 
 export function fetchDocuments() : any {
 
@@ -19,8 +20,11 @@ export function fetchDocuments() : any {
             for (var i = 0; i < documents.length; i++) {
                 try {
 
-                    documents[i].created = new Date(Date.parse(documents[i].created.toString()));
-                    documents[i].lastUpdated = new Date(Date.parse(documents[i].lastUpdated.toString()));
+                    documents[i].created = new Date(documents[i].created.toString());
+                    documents[i].lastUpdated = new Date(documents[i].lastUpdated.toString());
+
+                    //var { data: workflow } = await axios.get<NRWorkflow>(WorkflowsAPI.getWorkflow(documents[i].workflow.id));
+                    //documents[i].workflow = workflow;
 
                 }
                 catch(err) {

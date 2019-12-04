@@ -43,6 +43,11 @@ class Group extends React.Component<Group.Props> {
         this.props.fetchCurrentGroup(this.props.match.params.id);
      }
 
+     componentWillUnmount() {
+        this.props.clearForm();
+    }
+
+
      async onSubmit() {
 
         this.props.induceFlash();

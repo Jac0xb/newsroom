@@ -43,6 +43,10 @@ export namespace GroupCreate {
            this.props.fetchUsers();
         }
 
+        componentWillUnmount() {
+            this.props.clearForm();
+        }
+
         /**
          * TODO: Documentation
          */

@@ -51,6 +51,9 @@ export function workflowReducer( state = initialState, action: any): WorkflowSta
     case ActionTypes.CLEAR_FLASH: {
         return {...state, flash: ""};
     }
+    case ActionTypes.CLEAR_DATA: {
+        return {...initialState}
+    }
     default:
       return state;
   }

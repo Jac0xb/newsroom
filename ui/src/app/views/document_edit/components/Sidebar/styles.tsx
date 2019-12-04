@@ -17,10 +17,16 @@ export function styles(theme: Theme)  {
         formLabel:{
             paddingBottom: 8,
         },
+        closedDrawer: {
+            zIndex: 1,
+            minWidth: 64,
+            top: 'auto',
+        },
         drawerPaper: {
             zIndex: 1,
             width: "256px",
             padding: "16px",
+            paddingTop: "0",
             top: 'auto',
         },
         textField: {

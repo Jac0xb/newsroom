@@ -16,6 +16,7 @@ export namespace WorkflowStage {
         show: number
         index: number
         documents: Array<NRDocument>
+        title: string;
     }
     export interface State {
       openMenu: boolean
@@ -52,7 +53,7 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
 
   render() {
 
-    const { classes, show, index, documents } = this.props;
+    const { classes, show, index, documents, title } = this.props;
     const { } = this.state;
 
     return (
@@ -60,13 +61,17 @@ class WorkflowStage extends React.Component<WorkflowStage.Props, WorkflowStage.S
         {
           show == index ? 
             <MaterialTable
-              title="Documents"
+              title={title}
               columns={[
                   {title: "Aricle", render: WorkflowStage.getStageDocs},
                   {title: "Assinged", field: "assinged"},
                   {title: "Due", field: "due"},
               ]}
               data={documents}
+              options={{
+                  pageSize: 10,
+                  search: false
+              }}
               />
           : null
         }

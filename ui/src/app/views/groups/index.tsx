@@ -60,6 +60,12 @@ class Groups extends React.Component<Groups.Props, Groups.State> {
                             {title: "", render: (group: any) => this.deleteGroup.bind(this)(group)}
                         ]}
                         data={groups}
+                        options={
+                            {
+                                pageSize: 8,
+                                search: false
+                            }
+                        }
                         title="Groups"/>
                 </div>
             </main>
@@ -68,7 +74,7 @@ class Groups extends React.Component<Groups.Props, Groups.State> {
 
     static getGroupAvatar(group: any) {
         // TODO Get Image Avatar
-        return <Avatar>{group.name.substring(0, 2)}</Avatar>
+        return <Avatar style={{transform: "scale(0.75)"}}>{group.name.substring(0, 2)}</Avatar>
     }
 
     static getGroupName(group: any) {
@@ -88,7 +94,7 @@ class Groups extends React.Component<Groups.Props, Groups.State> {
             this.setState({groups: response.data})
         } 
 
-        return (<Button variant="contained" onClick={onClick}>
+        return (<Button style={{transform: "scale(0.75)"}} variant="contained" onClick={onClick}>
             Remove
         </Button>)
     }

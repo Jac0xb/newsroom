@@ -42,7 +42,7 @@ export namespace Header {
             this.state = {
                 route: "/",
                 categories: [
-                    {title: 'Documents', url: "/"},
+                    {title: 'Dashboard', url: "/"},
                     {title: 'Workflows', url: "/workflow"},
                     {title: 'Users', url: '/users'},
                     {title: 'Groups', url: '/groups'}

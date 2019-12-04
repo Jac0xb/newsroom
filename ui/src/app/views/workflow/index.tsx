@@ -11,6 +11,7 @@ import { WorkflowDispatchers, WorkflowState } from "app/store/workflow/types";
 import WorkflowSidebar from './components/WorkflowSidebar';
 import Subheader from 'app/components/common/subheader';
 import { NRStage } from 'app/utils/models';
+import { LoadingComponent } from 'app/components/common/loading';
 
 export namespace Workflow {
     export interface Props extends WorkflowDispatchers, WorkflowState {
@@ -37,6 +38,11 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
     componentDidMount() {
         this.getStages();
         this.getRole();
+
+    }
+
+    componentWillUnmount() {
+        this.props.clearData();
     }
 
     // Method to get stages of current workflow from database
@@ -126,6 +132,30 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
             return stage.name;
         });
         
+        var datatableMargins: number = 0;
+        if (this.props.workflow && this.props.workflow.permission != 0) {
+            if (this.props.sidebarClosed) {
+                datatableMargins = 64;
+            }
+            else {
+                datatableMargins = 250;
+            }
+        }
+
+        if (!this.props.workflow) {
+            return (
+            <React.Fragment>
+                <main className={classes.main}>
+                    <Subheader 
+                        tabs={[]} 
+                        selectedTab={0} 
+                        onTabChange={(sequenceId: number) => {}}
+                    />       
+                    <LoadingComponent />
+                </main>
+            </React.Fragment>
+            )
+        }
 
         return (
             <React.Fragment>
@@ -156,7 +186,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                         onDeleteTriggerClick={(stage) => this.deleteTrigger(stage)}
                     />
 
-                    <div style={(this.props.sidebarClosed) ? {marginRight: 64} : {marginRight: 250}}>
+                    <div style={{marginRight: datatableMargins}}>
                         {(this.props.flash != "") ?
                             <Paper className={classes.flashMessage}>
                                 <Typography variant="caption">
@@ -169,6 +199,7 @@ class Workflow extends React.Component<Workflow.Props, Workflow.State, any> {
                             {this.props.stages.map((stage, index) => (
                                 <div className={classes.stage}>
                                     <WorkflowStage 
+                                        title={(this.props.workflow) ? `${this.props.workflow.name} - ${(currentStage) ? currentStage.name + "": ""}` : ""}
                                         show={(currentStage) ? currentStage.sequenceId : 0}
                                         key={index}
                                         index={stage.sequenceId} 

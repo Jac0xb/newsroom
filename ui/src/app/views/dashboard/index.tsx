@@ -3,10 +3,10 @@ import { NRDocument } from 'app/utils/models';
 import { mapDispatchToProps } from 'app/store/dashboard/actions';
 import { mapStateToProps } from 'app/store/dashboard/reducers';
 import { DashboardDispatchers, DashboardReducerState } from 'app/store/dashboard/types';
-import { DocumentTileComponent } from 'app/views/dashboard/components/DocumentTile';
 import _ from 'lodash-es';
 import * as React from 'react';
 import { connect } from 'react-redux';
+import date from 'date-and-time';
 
 import { AppBar } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
@@ -79,20 +79,35 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
 
                             }},
                             {title: "Created", field:"created", searchable: true, render: (document: NRDocument) => { 
-                                return <div>{`${document.created.getDay()}/${document.created.getMonth()}/${document.created.getFullYear()}`}</div>;
+                                
+                                try {
+                                    var creationDate = date.format(document.created, 'M/D/YYYY')
+                                    return <div>{creationDate.toString()}</div>;
+                                }
+                                catch (err) {
+                                    return <div>0/0/2019</div>
+                                }
+
                             }},
                             {title: "Last Modified", field:"lastUpdated", render: (document: NRDocument) => { 
-                                return <div>{`${document.lastUpdated.getMonth()}/${document.lastUpdated.getUTCDay()}/${document.lastUpdated.getFullYear()}`}</div>;
+                                try {
+                                    var creationDate = date.format(document.lastUpdated, 'M/D/YYYY')
+                                    return <div>{creationDate.toString()}</div>;
+                                }
+                                catch (err) {
+                                    return <div>0/0/2019</div>
+                                }
                             }},
                             {title: "", render: (group: any) => {
                                 
                             }}
                         ]}
                         options={{
+                            pageSize: 10,
                             search: false
                         }}
                         data={documents}
-                        title="Documents"/>}
+                        title="Dashboard"/>}
                 </div>
                 }
             </main>

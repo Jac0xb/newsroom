@@ -88,24 +88,27 @@ export function dispatchUpdateStage(wfId: number, updatedStage: NRStage) : any {
   return async (dispatch: any) => {
 
       try {
-          // updated a given stage
-          await axios.put(StagesAPI.updateStage(wfId, updatedStage.id), updatedStage);
+          
+        // updated a given stage
+        await axios.put(StagesAPI.updateStage(wfId, updatedStage.id), updatedStage);
 
-          // Update trigger
-          await axios.put(TriggersAPI.triggerAPI(updatedStage.id), {
-            type: NRTriggerType.SLACK,
-            channelName: updatedStage.trigger.channelName,
-            stage: updatedStage
-          });
+        if (updatedStage.trigger) {
+            // Update trigger
+            await axios.put(TriggersAPI.triggerAPI(updatedStage.id), {
+                type: NRTriggerType.SLACK,
+                channelName: updatedStage.trigger.channelName,
+                stage: updatedStage
+            });
+        }
 
-          // Get updated stages
-          var { data: stages } = await axios.get(StagesAPI.getWorkflowStages(wfId))
+        // Get updated stages
+        var { data: stages } = await axios.get(StagesAPI.getWorkflowStages(wfId))
 
-          // dispatch updates
-          dispatch({
-              type: ActionTypes.SET_STAGES, 
-              stages: stages,
-          });
+        // dispatch updates
+        dispatch({
+            type: ActionTypes.SET_STAGES, 
+            stages: stages,
+        });
 
       }
       catch(err) {
@@ -234,6 +237,12 @@ function clearFlash() {
     };
 }
 
+function clearData() {
+    return {
+        type: ActionTypes.CLEAR_DATA
+    };
+}
+
 // Map Dispatch
 export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, any>, ownProps: T) : WorkflowDispatchers {
   return {
@@ -250,6 +259,7 @@ export function mapDispatchToProps<T>(dispatch: ThunkDispatch<any, any, any>, ow
     fetchDeleteTrigger: bindActionCreators(dispatchDeleteTrigger, dispatch),
     fetchWorkflow: bindActionCreators(fetchWorkflow, dispatch),
     toggleSidebar: bindActionCreators(toggleSidebar, dispatch),
-    clearFlash: bindActionCreators(clearFlash, dispatch)
+    clearFlash: bindActionCreators(clearFlash, dispatch),
+    clearData: bindActionCreators(clearData, dispatch)
   }
 }

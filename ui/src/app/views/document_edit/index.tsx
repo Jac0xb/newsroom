@@ -19,11 +19,12 @@ export namespace EditorContainer {
     }
 
     export interface State {
-        document?: NRDocument
-        styleBarUpdateFormats?: (formats: string[]) => void
-        errorText?: string
+        document?: NRDocument;
+        styleBarUpdateFormats?: (formats: string[]) => void;
+        errorText?: string;
         iFrameKey: number;
         workflow?: NRWorkflow;
+        sidebarToggled: boolean;
     }
 }
 
@@ -31,7 +32,7 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
 
     constructor(props: EditorContainer.Props) {
         super(props)
-        this.state = {iFrameKey: Math.random()};
+        this.state = {iFrameKey: Math.random(), sidebarToggled: false};
     }
 
     componentDidMount() {
@@ -45,9 +46,6 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
             
             this.setState({document, workflow});
 
-            //var { data: workflow } = await axios.get<NRWorkflow>(WorkflowsAPI.getWorkflow(document.workflow.id));
-
-            //console.log("y")
         };
 
         task();
@@ -72,12 +70,14 @@ class EditorContainer extends React.Component<EditorContainer.Props, EditorConta
         return (
             <React.Fragment>    
                 <Sidebar
+                    closed={this.state.sidebarToggled}
+                    onToggle={() => this.setState({sidebarToggled: !this.state.sidebarToggled})}
                     workflow={workflow}
                     currentStage={document.stage.sequenceId!}
                     onMove={(direction: string) => this.handleMove(direction)}>
                 </Sidebar>
                 <div style={{padding: "8px"}}>
-                    <Paper style={{display:"flex", margin: "16px", marginRight: "calc(167px + 32px + 16px + 64px)", height: "calc(100vh - 64px - 64px + 16px)", padding: "16px"}}>
+                    <Paper style={{display:"flex", margin: "16px", marginRight: (this.state.sidebarToggled)? "calc(64px + 16px)" : "calc(167px + 32px + 16px + 64px)", height: "calc(100vh - 64px - 64px + 16px)", padding: "16px"}}>
                         <iframe style={{width: "100%"}}
                                 key={iFrameKey}
                                 src={`https://docs.google.com/document/d/${document.googleDocId}/edit`}>

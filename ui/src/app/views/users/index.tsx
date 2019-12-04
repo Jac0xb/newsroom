@@ -57,13 +57,19 @@ class Users extends React.Component<Users.Props, Users.State> {
                         // {title: "Delete", render: (user: NRUser) => this.deleteUser.bind(this)(user)}
                     ]}
                     data={users}
+                    options={
+                        {
+                            pageSize: 8,
+                            search: false
+                        }
+                    }
                 />
             </div>
         );
     }
 
     static getUserAvatar(user: NRUser) {
-        return <Avatar>{user.firstName.substring(0, 1) + user.lastName.substring(0, 1)}</Avatar>
+        return <Avatar style={{transform: "scale(0.75)"}}>{user.firstName.substring(0, 1) + user.lastName.substring(0, 1)}</Avatar>
     }
 
     static getUserName(user: NRUser) {

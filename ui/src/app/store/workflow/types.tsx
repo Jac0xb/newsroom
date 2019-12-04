@@ -24,7 +24,8 @@ export const ActionTypes = {
   FETCH_REQUEST: "@@workflow/FETCH_REQUEST",
   FETCH_FAILURE: "@@workflow/FETCH_FAILURE",
   TOGGLE_SIDEBAR: "@@workflow/TOGGLE_SIDEBAR",
-  CLEAR_FLASH: "@@workflow/CLEAR_FLASH"
+  CLEAR_FLASH: "@@workflow/CLEAR_FLASH",
+  CLEAR_DATA: "@@workflow/CLEAR_DATA"
 }
 
 // Define Dispatchers
@@ -42,6 +43,7 @@ export interface WorkflowDispatchers {
   fetchWorkflow: (id: number) => any;
   toggleSidebar: () => any;
   clearFlash: () => any;
+  clearData: () => any;
 }
 
   
