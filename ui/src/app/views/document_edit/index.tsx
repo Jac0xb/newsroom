@@ -1,10 +1,6 @@
 import { NRDocument, NRWorkflow } from 'app/utils/models';
-import WorkflowMiniView from 'app/views/document_edit/components/WorkflowMiniview';
 import axios from 'axios';
 import * as React from 'react';
-
-import { TextField } from '@material-ui/core';
-import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
