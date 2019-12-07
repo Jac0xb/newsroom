@@ -348,7 +348,7 @@ export class WorkflowResource {
 
         try {
             const stages = await this.stRep.find({
-                relations: ["trigger"],
+                relations: ["trigger", "documents"],
                 where: {workflow: wf},
             });
 

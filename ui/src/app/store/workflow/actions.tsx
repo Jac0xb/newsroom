@@ -21,12 +21,12 @@ export function dispatchSetStages(wfId: number): any {
 
     var { data: stages } = await axios.get(WorkflowsAPI.getWorkflowStages(wfId));
 
-    // Get all documents/triggers for a stage
-    for (var i = 0; i < stages.length; i++){
-      // Docs
-      var { data: docs }  = await axios.get(DocumentsAPI.getStageDocuments(stages[i].id));
-      stages[i].documents = docs
-    }
+    // // Get all documents/triggers for a stage
+    // for (var i = 0; i < stages.length; i++){
+    //   // Docs
+    //   var { data: docs }  = await axios.get(DocumentsAPI.getStageDocuments(stages[i].id));
+    //   stages[i].documents = docs
+    // }
 
     dispatch({
       type: ActionTypes.SET_STAGES,
@@ -41,7 +41,7 @@ export function dispatchStageEdit(stageID: number, name: string, newValue: strin
     stageID: stageID,
     name: name,
     newValue: newValue,
-    
+
   };
 }
 
@@ -70,9 +70,9 @@ export function dispatchAddStage(wfId: number, newStage: NRStage, index: number)
 
           // dispatch updates
           dispatch({
-              type: ActionTypes.ADD_STAGE, 
+              type: ActionTypes.ADD_STAGE,
               stages: stages,
-              currentStage: stage, 
+              currentStage: stage,
           });
 
       }
@@ -88,7 +88,7 @@ export function dispatchUpdateStage(wfId: number, updatedStage: NRStage) : any {
   return async (dispatch: any) => {
 
       try {
-          
+
         // updated a given stage
         await axios.put(StagesAPI.updateStage(wfId, updatedStage.id), updatedStage);
 
@@ -106,7 +106,7 @@ export function dispatchUpdateStage(wfId: number, updatedStage: NRStage) : any {
 
         // dispatch updates
         dispatch({
-            type: ActionTypes.SET_STAGES, 
+            type: ActionTypes.SET_STAGES,
             stages: stages,
         });
 
@@ -131,7 +131,7 @@ export function dispatchDeleteStage(wfId: number, stageID: number) : any {
 
           // dispatch updates
           dispatch({
-              type: ActionTypes.DELETE_STAGE, 
+              type: ActionTypes.DELETE_STAGE,
               stages: stages,
               currentStage: stages[0]
           });
@@ -161,12 +161,12 @@ export function dispatchAddTrigger(stage: NRStage, channel: string) : any {
 
           // dispatch updates
           await dispatch({
-              type: ActionTypes.SET_STAGES, 
+              type: ActionTypes.SET_STAGES,
               stages: stages,
           });
 
           dispatch({
-            type: ActionTypes.STAGE_CHANGE, 
+            type: ActionTypes.STAGE_CHANGE,
             seqID: stage.sequenceId,
         });
 
@@ -191,12 +191,12 @@ export function dispatchDeleteTrigger(stage: NRStage) : any {
 
           // dispatch updates
           await dispatch({
-              type: ActionTypes.SET_STAGES, 
+              type: ActionTypes.SET_STAGES,
               stages: stages,
           });
 
           dispatch({
-            type: ActionTypes.STAGE_CHANGE, 
+            type: ActionTypes.STAGE_CHANGE,
             seqID: stage.sequenceId,
         });
 

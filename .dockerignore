@@ -1,5 +1,6 @@
 .git
-*node_modules*
+*/dist/*
+*/node_modules/*
 *Dockerfiles*
 *docker-compose*
 npm-debug.log

@@ -70,11 +70,11 @@ class Dashboard extends React.Component<Dashboard.Props, Dashboard.State> {
                             }},
                             
                             {title: "Workflow", field:"workflow.name", render: (document: NRDocument) => { 
-                                if (!document.workflow)
+                                if (!document.stage || !document.stage.workflow)
                                     return <div>Undefined</div>
 
-                                return <Link to={`/workflow/${document.workflow.id}/edit`}>
-                                    {document.workflow.name}
+                                return <Link to={`/workflow/${document.stage.workflow.id}/edit`}>
+                                    {document.stage.workflow.name}
                                 </Link>
 
                             }},

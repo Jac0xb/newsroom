@@ -29,7 +29,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
     constructor(props: WorkflowMenuBar.Props) {
         super(props);
         this.state = { };
-        
+
     }
 
     render() {
@@ -58,31 +58,31 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
                 </main>
             );
         }
-        
+
         const stages = workflow.stages.sort((a, b) => a.sequenceId - b.sequenceId);
 
         const workflowRouterLink = (props: any) => <RouterLink to={"/workflow/" + workflow.id + "/edit"} {...props} />
-        
+
         const stageComponents = stages.map((stage: NRStage) => {
             return <Step key={stage.id} title={stage.name} description={(currentStage == stage.sequenceId) ? stage.description : ""}/>
         });
 
-        var nextButton: any;
+        var nextButton: any = <div></div>;
 
-        if (currentStage == stages.length - 1 || !workflow || (workflow && workflow.stages && workflow.stages[currentStage] && workflow.stages[currentStage].permission == 0))
+        if (currentStage == stages.length - 1 && (workflow && workflow.stages && workflow.stages[currentStage] && workflow.stages[currentStage].permission != 0))
             nextButton = (<a href={`https://docs.google.com/document/u/0/export?format=pdf&id=${this.props.googleID}`}>
             <AntButton type="primary" className={classes.stageButton} size="small"
             onClick={() => {
 
-                
+
             }}
         >
             Export
         </AntButton>
         </a>);
-        else {
+        else if (workflow) {
             nextButton = (<AntButton type="primary" className={classes.stageButton} size="small"
-            disabled={currentStage == stages.length - 1 || !workflow || (workflow && workflow.stages && workflow.stages[currentStage] && workflow.stages[currentStage].permission == 0)} 
+            disabled={currentStage == stages.length - 1 || !workflow || (workflow && workflow.stages && workflow.stages[currentStage] && workflow.stages[currentStage].permission == 0)}
             onClick={() => {
                     this.props.onMove("next")
             }}
@@ -91,7 +91,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
             </AntButton>);
         }
 
-        return (        
+        return (
             <main className={classes.layout}>
                 <Drawer
                     anchor="right"

@@ -150,7 +150,7 @@ export class DocumentResource {
         console.log("CALLED getDocuments");
 
         const user = await this.serviceContext.user();
-        const dcs = await this.dcRep.find();
+        const dcs = await this.dcRep.find({relations: ["stage", "stage.workflow"]});
 
         await this.dcServ.appendPermsToDCS(dcs, user);
         await this.dcServ.appendAssigneeToDCS(dcs);

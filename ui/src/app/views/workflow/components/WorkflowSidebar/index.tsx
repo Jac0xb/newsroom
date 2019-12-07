@@ -97,7 +97,7 @@ class WorkflowMenuBar extends React.Component<WorkflowMenuBar.Props, WorkflowMen
 
         if (stage.trigger) {
             
-            const channels = ["general", "opinion-editors", "releases"];
+            const channels = ["general", "copy-desk", "sports-desk", "political-desk", "releases"];
             const children = [];
             for (let i = 0; i < channels.length; i++) {
                 children.push(<Option value={channels[i]}>{channels[i]}</Option>);

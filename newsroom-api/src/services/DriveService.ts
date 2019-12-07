@@ -206,8 +206,7 @@ export class DriveService {
                                 console.log(err.message + ": attempt #" + err.config.retryConfig.currentRetryAttempt);
                             },
                             retry: 50,
-                            retryDelay: 5000,
-                            statusCodesToRetry: [[403], [429]],
+                            statusCodesToRetry: [[403, 429]],
                         },
                     });
                 } catch (err) {
@@ -224,9 +223,8 @@ export class DriveService {
         }, {
             retry: true,
             retryConfig: {
-                httpMethodsToRetry: ["POST"],
+                httpMethodsToRetry: ["DELETE"],
                 retry: 2,
-                retryDelay: 1000,
                 statusCodesToRetry: [[403, 429]],
             },
         });

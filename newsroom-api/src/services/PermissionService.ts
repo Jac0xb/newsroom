@@ -169,6 +169,10 @@ export class PermissionService {
     public async getSTPermForUser(st: NRStage, user: NRUser): Promise<number> {
         let allowed = false;
 
+        if (!st || !user) {
+            return DBConstants.READ;
+        }
+
         if (await this.isUserAdmin(user)) {
             return DBConstants.WRITE;
         }
